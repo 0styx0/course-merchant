@@ -1,54 +1,115 @@
 // use prisma-8
+enum PaymentProvider {
+  @@type("pg/text@1")
+
+  STRIPE
+  PAYPAL
+  SQUARE
+}
+
+enum PaymentStatus {
+  @@type("pg/text@1")
+
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
 model Course {
-  id              Uuid         @id @default(uuid())
-  title           String
-  description     String
-  contentUrl      String
+  id          Uuid          @id @default(uuid())
+  title       String
+  description String
+  contentUrl  String
 
-  stripeProductId String       @unique
-  // admin can change price via stripe
-  stripePriceId   String       @unique
+  startsAt    DateTime?
+  archivedAt  DateTime?
 
-  startsAt        DateTime?
-  archivedAt      DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now())
 
-  createdAt       DateTime     @default(now())
-
-  enrollments     Enrollment[]
+  prices      CoursePrice[]
+  enrollments Enrollment[]
 
   @@index([startsAt])
+}
+
+model CoursePrice {
+  id        Uuid      @id @default(uuid())
+  courseId  Uuid
+
+  amount    Int
+  currency  String
+
+  createdAt DateTime  @default(now())
+
+  course    Course    @relation(fields:[courseId], references:[id])
+  payments  Payment[]
+
+  @@index([courseId])
 }
 
 model Customer {
   id               Uuid         @id @default(uuid())
   email            String       @unique
+
   stripeCustomerId String       @unique
 
   createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @default(now())
 
+  payments         Payment[]
   enrollments      Enrollment[]
 }
 
+model Payment {
+  id                 Uuid            @id @default(uuid())
+
+  customerId         Uuid
+  coursePriceId      Uuid
+
+  provider           PaymentProvider
+  status             PaymentStatus
+
+  amount             Int
+  currency           String
+
+  providerPaymentId  String
+  providerCheckoutId String?
+
+  createdAt          DateTime        @default(now())
+  paidAt             DateTime?
+
+  customer           Customer        @relation(fields:[customerId], references:[id])
+  coursePrice        CoursePrice     @relation(fields:[coursePriceId], references:[id])
+  enrollment         Enrollment?
+
+  @@unique([provider, providerPaymentId])
+  @@index([customerId])
+  @@index([coursePriceId])
+}
+
 model Enrollment {
-  id                      Uuid     @id @default(uuid())
+  id          Uuid     @id @default(uuid())
+  courseId    Uuid
+  customerId  Uuid
+  paymentId   Uuid     @unique
 
-  courseId                Uuid
-  customerId              Uuid
+  purchasedAt DateTime @default(now())
 
-  stripeCheckoutSessionId String   @unique
-  stripePaymentIntentId   String   @unique
-
-  purchasedAt             DateTime @default(now())
-
-  course                  Course   @relation(fields:[courseId], references:[id])
-  customer                Customer @relation(fields:[customerId], references:[id])
+  course      Course   @relation(fields:[courseId], references:[id])
+  customer    Customer @relation(fields:[customerId], references:[id])
+  payment     Payment  @relation(fields:[paymentId], references:[id])
 
   @@unique([courseId, customerId])
   @@index([customerId])
 }
 
-model ProcessedStripeEvent {
-  eventId     String   @id
+model ProcessedPaymentEvent {
+  provider    PaymentProvider
+  eventId     String
   type        String
-  processedAt DateTime @default(now())
+  processedAt DateTime        @default(now())
+
+  @@id([provider, eventId])
 }

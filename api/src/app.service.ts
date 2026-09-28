@@ -6,8 +6,5 @@ export class AppService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getHello() {
-    const courses = await this.prisma.db.orm.public.Course.all();
-
-    return courses;
   }
 }
