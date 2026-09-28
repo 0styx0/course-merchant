@@ -1,0 +1,54 @@
+// use prisma-8
+model Course {
+  id              Uuid         @id @default(uuid())
+  title           String
+  description     String
+  contentUrl      String
+
+  stripeProductId String       @unique
+  // admin can change price via stripe
+  stripePriceId   String       @unique
+
+  startsAt        DateTime?
+  archivedAt      DateTime?
+
+  createdAt       DateTime     @default(now())
+
+  enrollments     Enrollment[]
+
+  @@index([startsAt])
+}
+
+model Customer {
+  id               Uuid         @id @default(uuid())
+  email            String       @unique
+  stripeCustomerId String       @unique
+
+  createdAt        DateTime     @default(now())
+
+  enrollments      Enrollment[]
+}
+
+model Enrollment {
+  id                      Uuid     @id @default(uuid())
+
+  courseId                Uuid
+  customerId              Uuid
+
+  stripeCheckoutSessionId String   @unique
+  stripePaymentIntentId   String   @unique
+
+  purchasedAt             DateTime @default(now())
+
+  course                  Course   @relation(fields:[courseId], references:[id])
+  customer                Customer @relation(fields:[customerId], references:[id])
+
+  @@unique([courseId, customerId])
+  @@index([customerId])
+}
+
+model ProcessedStripeEvent {
+  eventId     String   @id
+  type        String
+  processedAt DateTime @default(now())
+}
