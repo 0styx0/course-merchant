@@ -12,7 +12,7 @@ export class CoursesController {
   ) {}
 
   @Get()
-  findAll() {
+  findAll(): CourseResponse {
     return this.coursesService.findAll();
   }
 }

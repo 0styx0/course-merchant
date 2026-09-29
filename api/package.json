@@ -20,6 +20,7 @@
     "db:test:up": "docker compose -f docker-compose.test.yaml up -d",
     "db:test:migrate": "dotenv run --override --file .env.test -- yarn prisma db migrate --advance-ref db",
     "test:integration": "yarn db:test:up && yarn db:test:migrate && vitest run --config vitest.integration.config.ts",
+    "generate:api-types": "openapi-typescript ./openapi/openapi-v1.yaml -o ./src/generated/api.d.ts",
     "contract:emit": "prisma contract emit"
   },
   "dependencies": {
@@ -50,6 +51,7 @@
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^16.0.0",
+    "openapi-typescript": "^7.13.0",
     "prettier": "^3.4.2",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",

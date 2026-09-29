@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { ListCoursesResponse } from 'types.js';
 
 @Injectable()
 export class CoursesService {
@@ -8,7 +9,7 @@ export class CoursesService {
     private readonly prisma: PrismaService,
   ) {}
 
-  findAll() {
-    return this.prisma.db.orm.public.Course.all();
+  findAll(): Promise<ListCoursesResponse> {
+    //return this.prisma.db.orm.public.Course.all();
   }
 }
