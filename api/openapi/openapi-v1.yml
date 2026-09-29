@@ -1,0 +1,157 @@
+openapi: 3.1.0
+
+info:
+  title: Course Merchant API
+  version: 1.0.0
+  description: API for browsing and purchasing courses.
+
+servers:
+  - url: http://localhost:3000/v1
+    description: Local development server
+
+tags:
+  - name: Courses
+    description: Public course operations
+
+paths:
+  courses:
+    get:
+      tags:
+        - Courses
+      operationId: listCourses
+      summary: List available courses
+      description: >
+        Returns courses that have not ended, ordered by start time ascending.
+        Courses that have been archived are not returned.
+      responses:
+        "200":
+          description: Successfully retrieved available courses.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListCoursesResponse"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    ListCoursesResponse:
+      type: object
+      required:
+        - courses
+      properties:
+        courses:
+          type: array
+          items:
+            $ref: "#/components/schemas/Course"
+      additionalProperties: false
+
+    Course:
+      type: object
+      required:
+        - name
+        - description
+        - enrollmentCount
+        - price
+        - schedule
+      properties:
+        name:
+          type: string
+          description: Public name of the course.
+          minLength: 1
+          example: React Fundamentals
+
+        description:
+          type: string
+          description: Public description of the course.
+          minLength: 1
+          example: Learn the fundamentals of React.
+
+        enrollmentCount:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Number of users currently enrolled in the course.
+          example: 12
+
+        price:
+          $ref: "#/components/schemas/Price"
+
+        schedule:
+          $ref: "#/components/schemas/CourseSchedule"
+
+      additionalProperties: false
+
+    Price:
+      type: object
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          type: integer
+          format: int64
+          minimum: 0
+          description: >
+            Price in the smallest unit of the currency. For USD, 9900
+            represents $99.00.
+          example: 9900
+
+        currency:
+          type: string
+          description: ISO 4217 currency code.
+          pattern: "^[A-Z]{3}$"
+          example: USD
+
+      additionalProperties: false
+
+    CourseSchedule:
+      type: object
+      required:
+        - startTime
+        - endTime
+        - timeZone
+      properties:
+        startTime:
+          type: string
+          format: date-time
+          description: >
+            Course start time as an RFC 3339 date-time including its UTC offset.
+          example: "2026-10-01T18:00:00-04:00"
+
+        endTime:
+          type: string
+          format: date-time
+          description: >
+            Course end time as an RFC 3339 date-time including its UTC offset.
+          example: "2026-10-01T20:00:00-04:00"
+
+        timeZone:
+          type: string
+          description: IANA time zone identifier.
+          example: America/New_York
+
+      additionalProperties: false
+
+    ErrorResponse:
+      type: object
+      required:
+        - statusCode
+        - message
+      properties:
+        statusCode:
+          type: integer
+          format: int32
+          description: HTTP status code.
+          example: 500
+
+        message:
+          type: string
+          description: Human-readable description of the error.
+          example: Internal server error
+
+      additionalProperties: false
