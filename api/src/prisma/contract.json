@@ -4,27 +4,31 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
-    "course": {
+    "Course": {
       "model": "Course",
       "namespace": "public"
     },
-    "coursePrice": {
+    "CoursePrice": {
       "model": "CoursePrice",
       "namespace": "public"
     },
-    "customer": {
+    "Customer": {
       "model": "Customer",
       "namespace": "public"
     },
-    "enrollment": {
+    "Enrollment": {
       "model": "Enrollment",
       "namespace": "public"
     },
-    "payment": {
+    "Payment": {
       "model": "Payment",
       "namespace": "public"
     },
-    "processedPaymentEvent": {
+    "PaymentProviderCustomer": {
+      "model": "PaymentProviderCustomer",
+      "namespace": "public"
+    },
+    "ProcessedPaymentEvent": {
       "model": "ProcessedPaymentEvent",
       "namespace": "public"
     }
@@ -38,15 +42,15 @@
             "members": [
               {
                 "name": "STRIPE",
-                "value": "STRIPE"
+                "value": "stripe"
               },
               {
                 "name": "PAYPAL",
-                "value": "PAYPAL"
+                "value": "paypal"
               },
               {
                 "name": "SQUARE",
-                "value": "SQUARE"
+                "value": "square"
               }
             ]
           },
@@ -55,19 +59,19 @@
             "members": [
               {
                 "name": "PENDING",
-                "value": "PENDING"
+                "value": "pending"
               },
               {
                 "name": "SUCCEEDED",
-                "value": "SUCCEEDED"
+                "value": "succeeded"
               },
               {
                 "name": "FAILED",
-                "value": "FAILED"
+                "value": "failed"
               },
               {
                 "name": "REFUNDED",
-                "value": "REFUNDED"
+                "value": "refunded"
               }
             ]
           }
@@ -103,6 +107,13 @@
                   "kind": "scalar"
                 }
               },
+              "endsAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -111,9 +122,16 @@
                 }
               },
               "startsAt": {
-                "nullable": true,
+                "nullable": false,
                 "type": {
                   "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "timeZone": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -127,7 +145,7 @@
               "updatedAt": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/timestamptz-temporal@1",
+                  "codecId": "pg/timestamptz-date@1",
                   "kind": "scalar"
                 }
               }
@@ -178,11 +196,17 @@
                 "description": {
                   "column": "description"
                 },
+                "endsAt": {
+                  "column": "endsAt"
+                },
                 "id": {
                   "column": "id"
                 },
                 "startsAt": {
                   "column": "startsAt"
+                },
+                "timeZone": {
+                  "column": "timeZone"
                 },
                 "title": {
                   "column": "title"
@@ -192,7 +216,7 @@
                 }
               },
               "namespaceId": "public",
-              "table": "course"
+              "table": "Course"
             }
           },
           "CoursePrice": {
@@ -222,6 +246,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "effectiveAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
                   "kind": "scalar"
                 }
               },
@@ -280,12 +311,15 @@
                 "currency": {
                   "column": "currency"
                 },
+                "effectiveAt": {
+                  "column": "effectiveAt"
+                },
                 "id": {
                   "column": "id"
                 }
               },
               "namespaceId": "public",
-              "table": "coursePrice"
+              "table": "CoursePrice"
             }
           },
           "Customer": {
@@ -311,17 +345,10 @@
                   "kind": "scalar"
                 }
               },
-              "stripeCustomerId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
               "updatedAt": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/timestamptz-temporal@1",
+                  "codecId": "pg/timestamptz-date@1",
                   "kind": "scalar"
                 }
               }
@@ -356,6 +383,21 @@
                   "model": "Payment",
                   "namespace": "public"
                 }
+              },
+              "providerCustomers": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "customerId"
+                  ]
+                },
+                "to": {
+                  "model": "PaymentProviderCustomer",
+                  "namespace": "public"
+                }
               }
             },
             "storage": {
@@ -369,15 +411,12 @@
                 "id": {
                   "column": "id"
                 },
-                "stripeCustomerId": {
-                  "column": "stripeCustomerId"
-                },
                 "updatedAt": {
                   "column": "updatedAt"
                 }
               },
               "namespaceId": "public",
-              "table": "customer"
+              "table": "Customer"
             }
           },
           "Enrollment": {
@@ -487,7 +526,7 @@
                 }
               },
               "namespaceId": "public",
-              "table": "enrollment"
+              "table": "Enrollment"
             }
           },
           "Payment": {
@@ -561,6 +600,13 @@
                   "kind": "scalar"
                 }
               },
+              "providerCustomerId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
               "providerPaymentId": {
                 "nullable": false,
                 "type": {
@@ -630,6 +676,22 @@
                   "model": "Enrollment",
                   "namespace": "public"
                 }
+              },
+              "providerCustomer": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "providerCustomerId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "PaymentProviderCustomer",
+                  "namespace": "public"
+                }
               }
             },
             "storage": {
@@ -661,6 +723,9 @@
                 "providerCheckoutId": {
                   "column": "providerCheckoutId"
                 },
+                "providerCustomerId": {
+                  "column": "providerCustomerId"
+                },
                 "providerPaymentId": {
                   "column": "providerPaymentId"
                 },
@@ -669,7 +734,106 @@
                 }
               },
               "namespaceId": "public",
-              "table": "payment"
+              "table": "Payment"
+            }
+          },
+          "PaymentProviderCustomer": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "customerId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "provider": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "PaymentProvider",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "providerCustomerId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "customer": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "customerId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Customer",
+                  "namespace": "public"
+                }
+              },
+              "payments": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "providerCustomerId"
+                  ]
+                },
+                "to": {
+                  "model": "Payment",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "customerId": {
+                  "column": "customerId"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "provider": {
+                  "column": "provider"
+                },
+                "providerCustomerId": {
+                  "column": "providerCustomerId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "PaymentProviderCustomer"
             }
           },
           "ProcessedPaymentEvent": {
@@ -726,7 +890,7 @@
                 }
               },
               "namespaceId": "public",
-              "table": "processedPaymentEvent"
+              "table": "ProcessedPaymentEvent"
             }
           }
         }
@@ -738,7 +902,7 @@
       "public": {
         "entries": {
           "table": {
-            "course": {
+            "Course": {
               "columns": {
                 "archivedAt": {
                   "codecId": "pg/timestamptz-temporal@1",
@@ -764,6 +928,11 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "endsAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
                 "id": {
                   "codecId": "pg/uuid@1",
                   "nativeType": "uuid",
@@ -772,7 +941,12 @@
                 "startsAt": {
                   "codecId": "pg/timestamptz-temporal@1",
                   "nativeType": "timestamptz",
-                  "nullable": true
+                  "nullable": false
+                },
+                "timeZone": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
                 },
                 "title": {
                   "codecId": "pg/text@1",
@@ -780,11 +954,7 @@
                   "nullable": false
                 },
                 "updatedAt": {
-                  "codecId": "pg/timestamptz-temporal@1",
-                  "default": {
-                    "expression": "now()",
-                    "kind": "function"
-                  },
+                  "codecId": "pg/timestamptz-date@1",
                   "nativeType": "timestamptz",
                   "nullable": false
                 }
@@ -795,8 +965,8 @@
                   "columns": [
                     "startsAt"
                   ],
-                  "name": "course_startsAt_idx_5ff0df68",
-                  "prefix": "course_startsAt_idx",
+                  "name": "Course_startsAt_idx_5ff0df68",
+                  "prefix": "Course_startsAt_idx",
                   "unique": false
                 }
               ],
@@ -807,7 +977,7 @@
               },
               "uniques": []
             },
-            "coursePrice": {
+            "CoursePrice": {
               "columns": {
                 "amount": {
                   "codecId": "pg/int4@1",
@@ -833,6 +1003,11 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "effectiveAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
                 "id": {
                   "codecId": "pg/uuid@1",
                   "nativeType": "uuid",
@@ -846,24 +1021,33 @@
                       "courseId"
                     ],
                     "namespaceId": "public",
-                    "tableName": "coursePrice"
+                    "tableName": "CoursePrice"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "public",
-                    "tableName": "course"
+                    "tableName": "Course"
                   }
                 }
               ],
               "indexes": [
                 {
                   "columns": [
+                    "courseId",
+                    "effectiveAt"
+                  ],
+                  "name": "CoursePrice_courseId_effectiveAt_idx_89f66b61",
+                  "prefix": "CoursePrice_courseId_effectiveAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
                     "courseId"
                   ],
-                  "name": "coursePrice_courseId_idx_12f72d2a",
-                  "prefix": "coursePrice_courseId_idx",
+                  "name": "CoursePrice_courseId_idx_12f72d2a",
+                  "prefix": "CoursePrice_courseId_idx",
                   "unique": false
                 }
               ],
@@ -872,9 +1056,16 @@
                   "id"
                 ]
               },
-              "uniques": []
+              "uniques": [
+                {
+                  "columns": [
+                    "courseId",
+                    "effectiveAt"
+                  ]
+                }
+              ]
             },
-            "customer": {
+            "Customer": {
               "columns": {
                 "createdAt": {
                   "codecId": "pg/timestamptz-temporal@1",
@@ -895,17 +1086,8 @@
                   "nativeType": "uuid",
                   "nullable": false
                 },
-                "stripeCustomerId": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": false
-                },
                 "updatedAt": {
-                  "codecId": "pg/timestamptz-temporal@1",
-                  "default": {
-                    "expression": "now()",
-                    "kind": "function"
-                  },
+                  "codecId": "pg/timestamptz-date@1",
                   "nativeType": "timestamptz",
                   "nullable": false
                 }
@@ -922,15 +1104,10 @@
                   "columns": [
                     "email"
                   ]
-                },
-                {
-                  "columns": [
-                    "stripeCustomerId"
-                  ]
                 }
               ]
             },
-            "enrollment": {
+            "Enrollment": {
               "columns": {
                 "courseId": {
                   "codecId": "pg/uuid@1",
@@ -969,14 +1146,14 @@
                       "courseId"
                     ],
                     "namespaceId": "public",
-                    "tableName": "enrollment"
+                    "tableName": "Enrollment"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "public",
-                    "tableName": "course"
+                    "tableName": "Course"
                   }
                 },
                 {
@@ -985,14 +1162,14 @@
                       "customerId"
                     ],
                     "namespaceId": "public",
-                    "tableName": "enrollment"
+                    "tableName": "Enrollment"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "public",
-                    "tableName": "customer"
+                    "tableName": "Customer"
                   }
                 },
                 {
@@ -1001,14 +1178,14 @@
                       "paymentId"
                     ],
                     "namespaceId": "public",
-                    "tableName": "enrollment"
+                    "tableName": "Enrollment"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "public",
-                    "tableName": "payment"
+                    "tableName": "Payment"
                   }
                 }
               ],
@@ -1017,16 +1194,16 @@
                   "columns": [
                     "courseId"
                   ],
-                  "name": "enrollment_courseId_idx_12f72d2a",
-                  "prefix": "enrollment_courseId_idx",
+                  "name": "Enrollment_courseId_idx_12f72d2a",
+                  "prefix": "Enrollment_courseId_idx",
                   "unique": false
                 },
                 {
                   "columns": [
                     "customerId"
                   ],
-                  "name": "enrollment_customerId_idx_b2a8a46c",
-                  "prefix": "enrollment_customerId_idx",
+                  "name": "Enrollment_customerId_idx_b2a8a46c",
+                  "prefix": "Enrollment_customerId_idx",
                   "unique": false
                 }
               ],
@@ -1049,17 +1226,17 @@
                 }
               ]
             },
-            "payment": {
+            "Payment": {
               "checks": [
                 {
-                  "expression": "\"provider\" IN ('STRIPE', 'PAYPAL', 'SQUARE')",
-                  "name": "payment_provider_check_230cec25",
-                  "prefix": "payment_provider_check"
+                  "expression": "\"provider\" IN ('stripe', 'paypal', 'square')",
+                  "name": "Payment_provider_check_9d8d413b",
+                  "prefix": "Payment_provider_check"
                 },
                 {
-                  "expression": "\"status\" IN ('PENDING', 'SUCCEEDED', 'FAILED', 'REFUNDED')",
-                  "name": "payment_status_check_218a9bc3",
-                  "prefix": "payment_status_check"
+                  "expression": "\"status\" IN ('pending', 'succeeded', 'failed', 'refunded')",
+                  "name": "Payment_status_check_e62c59b9",
+                  "prefix": "Payment_status_check"
                 }
               ],
               "columns": {
@@ -1075,10 +1252,6 @@
                 },
                 "createdAt": {
                   "codecId": "pg/timestamptz-temporal@1",
-                  "default": {
-                    "expression": "now()",
-                    "kind": "function"
-                  },
                   "nativeType": "timestamptz",
                   "nullable": false
                 },
@@ -1118,6 +1291,11 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "providerCustomerId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                },
                 "providerPaymentId": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -1142,14 +1320,14 @@
                       "customerId"
                     ],
                     "namespaceId": "public",
-                    "tableName": "payment"
+                    "tableName": "Payment"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "public",
-                    "tableName": "customer"
+                    "tableName": "Customer"
                   }
                 },
                 {
@@ -1158,14 +1336,30 @@
                       "coursePriceId"
                     ],
                     "namespaceId": "public",
-                    "tableName": "payment"
+                    "tableName": "Payment"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "public",
-                    "tableName": "coursePrice"
+                    "tableName": "CoursePrice"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "providerCustomerId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Payment"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "PaymentProviderCustomer"
                   }
                 }
               ],
@@ -1174,16 +1368,24 @@
                   "columns": [
                     "coursePriceId"
                   ],
-                  "name": "payment_coursePriceId_idx_0534b282",
-                  "prefix": "payment_coursePriceId_idx",
+                  "name": "Payment_coursePriceId_idx_0534b282",
+                  "prefix": "Payment_coursePriceId_idx",
                   "unique": false
                 },
                 {
                   "columns": [
                     "customerId"
                   ],
-                  "name": "payment_customerId_idx_b2a8a46c",
-                  "prefix": "payment_customerId_idx",
+                  "name": "Payment_customerId_idx_b2a8a46c",
+                  "prefix": "Payment_customerId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "providerCustomerId"
+                  ],
+                  "name": "Payment_providerCustomerId_idx_5b70cca7",
+                  "prefix": "Payment_providerCustomerId_idx",
                   "unique": false
                 }
               ],
@@ -1201,12 +1403,105 @@
                 }
               ]
             },
-            "processedPaymentEvent": {
+            "PaymentProviderCustomer": {
               "checks": [
                 {
-                  "expression": "\"provider\" IN ('STRIPE', 'PAYPAL', 'SQUARE')",
-                  "name": "processedPaymentEvent_provider_check_230cec25",
-                  "prefix": "processedPaymentEvent_provider_check"
+                  "expression": "\"provider\" IN ('stripe', 'paypal', 'square')",
+                  "name": "PaymentProviderCustomer_provider_check_9d8d413b",
+                  "prefix": "PaymentProviderCustomer_provider_check"
+                }
+              ],
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "customerId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "provider": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "PaymentProvider",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "providerCustomerId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "customerId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "PaymentProviderCustomer"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Customer"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "customerId"
+                  ],
+                  "name": "PaymentProviderCustomer_customerId_idx_b2a8a46c",
+                  "prefix": "PaymentProviderCustomer_customerId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "provider",
+                    "providerCustomerId"
+                  ]
+                },
+                {
+                  "columns": [
+                    "customerId",
+                    "provider"
+                  ]
+                }
+              ]
+            },
+            "ProcessedPaymentEvent": {
+              "checks": [
+                {
+                  "expression": "\"provider\" IN ('stripe', 'paypal', 'square')",
+                  "name": "ProcessedPaymentEvent_provider_check_9d8d413b",
+                  "prefix": "ProcessedPaymentEvent_provider_check"
                 }
               ],
               "columns": {
@@ -1256,18 +1551,18 @@
             "PaymentProvider": {
               "kind": "valueSet",
               "values": [
-                "STRIPE",
-                "PAYPAL",
-                "SQUARE"
+                "stripe",
+                "paypal",
+                "square"
               ]
             },
             "PaymentStatus": {
               "kind": "valueSet",
               "values": [
-                "PENDING",
-                "SUCCEEDED",
-                "FAILED",
-                "REFUNDED"
+                "pending",
+                "succeeded",
+                "failed",
+                "refunded"
               ]
             }
           }
@@ -1276,10 +1571,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "5ac66a8264ad3df2f8a06ebf36a7bdc688884c3d8e3ef261bbbcba3e4e30d59f"
+    "storageHash": "78d34f4f9b99ae69d09be86753e470bca1dce098cff49a9078aa511fd6b466fd"
   },
   "execution": {
-    "executionHash": "abb1a6aac9ac94d499032d8dfbed8b196295a7d88bb8a01d934a9f6a25fa16f5",
+    "executionHash": "afcca67edb2e13eb7125ae03d77ec2e4ddc3ad25e9aaf3e49f84dd2826ecced0",
     "mutations": {
       "defaults": [
         {
@@ -1288,9 +1583,24 @@
             "kind": "generator"
           },
           "ref": {
-            "column": "id",
-            "namespace": "public",
-            "table": "course"
+            "entry": "Course",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "Course",
+            "field": "updatedAt",
+            "namespace": "public"
           }
         },
         {
@@ -1299,9 +1609,9 @@
             "kind": "generator"
           },
           "ref": {
-            "column": "id",
-            "namespace": "public",
-            "table": "coursePrice"
+            "entry": "CoursePrice",
+            "field": "id",
+            "namespace": "public"
           }
         },
         {
@@ -1310,9 +1620,24 @@
             "kind": "generator"
           },
           "ref": {
-            "column": "id",
-            "namespace": "public",
-            "table": "customer"
+            "entry": "Customer",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "Customer",
+            "field": "updatedAt",
+            "namespace": "public"
           }
         },
         {
@@ -1321,9 +1646,9 @@
             "kind": "generator"
           },
           "ref": {
-            "column": "id",
-            "namespace": "public",
-            "table": "enrollment"
+            "entry": "Enrollment",
+            "field": "id",
+            "namespace": "public"
           }
         },
         {
@@ -1332,9 +1657,20 @@
             "kind": "generator"
           },
           "ref": {
-            "column": "id",
-            "namespace": "public",
-            "table": "payment"
+            "entry": "Payment",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "PaymentProviderCustomer",
+            "field": "id",
+            "namespace": "public"
           }
         }
       ]
@@ -1353,6 +1689,8 @@
       "checkConstraint": true,
       "defaultInInsert": true,
       "enums": true,
+      "insertOnConflictSkip": true,
+      "insertOnConflictWithoutTarget": true,
       "lateral": true,
       "returning": true,
       "scalarList": true

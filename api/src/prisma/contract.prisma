@@ -1,32 +1,32 @@
 // use prisma-8
-enum PaymentProvider {
-  @@type("pg/text@1")
 
-  STRIPE
-  PAYPAL
-  SQUARE
+enum PaymentProvider {
+  STRIPE = "stripe"
+  PAYPAL = "paypal"
+  SQUARE = "square"
 }
 
 enum PaymentStatus {
-  @@type("pg/text@1")
-
-  PENDING
-  SUCCEEDED
-  FAILED
-  REFUNDED
+  PENDING = "pending"
+  SUCCEEDED = "succeeded"
+  FAILED = "failed"
+  REFUNDED = "refunded"
 }
 
 model Course {
-  id          Uuid          @id @default(uuid())
+  id          Uuid   @id @default(uuid())
   title       String
   description String
   contentUrl  String
 
-  startsAt    DateTime?
-  archivedAt  DateTime?
+  startsAt  DateTime
+  endsAt    DateTime
+  timeZone  String
 
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @default(now())
+  archivedAt DateTime?
+
+  createdAt DateTime                 @default(now())
+  updatedAt temporal.updatedAtJsDate()
 
   prices      CoursePrice[]
   enrollments Enrollment[]
@@ -35,71 +35,95 @@ model Course {
 }
 
 model CoursePrice {
-  id        Uuid      @id @default(uuid())
-  courseId  Uuid
+  id       Uuid @id @default(uuid())
+  courseId Uuid
 
-  amount    Int
-  currency  String
+  amount   Int
+  currency String
 
-  createdAt DateTime  @default(now())
+  effectiveAt DateTime
+  createdAt   DateTime @default(now())
 
-  course    Course    @relation(fields:[courseId], references:[id])
-  payments  Payment[]
+  course   Course   @relation(fields: [courseId], references: [id])
+  payments Payment[]
 
-  @@index([courseId])
+  @@unique([courseId, effectiveAt])
+  @@index([courseId, effectiveAt])
 }
 
 model Customer {
-  id               Uuid         @id @default(uuid())
-  email            String       @unique
+  id    Uuid   @id @default(uuid())
+  email String @unique
 
-  stripeCustomerId String       @unique
+  createdAt DateTime                 @default(now())
+  updatedAt temporal.updatedAtJsDate()
 
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @default(now())
+  providerCustomers PaymentProviderCustomer[]
+  payments          Payment[]
+  enrollments       Enrollment[]
+}
 
-  payments         Payment[]
-  enrollments      Enrollment[]
+model PaymentProviderCustomer {
+  id Uuid @id @default(uuid())
+
+  customerId Uuid
+  provider   PaymentProvider
+
+  providerCustomerId String
+
+  createdAt DateTime @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  payments Payment[]
+
+  @@unique([provider, providerCustomerId])
+  @@unique([customerId, provider])
+  @@index([customerId])
 }
 
 model Payment {
-  id                 Uuid            @id @default(uuid())
+  id Uuid @id @default(uuid())
 
-  customerId         Uuid
-  coursePriceId      Uuid
+  customerId    Uuid
+  coursePriceId Uuid
 
-  provider           PaymentProvider
-  status             PaymentStatus
+  provider PaymentProvider
+  status   PaymentStatus
 
-  amount             Int
-  currency           String
+  amount   Int
+  currency String
 
   providerPaymentId  String
   providerCheckoutId String?
 
-  createdAt          DateTime        @default(now())
-  paidAt             DateTime?
+  providerCustomerId Uuid?
 
-  customer           Customer        @relation(fields:[customerId], references:[id])
-  coursePrice        CoursePrice     @relation(fields:[coursePriceId], references:[id])
-  enrollment         Enrollment?
+  createdAt DateTime
+  paidAt    DateTime?
+
+  customer         Customer                 @relation(fields: [customerId], references: [id])
+  coursePrice      CoursePrice              @relation(fields: [coursePriceId], references: [id])
+  providerCustomer PaymentProviderCustomer? @relation(fields: [providerCustomerId], references: [id])
+
+  enrollment Enrollment?
 
   @@unique([provider, providerPaymentId])
   @@index([customerId])
   @@index([coursePriceId])
+  @@index([providerCustomerId])
 }
 
 model Enrollment {
-  id          Uuid     @id @default(uuid())
-  courseId    Uuid
-  customerId  Uuid
-  paymentId   Uuid     @unique
+  id         Uuid @id @default(uuid())
+  courseId   Uuid
+  customerId Uuid
+  paymentId  Uuid @unique
 
   purchasedAt DateTime @default(now())
 
-  course      Course   @relation(fields:[courseId], references:[id])
-  customer    Customer @relation(fields:[customerId], references:[id])
-  payment     Payment  @relation(fields:[paymentId], references:[id])
+  course   Course   @relation(fields: [courseId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+  payment  Payment  @relation(fields: [paymentId], references: [id])
 
   @@unique([courseId, customerId])
   @@index([customerId])
@@ -109,7 +133,7 @@ model ProcessedPaymentEvent {
   provider    PaymentProvider
   eventId     String
   type        String
-  processedAt DateTime        @default(now())
+  processedAt DateTime @default(now())
 
   @@id([provider, eventId])
 }

@@ -1,0 +1,1273 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.Course",
+    "label": "Create table \"Course\"",
+    "summary": "Creates table \"Course\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Course"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Course\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Course\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Course\"",
+        "sql": "CREATE TABLE \"public\".\"Course\" (\n  \"archivedAt\" timestamptz,\n  \"contentUrl\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text NOT NULL,\n  \"endsAt\" timestamptz NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"startsAt\" timestamptz NOT NULL,\n  \"timeZone\" text NOT NULL,\n  \"title\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Course\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Course\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.CoursePrice",
+    "label": "Create table \"CoursePrice\"",
+    "summary": "Creates table \"CoursePrice\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "CoursePrice"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"CoursePrice\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"CoursePrice\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"CoursePrice\"",
+        "sql": "CREATE TABLE \"public\".\"CoursePrice\" (\n  \"amount\" int4 NOT NULL,\n  \"courseId\" uuid NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"currency\" text NOT NULL,\n  \"effectiveAt\" timestamptz NOT NULL,\n  \"id\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"CoursePrice\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"CoursePrice\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.Customer",
+    "label": "Create table \"Customer\"",
+    "summary": "Creates table \"Customer\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Customer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Customer\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Customer\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Customer\"",
+        "sql": "CREATE TABLE \"public\".\"Customer\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" text NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Customer\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Customer\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.Enrollment",
+    "label": "Create table \"Enrollment\"",
+    "summary": "Creates table \"Enrollment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Enrollment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Enrollment\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Enrollment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Enrollment\"",
+        "sql": "CREATE TABLE \"public\".\"Enrollment\" (\n  \"courseId\" uuid NOT NULL,\n  \"customerId\" uuid NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"paymentId\" uuid NOT NULL,\n  \"purchasedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Enrollment\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Enrollment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.Payment",
+    "label": "Create table \"Payment\"",
+    "summary": "Creates table \"Payment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Payment\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Payment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Payment\"",
+        "sql": "CREATE TABLE \"public\".\"Payment\" (\n  \"amount\" int4 NOT NULL,\n  \"coursePriceId\" uuid NOT NULL,\n  \"createdAt\" timestamptz NOT NULL,\n  \"currency\" text NOT NULL,\n  \"customerId\" uuid NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"paidAt\" timestamptz,\n  \"provider\" text NOT NULL,\n  \"providerCheckoutId\" text,\n  \"providerCustomerId\" uuid,\n  \"providerPaymentId\" text NOT NULL,\n  \"status\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"Payment_provider_check_9d8d413b\" CHECK (\"provider\" IN ('stripe', 'paypal', 'square')),\n  CONSTRAINT \"Payment_status_check_e62c59b9\" CHECK (\"status\" IN ('pending', 'succeeded', 'failed', 'refunded'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Payment\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Payment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.PaymentProviderCustomer",
+    "label": "Create table \"PaymentProviderCustomer\"",
+    "summary": "Creates table \"PaymentProviderCustomer\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "PaymentProviderCustomer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"PaymentProviderCustomer\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentProviderCustomer\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"PaymentProviderCustomer\"",
+        "sql": "CREATE TABLE \"public\".\"PaymentProviderCustomer\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"customerId\" uuid NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"provider\" text NOT NULL,\n  \"providerCustomerId\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"PaymentProviderCustomer_provider_check_9d8d413b\" CHECK (\"provider\" IN ('stripe', 'paypal', 'square'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"PaymentProviderCustomer\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentProviderCustomer\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.ProcessedPaymentEvent",
+    "label": "Create table \"ProcessedPaymentEvent\"",
+    "summary": "Creates table \"ProcessedPaymentEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "ProcessedPaymentEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"ProcessedPaymentEvent\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"ProcessedPaymentEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"ProcessedPaymentEvent\"",
+        "sql": "CREATE TABLE \"public\".\"ProcessedPaymentEvent\" (\n  \"eventId\" text NOT NULL,\n  \"processedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"provider\" text NOT NULL,\n  \"type\" text NOT NULL,\n  PRIMARY KEY (\"provider\", \"eventId\"),\n  CONSTRAINT \"ProcessedPaymentEvent_provider_check_9d8d413b\" CHECK (\"provider\" IN ('stripe', 'paypal', 'square'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"ProcessedPaymentEvent\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"ProcessedPaymentEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.CoursePrice.CoursePrice_courseId_effectiveAt_key",
+    "label": "Add unique constraint on \"CoursePrice\" (courseId, effectiveAt)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "CoursePrice_courseId_effectiveAt_key",
+        "table": "CoursePrice"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"CoursePrice_courseId_effectiveAt_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "CoursePrice_courseId_effectiveAt_key",
+          "public",
+          "\"public\".\"CoursePrice\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"CoursePrice_courseId_effectiveAt_key\"",
+        "sql": "ALTER TABLE \"public\".\"CoursePrice\" ADD CONSTRAINT \"CoursePrice_courseId_effectiveAt_key\" UNIQUE (\"courseId\", \"effectiveAt\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"CoursePrice_courseId_effectiveAt_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "CoursePrice_courseId_effectiveAt_key",
+          "public",
+          "\"public\".\"CoursePrice\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Customer.Customer_email_key",
+    "label": "Add unique constraint on \"Customer\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Customer_email_key",
+        "table": "Customer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Customer_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Customer_email_key",
+          "public",
+          "\"public\".\"Customer\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Customer_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"Customer\" ADD CONSTRAINT \"Customer_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Customer_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Customer_email_key",
+          "public",
+          "\"public\".\"Customer\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Enrollment.Enrollment_paymentId_key",
+    "label": "Add unique constraint on \"Enrollment\" (paymentId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Enrollment_paymentId_key",
+        "table": "Enrollment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Enrollment_paymentId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Enrollment_paymentId_key",
+          "public",
+          "\"public\".\"Enrollment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Enrollment_paymentId_key\"",
+        "sql": "ALTER TABLE \"public\".\"Enrollment\" ADD CONSTRAINT \"Enrollment_paymentId_key\" UNIQUE (\"paymentId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Enrollment_paymentId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Enrollment_paymentId_key",
+          "public",
+          "\"public\".\"Enrollment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Enrollment.Enrollment_courseId_customerId_key",
+    "label": "Add unique constraint on \"Enrollment\" (courseId, customerId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Enrollment_courseId_customerId_key",
+        "table": "Enrollment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Enrollment_courseId_customerId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Enrollment_courseId_customerId_key",
+          "public",
+          "\"public\".\"Enrollment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Enrollment_courseId_customerId_key\"",
+        "sql": "ALTER TABLE \"public\".\"Enrollment\" ADD CONSTRAINT \"Enrollment_courseId_customerId_key\" UNIQUE (\"courseId\", \"customerId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Enrollment_courseId_customerId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Enrollment_courseId_customerId_key",
+          "public",
+          "\"public\".\"Enrollment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Payment.Payment_provider_providerPaymentId_key",
+    "label": "Add unique constraint on \"Payment\" (provider, providerPaymentId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Payment_provider_providerPaymentId_key",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Payment_provider_providerPaymentId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_provider_providerPaymentId_key",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Payment_provider_providerPaymentId_key\"",
+        "sql": "ALTER TABLE \"public\".\"Payment\" ADD CONSTRAINT \"Payment_provider_providerPaymentId_key\" UNIQUE (\"provider\", \"providerPaymentId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Payment_provider_providerPaymentId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_provider_providerPaymentId_key",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.PaymentProviderCustomer.PaymentProviderCustomer_provider_providerCustomerId_key",
+    "label": "Add unique constraint on \"PaymentProviderCustomer\" (provider, providerCustomerId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "PaymentProviderCustomer_provider_providerCustomerId_key",
+        "table": "PaymentProviderCustomer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentProviderCustomer_provider_providerCustomerId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentProviderCustomer_provider_providerCustomerId_key",
+          "public",
+          "\"public\".\"PaymentProviderCustomer\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"PaymentProviderCustomer_provider_providerCustomerId_key\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentProviderCustomer\" ADD CONSTRAINT \"PaymentProviderCustomer_provider_providerCustomerId_key\" UNIQUE (\"provider\", \"providerCustomerId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentProviderCustomer_provider_providerCustomerId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentProviderCustomer_provider_providerCustomerId_key",
+          "public",
+          "\"public\".\"PaymentProviderCustomer\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.PaymentProviderCustomer.PaymentProviderCustomer_customerId_provider_key",
+    "label": "Add unique constraint on \"PaymentProviderCustomer\" (customerId, provider)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "PaymentProviderCustomer_customerId_provider_key",
+        "table": "PaymentProviderCustomer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"PaymentProviderCustomer_customerId_provider_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentProviderCustomer_customerId_provider_key",
+          "public",
+          "\"public\".\"PaymentProviderCustomer\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"PaymentProviderCustomer_customerId_provider_key\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentProviderCustomer\" ADD CONSTRAINT \"PaymentProviderCustomer_customerId_provider_key\" UNIQUE (\"customerId\", \"provider\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"PaymentProviderCustomer_customerId_provider_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentProviderCustomer_customerId_provider_key",
+          "public",
+          "\"public\".\"PaymentProviderCustomer\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Course.Course_startsAt_idx_5ff0df68",
+    "label": "Create index \"Course_startsAt_idx_5ff0df68\" on \"Course\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Course_startsAt_idx_5ff0df68",
+        "table": "Course"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Course_startsAt_idx_5ff0df68\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Course_startsAt_idx_5ff0df68\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Course_startsAt_idx_5ff0df68\"",
+        "sql": "CREATE INDEX \"Course_startsAt_idx_5ff0df68\" ON \"public\".\"Course\" (\"startsAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Course_startsAt_idx_5ff0df68\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Course_startsAt_idx_5ff0df68\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.CoursePrice.CoursePrice_courseId_effectiveAt_idx_89f66b61",
+    "label": "Create index \"CoursePrice_courseId_effectiveAt_idx_89f66b61\" on \"CoursePrice\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "CoursePrice_courseId_effectiveAt_idx_89f66b61",
+        "table": "CoursePrice"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"CoursePrice_courseId_effectiveAt_idx_89f66b61\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"CoursePrice_courseId_effectiveAt_idx_89f66b61\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"CoursePrice_courseId_effectiveAt_idx_89f66b61\"",
+        "sql": "CREATE INDEX \"CoursePrice_courseId_effectiveAt_idx_89f66b61\" ON \"public\".\"CoursePrice\" (\"courseId\", \"effectiveAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"CoursePrice_courseId_effectiveAt_idx_89f66b61\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"CoursePrice_courseId_effectiveAt_idx_89f66b61\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.CoursePrice.CoursePrice_courseId_idx_12f72d2a",
+    "label": "Create index \"CoursePrice_courseId_idx_12f72d2a\" on \"CoursePrice\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "CoursePrice_courseId_idx_12f72d2a",
+        "table": "CoursePrice"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"CoursePrice_courseId_idx_12f72d2a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"CoursePrice_courseId_idx_12f72d2a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"CoursePrice_courseId_idx_12f72d2a\"",
+        "sql": "CREATE INDEX \"CoursePrice_courseId_idx_12f72d2a\" ON \"public\".\"CoursePrice\" (\"courseId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"CoursePrice_courseId_idx_12f72d2a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"CoursePrice_courseId_idx_12f72d2a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Enrollment.Enrollment_courseId_idx_12f72d2a",
+    "label": "Create index \"Enrollment_courseId_idx_12f72d2a\" on \"Enrollment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Enrollment_courseId_idx_12f72d2a",
+        "table": "Enrollment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Enrollment_courseId_idx_12f72d2a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Enrollment_courseId_idx_12f72d2a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Enrollment_courseId_idx_12f72d2a\"",
+        "sql": "CREATE INDEX \"Enrollment_courseId_idx_12f72d2a\" ON \"public\".\"Enrollment\" (\"courseId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Enrollment_courseId_idx_12f72d2a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Enrollment_courseId_idx_12f72d2a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Enrollment.Enrollment_customerId_idx_b2a8a46c",
+    "label": "Create index \"Enrollment_customerId_idx_b2a8a46c\" on \"Enrollment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Enrollment_customerId_idx_b2a8a46c",
+        "table": "Enrollment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Enrollment_customerId_idx_b2a8a46c\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Enrollment_customerId_idx_b2a8a46c\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Enrollment_customerId_idx_b2a8a46c\"",
+        "sql": "CREATE INDEX \"Enrollment_customerId_idx_b2a8a46c\" ON \"public\".\"Enrollment\" (\"customerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Enrollment_customerId_idx_b2a8a46c\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Enrollment_customerId_idx_b2a8a46c\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Payment.Payment_coursePriceId_idx_0534b282",
+    "label": "Create index \"Payment_coursePriceId_idx_0534b282\" on \"Payment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Payment_coursePriceId_idx_0534b282",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Payment_coursePriceId_idx_0534b282\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Payment_coursePriceId_idx_0534b282\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Payment_coursePriceId_idx_0534b282\"",
+        "sql": "CREATE INDEX \"Payment_coursePriceId_idx_0534b282\" ON \"public\".\"Payment\" (\"coursePriceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Payment_coursePriceId_idx_0534b282\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Payment_coursePriceId_idx_0534b282\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Payment.Payment_customerId_idx_b2a8a46c",
+    "label": "Create index \"Payment_customerId_idx_b2a8a46c\" on \"Payment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Payment_customerId_idx_b2a8a46c",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Payment_customerId_idx_b2a8a46c\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Payment_customerId_idx_b2a8a46c\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Payment_customerId_idx_b2a8a46c\"",
+        "sql": "CREATE INDEX \"Payment_customerId_idx_b2a8a46c\" ON \"public\".\"Payment\" (\"customerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Payment_customerId_idx_b2a8a46c\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Payment_customerId_idx_b2a8a46c\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Payment.Payment_providerCustomerId_idx_5b70cca7",
+    "label": "Create index \"Payment_providerCustomerId_idx_5b70cca7\" on \"Payment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Payment_providerCustomerId_idx_5b70cca7",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Payment_providerCustomerId_idx_5b70cca7\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Payment_providerCustomerId_idx_5b70cca7\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Payment_providerCustomerId_idx_5b70cca7\"",
+        "sql": "CREATE INDEX \"Payment_providerCustomerId_idx_5b70cca7\" ON \"public\".\"Payment\" (\"providerCustomerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Payment_providerCustomerId_idx_5b70cca7\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Payment_providerCustomerId_idx_5b70cca7\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.PaymentProviderCustomer.PaymentProviderCustomer_customerId_idx_b2a8a46c",
+    "label": "Create index \"PaymentProviderCustomer_customerId_idx_b2a8a46c\" on \"PaymentProviderCustomer\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "PaymentProviderCustomer_customerId_idx_b2a8a46c",
+        "table": "PaymentProviderCustomer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"PaymentProviderCustomer_customerId_idx_b2a8a46c\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentProviderCustomer_customerId_idx_b2a8a46c\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"PaymentProviderCustomer_customerId_idx_b2a8a46c\"",
+        "sql": "CREATE INDEX \"PaymentProviderCustomer_customerId_idx_b2a8a46c\" ON \"public\".\"PaymentProviderCustomer\" (\"customerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"PaymentProviderCustomer_customerId_idx_b2a8a46c\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentProviderCustomer_customerId_idx_b2a8a46c\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.CoursePrice.CoursePrice_courseId_fkey",
+    "label": "Add foreign key \"CoursePrice_courseId_fkey\" on \"CoursePrice\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "CoursePrice_courseId_fkey",
+        "table": "CoursePrice"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"CoursePrice_courseId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "CoursePrice_courseId_fkey",
+          "public",
+          "\"public\".\"CoursePrice\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"CoursePrice_courseId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"CoursePrice\"\nADD CONSTRAINT \"CoursePrice_courseId_fkey\"\nFOREIGN KEY (\"courseId\")\nREFERENCES \"public\".\"Course\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"CoursePrice_courseId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "CoursePrice_courseId_fkey",
+          "public",
+          "\"public\".\"CoursePrice\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Enrollment.Enrollment_courseId_fkey",
+    "label": "Add foreign key \"Enrollment_courseId_fkey\" on \"Enrollment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Enrollment_courseId_fkey",
+        "table": "Enrollment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Enrollment_courseId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Enrollment_courseId_fkey",
+          "public",
+          "\"public\".\"Enrollment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Enrollment_courseId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Enrollment\"\nADD CONSTRAINT \"Enrollment_courseId_fkey\"\nFOREIGN KEY (\"courseId\")\nREFERENCES \"public\".\"Course\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Enrollment_courseId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Enrollment_courseId_fkey",
+          "public",
+          "\"public\".\"Enrollment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Enrollment.Enrollment_customerId_fkey",
+    "label": "Add foreign key \"Enrollment_customerId_fkey\" on \"Enrollment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Enrollment_customerId_fkey",
+        "table": "Enrollment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Enrollment_customerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Enrollment_customerId_fkey",
+          "public",
+          "\"public\".\"Enrollment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Enrollment_customerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Enrollment\"\nADD CONSTRAINT \"Enrollment_customerId_fkey\"\nFOREIGN KEY (\"customerId\")\nREFERENCES \"public\".\"Customer\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Enrollment_customerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Enrollment_customerId_fkey",
+          "public",
+          "\"public\".\"Enrollment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Enrollment.Enrollment_paymentId_fkey",
+    "label": "Add foreign key \"Enrollment_paymentId_fkey\" on \"Enrollment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Enrollment_paymentId_fkey",
+        "table": "Enrollment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Enrollment_paymentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Enrollment_paymentId_fkey",
+          "public",
+          "\"public\".\"Enrollment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Enrollment_paymentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Enrollment\"\nADD CONSTRAINT \"Enrollment_paymentId_fkey\"\nFOREIGN KEY (\"paymentId\")\nREFERENCES \"public\".\"Payment\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Enrollment_paymentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Enrollment_paymentId_fkey",
+          "public",
+          "\"public\".\"Enrollment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Payment.Payment_customerId_fkey",
+    "label": "Add foreign key \"Payment_customerId_fkey\" on \"Payment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Payment_customerId_fkey",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Payment_customerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_customerId_fkey",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Payment_customerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Payment\"\nADD CONSTRAINT \"Payment_customerId_fkey\"\nFOREIGN KEY (\"customerId\")\nREFERENCES \"public\".\"Customer\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Payment_customerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_customerId_fkey",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Payment.Payment_coursePriceId_fkey",
+    "label": "Add foreign key \"Payment_coursePriceId_fkey\" on \"Payment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Payment_coursePriceId_fkey",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Payment_coursePriceId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_coursePriceId_fkey",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Payment_coursePriceId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Payment\"\nADD CONSTRAINT \"Payment_coursePriceId_fkey\"\nFOREIGN KEY (\"coursePriceId\")\nREFERENCES \"public\".\"CoursePrice\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Payment_coursePriceId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_coursePriceId_fkey",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Payment.Payment_providerCustomerId_fkey",
+    "label": "Add foreign key \"Payment_providerCustomerId_fkey\" on \"Payment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Payment_providerCustomerId_fkey",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Payment_providerCustomerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_providerCustomerId_fkey",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Payment_providerCustomerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Payment\"\nADD CONSTRAINT \"Payment_providerCustomerId_fkey\"\nFOREIGN KEY (\"providerCustomerId\")\nREFERENCES \"public\".\"PaymentProviderCustomer\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Payment_providerCustomerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_providerCustomerId_fkey",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.PaymentProviderCustomer.PaymentProviderCustomer_customerId_fkey",
+    "label": "Add foreign key \"PaymentProviderCustomer_customerId_fkey\" on \"PaymentProviderCustomer\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "PaymentProviderCustomer_customerId_fkey",
+        "table": "PaymentProviderCustomer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"PaymentProviderCustomer_customerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentProviderCustomer_customerId_fkey",
+          "public",
+          "\"public\".\"PaymentProviderCustomer\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"PaymentProviderCustomer_customerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"PaymentProviderCustomer\"\nADD CONSTRAINT \"PaymentProviderCustomer_customerId_fkey\"\nFOREIGN KEY (\"customerId\")\nREFERENCES \"public\".\"Customer\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"PaymentProviderCustomer_customerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "PaymentProviderCustomer_customerId_fkey",
+          "public",
+          "\"public\".\"PaymentProviderCustomer\""
+        ]
+      }
+    ]
+  }
+]
