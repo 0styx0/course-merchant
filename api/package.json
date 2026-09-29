@@ -17,6 +17,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
+    "db:test:up": "docker compose -f docker-compose.test.yaml up -d",
+    "db:test:migrate": "dotenv run --override --file .env.test -- yarn prisma db migrate --advance-ref db",
+    "test:integration": "yarn db:test:up && yarn db:test:migrate && vitest run --config vitest.integration.config.ts",
     "contract:emit": "prisma contract emit"
   },
   "dependencies": {
