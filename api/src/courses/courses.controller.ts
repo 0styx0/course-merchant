@@ -1,5 +1,6 @@
 import { Controller, Get, Inject } from '@nestjs/common';
 import { CoursesService } from './courses.service.js';
+import { ListCoursesResponse } from 'types.js';
 
 @Controller({
     path: "courses",
@@ -12,7 +13,7 @@ export class CoursesController {
   ) {}
 
   @Get()
-  findAll(): CourseResponse {
+  findAll(): Promise<ListCoursesResponse> {
     return this.coursesService.findAll();
   }
 }

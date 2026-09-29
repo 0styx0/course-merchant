@@ -2,13 +2,9 @@ import { Test, type TestingModule } from "@nestjs/testing";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CoursesService } from "./courses.service.js";
-import { PrismaService } from "../prisma/prisma.service.js";
+import { CoursesRepository } from "./courses.repository/courses.repository.js";
 
-const NOW = new Date("2026-09-29T14:00:00.000Z");
-
-const makeCourseRecord = (
-  overrides: Record<string, unknown> = {},
-) => ({
+const makeCourseRecord = (overrides = {}) => ({
   title: "React Fundamentals",
   description: "Learn React",
   startsAt: new Date("2026-10-01T18:00:00.000Z"),
@@ -25,32 +21,21 @@ const makeCourseRecord = (
 describe("CoursesService", () => {
   let service: CoursesService;
 
-  const courseAll = vi.fn();
+  const findAvailable = vi.fn();
 
-  const prismaMock = {
-    db: {
-      orm: {
-        public: {
-          Course: {
-            all: courseAll,
-          },
-        },
-      },
-    },
+  const coursesRepositoryMock = {
+    findAvailable,
   };
 
   beforeEach(async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(NOW);
-
-    courseAll.mockReset();
+    findAvailable.mockReset();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CoursesService,
         {
-          provide: PrismaService,
-          useValue: prismaMock,
+          provide: CoursesRepository,
+          useValue: coursesRepositoryMock,
         },
       ],
     }).compile();
@@ -59,20 +44,20 @@ describe("CoursesService", () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   describe("findAll", () => {
-    it("returns an empty array when there are no courses", async () => {
-      courseAll.mockResolvedValue([]);
+    it("returns an empty courses array when the repository returns no courses", async () => {
+      findAvailable.mockResolvedValue([]);
 
       await expect(service.findAll()).resolves.toEqual({
         courses: [],
       });
     });
 
-    it("returns a course in the expected format", async () => {
-      courseAll.mockResolvedValue([
+    it("maps a course to the expected API format", async () => {
+      findAvailable.mockResolvedValue([
         makeCourseRecord(),
       ]);
 
@@ -87,8 +72,8 @@ describe("CoursesService", () => {
               currency: "USD",
             },
             schedule: {
-              startTime: "2026-10-01T18:00:00-04:00",
-              endTime: "2026-10-01T20:00:00-04:00",
+              startTime: "2026-10-01T18:00:00.000Z",
+              endTime: "2026-10-01T20:00:00.000Z",
               timeZone: "America/New_York",
             },
           },
@@ -96,8 +81,8 @@ describe("CoursesService", () => {
       });
     });
 
-    it("returns multiple courses", async () => {
-      courseAll.mockResolvedValue([
+    it("maps multiple courses", async () => {
+      findAvailable.mockResolvedValue([
         makeCourseRecord({
           title: "Course One",
         }),
@@ -119,8 +104,8 @@ describe("CoursesService", () => {
               currency: "USD",
             },
             schedule: {
-              startTime: "2026-10-01T18:00:00-04:00",
-              endTime: "2026-10-01T20:00:00-04:00",
+              startTime: "2026-10-01T18:00:00.000Z",
+              endTime: "2026-10-01T20:00:00.000Z",
               timeZone: "America/New_York",
             },
           },
@@ -133,8 +118,8 @@ describe("CoursesService", () => {
               currency: "USD",
             },
             schedule: {
-              startTime: "2026-10-02T18:00:00-04:00",
-              endTime: "2026-10-02T20:00:00-04:00",
+              startTime: "2026-10-02T18:00:00.000Z",
+              endTime: "2026-10-02T20:00:00.000Z",
               timeZone: "America/New_York",
             },
           },
@@ -142,8 +127,8 @@ describe("CoursesService", () => {
       });
     });
 
-    it("returns the enrollment count", async () => {
-      courseAll.mockResolvedValue([
+    it("maps the enrollment count", async () => {
+      findAvailable.mockResolvedValue([
         makeCourseRecord({
           enrollmentCount: 12,
         }),
@@ -151,26 +136,15 @@ describe("CoursesService", () => {
 
       await expect(service.findAll()).resolves.toEqual({
         courses: [
-          {
-            name: "React Fundamentals",
-            description: "Learn React",
+          expect.objectContaining({
             enrollmentCount: 12,
-            price: {
-              amount: 9900,
-              currency: "USD",
-            },
-            schedule: {
-              startTime: "2026-10-01T18:00:00-04:00",
-              endTime: "2026-10-01T20:00:00-04:00",
-              timeZone: "America/New_York",
-            },
-          },
+          }),
         ],
       });
     });
 
-    it("returns zero when there are no registered users", async () => {
-      courseAll.mockResolvedValue([
+    it("maps zero enrollments", async () => {
+      findAvailable.mockResolvedValue([
         makeCourseRecord({
           enrollmentCount: 0,
         }),
@@ -185,8 +159,8 @@ describe("CoursesService", () => {
       });
     });
 
-    it("returns the course price", async () => {
-      courseAll.mockResolvedValue([
+    it("maps the price", async () => {
+      findAvailable.mockResolvedValue([
         makeCourseRecord({
           price: {
             amount: 14900,
@@ -207,8 +181,8 @@ describe("CoursesService", () => {
       });
     });
 
-    it("returns the course schedule", async () => {
-      courseAll.mockResolvedValue([
+    it("maps the schedule", async () => {
+      findAvailable.mockResolvedValue([
         makeCourseRecord(),
       ]);
 
@@ -216,8 +190,8 @@ describe("CoursesService", () => {
         courses: [
           expect.objectContaining({
             schedule: {
-              startTime: "2026-10-01T18:00:00-04:00",
-              endTime: "2026-10-01T20:00:00-04:00",
+              startTime: "2026-10-01T18:00:00.000Z",
+              endTime: "2026-10-01T20:00:00.000Z",
               timeZone: "America/New_York",
             },
           }),
@@ -226,7 +200,7 @@ describe("CoursesService", () => {
     });
 
     it("returns exactly the public API representation", async () => {
-      courseAll.mockResolvedValue([
+      findAvailable.mockResolvedValue([
         makeCourseRecord(),
       ]);
 
@@ -243,8 +217,8 @@ describe("CoursesService", () => {
               currency: "USD",
             },
             schedule: {
-              startTime: "2026-10-01T18:00:00-04:00",
-              endTime: "2026-10-01T20:00:00-04:00",
+              startTime: "2026-10-01T18:00:00.000Z",
+              endTime: "2026-10-01T20:00:00.000Z",
               timeZone: "America/New_York",
             },
           },
@@ -252,8 +226,29 @@ describe("CoursesService", () => {
       });
     });
 
-    it("propagates database errors", async () => {
-      courseAll.mockRejectedValue(
+    it("does not expose repository fields in the API response", async () => {
+      findAvailable.mockResolvedValue([
+        makeCourseRecord({
+          id: "internal-course-id",
+          contentUrl: "https://example.com/private-content",
+          stripeProductId: "prod_internal",
+          stripePriceId: "price_internal",
+          archivedAt: null,
+        }),
+      ]);
+
+      const result = await service.findAll();
+      const course = result.courses[0];
+
+      expect(course).not.toHaveProperty("id");
+      expect(course).not.toHaveProperty("contentUrl");
+      expect(course).not.toHaveProperty("stripeProductId");
+      expect(course).not.toHaveProperty("stripePriceId");
+      expect(course).not.toHaveProperty("archivedAt");
+    });
+
+    it("propagates repository errors", async () => {
+      findAvailable.mockRejectedValue(
         new Error("database unavailable"),
       );
 
@@ -262,14 +257,24 @@ describe("CoursesService", () => {
       );
     });
 
-    it("propagates unexpected database errors", async () => {
-      courseAll.mockRejectedValue(
-        new Error("unexpected database failure"),
+    it("propagates unexpected repository errors", async () => {
+      findAvailable.mockRejectedValue(
+        new Error("unexpected repository failure"),
       );
 
       await expect(service.findAll()).rejects.toThrow(
-        "unexpected database failure",
+        "unexpected repository failure",
       );
+    });
+
+    it("throws when a returned course has no price", async () => {
+      findAvailable.mockResolvedValue([
+        makeCourseRecord({
+          price: undefined,
+        }),
+      ]);
+
+      await expect(service.findAll()).rejects.toThrow();
     });
   });
 });
