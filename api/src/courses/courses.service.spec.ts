@@ -1,20 +1,23 @@
 import { Test, type TestingModule } from "@nestjs/testing";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CoursesService } from "./courses.service.js";
 import { CoursesRepository } from "./courses.repository/courses.repository.js";
 
 const makeCourseRecord = (overrides = {}) => ({
+  id: "course-1",
   title: "React Fundamentals",
   description: "Learn React",
   startsAt: new Date("2026-10-01T18:00:00.000Z"),
   endsAt: new Date("2026-10-01T20:00:00.000Z"),
   timeZone: "America/New_York",
-  price: {
-    amount: 9900,
-    currency: "USD",
-  },
-  enrollmentCount: 0,
+  prices: [
+    {
+      amount: 9900,
+      currency: "USD",
+    },
+  ],
+  enrollments: 0,
   ...overrides,
 });
 
@@ -43,10 +46,6 @@ describe("CoursesService", () => {
     service = module.get<CoursesService>(CoursesService);
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   describe("findAll", () => {
     it("returns an empty courses array when the repository returns no courses", async () => {
       findAvailable.mockResolvedValue([]);
@@ -57,9 +56,7 @@ describe("CoursesService", () => {
     });
 
     it("maps a course to the expected API format", async () => {
-      findAvailable.mockResolvedValue([
-        makeCourseRecord(),
-      ]);
+      findAvailable.mockResolvedValue([makeCourseRecord()]);
 
       await expect(service.findAll()).resolves.toEqual({
         courses: [
@@ -87,6 +84,7 @@ describe("CoursesService", () => {
           title: "Course One",
         }),
         makeCourseRecord({
+          id: "course-2",
           title: "Course Two",
           startsAt: new Date("2026-10-02T18:00:00.000Z"),
           endsAt: new Date("2026-10-02T20:00:00.000Z"),
@@ -130,7 +128,7 @@ describe("CoursesService", () => {
     it("maps the enrollment count", async () => {
       findAvailable.mockResolvedValue([
         makeCourseRecord({
-          enrollmentCount: 12,
+          enrollments: 12,
         }),
       ]);
 
@@ -146,7 +144,7 @@ describe("CoursesService", () => {
     it("maps zero enrollments", async () => {
       findAvailable.mockResolvedValue([
         makeCourseRecord({
-          enrollmentCount: 0,
+          enrollments: 0,
         }),
       ]);
 
@@ -162,10 +160,40 @@ describe("CoursesService", () => {
     it("maps the price", async () => {
       findAvailable.mockResolvedValue([
         makeCourseRecord({
-          price: {
-            amount: 14900,
-            currency: "USD",
-          },
+          prices: [
+            {
+              amount: 14900,
+              currency: "USD",
+            },
+          ],
+        }),
+      ]);
+
+      await expect(service.findAll()).resolves.toEqual({
+        courses: [
+          expect.objectContaining({
+            price: {
+              amount: 14900,
+              currency: "USD",
+            },
+          }),
+        ],
+      });
+    });
+
+    it("uses the first currently effective price returned by the repository", async () => {
+      findAvailable.mockResolvedValue([
+        makeCourseRecord({
+          prices: [
+            {
+              amount: 14900,
+              currency: "USD",
+            },
+            {
+              amount: 19900,
+              currency: "USD",
+            },
+          ],
         }),
       ]);
 
@@ -182,9 +210,7 @@ describe("CoursesService", () => {
     });
 
     it("maps the schedule", async () => {
-      findAvailable.mockResolvedValue([
-        makeCourseRecord(),
-      ]);
+      findAvailable.mockResolvedValue([makeCourseRecord()]);
 
       await expect(service.findAll()).resolves.toEqual({
         courses: [
@@ -200,9 +226,7 @@ describe("CoursesService", () => {
     });
 
     it("returns exactly the public API representation", async () => {
-      findAvailable.mockResolvedValue([
-        makeCourseRecord(),
-      ]);
+      findAvailable.mockResolvedValue([makeCourseRecord()]);
 
       const result = await service.findAll();
 
@@ -229,7 +253,6 @@ describe("CoursesService", () => {
     it("does not expose repository fields in the API response", async () => {
       findAvailable.mockResolvedValue([
         makeCourseRecord({
-          id: "internal-course-id",
           contentUrl: "https://example.com/private-content",
           stripeProductId: "prod_internal",
           stripePriceId: "price_internal",
@@ -248,33 +271,23 @@ describe("CoursesService", () => {
     });
 
     it("propagates repository errors", async () => {
-      findAvailable.mockRejectedValue(
-        new Error("database unavailable"),
-      );
+      findAvailable.mockRejectedValue(new Error("database unavailable"));
 
       await expect(service.findAll()).rejects.toThrow(
         "database unavailable",
       );
     });
 
-    it("propagates unexpected repository errors", async () => {
-      findAvailable.mockRejectedValue(
-        new Error("unexpected repository failure"),
-      );
-
-      await expect(service.findAll()).rejects.toThrow(
-        "unexpected repository failure",
-      );
-    });
-
     it("throws when a returned course has no price", async () => {
       findAvailable.mockResolvedValue([
         makeCourseRecord({
-          price: undefined,
+          prices: [],
         }),
       ]);
 
-      await expect(service.findAll()).rejects.toThrow();
+      await expect(service.findAll()).rejects.toThrow(
+        "Course has no currently effective price: course-1",
+      );
     });
   });
 });

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CoursesRepository } from './courses.repository';
+import { CoursesRepository } from './courses.repository.js';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 describe('CoursesRepository', () => {
   let provider: CoursesRepository;
