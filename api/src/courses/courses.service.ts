@@ -9,7 +9,7 @@ export class CoursesService {
   constructor(
     @Inject(CoursesRepository)
     private readonly coursesRepository: CoursesRepository,
-  ) {}
+  ) { }
 
   async findAll(): Promise<ListCoursesResponse> {
     const courses = await this.coursesRepository.findAvailable(Temporal.Now.instant());
@@ -33,8 +33,16 @@ export class CoursesService {
             currency: price.currency,
           },
           schedule: {
-            startTime: course.startsAt.toString(),
-            endTime: course.endsAt.toString(),
+            startTime: course.startsAt
+              .toZonedDateTimeISO(course.timeZone)
+              .toString({
+                timeZoneName: "never",
+              }),
+            endTime: course.endsAt
+              .toZonedDateTimeISO(course.timeZone)
+              .toString({
+                timeZoneName: "never",
+              }),
             timeZone: course.timeZone,
           },
         };
