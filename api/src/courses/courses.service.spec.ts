@@ -3,13 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CoursesService } from "./courses.service.js";
 import { CoursesRepository } from "./courses.repository/courses.repository.js";
+import { instant } from "src/test/test-helpers.js";
 
 const makeCourseRecord = (overrides = {}) => ({
   id: "course-1",
   title: "React Fundamentals",
   description: "Learn React",
-  startsAt: new Date("2026-10-01T18:00:00.000Z"),
-  endsAt: new Date("2026-10-01T20:00:00.000Z"),
+  startsAt: instant("2026-10-01T18:00:00.000Z"),
+  endsAt: instant("2026-10-01T20:00:00.000Z"),
   timeZone: "America/New_York",
   prices: [
     {
@@ -86,8 +87,8 @@ describe("CoursesService", () => {
         makeCourseRecord({
           id: "course-2",
           title: "Course Two",
-          startsAt: new Date("2026-10-02T18:00:00.000Z"),
-          endsAt: new Date("2026-10-02T20:00:00.000Z"),
+          startsAt: instant("2026-10-02T18:00:00.000Z"),
+          endsAt: instant("2026-10-02T20:00:00.000Z"),
         }),
       ]);
 

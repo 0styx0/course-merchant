@@ -1,10 +1,12 @@
+import { Temporal } from "@js-temporal/polyfill";
 import { db } from "../prisma/db.js";
+
 
 export async function createCourse(input: {
   title: string;
   description: string;
-  startsAt: Date;
-  endsAt: Date;
+  startsAt: Temporal.Instant;
+  endsAt: Temporal.Instant;
   timeZone: string;
 }) {
   return db.orm.public.Course.create({
@@ -17,11 +19,12 @@ export async function createCourse(input: {
   });
 }
 
+
 export async function createCoursePrice(input: {
   courseId: string;
   amount: number;
   currency: string;
-  effectiveAt: Date;
+  effectiveAt: Temporal.Instant;
 }) {
   return db.orm.public.CoursePrice.create({
     courseId: input.courseId,
@@ -31,6 +34,7 @@ export async function createCoursePrice(input: {
   });
 }
 
+
 export async function createCustomer(input: {
   email?: string;
 }) {
@@ -38,6 +42,7 @@ export async function createCustomer(input: {
     email: input.email ?? `test-${crypto.randomUUID()}@example.com`,
   });
 }
+
 
 export async function createPayment(input: {
   customerId: string;
@@ -53,9 +58,10 @@ export async function createPayment(input: {
     amount: input.amount,
     currency: input.currency,
     providerPaymentId: `test-payment-${crypto.randomUUID()}`,
-    createdAt: new Date(),
+    createdAt: Temporal.Now.instant(),
   });
 }
+
 
 export async function createEnrollment(input: {
   courseId: string;

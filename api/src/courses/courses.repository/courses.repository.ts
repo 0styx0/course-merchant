@@ -1,5 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service.js";
+import { Temporal } from "@js-temporal/polyfill";
 
 
 @Injectable()
@@ -9,7 +10,7 @@ export class CoursesRepository {
     private readonly prisma: PrismaService,
   ) {}
 
-  findAvailable(now: Date) {
+  findAvailable(now: Temporal.Instant) {
     return this.prisma.db.orm.public.Course
       .where((course) => course.endsAt.gt(now))
       .where((course) => course.archivedAt.isNull())

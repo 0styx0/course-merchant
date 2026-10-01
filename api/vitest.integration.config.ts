@@ -10,5 +10,6 @@ export default defineConfig({
   test: {
     include: ["src/**/*.integration.spec.ts"],
     fileParallelism: false,
+    setupFiles: ["./src/test/integration.setup.ts"]
   },
 });

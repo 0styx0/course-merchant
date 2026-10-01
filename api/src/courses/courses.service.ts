@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { ListCoursesResponse } from "types.js";
 import { CoursesRepository } from "./courses.repository/courses.repository.js";
+import { Temporal } from "@js-temporal/polyfill";
 
 
 @Injectable()
@@ -11,7 +12,7 @@ export class CoursesService {
   ) {}
 
   async findAll(): Promise<ListCoursesResponse> {
-    const courses = await this.coursesRepository.findAvailable(new Date());
+    const courses = await this.coursesRepository.findAvailable(Temporal.Now.instant());
 
     return {
       courses: courses.map((course) => {
@@ -32,8 +33,8 @@ export class CoursesService {
             currency: price.currency,
           },
           schedule: {
-            startTime: course.startsAt.toISOString(),
-            endTime: course.endsAt.toISOString(),
+            startTime: course.startsAt.toString(),
+            endTime: course.endsAt.toString(),
             timeZone: course.timeZone,
           },
         };
