@@ -1,5 +1,5 @@
 import { Test, type TestingModule } from "@nestjs/testing";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CoursesService } from "./courses.service.js";
 import { PrismaModule } from "../prisma/prisma.module.js";
@@ -12,6 +12,7 @@ import {
 } from "../test/course-fixtures.js";
 import { CoursesRepository } from "./courses.repository/courses.repository.js";
 import { instant } from "../test/test-helpers.js";
+import { Temporal } from "@js-temporal/polyfill";
 
 const NOW = instant("2026-09-29T14:00:00.000Z");
 
@@ -30,6 +31,10 @@ describe("CoursesService integration", () => {
     }).compile();
 
     service = testingModule.get(CoursesService);
+  });
+  
+  beforeEach(() => {
+    vi.spyOn(Temporal.Now, "instant").mockReturnValue(NOW);
   });
 
   afterAll(async () => {
