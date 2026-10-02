@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CoursesService } from "./courses.service.js";
 import { CoursesRepository } from "./courses.repository/courses.repository.js";
-import { instant } from "src/test/test-helpers.js";
+import { instant } from "../test/test-helpers.js";
 
 const makeCourseRecord = (overrides = {}) => ({
   id: "course-1",
@@ -70,8 +70,8 @@ describe("CoursesService", () => {
               currency: "USD",
             },
             schedule: {
-              startTime: "2026-10-01T18:00:00.000Z",
-              endTime: "2026-10-01T20:00:00.000Z",
+              endTime: "2026-10-01T16:00:00-04:00",
+              startTime: "2026-10-01T14:00:00-04:00",
               timeZone: "America/New_York",
             },
           },
@@ -103,8 +103,8 @@ describe("CoursesService", () => {
               currency: "USD",
             },
             schedule: {
-              startTime: "2026-10-01T18:00:00.000Z",
-              endTime: "2026-10-01T20:00:00.000Z",
+              startTime: "2026-10-01T14:00:00-04:00",
+              endTime: "2026-10-01T16:00:00-04:00",
               timeZone: "America/New_York",
             },
           },
@@ -117,8 +117,8 @@ describe("CoursesService", () => {
               currency: "USD",
             },
             schedule: {
-              startTime: "2026-10-02T18:00:00.000Z",
-              endTime: "2026-10-02T20:00:00.000Z",
+              startTime: "2026-10-02T14:00:00-04:00",
+              endTime: "2026-10-02T16:00:00-04:00",
               timeZone: "America/New_York",
             },
           },
@@ -217,8 +217,8 @@ describe("CoursesService", () => {
         courses: [
           expect.objectContaining({
             schedule: {
-              startTime: "2026-10-01T18:00:00.000Z",
-              endTime: "2026-10-01T20:00:00.000Z",
+              endTime: "2026-10-01T16:00:00-04:00",
+              startTime: "2026-10-01T14:00:00-04:00",
               timeZone: "America/New_York",
             },
           }),
@@ -242,8 +242,8 @@ describe("CoursesService", () => {
               currency: "USD",
             },
             schedule: {
-              startTime: "2026-10-01T18:00:00.000Z",
-              endTime: "2026-10-01T20:00:00.000Z",
+              endTime: "2026-10-01T16:00:00-04:00",
+              startTime: "2026-10-01T14:00:00-04:00",
               timeZone: "America/New_York",
             },
           },
