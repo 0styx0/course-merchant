@@ -1,16 +1,32 @@
 import "server-only";
 
+import type { operations } from "./generated";
 import { api } from "./client";
-import { components } from "./generated.js";
+import { Result } from "../types";
 
-export type Course = components["schemas"]["Course"];
+type CoursesResponse =
+  operations["listCourses"]["responses"][200]["content"]["application/json"];
 
-export async function getCourses() {
+export type Course = CoursesResponse["courses"][number];
+
+export type GetCoursesResult = Result<
+  CoursesResponse,
+  string
+>;
+
+export async function getCourses(): Promise<GetCoursesResult> {
+
   const { data, error } = await api.GET("/courses");
 
   if (error || !data) {
-    throw new Error("Failed to fetch courses");
+    return {
+      state: "failure",
+      error: error.message
+    };
   }
 
-  return data;
+  return {
+    state: "success",
+    data,
+  };
 }

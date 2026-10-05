@@ -58,7 +58,7 @@ export const coursesError = http.get(coursesUrl, () => {
     {
       message: "Internal server error",
     },
-    { status: 500 },
+    { status: 500 }
   );
 });
 

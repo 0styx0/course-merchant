@@ -20,8 +20,40 @@ const course: Course = {
 };
 
 describe("CoursesView", () => {
+  it("renders the error state", () => {
+    render(
+      <CoursesView
+        result={{
+          state: "failure",
+          error: "unavailable",
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Courses" }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        "We couldn't load the courses right now. Please try again later.",
+      ),
+    ).toBeInTheDocument();
+
+    expect(screen.queryByRole("article")).not.toBeInTheDocument();
+  });
+
   it("renders the empty state when there are no courses", () => {
-    render(<CoursesView courses={[]} />);
+    render(
+      <CoursesView
+        result={{
+          state: "success",
+          data: {
+            courses: [],
+          },
+        }}
+      />,
+    );
 
     expect(
       screen.getByRole("heading", { name: "Courses" }),
@@ -37,13 +69,18 @@ describe("CoursesView", () => {
   it("renders the available courses", () => {
     render(
       <CoursesView
-        courses={[
-          course,
-          {
-            ...course,
-            name: "Advanced TypeScript",
+        result={{
+          state: "success",
+          data: {
+            courses: [
+              course,
+              {
+                ...course,
+                name: "Advanced TypeScript",
+              },
+            ],
           },
-        ]}
+        }}
       />,
     );
 
