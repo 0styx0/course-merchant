@@ -14,7 +14,7 @@ tags:
     description: Public course operations
 
 paths:
-  courses:
+  /courses:
     get:
       tags:
         - Courses
