@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    courses: {
+    "/courses": {
         parameters: {
             query?: never;
             header?: never;

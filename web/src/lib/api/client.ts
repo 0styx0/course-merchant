@@ -10,5 +10,5 @@ if (!baseUrl) {
 }
 
 export const api = createClient<paths>({
-  baseUrl: `${baseUrl}/v1`,
+  baseUrl: `${baseUrl}/v1/`,
 });
