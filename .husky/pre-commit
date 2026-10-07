@@ -1,0 +1,25 @@
+# Runs unit tests for whichever module changed since the last commit
+
+api_changed=false
+web_changed=false
+
+while IFS= read -r file; do
+  case "$file" in
+    api/*)
+      api_changed=true
+      ;;
+    web/*)
+      web_changed=true
+      ;;
+  esac
+done <<EOF
+$(git diff --cached --name-only --diff-filter=ACMRT)
+EOF
+
+if [ "$api_changed" = true ]; then
+    yarn --cwd api test:unit
+fi
+
+if [ "$web_changed" = true ]; then
+    yarn --cwd web test:unit
+fi
