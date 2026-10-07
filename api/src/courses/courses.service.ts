@@ -1,7 +1,8 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { ListCoursesResponse } from "types.js";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { errorResponse, GetCourseResponse, ListCoursesResponse } from "types.js";
 import { CoursesRepository } from "./courses.repository/courses.repository.js";
 import { Temporal } from "@js-temporal/polyfill";
+import { ErrorCode } from "src/utils/errorCodes.js";
 
 
 @Injectable()
@@ -25,6 +26,7 @@ export class CoursesService {
         }
 
         return {
+          id: course.id,
           name: course.title,
           description: course.description,
           enrollmentCount: course.enrollments,
@@ -47,6 +49,44 @@ export class CoursesService {
           },
         };
       }),
+    };
+  }
+
+  async findById(
+    courseId: string,
+  ): Promise<GetCourseResponse> {
+    const now = Temporal.Now.instant();
+
+    const course = await this.coursesRepository.findById(
+      courseId,
+      now,
+    );
+
+    if (!course) {
+      throw new NotFoundException({
+        message: "Course not found",
+        code: "COURSE_NOT_FOUND",
+      } as errorResponse) ;
+    }
+
+    return {
+      id: course.id,
+      name: course.title,
+      description: course.description,
+      enrollmentCount: course.enrollments,
+      price: {
+        amount: course.prices[0].amount,
+        currency: course.prices[0].currency,
+      },
+      schedule: {
+        startTime: course.startsAt
+          .toZonedDateTimeISO(course.timeZone)
+          .toString(),
+        endTime: course.endsAt
+          .toZonedDateTimeISO(course.timeZone)
+          .toString(),
+        timeZone: course.timeZone,
+      },
     };
   }
 }

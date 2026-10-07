@@ -1,9 +1,9 @@
 import { Test, type TestingModule } from "@nestjs/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CoursesService } from "./courses.service.js";
-import { CoursesRepository } from "./courses.repository/courses.repository.js";
-import { instant } from "../test/test-helpers.js";
+import { CoursesService } from "../../courses.service.js";
+import { CourseRepositoryModel, CoursesRepository } from "../../courses.repository/courses.repository.js";
+import { instant } from "../../../test/test-helpers.js";
 
 const makeCourseRecord = (overrides = {}) => ({
   id: "course-1",
@@ -20,7 +20,7 @@ const makeCourseRecord = (overrides = {}) => ({
   ],
   enrollments: 0,
   ...overrides,
-});
+} satisfies CourseRepositoryModel);
 
 describe("CoursesService", () => {
   let service: CoursesService;

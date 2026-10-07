@@ -1,6 +1,6 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get, Inject, Param } from '@nestjs/common';
+import { GetCourseResponse, ListCoursesResponse } from 'types.js';
 import { CoursesService } from './courses.service.js';
-import { ListCoursesResponse } from 'types.js';
 
 @Controller({
     path: "courses",
@@ -15,5 +15,12 @@ export class CoursesController {
   @Get()
   findAll(): Promise<ListCoursesResponse> {
     return this.coursesService.findAll();
+  }
+  
+  @Get(":courseId")
+  findOne(
+    @Param("courseId") courseId: string,
+  ): Promise<GetCourseResponse> {
+    return this.coursesService.findById(courseId);
   }
 }

@@ -1,17 +1,17 @@
 import { Test, type TestingModule } from "@nestjs/testing";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CoursesService } from "./courses.service.js";
-import { PrismaModule } from "../prisma/prisma.module.js";
+import { CoursesService } from "../courses.service.js";
+import { PrismaModule } from "../../prisma/prisma.module.js";
 import {
   createCourse,
   createCoursePrice,
   createCustomer,
   createEnrollment,
   createPayment,
-} from "../test/course-fixtures.js";
-import { CoursesRepository } from "./courses.repository/courses.repository.js";
-import { instant } from "../test/test-helpers.js";
+} from "../../test/course-fixtures.js";
+import { CoursesRepository } from "../courses.repository/courses.repository.js";
+import { instant } from "../../test/test-helpers.js";
 import { Temporal } from "@js-temporal/polyfill";
 
 const NOW = instant("2026-09-29T14:00:00.000Z");
@@ -73,6 +73,7 @@ describe("CoursesService integration", () => {
           name: "React Fundamentals",
           description: "Learn React",
           enrollmentCount: 0,
+          id: course.id,
           price: {
             amount: 9900,
             currency: "USD",

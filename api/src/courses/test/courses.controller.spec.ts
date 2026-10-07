@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-import { CoursesController } from "./courses.controller.js";
-import { CoursesService } from "./courses.service.js";
+import { CoursesController } from "../courses.controller.js";
+import { CoursesService } from "../courses.service.js";
 
 describe("CoursesController", () => {
   let controller: CoursesController;
