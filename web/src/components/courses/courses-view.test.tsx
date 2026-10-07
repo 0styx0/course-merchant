@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { CoursesView } from "./courses-view";
+import { CoursesLoading, CoursesView } from "./courses-view";
 import type { Course } from "@/lib/api/courses";
 
 const course: Course = {
@@ -20,6 +20,19 @@ const course: Course = {
 };
 
 describe("CoursesView", () => {
+    
+  it("renders the loading state", () => {
+    render(<CoursesLoading />);
+
+    expect(
+      screen.getByRole("heading", { name: "Courses" })
+    ).toBeInTheDocument();
+
+    expect(screen.getByText("Loading courses...")).toBeInTheDocument();
+
+    expect(screen.queryByRole("article")).not.toBeInTheDocument();
+  });
+
   it("renders the error state", () => {
     render(
       <CoursesView
@@ -27,17 +40,17 @@ describe("CoursesView", () => {
           state: "failure",
           error: "unavailable",
         }}
-      />,
+      />
     );
 
     expect(
-      screen.getByRole("heading", { name: "Courses" }),
+      screen.getByRole("heading", { name: "Courses" })
     ).toBeInTheDocument();
 
     expect(
       screen.getByText(
-        "We couldn't load the courses right now. Please try again later.",
-      ),
+        "We couldn't load the courses right now. Please try again later."
+      )
     ).toBeInTheDocument();
 
     expect(screen.queryByRole("article")).not.toBeInTheDocument();
@@ -52,15 +65,15 @@ describe("CoursesView", () => {
             courses: [],
           },
         }}
-      />,
+      />
     );
 
     expect(
-      screen.getByRole("heading", { name: "Courses" }),
+      screen.getByRole("heading", { name: "Courses" })
     ).toBeInTheDocument();
 
     expect(
-      screen.getByText("Check back later for new courses."),
+      screen.getByText("Check back later for new courses.")
     ).toBeInTheDocument();
 
     expect(screen.queryByRole("article")).not.toBeInTheDocument();
@@ -81,7 +94,7 @@ describe("CoursesView", () => {
             ],
           },
         }}
-      />,
+      />
     );
 
     const courses = screen.getByRole("region", { name: "Courses" });

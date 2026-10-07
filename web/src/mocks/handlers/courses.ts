@@ -1,17 +1,15 @@
-import { delay } from "msw/utils/delay";
-import { http, HttpResponse } from "msw/http";
 import type { operations } from "@/lib/api/generated";
-import { SetupServer } from "msw/node";
+import { http, HttpResponse, delay } from "msw";
 
 type CoursesResponse =
   operations["listCourses"]["responses"][200]["content"]["application/json"];
 
 const apiBaseUrl =
-  process.env.API_BASE_URL ?? "http://localhost:3000";
+  process.env.API_BASE_URL ?? "http://localhost:3001";
 
-const coursesUrl = `${apiBaseUrl}/v1/courses`;
+export const coursesUrl = `${apiBaseUrl}/v1/courses`;
 
-const coursesResponse = {
+export const coursesResponse = {
   courses: [
     {
       name: "React Fundamentals",
@@ -42,7 +40,7 @@ const coursesResponse = {
       },
     },
   ],
-} satisfies CoursesResponse;
+} as const satisfies CoursesResponse;
 
 export const coursesSuccess = http.get(coursesUrl, () => {
   return HttpResponse.json(coursesResponse);
@@ -76,23 +74,3 @@ export const coursesHandlers = {
   error: coursesError,
   slow: coursesSlow,
 };
-
-// allow changing mock responses via dedicated endpoint.
-//  used for e2e, where browser can't directly communicate with msw
-export const coursesMockControl = (server: SetupServer) => http.get(
-  `${apiBaseUrl}/__mocks__/courses`,
-  ({ request }) => {
-    const state = new URL(request.url).searchParams.get("state");
-
-    if (state === null || !Object.hasOwn(coursesHandlers, state)) {
-      return HttpResponse.json(
-        { message: "Invalid mock state" },
-        { status: 400 },
-      );
-    }
-
-    server.use(coursesHandlers[state as keyof typeof coursesHandlers]);
-
-    return HttpResponse.json({ state });
-  },
-);

@@ -1,4 +1,6 @@
 import Courses from "@/components/courses/courses";
+import { CoursesLoading } from "@/components/courses/courses-view";
+import { Suspense } from "react";
 
 export default function Home() {
   return (
@@ -11,7 +13,9 @@ export default function Home() {
       </header>
 
       <div className="mt-12">
-        <Courses />
+        <Suspense fallback={<CoursesLoading />}>
+          <Courses />
+        </Suspense>
       </div>
     </main>
   );

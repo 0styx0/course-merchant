@@ -34,6 +34,14 @@ function CoursesError() {
   );
 }
 
+export function CoursesLoading() {
+  return (
+    <CoursesSection>
+      <p className="mt-4 text-gray-600">Loading courses...</p>
+    </CoursesSection>
+  );
+}
+
 export function CoursesView({ result }: CoursesViewProps) {
   if (result.state === "failure") {
     return (
