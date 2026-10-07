@@ -9,6 +9,9 @@ servers:
   - url: http://localhost:3000/v1
     description: Local development server
 
+# These operations are public. Declared explicitly so the intent is visible.
+security: []
+
 tags:
   - name: Courses
     description: Public course operations
@@ -22,7 +25,8 @@ paths:
       summary: List available courses
       description: >
         Returns courses that have not ended, ordered by start time ascending.
-        Courses that have been archived are not returned.
+        Courses that have been archived or do not have an effective price are
+        not returned.
       responses:
         "200":
           description: Successfully retrieved available courses.
@@ -31,13 +35,70 @@ paths:
               schema:
                 $ref: "#/components/schemas/ListCoursesResponse"
         "500":
-          description: Internal server error.
+          $ref: "#/components/responses/InternalServerError"
+
+  /courses/{courseId}:
+    get:
+      tags:
+        - Courses
+      operationId: getCourse
+      summary: Get a course
+      description: >
+        Returns a course that has not been archived and has an effective price.
+        Unlike `listCourses`, ended courses are still returned. An unknown or
+        malformed identifier results in a 404.
+      parameters:
+        - $ref: "#/components/parameters/CourseId"
+      responses:
+        "200":
+          description: Successfully retrieved the course.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/GetCourseResponse"
+        "404":
+          $ref: "#/components/responses/CourseNotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
 components:
+  parameters:
+    CourseId:
+      name: courseId
+      in: path
+      required: true
+      description: Public identifier of the course.
+      schema:
+        type: string
+        minLength: 1
+        examples:
+          - crs_01HZX3
+
+  responses:
+    CourseNotFound:
+      description: Course not found, archived, or does not have an effective price.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            notFound:
+              value:
+                message: Course not found
+                code: COURSE_NOT_FOUND
+
+    InternalServerError:
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            internalServerError:
+              value:
+                message: Internal server error
+                code: INTERNAL_SERVER_ERROR
+
   schemas:
     ListCoursesResponse:
       type: object
@@ -53,30 +114,41 @@ components:
     Course:
       type: object
       required:
+        - id
         - name
         - description
         - enrollmentCount
         - price
         - schedule
       properties:
+        id:
+          type: string
+          minLength: 1
+          description: Public identifier of the course.
+          examples:
+            - crs_01HZX3
+
         name:
           type: string
           description: Public name of the course.
           minLength: 1
-          example: React Fundamentals
+          examples:
+            - React Fundamentals
 
         description:
           type: string
           description: Public description of the course.
           minLength: 1
-          example: Learn the fundamentals of React.
+          examples:
+            - Learn the fundamentals of React.
 
         enrollmentCount:
           type: integer
           format: int32
           minimum: 0
           description: Number of users currently enrolled in the course.
-          example: 12
+          examples:
+            - 12
 
         price:
           $ref: "#/components/schemas/Price"
@@ -85,6 +157,9 @@ components:
           $ref: "#/components/schemas/CourseSchedule"
 
       additionalProperties: false
+
+    GetCourseResponse:
+      $ref: "#/components/schemas/Course"
 
     Price:
       type: object
@@ -96,16 +171,19 @@ components:
           type: integer
           format: int64
           minimum: 0
+          maximum: 9007199254740991
           description: >
             Price in the smallest unit of the currency. For USD, 9900
             represents $99.00.
-          example: 9900
+          examples:
+            - 9900
 
         currency:
           type: string
           description: ISO 4217 currency code.
           pattern: "^[A-Z]{3}$"
-          example: USD
+          examples:
+            - USD
 
       additionalProperties: false
 
@@ -121,37 +199,44 @@ components:
           format: date-time
           description: >
             Course start time as an RFC 3339 date-time including its UTC offset.
-          example: "2026-10-01T18:00:00-04:00"
+          examples:
+            - "2026-10-01T18:00:00-04:00"
 
         endTime:
           type: string
           format: date-time
           description: >
             Course end time as an RFC 3339 date-time including its UTC offset.
-          example: "2026-10-01T20:00:00-04:00"
+            Always after `startTime`.
+          examples:
+            - "2026-10-01T20:00:00-04:00"
 
         timeZone:
           type: string
-          description: IANA time zone identifier.
-          example: America/New_York
+          description: >
+            IANA time zone identifier the course is held in. Use this, rather
+            than the UTC offset in `startTime` and `endTime`, to display local
+            times correctly across daylight saving changes.
+          examples:
+            - America/New_York
 
       additionalProperties: false
 
     ErrorResponse:
       type: object
       required:
-        - statusCode
         - message
+        - code
       properties:
-        statusCode:
-          type: integer
-          format: int32
-          description: HTTP status code.
-          example: 500
-
         message:
           type: string
           description: Human-readable description of the error.
-          example: Internal server error
+
+        code:
+          type: string
+          enum:
+            - COURSE_NOT_FOUND
+            - INTERNAL_SERVER_ERROR
+          description: Stable machine-readable error code. Clients should branch on this rather than on message.
 
       additionalProperties: false
