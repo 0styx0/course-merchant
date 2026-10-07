@@ -1,3 +1,5 @@
+#!/usr/bin/env sh
+
 # Runs unit tests for whichever module changed since the last commit
 
 api_changed=false
