@@ -63,6 +63,7 @@ describe("CoursesService", () => {
         courses: [
           {
             name: "React Fundamentals",
+            id: "course-1",
             description: "Learn React",
             enrollmentCount: 0,
             price: {
@@ -96,6 +97,7 @@ describe("CoursesService", () => {
         courses: [
           {
             name: "Course One",
+            id: "course-1",
             description: "Learn React",
             enrollmentCount: 0,
             price: {
@@ -110,6 +112,7 @@ describe("CoursesService", () => {
           },
           {
             name: "Course Two",
+            id: "course-2",
             description: "Learn React",
             enrollmentCount: 0,
             price: {
@@ -236,6 +239,7 @@ describe("CoursesService", () => {
           {
             name: "React Fundamentals",
             description: "Learn React",
+            id: "course-1",
             enrollmentCount: 0,
             price: {
               amount: 9900,
@@ -264,7 +268,6 @@ describe("CoursesService", () => {
       const result = await service.findAll();
       const course = result.courses[0];
 
-      expect(course).not.toHaveProperty("id");
       expect(course).not.toHaveProperty("contentUrl");
       expect(course).not.toHaveProperty("stripeProductId");
       expect(course).not.toHaveProperty("stripePriceId");
