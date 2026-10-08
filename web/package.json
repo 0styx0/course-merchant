@@ -11,7 +11,7 @@
     "test:unit:watch": "vitest",
     "test:e2e": "yarn playwright test",
     "lint": "eslint",
-    "generate:api": "openapi-typescript ../api/openapi/openapi-v1.yaml -o src/lib/api/generated.ts"
+    "generate:api-types": "openapi-typescript ../api/openapi/openapi-v1.yaml -o src/lib/api/generated.ts"
   },
   "dependencies": {
     "next": "16.3.8",
