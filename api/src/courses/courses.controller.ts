@@ -1,6 +1,8 @@
 import { Controller, Get, Inject, Param, ParseUUIDPipe } from '@nestjs/common';
 import { GetCourseResponse, ListCoursesResponse } from 'types.js';
 import { CoursesService } from './courses.service.js';
+import { ApiException } from '../common/errors/api.exception.js';
+import { ErrorCode } from '../common/errors/error-codes.js';
 
 @Controller({
     path: "courses",
@@ -19,7 +21,12 @@ export class CoursesController {
   
   @Get(":courseId")
   findById(
-    @Param("courseId", ParseUUIDPipe) courseId: string,
+    @Param(
+      "courseId",
+      new ParseUUIDPipe({
+        exceptionFactory: () => new ApiException(ErrorCode.INVALID_COURSE_ID),
+      }),
+    ) courseId: string
   ): Promise<GetCourseResponse> {
     return this.coursesService.findById(courseId);
   }
