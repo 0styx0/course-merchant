@@ -244,7 +244,7 @@ describe("CoursesService integration", () => {
             ).rejects.toMatchObject({
                 status: 404,
                 response: {
-                    message: "Course not found",
+                    title: "Course not found",
                     code: "COURSE_NOT_FOUND",
                 },
             });
@@ -336,7 +336,7 @@ describe("CoursesService integration", () => {
         ).rejects.toMatchObject({
           status: 404,
           response: {
-            message: "Course not found",
+            title: "Course not found",
             code: "COURSE_NOT_FOUND",
           },
         });
