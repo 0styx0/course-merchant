@@ -1,18 +1,13 @@
 import { Test, type TestingModule } from "@nestjs/testing";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CoursesService } from "../courses.service.js";
-import { PrismaModule } from "../../prisma/prisma.module.js";
-import {
-  createCourse,
-  createCoursePrice,
-  createCustomer,
-  createEnrollment,
-  createPayment,
-} from "../../test/course-fixtures.js";
-import { CoursesRepository } from "../courses.repository/courses.repository.js";
-import { instant } from "../../test/test-helpers.js";
 import { Temporal } from "@js-temporal/polyfill";
+
+import { CoursesRepository } from "../../courses.repository/courses.repository.js";
+import { createCourse, createCoursePrice, createCustomer, createPayment, createEnrollment } from "../../../test/course-fixtures.js";
+import { CoursesService } from "../../courses.service.js";
+import { instant } from "../../../test/test-helpers.js";
+import { PrismaModule } from "../../../prisma/prisma.module.js";
 
 const NOW = instant("2026-09-29T14:00:00.000Z");
 

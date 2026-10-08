@@ -2,8 +2,7 @@ import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { errorResponse, GetCourseResponse, ListCoursesResponse } from "types.js";
 import { CoursesRepository } from "./courses.repository/courses.repository.js";
 import { Temporal } from "@js-temporal/polyfill";
-import { ErrorCode } from "src/utils/errorCodes.js";
-
+import { formatDate } from "../utils/formatters.js";
 
 @Injectable()
 export class CoursesService {
@@ -13,7 +12,15 @@ export class CoursesService {
   ) { }
 
   async findAll(): Promise<ListCoursesResponse> {
+    // TODO: fix
     const courses = await this.coursesRepository.findAvailable(Temporal.Now.instant());
+
+    // if (!courses) {
+    //   throw new NotFoundException({
+    //     message: "Course not found",
+    //     code: "COURSE_NOT_FOUND",
+    //   } as errorResponse) ;
+    // }
 
     return {
       courses: courses.map((course) => {
@@ -35,16 +42,8 @@ export class CoursesService {
             currency: price.currency,
           },
           schedule: {
-            startTime: course.startsAt
-              .toZonedDateTimeISO(course.timeZone)
-              .toString({
-                timeZoneName: "never",
-              }),
-            endTime: course.endsAt
-              .toZonedDateTimeISO(course.timeZone)
-              .toString({
-                timeZoneName: "never",
-              }),
+            startTime: formatDate(course.startsAt, course.timeZone),
+            endTime: formatDate(course.endsAt, course.timeZone),
             timeZone: course.timeZone,
           },
         };
@@ -79,12 +78,8 @@ export class CoursesService {
         currency: course.prices[0].currency,
       },
       schedule: {
-        startTime: course.startsAt
-          .toZonedDateTimeISO(course.timeZone)
-          .toString(),
-        endTime: course.endsAt
-          .toZonedDateTimeISO(course.timeZone)
-          .toString(),
+        startTime: formatDate(course.startsAt, course.timeZone),
+        endTime: formatDate(course.endsAt, course.timeZone),
         timeZone: course.timeZone,
       },
     };

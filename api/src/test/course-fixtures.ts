@@ -1,6 +1,11 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { db } from "../prisma/db.js";
+import { DefaultModelRow } from "@prisma/orm-postgres/orm-client";
+import { Contract } from "migrations/snapshots/78d34f4f9b99ae69d09be86753e470bca1dce098cff49a9078aa511fd6b466fd/contract.js";
+import { instant } from "./test-helpers.js";
 
+
+type Course = DefaultModelRow<Contract, "Course", "public">
 
 export async function createCourse(input: {
   title: string;
@@ -8,7 +13,7 @@ export async function createCourse(input: {
   startsAt: Temporal.Instant;
   endsAt: Temporal.Instant;
   timeZone: string;
-}) {
+}): Promise<Course> {
   return db.orm.public.Course.create({
     title: input.title,
     description: input.description,
@@ -73,4 +78,10 @@ export async function createEnrollment(input: {
     customerId: input.customerId,
     paymentId: input.paymentId,
   });
+}
+
+export function archiveCourse(courseId: string, archiveAt: Temporal.Instant) {
+  return db.orm.public.Course
+    .where({ id: courseId })
+    .update({ archivedAt: archiveAt })
 }

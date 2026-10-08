@@ -58,9 +58,9 @@ describe("CoursesService", () => {
                 },
                 schedule: {
                     startTime:
-                        "2026-10-01T14:00:00-04:00[America/New_York]",
+                        "2026-10-01T14:00:00-04:00",
                     endTime:
-                        "2026-10-01T16:00:00-04:00[America/New_York]",
+                        "2026-10-01T16:00:00-04:00",
                     timeZone: "America/New_York",
                 },
             });
@@ -86,9 +86,9 @@ describe("CoursesService", () => {
                 },
                 schedule: {
                     startTime:
-                        "2026-09-29T09:00:00-04:00[America/New_York]",
+                        "2026-09-29T09:00:00-04:00",
                     endTime:
-                        "2026-09-29T11:00:00-04:00[America/New_York]",
+                        "2026-09-29T11:00:00-04:00",
                     timeZone: "America/New_York",
                 },
             });
@@ -114,9 +114,9 @@ describe("CoursesService", () => {
                 },
                 schedule: {
                     startTime:
-                        "2026-09-28T09:00:00-04:00[America/New_York]",
+                        "2026-09-28T09:00:00-04:00",
                     endTime:
-                        "2026-09-28T11:00:00-04:00[America/New_York]",
+                        "2026-09-28T11:00:00-04:00",
                     timeZone: "America/New_York",
                 },
             });
@@ -201,9 +201,9 @@ describe("CoursesService", () => {
 
             expect(result.schedule).toEqual({
                 startTime:
-                    "2026-10-01T14:00:00-04:00[America/New_York]",
+                    "2026-10-01T14:00:00-04:00",
                 endTime:
-                    "2026-10-01T16:00:00-04:00[America/New_York]",
+                    "2026-10-01T16:00:00-04:00",
                 timeZone: "America/New_York",
             });
         });
