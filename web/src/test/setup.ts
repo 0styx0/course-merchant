@@ -6,7 +6,7 @@ import { cleanup } from "@testing-library/react";
 
 beforeAll(() => {
   server.listen({
-    onUnhandledFrame: "error",
+    onUnhandledRequest: "error"
   });
 })
 afterEach(() => {

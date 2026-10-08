@@ -1,4 +1,5 @@
 import type { operations } from "@/lib/api/generated";
+import { randomUUID } from "crypto";
 import { http, HttpResponse, delay } from "msw";
 
 type CoursesResponse =
@@ -12,6 +13,7 @@ export const coursesUrl = `${apiBaseUrl}/v1/courses`;
 export const coursesResponse = {
   courses: [
     {
+      id: randomUUID(),
       name: "React Fundamentals",
       description: "Learn React",
       enrollmentCount: 12,
@@ -26,6 +28,7 @@ export const coursesResponse = {
       },
     },
     {
+      id: randomUUID(),
       name: "Advanced TypeScript",
       description: "Build robust applications with TypeScript",
       enrollmentCount: 37,

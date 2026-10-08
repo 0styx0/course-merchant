@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 
 import { CoursesLoading, CoursesView } from "./courses-view";
 import type { Course } from "@/lib/api/courses";
+import { randomUUID } from "crypto";
 
 const course: Course = {
+  id: randomUUID(),
   name: "React Fundamentals",
   description: "Learn React",
   enrollmentCount: 12,

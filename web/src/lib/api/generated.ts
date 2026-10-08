@@ -116,10 +116,19 @@ export interface components {
              * @description Stable machine-readable error code. Clients should branch on this rather than on message.
              * @enum {string}
              */
-            code: "COURSE_NOT_FOUND" | "INTERNAL_SERVER_ERROR";
+            code: "COURSE_NOT_FOUND" | "INVALID_COURSE_ID" | "INTERNAL_SERVER_ERROR";
         };
     };
     responses: {
+        /** @description The course identifier is malformed. */
+        InvalidCourseId: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
         /** @description Course not found, archived, or does not have an effective price. */
         CourseNotFound: {
             headers: {
@@ -167,6 +176,7 @@ export interface operations {
                     "application/json": components["schemas"]["ListCoursesResponse"];
                 };
             };
+            400: components["responses"]["InvalidCourseId"];
             500: components["responses"]["InternalServerError"];
         };
     };
