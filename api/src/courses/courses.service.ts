@@ -12,15 +12,8 @@ export class CoursesService {
   ) { }
 
   async findAll(): Promise<ListCoursesResponse> {
-    // TODO: fix
-    const courses = await this.coursesRepository.findAvailable(Temporal.Now.instant());
 
-    // if (!courses) {
-    //   throw new NotFoundException({
-    //     message: "Course not found",
-    //     code: "COURSE_NOT_FOUND",
-    //   } as errorResponse) ;
-    // }
+    const courses = await this.coursesRepository.findAvailable(Temporal.Now.instant());
 
     return {
       courses: courses.map((course) => {

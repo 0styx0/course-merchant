@@ -23,8 +23,8 @@ export class CoursesRepository {
     private readonly prisma: PrismaService,
   ) {}
 
-  findAvailable(now: Temporal.Instant): AsyncIterable<CourseRepositoryModel | null> {
-    return this.prisma.db.orm.public.Course
+  async findAvailable(now: Temporal.Instant): Promise<CourseRepositoryModel[]> {
+    return await this.prisma.db.orm.public.Course
       .where((course) => course.endsAt.gt(now))
       .where((course) => course.archivedAt.isNull())
       .where((course) =>
