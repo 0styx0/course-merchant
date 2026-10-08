@@ -21,7 +21,7 @@ export async function getCourses(): Promise<GetCoursesResult> {
   if (error || !data) {
     return {
       state: "failure",
-      error: error.message
+      error: error.code
     };
   }
 

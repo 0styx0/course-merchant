@@ -25,8 +25,8 @@ paths:
       summary: List available courses
       description: >
         Returns courses that have not ended, ordered by start time ascending.
-        Courses that have been archived or do not have an effective price are
-        not returned.
+        Courses that have been archived or do not have a currently active price
+        are not returned.
       responses:
         "200":
           description: Successfully retrieved available courses.
@@ -44,9 +44,8 @@ paths:
       operationId: getCourse
       summary: Get a course
       description: >
-        Returns a course that has not been archived and has an effective price.
-        Unlike `listCourses`, ended courses are still returned. An unknown or
-        malformed identifier results in a 404.
+        Returns a course that has not been archived and has a currently active
+        price. Unlike `listCourses`, ended courses are still returned.
       parameters:
         - $ref: "#/components/parameters/CourseId"
       responses:
@@ -55,7 +54,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetCourseResponse"
+                $ref: "#/components/schemas/Course"
+        "400":
+          $ref: "#/components/responses/InvalidCourseId"
         "404":
           $ref: "#/components/responses/CourseNotFound"
         "500":
@@ -69,37 +70,55 @@ components:
       required: true
       description: Public identifier of the course.
       schema:
-        type: string
-        minLength: 1
-        examples:
-          - crs_01HZX3
+        $ref: "#/components/schemas/CourseId"
 
   responses:
-    CourseNotFound:
-      description: Course not found, archived, or does not have an effective price.
+    InvalidCourseId:
+      description: The course identifier is malformed.
       content:
-        application/json:
+        application/problem+json:
           schema:
-            $ref: "#/components/schemas/ErrorResponse"
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            invalidCourseId:
+              value:
+                title: Invalid course ID
+                detail: "'not-a-uuid' is not a valid course identifier."
+                code: INVALID_COURSE_ID
+
+    CourseNotFound:
+      description: Course not found, archived, or does not have a currently active price.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
           examples:
             notFound:
               value:
-                message: Course not found
+                title: Course not found
+                detail: No course exists with ID 123e4567-e89b-12d3-a456-426614174000.
                 code: COURSE_NOT_FOUND
 
     InternalServerError:
       description: Internal server error.
       content:
-        application/json:
+        application/problem+json:
           schema:
-            $ref: "#/components/schemas/ErrorResponse"
+            $ref: "#/components/schemas/ProblemDetails"
           examples:
             internalServerError:
               value:
-                message: Internal server error
+                title: Internal server error
                 code: INTERNAL_SERVER_ERROR
 
   schemas:
+    CourseId:
+      type: string
+      format: uuid
+      description: Public identifier of the course.
+      examples:
+        - 123e4567-e89b-12d3-a456-426614174000
+
     ListCoursesResponse:
       type: object
       required:
@@ -109,7 +128,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Course"
-      additionalProperties: false
 
     Course:
       type: object
@@ -122,26 +140,19 @@ components:
         - schedule
       properties:
         id:
-          type: string
-          minLength: 1
-          description: Public identifier of the course.
-          examples:
-            - crs_01HZX3
-
+          $ref: "#/components/schemas/CourseId"
         name:
           type: string
           description: Public name of the course.
           minLength: 1
           examples:
             - React Fundamentals
-
         description:
           type: string
           description: Public description of the course.
           minLength: 1
           examples:
             - Learn the fundamentals of React.
-
         enrollmentCount:
           type: integer
           format: int32
@@ -149,17 +160,10 @@ components:
           description: Number of users currently enrolled in the course.
           examples:
             - 12
-
         price:
           $ref: "#/components/schemas/Price"
-
         schedule:
           $ref: "#/components/schemas/CourseSchedule"
-
-      additionalProperties: false
-
-    GetCourseResponse:
-      $ref: "#/components/schemas/Course"
 
     Price:
       type: object
@@ -177,15 +181,12 @@ components:
             represents $99.00.
           examples:
             - 9900
-
         currency:
           type: string
           description: ISO 4217 currency code.
           pattern: "^[A-Z]{3}$"
           examples:
             - USD
-
-      additionalProperties: false
 
     CourseSchedule:
       type: object
@@ -201,7 +202,6 @@ components:
             Course start time as an RFC 3339 date-time including its UTC offset.
           examples:
             - "2026-10-01T18:00:00-04:00"
-
         endTime:
           type: string
           format: date-time
@@ -210,7 +210,6 @@ components:
             Always after `startTime`.
           examples:
             - "2026-10-01T20:00:00-04:00"
-
         timeZone:
           type: string
           description: >
@@ -220,23 +219,33 @@ components:
           examples:
             - America/New_York
 
-      additionalProperties: false
-
-    ErrorResponse:
+    # RFC 9457 Problem Details, using only `title` and `detail` from the
+    # standard members plus a `code` extension member. `type` is omitted
+    # (defaults to about:blank); the HTTP status code is the source of truth
+    # for status. Extension members are allowed, so no additionalProperties
+    # restriction.
+    ProblemDetails:
       type: object
+      description: >
+        Error response in the RFC 9457 Problem Details format. Clients should
+        branch on `code`, not on `title` or `detail`. New codes may be added
+        in future versions; clients should treat an unrecognized `code` as a
+        generic error for the response's HTTP status.
       required:
-        - message
+        - title
+        - detail
         - code
       properties:
-        message:
+        title:
           type: string
-          description: Human-readable description of the error.
-
+          description: Short, human-readable summary of the problem.
+          examples:
+            - Course not found
+        detail:
+          type: string
+          description: Human-readable explanation specific to this occurrence.
         code:
           type: string
-          enum:
+          description: Stable machine-readable error code.
+          examples:
             - COURSE_NOT_FOUND
-            - INTERNAL_SERVER_ERROR
-          description: Stable machine-readable error code. Clients should branch on this rather than on message.
-
-      additionalProperties: false

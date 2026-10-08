@@ -56,7 +56,8 @@ export class CoursesService {
 
     if (!course) {
       throw new NotFoundException({
-        message: "Course not found",
+        title: 'Course not found',
+        detail: "Course not found",
         code: "COURSE_NOT_FOUND",
       } as errorResponse) ;
     }

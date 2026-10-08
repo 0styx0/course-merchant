@@ -6,6 +6,6 @@ export type CourseResponse =
 export type ListCoursesResponse =
   components["schemas"]["ListCoursesResponse"];
 
-export type GetCourseResponse = components["schemas"]["GetCourseResponse"]
+export type GetCourseResponse = components["schemas"]["Course"]
 
-export type errorResponse = components["schemas"]["ErrorResponse"]
+export type errorResponse = components["schemas"]["ProblemDetails"]

@@ -13,7 +13,7 @@ export interface paths {
         };
         /**
          * List available courses
-         * @description Returns courses that have not ended, ordered by start time ascending. Courses that have been archived or do not have an effective price are not returned.
+         * @description Returns courses that have not ended, ordered by start time ascending. Courses that have been archived or do not have a currently active price are not returned.
          */
         get: operations["listCourses"];
         put?: never;
@@ -33,7 +33,7 @@ export interface paths {
         };
         /**
          * Get a course
-         * @description Returns a course that has not been archived and has an effective price. Unlike `listCourses`, ended courses are still returned. An unknown or malformed identifier results in a 404.
+         * @description Returns a course that has not been archived and has a currently active price. Unlike `listCourses`, ended courses are still returned.
          */
         get: operations["getCourse"];
         put?: never;
@@ -48,15 +48,17 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * Format: uuid
+         * @description Public identifier of the course.
+         * @example 123e4567-e89b-12d3-a456-426614174000
+         */
+        CourseId: string;
         ListCoursesResponse: {
             courses: components["schemas"]["Course"][];
         };
         Course: {
-            /**
-             * @description Public identifier of the course.
-             * @example crs_01HZX3
-             */
-            id: string;
+            id: components["schemas"]["CourseId"];
             /**
              * @description Public name of the course.
              * @example React Fundamentals
@@ -76,7 +78,6 @@ export interface components {
             price: components["schemas"]["Price"];
             schedule: components["schemas"]["CourseSchedule"];
         };
-        GetCourseResponse: components["schemas"]["Course"];
         Price: {
             /**
              * Format: int64
@@ -109,14 +110,20 @@ export interface components {
              */
             timeZone: string;
         };
-        ErrorResponse: {
-            /** @description Human-readable description of the error. */
-            message: string;
+        /** @description Error response in the RFC 9457 Problem Details format. Clients should branch on `code`, not on `title` or `detail`. New codes may be added in future versions; clients should treat an unrecognized `code` as a generic error for the response's HTTP status. */
+        ProblemDetails: {
             /**
-             * @description Stable machine-readable error code. Clients should branch on this rather than on message.
-             * @enum {string}
+             * @description Short, human-readable summary of the problem.
+             * @example Course not found
              */
-            code: "COURSE_NOT_FOUND" | "INVALID_COURSE_ID" | "INTERNAL_SERVER_ERROR";
+            title: string;
+            /** @description Human-readable explanation specific to this occurrence. */
+            detail: string;
+            /**
+             * @description Stable machine-readable error code.
+             * @example COURSE_NOT_FOUND
+             */
+            code: string;
         };
     };
     responses: {
@@ -126,16 +133,16 @@ export interface components {
                 [name: string]: unknown;
             };
             content: {
-                "application/json": components["schemas"]["ErrorResponse"];
+                "application/problem+json": components["schemas"]["ProblemDetails"];
             };
         };
-        /** @description Course not found, archived, or does not have an effective price. */
+        /** @description Course not found, archived, or does not have a currently active price. */
         CourseNotFound: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                "application/json": components["schemas"]["ErrorResponse"];
+                "application/problem+json": components["schemas"]["ProblemDetails"];
             };
         };
         /** @description Internal server error. */
@@ -144,13 +151,13 @@ export interface components {
                 [name: string]: unknown;
             };
             content: {
-                "application/json": components["schemas"]["ErrorResponse"];
+                "application/problem+json": components["schemas"]["ProblemDetails"];
             };
         };
     };
     parameters: {
         /** @description Public identifier of the course. */
-        CourseId: string;
+        CourseId: components["schemas"]["CourseId"];
     };
     requestBodies: never;
     headers: never;
@@ -176,7 +183,6 @@ export interface operations {
                     "application/json": components["schemas"]["ListCoursesResponse"];
                 };
             };
-            400: components["responses"]["InvalidCourseId"];
             500: components["responses"]["InternalServerError"];
         };
     };
@@ -198,9 +204,10 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GetCourseResponse"];
+                    "application/json": components["schemas"]["Course"];
                 };
             };
+            400: components["responses"]["InvalidCourseId"];
             404: components["responses"]["CourseNotFound"];
             500: components["responses"]["InternalServerError"];
         };
