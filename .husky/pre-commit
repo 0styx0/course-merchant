@@ -1,5 +1,11 @@
 #!/usr/bin/env sh
 
+# run type checking for both modules
+yarn --cwd api generate:api-types
+yarn --cwd web generate:api-types
+yarn --cwd api tsc --noEmit
+yarn --cwd web tsc --noEmit
+
 # Runs unit tests for whichever module changed since the last commit
 
 api_changed=false
