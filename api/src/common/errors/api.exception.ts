@@ -2,7 +2,6 @@ import { HttpException } from "@nestjs/common";
 import { ErrorCode, ERROR_DEFINITIONS } from "./error-codes.js";
 
 export interface ApiExceptionOptions {
-    /** Occurrence-specific explanation. Omitted from the response if not set. */
     detail?: string;
   }
   
