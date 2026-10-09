@@ -1,8 +1,6 @@
 import { Controller, Get, Inject, Param } from '@nestjs/common';
 import { GetCourseResponse, ListCoursesResponse } from 'types.js';
 import { CoursesService } from './courses.service.js';
-import { ApiException } from '../common/errors/api.exception.js';
-import { ErrorCode } from '../common/errors/error-codes.js';
 import { ParseCourseIdPipe } from './pipes/parse-course-id.pipe.js';
 
 @Controller({
