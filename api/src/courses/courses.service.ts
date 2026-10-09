@@ -1,8 +1,10 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { errorResponse, GetCourseResponse, ListCoursesResponse } from "types.js";
-import { CoursesRepository } from "./courses.repository/courses.repository.js";
+import { Inject, Injectable } from "@nestjs/common";
+import { GetCourseResponse, ListCoursesResponse } from "types.js";
+import { CourseRepositoryModel, CoursesRepository } from "./courses.repository/courses.repository.js";
 import { Temporal } from "@js-temporal/polyfill";
 import { formatDate } from "../utils/formatters.js";
+import { ApiException } from "../common/errors/api.exception.js";
+import { ErrorCodeCourseGet } from "../common/errors/error-codes.js";
 
 @Injectable()
 export class CoursesService {
@@ -17,29 +19,10 @@ export class CoursesService {
 
     return {
       courses: courses.map((course) => {
-        const [price] = course.prices;
 
-        if (!price) {
-          throw new Error(
-            `Course has no currently effective price: ${course.id}`,
-          );
-        }
+        validatePublicCourse(course)
 
-        return {
-          id: course.id,
-          name: course.title,
-          description: course.description,
-          enrollmentCount: course.enrollments,
-          price: {
-            amount: price.amount,
-            currency: price.currency,
-          },
-          schedule: {
-            startTime: formatDate(course.startsAt, course.timeZone),
-            endTime: formatDate(course.endsAt, course.timeZone),
-            timeZone: course.timeZone,
-          },
-        };
+        return formatCourseResponse(course)
       }),
     };
   }
@@ -54,28 +37,37 @@ export class CoursesService {
       now,
     );
 
-    if (!course) {
-      throw new NotFoundException({
-        title: 'Course not found',
-        detail: "Course not found",
-        code: "COURSE_NOT_FOUND",
-      } as errorResponse) ;
-    }
+    validatePublicCourse(course)
 
-    return {
-      id: course.id,
-      name: course.title,
-      description: course.description,
-      enrollmentCount: course.enrollments,
-      price: {
-        amount: course.prices[0].amount,
-        currency: course.prices[0].currency,
-      },
-      schedule: {
-        startTime: formatDate(course.startsAt, course.timeZone),
-        endTime: formatDate(course.endsAt, course.timeZone),
-        timeZone: course.timeZone,
-      },
-    };
+    return formatCourseResponse(course)
+  }
+}
+
+function formatCourseResponse(course: CourseRepositoryModel): GetCourseResponse {
+
+  const [price] = course.prices
+  return {
+    id: course.id,
+    name: course.title,
+    description: course.description,
+    enrollmentCount: course.enrollments,
+    price: {
+      amount: price.amount,
+      currency: price.currency,
+    },
+    schedule: {
+      startTime: formatDate(course.startsAt, course.timeZone),
+      endTime: formatDate(course.endsAt, course.timeZone),
+      timeZone: course.timeZone,
+    },
+  };
+}
+
+function validatePublicCourse(course: CourseRepositoryModel | null): asserts course is CourseRepositoryModel {
+
+  if (!course || !course.prices.length) {
+    throw new ApiException(
+      ErrorCodeCourseGet.COURSE_NOT_FOUND,
+    );
   }
 }

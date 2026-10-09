@@ -282,16 +282,22 @@ describe("CoursesService", () => {
       );
     });
 
-    it("throws when a returned course has no price", async () => {
+    it("not found response when a returned course has no price", async () => {
       findAvailable.mockResolvedValue([
         makeCourseRecord({
           prices: [],
         }),
       ]);
 
-      await expect(service.findAll()).rejects.toThrow(
-        "Course has no currently effective price: course-1",
-      );
+      await expect(
+        service.findAll()
+      ).rejects.toMatchObject({
+        status: 404,
+        response: {
+          title: "Course not found",
+          code: "COURSE_NOT_FOUND",
+        },
+      });
     });
   });
 });
