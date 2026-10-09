@@ -1,4 +1,4 @@
-import type { Course } from "@/lib/api/courses";
+import { Course } from "@/lib/types";
 import { formatPrice } from "@/lib/utils/formatters";
 
 export function CourseCard({ course }: { course: Course }) {

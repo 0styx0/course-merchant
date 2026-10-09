@@ -1,14 +1,14 @@
 import type { operations } from "@/lib/api/generated";
 import { randomUUID } from "crypto";
 import { http, HttpResponse, delay } from "msw";
+import { apiBaseUrl } from "./handler-utils";
 
 type CoursesResponse =
   operations["listCourses"]["responses"][200]["content"]["application/json"];
+type InternalServerError =
+  operations["listCourses"]["responses"][500]["content"]["application/problem+json"];
 
-const apiBaseUrl =
-  process.env.API_BASE_URL ?? "http://localhost:3001";
-
-export const coursesUrl = `${apiBaseUrl}/v1/courses`;
+const coursesUrl = `${apiBaseUrl}/v1/courses`;
 
 export const coursesResponse = {
   courses: [
@@ -55,13 +55,20 @@ export const coursesEmpty = http.get(coursesUrl, () => {
   } satisfies CoursesResponse);
 });
 
+
 export const coursesError = http.get(coursesUrl, () => {
-  return HttpResponse.json(
-    {
-      message: "Internal server error",
+  const body = {
+    title: "Internal server error",
+    detail: "An unexpected error occurred.",
+    code: "INTERNAL_SERVER_ERROR",
+  } satisfies InternalServerError;
+
+  return new HttpResponse(JSON.stringify(body), {
+    status: 500,
+    headers: {
+      "Content-Type": "application/problem+json",
     },
-    { status: 500 }
-  );
+  });
 });
 
 export const coursesSlow = http.get(coursesUrl, async () => {
@@ -71,7 +78,7 @@ export const coursesSlow = http.get(coursesUrl, async () => {
 });
 
 
-export const coursesHandlers = {
+export const courseListHandlers = {
   success: coursesSuccess,
   empty: coursesEmpty,
   error: coursesError,

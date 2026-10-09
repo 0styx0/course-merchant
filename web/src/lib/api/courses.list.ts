@@ -7,8 +7,6 @@ import { Result } from "../types";
 type CoursesResponse =
   operations["listCourses"]["responses"][200]["content"]["application/json"];
 
-export type Course = CoursesResponse["courses"][number];
-
 export type GetCoursesResult = Result<
   CoursesResponse,
   string

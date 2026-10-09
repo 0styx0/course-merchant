@@ -1,4 +1,4 @@
-import { getCourses } from "@/lib/api/courses";
+import { getCourses } from "@/lib/api/courses.list";
 import { CoursesView } from "./courses-view";
 
 export default async function Courses() {

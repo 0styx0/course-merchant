@@ -1,5 +1,5 @@
 import { test, expect } from 'next/experimental/testmode/playwright/msw';
-import { coursesSlow, coursesSuccess } from '@/mocks/handlers/courses';
+import { coursesSlow, coursesSuccess } from '@/mocks/handlers/courses.list';
 
 test.use({
   mswHandlers: [

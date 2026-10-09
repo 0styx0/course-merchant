@@ -2,8 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { CoursesLoading, CoursesView } from "./courses-view";
-import type { Course } from "@/lib/api/courses";
 import { randomUUID } from "crypto";
+import { Course } from "@/lib/types";
 
 const course: Course = {
   id: randomUUID(),

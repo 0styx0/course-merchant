@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { GetCoursesResult } from "@/lib/api/courses";
+import type { GetCoursesResult } from "@/lib/api/courses.list";
 import { CourseCard } from "../course-card";
 
 type CoursesViewProps = {
