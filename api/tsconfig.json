@@ -24,6 +24,9 @@
     "resolveJsonModule": true,
     "types": [
       "node"
-    ]
+    ],
+    "paths": {
+      "@/*": ["src/*"]
+    }
   }
 }
