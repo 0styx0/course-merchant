@@ -38,3 +38,4 @@ When the course is bought, the user should get access to a google drive folder, 
 - Core: Nest.JS, TypeScript, Postgres, Prisma, Docker
 - Unit tests: Vitest
 - Integration tests: Vitest + separate Postgres docker container
+- End-to-end tests: Vitest + SuperTest + Postgres docker
