@@ -14,14 +14,15 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test:unit": "vitest run --config vitest.unit.config.ts",
-    "test:unit:watch": "yarn test:unit --watch",
-    "test:integration": "yarn db:test:up && yarn db:test:migrate && vitest run --config vitest.integration.config.ts",
     "test:cov": "vitest run --coverage",
     "db:test:up": "docker compose -f docker-compose.test.yaml up -d",
     "db:test:migrate": "dotenv run --override --file .env.test -- yarn prisma db migrate --advance-ref db",
     "generate:api-types": "openapi-typescript ./openapi/openapi-v1.yaml -o ./src/generated/api.d.ts",
-    "contract:emit": "prisma contract emit"
+    "contract:emit": "prisma contract emit",
+    "test:unit": "vitest run --config vitest.unit.config.ts",
+    "test:unit:watch": "yarn test:unit --watch",
+    "test:integration": "yarn db:test:up && yarn db:test:migrate && vitest run --config vitest.integration.config.ts",
+    "test:e2e": "yarn db:test:up && yarn db:test:migrate && vitest run --config vitest.e2e.config.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

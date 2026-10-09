@@ -6,38 +6,9 @@ import { instant } from "../../../test/test-helpers.js";
 import { CoursesRepository } from "../../courses.repository/courses.repository.js";
 import { CoursesService } from "../../courses.service.js";
 import { PrismaModule } from "../../../prisma/prisma.module.js";
-import { createCourse, createCoursePrice, createCustomer, createPayment, createEnrollment, archiveCourse } from "../../../test/course-fixtures.js";
+import { createCourse, createCoursePrice, createCustomer, createPayment, createEnrollment, archiveCourse, createPricedCourse } from "../../../test/course-fixtures.js";
 
 const NOW = instant("2026-09-29T14:00:00.000Z");
-
-type CoursePrice = Partial<Parameters<typeof createCoursePrice>[0]>
-
-const createPricedCourse = async (
-    courseOverrides: Partial<Parameters<typeof createCourse>[0]> = {},
-    priceOverrides: CoursePrice = {},
-) => {
-    const course = await createCourse({
-        title: "React Fundamentals",
-        description: "Learn React",
-        startsAt: instant("2026-10-01T18:00:00.000Z"),
-        endsAt: instant("2026-10-01T20:00:00.000Z"),
-        timeZone: "America/New_York",
-        ...courseOverrides,
-    });
-
-    const price = await createCoursePrice({
-        courseId: course.id,
-        amount: 9900,
-        currency: "USD",
-        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
-        ...priceOverrides,
-    });
-
-    return {
-        course,
-        price
-    }
-};
 
 describe("CoursesService integration", () => {
     let service: CoursesService;

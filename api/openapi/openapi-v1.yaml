@@ -110,6 +110,7 @@ components:
               value:
                 title: Internal server error
                 code: INTERNAL_SERVER_ERROR
+                detail: ""
 
   schemas:
     CourseId:

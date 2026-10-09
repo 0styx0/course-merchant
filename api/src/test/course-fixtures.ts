@@ -2,6 +2,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import { db } from "../prisma/db.js";
 import { DefaultModelRow } from "@prisma/orm-postgres/orm-client";
 import { Contract } from "migrations/snapshots/78d34f4f9b99ae69d09be86753e470bca1dce098cff49a9078aa511fd6b466fd/contract.js";
+import { instant } from "./test-helpers.js";
 
 
 type Course = DefaultModelRow<Contract, "Course", "public">
@@ -37,6 +38,35 @@ export async function createCoursePrice(input: {
     effectiveAt: input.effectiveAt,
   });
 }
+
+type CoursePrice = Partial<Parameters<typeof createCoursePrice>[0]>
+
+export async function createPricedCourse(
+    courseOverrides: Partial<Parameters<typeof createCourse>[0]> = {},
+    priceOverrides: CoursePrice = {},
+) {
+    const course = await createCourse({
+        title: "React Fundamentals",
+        description: "Learn React",
+        startsAt: instant("2026-10-01T18:00:00.000Z"),
+        endsAt: instant("2026-10-01T20:00:00.000Z"),
+        timeZone: "America/New_York",
+        ...courseOverrides,
+    });
+
+    const price = await createCoursePrice({
+        courseId: course.id,
+        amount: 9900,
+        currency: "USD",
+        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
+        ...priceOverrides,
+    });
+
+    return {
+        course,
+        price
+    }
+};
 
 
 export async function createCustomer(input: {

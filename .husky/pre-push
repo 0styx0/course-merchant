@@ -2,3 +2,5 @@
 
 yarn --cwd api test:integration
 yarn --cwd web test:integration
+
+yarn --cwd api test:e2e

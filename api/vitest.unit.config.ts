@@ -6,6 +6,6 @@ export default defineConfig({
   },
   test: {
     include: ["src/**/*.spec.ts"],
-    exclude: ["src/**/*.integration.spec.ts"],
+    exclude: ["src/**/*.integration.spec.ts", "src/test/e2e/"],
   },
 });
