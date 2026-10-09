@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 
 yarn --cwd api test:integration
-yarn --cwd web test:e2e
+yarn --cwd web test:integration
