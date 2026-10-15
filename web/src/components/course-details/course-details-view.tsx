@@ -1,5 +1,6 @@
 import { GetCourseResult } from "@/lib/api/course.get";
 import { formatDate, formatPrice } from "@/lib/utils/formatters";
+import { ApiErrorMessage } from "../api-error-message";
 
 type CourseDetailsViewProps = {
   result: GetCourseResult;
@@ -9,14 +10,14 @@ export function CourseDetailsView({ result }: CourseDetailsViewProps) {
   if (result.state === "failure") {
     return (
       <main>
-        <CourseError />
+        <ApiErrorMessage problem={result.error} />
       </main>
     );
   }
 
   const course = result.data;
   const { schedule } = course;
-  const dateFormatter = formatDate(course.schedule.timeZone)
+  const dateFormatter = formatDate(course.schedule.timeZone);
 
   return (
     <main>
@@ -55,12 +56,3 @@ export function CourseDetailsView({ result }: CourseDetailsViewProps) {
     </main>
   );
 }
-
-function CourseError() {
-  return (
-    <p role="alert" className="mt-4 text-gray-600">
-      We couldn&apos;t load this course right now. Please try again later.
-    </p>
-  );
-}
-

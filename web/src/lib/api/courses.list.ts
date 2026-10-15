@@ -2,14 +2,14 @@ import "server-only";
 
 import type { operations } from "./generated";
 import { api } from "./client";
-import { Result } from "../types";
+import { ProblemDetails, Result } from "../types";
 
 type CoursesResponse =
   operations["listCourses"]["responses"][200]["content"]["application/json"];
 
 export type GetCoursesResult = Result<
   CoursesResponse,
-  string
+  ProblemDetails
 >;
 
 export async function getCourses(): Promise<GetCoursesResult> {
@@ -19,7 +19,7 @@ export async function getCourses(): Promise<GetCoursesResult> {
   if (error || !data) {
     return {
       state: "failure",
-      error: error.code
+      error
     };
   }
 

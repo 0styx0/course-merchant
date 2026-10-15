@@ -1,7 +1,7 @@
-import { Course, Result } from "../types";
+import { Course, Result, ProblemDetails } from "../types";
 import { api } from "./client";
 
-export type GetCourseResult = Result<Course, string>;
+export type GetCourseResult = Result<Course, ProblemDetails>;
 
 export async function getCourse(
     courseId: string,
@@ -15,7 +15,7 @@ export async function getCourse(
     if (error || !data) {
         return {
             state: "failure",
-            error: error?.code ?? "UNKNOWN_ERROR",
+            error,
         };
     }
 

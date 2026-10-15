@@ -8,4 +8,5 @@ export type ListCoursesResponse =
 
 export type GetCourseResponse = components["schemas"]["Course"]
 
-export type errorResponse = components["schemas"]["ProblemDetails"]
+export type ProblemDetails = components["schemas"]["ProblemDetails"]
+

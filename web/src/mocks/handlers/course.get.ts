@@ -60,7 +60,7 @@ export const courseByIdInvalidId = http.get(courseByIdUrl, ({ params }) => {
 export const courseByIdError = http.get(courseByIdUrl, () => {
   const body = {
     title: "Internal server error",
-    detail: "An unexpected error occurred.",
+    detail: "We couldn't load this course right now. Please try again later.",
     code: "INTERNAL_SERVER_ERROR",
   } satisfies InternalServerErrorResponse;
 

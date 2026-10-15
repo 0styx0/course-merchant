@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { GetCoursesResult } from "@/lib/api/courses.list";
 import { CourseCard } from "../course-card";
+import { ApiErrorMessage } from "../api-error-message";
 
 type CoursesViewProps = {
   result: GetCoursesResult;
@@ -20,17 +21,7 @@ function CoursesSection({ children }: { children: ReactNode }) {
 
 function CoursesEmpty() {
   return (
-    <p className="mt-4 text-gray-600">
-      Check back later for new courses.
-    </p>
-  );
-}
-
-function CoursesError() {
-  return (
-    <p className="mt-4 text-gray-600">
-      We couldn&apos;t load the courses right now. Please try again later.
-    </p>
+    <p className="mt-4 text-gray-600">Check back later for new courses.</p>
   );
 }
 
@@ -46,7 +37,7 @@ export function CoursesView({ result }: CoursesViewProps) {
   if (result.state === "failure") {
     return (
       <CoursesSection>
-        <CoursesError />
+        <ApiErrorMessage problem={result.error} />
       </CoursesSection>
     );
   }

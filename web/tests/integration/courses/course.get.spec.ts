@@ -6,9 +6,6 @@ test.use({
     mswHandlers: [[courseByIdSuccess], { scope: "test" }],
 });
 
-const errorMessage =
-    "We couldn't load this course right now. Please try again later.";
-
 test("displays course details", async ({ page }) => {
     await page.goto(`/courses/${courseResponse.id}`);
 
@@ -64,17 +61,20 @@ test("displays loading state while the course is loading", async ({
 test("displays an error when the API returns a server error", async ({
     page,
     msw,
-}) => {
+  }) => {
     msw.use(courseByIdError);
-
+  
     await page.goto(`/courses/${courseResponse.id}`);
-
-    await expect(page.getByRole("alert")).toHaveText(errorMessage);
-
+  
+    const alert = page.getByRole("alert");
+  
+    await expect(alert).toContainText("Internal server error");
+    await expect(alert).toContainText("We couldn't load this course");
+  
     await expect(
-        page.getByRole("heading", { level: 1 }),
+      page.getByRole("heading", { level: 1 }),
     ).not.toBeVisible();
-});
+  });
 
 test("displays an error when the course does not exist", async ({
     page,
@@ -84,7 +84,7 @@ test("displays an error when the course does not exist", async ({
 
     await page.goto(`/courses/${courseResponse.id}`);
 
-    await expect(page.getByRole("alert")).toHaveText(errorMessage);
+    await expect(page.getByRole("alert")).toContainText("Course not found");
 });
 
 test("displays an error for an invalid course ID", async ({
@@ -95,5 +95,5 @@ test("displays an error for an invalid course ID", async ({
 
     await page.goto("/courses/not-a-uuid");
 
-    await expect(page.getByRole("alert")).toHaveText(errorMessage);
+    await expect(page.getByRole("alert")).toContainText("is not a valid course identifier.");
 });

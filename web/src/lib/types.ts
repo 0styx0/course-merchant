@@ -11,3 +11,4 @@ export type Result<T, E> =
   };
 
 export type Course = components["schemas"]["Course"];
+export type ProblemDetails = components["schemas"]["ProblemDetails"]

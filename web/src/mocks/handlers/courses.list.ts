@@ -59,7 +59,7 @@ export const coursesEmpty = http.get(coursesUrl, () => {
 export const coursesError = http.get(coursesUrl, () => {
   const body = {
     title: "Internal server error",
-    detail: "An unexpected error occurred.",
+    detail: "Unable to load courses. Please reload the page.",
     code: "INTERNAL_SERVER_ERROR",
   } satisfies InternalServerError;
 

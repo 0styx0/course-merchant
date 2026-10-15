@@ -40,7 +40,11 @@ describe("CoursesView", () => {
       <CoursesView
         result={{
           state: "failure",
-          error: "unavailable",
+          error: {
+            title: "error title",
+            detail: "error details",
+            code: "code_red"
+          },
         }}
       />
     );
@@ -51,7 +55,7 @@ describe("CoursesView", () => {
 
     expect(
       screen.getByText(
-        "We couldn't load the courses right now. Please try again later."
+        "error details"
       )
     ).toBeInTheDocument();
 
