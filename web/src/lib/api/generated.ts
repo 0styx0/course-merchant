@@ -13,7 +13,7 @@ export interface paths {
         };
         /**
          * List available courses
-         * @description Returns courses that have not ended, ordered by start time ascending. Courses that have been archived or do not have a currently active price are not returned.
+         * @description Returns courses that have not ended, ordered by start time ascending. Courses that have been archived or do not have a currently active price are not returned. A course whose prices all take effect in the future is hidden until the earliest `effectiveAt` is reached.
          */
         get: operations["listCourses"];
         put?: never;
@@ -33,11 +33,51 @@ export interface paths {
         };
         /**
          * Get a course
-         * @description Returns a course that has not been archived and has a currently active price. Unlike `listCourses`, ended courses are still returned.
+         * @description Returns a course that has not been archived and has a currently active price. Unlike `listCourses`, ended courses are still returned. A course whose prices all take effect in the future returns 404 until the earliest `effectiveAt` is reached.
          */
         get: operations["getCourse"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a course
+         * @description Creates a course. Requires an administrator.
+         *
+         *     All fields are required. The server validates every field and reports all failures at once in the `errors` array of a 400 response, so clients can display every problem together.
+         *
+         *     Validation rules:
+         *     - `name`: 1 to 100 characters.
+         *     - `description`: 1 to 5,000 characters.
+         *     - `schedule.timeZone`: must be a valid IANA time zone identifier.
+         *     - `schedule.startTime`: must be an RFC 3339 date-time with a UTC offset, and must be now or in the future.
+         *     - `schedule.endTime`: must be an RFC 3339 date-time with a UTC offset, in the future, and after `startTime`.
+         *     - `schedule.startTime` and `schedule.endTime`: the UTC offset must match the offset `timeZone` observes at that instant. For example, `2026-07-01T18:00:00-05:00` is rejected for `America/New_York`, which is at -04:00 in July. A local time skipped by a daylight saving change cannot match any offset and is rejected the same way.
+         *     - `prices`: at least one entry, and no two entries may share the same `effectiveAt`. Entries may use different currencies.
+         *     - `prices[].currency`: must be an existing ISO 4217 currency code.
+         *     - `prices[].amount`: must be at least 50 (fifty cents for USD), because the payment processor does not accept smaller charges.
+         *     - `prices[].effectiveAt`: must be now or in the future.
+         *
+         *     A created course is not publicly visible until a price is in effect. If every entry in `prices` has a future `effectiveAt`, the course is hidden from `listCourses` and `getCourse` until the earliest `effectiveAt`. Include a price with an `effectiveAt` of now to make the course visible immediately.
+         *
+         *     `prices` is accepted only on creation. Course responses return a single `price`, the currently active price, without `effectiveAt`.
+         *
+         *     Send an `Idempotency-Key` header to make retries safe. Retrying a request with the same key and the same body returns the original response instead of creating another course. Reusing a key with a different body returns 422, and retrying while the original request is still being processed returns 409. Keys are scoped to the authenticated user.
+         */
+        post: operations["createCourse"];
         delete?: never;
         options?: never;
         head?: never;
@@ -57,26 +97,46 @@ export interface components {
         ListCoursesResponse: {
             courses: components["schemas"]["Course"][];
         };
-        Course: {
+        /**
+         * @description Public name of the course.
+         * @example React Fundamentals
+         */
+        CourseName: string;
+        /**
+         * @description Public description of the course.
+         * @example Learn the fundamentals of React.
+         */
+        CourseDescription: string;
+        CourseDetails: {
+            name: components["schemas"]["CourseName"];
+            description: components["schemas"]["CourseDescription"];
+            schedule: components["schemas"]["CourseSchedule"];
+        };
+        /** @description A `Price` that takes effect at `effectiveAt`, with the additional constraint that the amount is at least 50, the payment processor's minimum charge. */
+        ScheduledPrice: components["schemas"]["Price"] & {
+            amount?: unknown;
+            /**
+             * Format: date-time
+             * @description RFC 3339 date-time including its UTC offset, from which this price applies. A price stays in effect until the next entry's `effectiveAt`.
+             * @example 2026-10-20T00:00:00-04:00
+             */
+            effectiveAt: string;
+        };
+        /** @description All fields are required. */
+        CreateCourseRequest: components["schemas"]["CourseDetails"] & {
+            /** @description Price schedule for the course. Each entry takes effect at its `effectiveAt`, which must be now or in the future. Entries may be sent in any order and may use different currencies; `effectiveAt` values must be unique. If every entry takes effect in the future, the course is hidden from `listCourses` and `getCourse` until the earliest `effectiveAt`. */
+            prices: components["schemas"]["ScheduledPrice"][];
+        };
+        Course: components["schemas"]["CourseDetails"] & {
             id: components["schemas"]["CourseId"];
-            /**
-             * @description Public name of the course.
-             * @example React Fundamentals
-             */
-            name: string;
-            /**
-             * @description Public description of the course.
-             * @example Learn the fundamentals of React.
-             */
-            description: string;
             /**
              * Format: int32
              * @description Number of users currently enrolled in the course.
              * @example 12
              */
             enrollmentCount: number;
+            /** @description The course's currently active price. */
             price: components["schemas"]["Price"];
-            schedule: components["schemas"]["CourseSchedule"];
         };
         Price: {
             /**
@@ -94,13 +154,13 @@ export interface components {
         CourseSchedule: {
             /**
              * Format: date-time
-             * @description Course start time as an RFC 3339 date-time including its UTC offset.
+             * @description Course start time as an RFC 3339 date-time including its UTC offset. Must be either now or in the future when creating a course. The offset must match the offset `timeZone` observes at this instant.
              * @example 2026-10-01T18:00:00-04:00
              */
             startTime: string;
             /**
              * Format: date-time
-             * @description Course end time as an RFC 3339 date-time including its UTC offset. Always after `startTime`.
+             * @description Course end time as an RFC 3339 date-time including its UTC offset. Always after `startTime`. The offset must match the offset `timeZone` observes at this instant.
              * @example 2026-10-01T20:00:00-04:00
              */
             endTime: string;
@@ -125,8 +185,90 @@ export interface components {
              */
             code: string;
         };
+        /** @description Problem Details with one entry per invalid field. */
+        ValidationProblemDetails: components["schemas"]["ProblemDetails"] & {
+            errors: components["schemas"]["FieldError"][];
+        };
+        FieldError: {
+            /**
+             * @description JSON Pointer (RFC 6901) to the invalid field in the request body.
+             * @example /schedule/endTime
+             */
+            field: string;
+            /**
+             * @description Stable machine-readable code describing the rule that was
+             *     violated. Codes are generic; use `field` to know which field
+             *     failed. Current values:
+             *
+             *     - `REQUIRED`: the field is missing or null.
+             *     - `INVALID_TYPE`: the value has the wrong JSON type.
+             *     - `INVALID_FORMAT`: the value is not in the expected format, such
+             *       as a malformed date-time.
+             *     - `INVALID_VALUE`: the value is well formed but not accepted, such
+             *       as an unknown currency or time zone, or a UTC offset that does
+             *       not match the course's time zone at that instant.
+             *     - `TOO_SHORT`: the value is shorter than the minimum length.
+             *     - `TOO_LONG`: the value is longer than the maximum length.
+             *     - `BELOW_MINIMUM`: a number is below the minimum allowed.
+             *     - `IN_PAST`: a date-time must be now or in the future.
+             *     - `INVALID_RANGE`: the value is inconsistent with a related
+             *       field, such as `endTime` not being after `startTime`.
+             *     - `DUPLICATE_VALUE`: the value must be unique within its list.
+             *
+             *     Treat unrecognized values as a generic validation error.
+             * @example INVALID_RANGE
+             */
+            code: string;
+            /** @description Human-readable message suitable for display next to the field. */
+            detail: string;
+        };
     };
     responses: {
+        /** @description The request body failed validation. `errors` lists every failure. */
+        ValidationFailed: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ValidationProblemDetails"];
+            };
+        };
+        /** @description A request with the same `Idempotency-Key` is still being processed. Retry after a short delay. */
+        IdempotencyKeyInProgress: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description The `Idempotency-Key` was already used with a different request body. */
+        IdempotencyKeyReused: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description Missing or invalid credentials. */
+        Unauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description The authenticated user is not an administrator. */
+        Forbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
         /** @description The course identifier is malformed. */
         InvalidCourseId: {
             headers: {
@@ -136,7 +278,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["ProblemDetails"];
             };
         };
-        /** @description Course not found, archived, or does not have a currently active price. */
+        /** @description Course not found, archived, or does not have a currently active price (including a course whose prices all take effect in the future). */
         CourseNotFound: {
             headers: {
                 [name: string]: unknown;
@@ -156,6 +298,11 @@ export interface components {
         };
     };
     parameters: {
+        /**
+         * @description Client-generated unique key (a UUID is recommended) that makes the request safe to retry. Scoped to the authenticated user.
+         * @example 8e03978e-40d5-43e8-bc93-6894a57f9324
+         */
+        IdempotencyKey: string;
         /** @description Public identifier of the course. */
         CourseId: components["schemas"]["CourseId"];
     };
@@ -209,6 +356,44 @@ export interface operations {
             };
             400: components["responses"]["InvalidCourseId"];
             404: components["responses"]["CourseNotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    createCourse: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Client-generated unique key (a UUID is recommended) that makes the request safe to retry. Scoped to the authenticated user.
+                 * @example 8e03978e-40d5-43e8-bc93-6894a57f9324
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCourseRequest"];
+            };
+        };
+        responses: {
+            /** @description Course created. If no price is in effect yet, `price` is the one with the earliest `effectiveAt`. */
+            201: {
+                headers: {
+                    /** @description URL of the newly created course. */
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Course"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["IdempotencyKeyInProgress"];
+            422: components["responses"]["IdempotencyKeyReused"];
             500: components["responses"]["InternalServerError"];
         };
     };

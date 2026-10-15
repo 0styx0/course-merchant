@@ -2,19 +2,21 @@ openapi: 3.1.0
 
 info:
   title: Course Merchant API
-  version: 1.0.0
-  description: API for browsing and purchasing courses.
+  version: 1.1.0
+  description: API for browsing, creating, and purchasing courses.
 
 servers:
   - url: http://localhost:3000/v1
     description: Local development server
 
-# These operations are public. Declared explicitly so the intent is visible.
+# Operations are public unless they declare their own `security`.
 security: []
 
 tags:
   - name: Courses
     description: Public course operations
+  - name: Admin
+    description: Administrator-only operations
 
 paths:
   /courses:
@@ -26,7 +28,8 @@ paths:
       description: >
         Returns courses that have not ended, ordered by start time ascending.
         Courses that have been archived or do not have a currently active price
-        are not returned.
+        are not returned. A course whose prices all take effect in the future
+        is hidden until the earliest `effectiveAt` is reached.
       responses:
         "200":
           description: Successfully retrieved available courses.
@@ -45,7 +48,9 @@ paths:
       summary: Get a course
       description: >
         Returns a course that has not been archived and has a currently active
-        price. Unlike `listCourses`, ended courses are still returned.
+        price. Unlike `listCourses`, ended courses are still returned. A course
+        whose prices all take effect in the future returns 404 until the
+        earliest `effectiveAt` is reached.
       parameters:
         - $ref: "#/components/parameters/CourseId"
       responses:
@@ -62,8 +67,146 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /admin/courses:
+    post:
+      tags:
+        - Admin
+      operationId: createCourse
+      summary: Create a course
+      description: >
+        Creates a course. Requires an administrator.
+
+
+        All fields are required. The server validates every field and reports
+        all failures at once in the `errors` array of a 400 response, so
+        clients can display every problem together.
+
+
+        Validation rules:
+
+        - `name`: 1 to 100 characters.
+
+        - `description`: 1 to 5,000 characters.
+
+        - `schedule.timeZone`: must be a valid IANA time zone identifier.
+
+        - `schedule.startTime`: must be an RFC 3339 date-time with a UTC
+        offset, and must be now or in the future.
+
+        - `schedule.endTime`: must be an RFC 3339 date-time with a UTC offset,
+        in the future, and after `startTime`.
+
+        - `schedule.startTime` and `schedule.endTime`: the UTC offset must
+        match the offset `timeZone` observes at that instant. For example,
+        `2026-07-01T18:00:00-05:00` is rejected for `America/New_York`, which
+        is at -04:00 in July. A local time skipped by a daylight saving change
+        cannot match any offset and is rejected the same way.
+
+        - `prices`: at least one entry, and no two entries may share the same
+        `effectiveAt`.
+
+        - `prices[].currency`: must be an existing ISO 4217 currency code.
+
+        - `prices[].amount`: must be at least 50 (fifty cents for USD), because
+        the payment processor does not accept smaller charges.
+
+        - `prices[].effectiveAt`: must be now or in the future.
+
+
+        A created course is not publicly visible until a price is in effect. If
+        every entry in `prices` has a future `effectiveAt`, the course is hidden
+        from `listCourses` and `getCourse` until the earliest `effectiveAt`.
+        Include a price with an `effectiveAt` of now to make the course visible
+        immediately.
+
+
+        `prices` is accepted only on creation. Course responses return a single
+        `price`, the currently active price, without `effectiveAt`.
+
+
+        Send an `Idempotency-Key` header to make retries safe. Retrying a
+        request with the same key and the same body returns the original
+        response instead of creating another course. Reusing a key with a
+        different body returns 422, and retrying while the original request is
+        still being processed returns 409. Keys are scoped to the authenticated
+        user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCourseRequest"
+            examples:
+              reactFundamentals:
+                value:
+                  name: React Fundamentals
+                  description: Learn the fundamentals of React.
+                  prices:
+                    - amount: 7900
+                      currency: USD
+                      effectiveAt: "2026-10-20T00:00:00-04:00"
+                    - amount: 9900
+                      currency: USD
+                      effectiveAt: "2026-11-15T00:00:00-05:00"
+                  schedule:
+                    startTime: "2026-12-01T18:00:00-05:00"
+                    endTime: "2026-12-01T20:00:00-05:00"
+                    timeZone: America/New_York
+      responses:
+        "201":
+          description: >
+            Course created.
+          headers:
+            Location:
+              description: URL of the newly created course.
+              schema:
+                type: string
+                format: uri-reference
+                examples:
+                  - /v1/courses/123e4567-e89b-12d3-a456-426614174000
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Course"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/IdempotencyKeyInProgress"
+        "422":
+          $ref: "#/components/responses/IdempotencyKeyReused"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token for an authenticated administrator.
+
   parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: >
+        Client-generated unique key (a UUID is recommended) that makes the
+        request safe to retry. Scoped to the authenticated user.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 255
+      example: 8e03978e-40d5-43e8-bc93-6894a57f9324
+
     CourseId:
       name: courseId
       in: path
@@ -73,6 +216,82 @@ components:
         $ref: "#/components/schemas/CourseId"
 
   responses:
+    ValidationFailed:
+      description: >
+        The request body failed validation. `errors` lists every failure.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ValidationProblemDetails"
+          examples:
+            validationFailed:
+              value:
+                title: Validation failed
+                detail: The request contains 2 invalid fields.
+                code: VALIDATION_FAILED
+                errors:
+                  - field: /prices/0/amount
+                    code: BELOW_MINIMUM
+                    detail: Payment processor requires courses at least fifty cents.
+                  - field: /schedule/endTime
+                    code: INVALID_RANGE
+                    detail: End time must be after start time.
+
+    IdempotencyKeyInProgress:
+      description: >
+        A request with the same `Idempotency-Key` is still being processed.
+        Retry after a short delay.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            inProgress:
+              value:
+                title: Request in progress
+                detail: A request with this idempotency key is still being processed.
+                code: IDEMPOTENCY_KEY_IN_PROGRESS
+
+    IdempotencyKeyReused:
+      description: >
+        The `Idempotency-Key` was already used with a different request body.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            reused:
+              value:
+                title: Idempotency key reused
+                detail: This idempotency key was already used with a different request.
+                code: IDEMPOTENCY_KEY_REUSED
+
+    Unauthorized:
+      description: Missing or invalid credentials.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            unauthorized:
+              value:
+                title: Unauthorized
+                detail: Authentication is required.
+                code: UNAUTHORIZED
+
+    Forbidden:
+      description: The authenticated user is not an administrator.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            forbidden:
+              value:
+                title: Forbidden
+                detail: Only administrators can create courses.
+                code: FORBIDDEN
+
     InvalidCourseId:
       description: The course identifier is malformed.
       content:
@@ -87,7 +306,9 @@ components:
                 code: INVALID_COURSE_ID
 
     CourseNotFound:
-      description: Course not found, archived, or does not have a currently active price.
+      description: >
+        Course not found, archived, or does not have a currently active price
+        (including a course whose prices all take effect in the future).
       content:
         application/problem+json:
           schema:
@@ -130,41 +351,106 @@ components:
           items:
             $ref: "#/components/schemas/Course"
 
-    Course:
+    CourseName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Public name of the course.
+      examples:
+        - React Fundamentals
+
+    CourseDescription:
+      type: string
+      minLength: 1
+      maxLength: 5000
+      description: Public description of the course.
+      examples:
+        - Learn the fundamentals of React.
+
+    # Fields common to every representation of a course (public, create, and
+    # future admin read/update). Validation limits live here once so they
+    # cannot drift between operations.
+    CourseDetails:
       type: object
       required:
-        - id
         - name
         - description
-        - enrollmentCount
-        - price
         - schedule
       properties:
-        id:
-          $ref: "#/components/schemas/CourseId"
         name:
-          type: string
-          description: Public name of the course.
-          minLength: 1
-          examples:
-            - React Fundamentals
+          $ref: "#/components/schemas/CourseName"
         description:
-          type: string
-          description: Public description of the course.
-          minLength: 1
-          examples:
-            - Learn the fundamentals of React.
-        enrollmentCount:
-          type: integer
-          format: int32
-          minimum: 0
-          description: Number of users currently enrolled in the course.
-          examples:
-            - 12
-        price:
-          $ref: "#/components/schemas/Price"
+          $ref: "#/components/schemas/CourseDescription"
         schedule:
           $ref: "#/components/schemas/CourseSchedule"
+
+    # A price that takes effect at a given time. Shared by every operation that
+    # reads or writes a course's price schedule.
+    ScheduledPrice:
+      description: >
+        A `Price` that takes effect at `effectiveAt`, with the additional
+        constraint that the amount is at least 50, the payment processor's
+        minimum charge in USD.
+      allOf:
+        - $ref: "#/components/schemas/Price"
+        - type: object
+          required:
+            - effectiveAt
+          properties:
+            amount:
+              minimum: 50
+            effectiveAt:
+              type: string
+              format: date-time
+              description: >
+                RFC 3339 date-time including its UTC offset, from which this
+                price applies. A price stays in effect until the next entry's
+                `effectiveAt`, at which point it gets replaced with that next entry.
+              examples:
+                - "2026-10-20T00:00:00-04:00"
+
+    CreateCourseRequest:
+      description: All fields are required.
+      allOf:
+        - $ref: "#/components/schemas/CourseDetails"
+        - type: object
+          required:
+            - prices
+          properties:
+            prices:
+              type: array
+              minItems: 1
+              description: >
+                Price schedule for the course. Each entry takes effect at its
+                `effectiveAt`, which must be now or in the future. Entries may
+                be sent in any order and may use different currencies;
+                `effectiveAt` values must be unique. If every entry takes
+                effect in the future, the course is hidden from `listCourses`
+                and `getCourse` until the earliest `effectiveAt`.
+              items:
+                $ref: "#/components/schemas/ScheduledPrice"
+
+    Course:
+      allOf:
+        - $ref: "#/components/schemas/CourseDetails"
+        - type: object
+          required:
+            - id
+            - enrollmentCount
+            - price
+          properties:
+            id:
+              $ref: "#/components/schemas/CourseId"
+            enrollmentCount:
+              type: integer
+              format: int32
+              minimum: 0
+              description: Number of users currently enrolled in the course.
+              examples:
+                - 12
+            price:
+              description: The course's currently active price.
+              $ref: "#/components/schemas/Price"
 
     Price:
       type: object
@@ -201,6 +487,8 @@ components:
           format: date-time
           description: >
             Course start time as an RFC 3339 date-time including its UTC offset.
+            Must be either now or in the future when creating a course. The
+            offset must match the offset `timeZone` observes at this instant.
           examples:
             - "2026-10-01T18:00:00-04:00"
         endTime:
@@ -208,7 +496,8 @@ components:
           format: date-time
           description: >
             Course end time as an RFC 3339 date-time including its UTC offset.
-            Always after `startTime`.
+            Always after `startTime`. The offset must match the offset
+            `timeZone` observes at this instant.
           examples:
             - "2026-10-01T20:00:00-04:00"
         timeZone:
@@ -250,3 +539,59 @@ components:
           description: Stable machine-readable error code.
           examples:
             - COURSE_NOT_FOUND
+
+    ValidationProblemDetails:
+      description: Problem Details with one entry per invalid field.
+      allOf:
+        - $ref: "#/components/schemas/ProblemDetails"
+        - type: object
+          required:
+            - errors
+          properties:
+            errors:
+              type: array
+              minItems: 1
+              items:
+                $ref: "#/components/schemas/FieldError"
+
+    FieldError:
+      type: object
+      required:
+        - field
+        - code
+        - detail
+      properties:
+        field:
+          type: string
+          description: >
+            JSON Pointer (RFC 6901) to the invalid field in the request body.
+          examples:
+            - /schedule/endTime
+        code:
+          type: string
+          description: |
+            Stable machine-readable code describing the rule that was
+            violated. Codes are generic; use `field` to know which field
+            failed. Current values:
+
+            - `REQUIRED`: the field is missing or null.
+            - `INVALID_TYPE`: the value has the wrong JSON type.
+            - `INVALID_FORMAT`: the value is not in the expected format, such
+              as a malformed date-time.
+            - `INVALID_VALUE`: the value is well formed but not accepted, such
+              as an unknown currency or time zone, or a UTC offset that does
+              not match the course's time zone at that instant.
+            - `TOO_SHORT`: the value is shorter than the minimum length.
+            - `TOO_LONG`: the value is longer than the maximum length.
+            - `BELOW_MINIMUM`: a number is below the minimum allowed.
+            - `IN_PAST`: a date-time must be now or in the future.
+            - `INVALID_RANGE`: the value is inconsistent with a related
+              field, such as `endTime` not being after `startTime`.
+            - `DUPLICATE_VALUE`: the value must be unique within its list.
+
+            Treat unrecognized values as a generic validation error.
+          examples:
+            - INVALID_RANGE
+        detail:
+          type: string
+          description: Human-readable message suitable for display next to the field.
