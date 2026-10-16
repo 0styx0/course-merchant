@@ -300,7 +300,7 @@ describe("CoursesService integration", () => {
     it("returns 404 for an archived course", async () => {
         const { course } = await createPricedCourse();
       
-        await archiveCourse(course.id, NOW);
+        await archiveCourse(course.id, course.createdAt.add({ seconds: 1 }));
       
         await expect(
           service.findById(course.id),

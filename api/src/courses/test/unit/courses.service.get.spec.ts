@@ -2,7 +2,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { instant } from "../../../test/test-helpers.js";
-import { CourseRepositoryModel, CoursesRepository } from "../../courses.repository/courses.repository.js";
+import { CourseRepositoryModelPublic, CoursesRepository } from "../../courses.repository/courses.repository.js";
 import { CoursesService } from "../../courses.service.js";
 
 const NOW = instant("2026-09-29T14:00:00.000Z");
@@ -22,7 +22,7 @@ const repositoryCourse = {
         },
     ],
     enrollments: 12,
-} satisfies CourseRepositoryModel;
+} satisfies CourseRepositoryModelPublic;
 
 describe("CoursesService", () => {
     let service: CoursesService;
