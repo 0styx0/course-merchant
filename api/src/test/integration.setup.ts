@@ -15,6 +15,7 @@ beforeEach(async () => {
     
     await Promise.all([
       db.orm.public.Customer.where({}).deleteAll(),
+      db.orm.public.CourseStatus.where({}).deleteAll(),
       db.orm.public.Course.where({}).deleteAll(),
     ]);
     

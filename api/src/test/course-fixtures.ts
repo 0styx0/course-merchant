@@ -1,11 +1,10 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { db } from "../prisma/db.js";
-import { DefaultModelRow } from "@prisma/orm-postgres/orm-client";
-import { Contract } from "migrations/snapshots/78d34f4f9b99ae69d09be86753e470bca1dce098cff49a9078aa511fd6b466fd/contract.js";
 import { instant } from "./test-helpers.js";
+import { Models } from "@/prisma/contract.js";
 
 
-type Course = DefaultModelRow<Contract, "Course", "public">
+type Course = Models.public_Course;
 
 export async function createCourse(input: {
   title: string;
@@ -13,7 +12,7 @@ export async function createCourse(input: {
   startsAt: Temporal.Instant;
   endsAt: Temporal.Instant;
   timeZone: string;
-}): Promise<Course> {
+}) {
   return db.orm.public.Course.create({
     title: input.title,
     description: input.description,
@@ -21,6 +20,8 @@ export async function createCourse(input: {
     startsAt: input.startsAt,
     endsAt: input.endsAt,
     timeZone: input.timeZone,
+    statuses: (statuses) =>
+      statuses.create([{ name: "published" }]),
   });
 }
 
@@ -71,9 +72,11 @@ export async function createPricedCourse(
 
 export async function createCustomer(input: {
   email?: string;
+  name?: string;
 }) {
   return db.orm.public.Customer.create({
     email: input.email ?? `test-${crypto.randomUUID()}@example.com`,
+    name: input.name ?? `test-${crypto.randomUUID()}`
   });
 }
 
@@ -110,7 +113,9 @@ export async function createEnrollment(input: {
 }
 
 export function archiveCourse(courseId: string, archiveAt: Temporal.Instant) {
-  return db.orm.public.Course
-    .where({ id: courseId })
-    .update({ archivedAt: archiveAt })
+  return db.orm.public.CourseStatus.create({
+    courseId,
+    name: "archived",
+    changedAt: archiveAt,
+  });
 }
