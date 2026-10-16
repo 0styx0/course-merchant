@@ -26,10 +26,12 @@ paths:
       operationId: listCourses
       summary: List available courses
       description: >
-        Returns courses that have not ended, ordered by start time ascending.
-        Courses that have been archived or do not have a currently active price
-        are not returned. A course whose prices all take effect in the future
-        is hidden until the earliest `effectiveAt` is reached.
+        Returns publicly viewable courses that have not ended, ordered by start
+        time ascending. A course is publicly viewable when its `status` is
+        `published` and it has a currently active price. Archived courses and
+        courses without a currently active price are not returned. A course
+        whose prices all take effect in the future is hidden until the
+        earliest `effectiveAt` is reached.
       responses:
         "200":
           description: Successfully retrieved available courses.
@@ -47,10 +49,11 @@ paths:
       operationId: getCourse
       summary: Get a course
       description: >
-        Returns a course that has not been archived and has a currently active
-        price. Unlike `listCourses`, ended courses are still returned. A course
-        whose prices all take effect in the future returns 404 until the
-        earliest `effectiveAt` is reached.
+        Returns a course that is publicly viewable: its `status` is `published`
+        and it has a currently active price. Unlike `listCourses`, ended courses
+        are still returned. An archived course returns 404, as does a course
+        whose prices all take effect in the future until the earliest
+        `effectiveAt` is reached.
       parameters:
         - $ref: "#/components/parameters/CourseId"
       responses:
@@ -68,6 +71,41 @@ paths:
           $ref: "#/components/responses/InternalServerError"
 
   /admin/courses:
+    get:
+      tags:
+        - Admin
+      operationId: listCoursesAsAdmin
+      summary: List all courses as an administrator
+      description: >
+        Returns every course with its full price schedule. Requires an
+        administrator.
+
+
+        Unlike `listCourses`, nothing is filtered out: ended courses,
+        archived courses, and courses without a currently active price
+        (including those whose prices all take effect in the future) are all
+        included. Courses are ordered by `schedule.startTime` descending,
+        so the most recent and upcoming courses come first. Each course is in
+        the same representation as `getCourseAsAdmin`, including its `status`.
+
+
+        The response is not paginated.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Successfully retrieved all courses.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListAdminCoursesResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
     post:
       tags:
         - Admin
@@ -77,9 +115,9 @@ paths:
         Creates a course. Requires an administrator.
 
 
-        All fields are required. The server validates every field and reports
-        all failures at once in the `errors` array of a 400 response, so
-        clients can display every problem together.
+        All fields are required except `status`. The server validates every
+        field and reports all failures at once in the `errors` array of a 400
+        response, so clients can display every problem together.
 
 
         Validation rules:
@@ -112,15 +150,23 @@ paths:
 
         - `prices[].effectiveAt`: must be now or in the future.
 
-
-        A created course is not publicly visible until a price is in effect. If
-        every entry in `prices` has a future `effectiveAt`, the course is hidden
-        from `listCourses` and `getCourse` until the earliest `effectiveAt`.
-        Include a price with an `effectiveAt` of now to make the course visible
-        immediately.
+        - `status`: optional, either `published` or `archived`. Defaults to
+        `published`.
 
 
-        `prices` is accepted only on creation. Course responses return a single
+        A course is publicly visible only when its `status` is `published` and
+        a price is in effect. If every entry in `prices` has a future
+        `effectiveAt`, the course is hidden from `listCourses` and `getCourse`
+        until the earliest `effectiveAt`. Include a price with an `effectiveAt`
+        of now to make the course visible immediately. Create a course with
+        `status: archived` to keep it hidden, regardless of its prices, until
+        it is published.
+
+
+        The response is the same representation returned by
+        `getCourseAsAdmin`: `prices` contains the full schedule, each entry
+        with a generated `id`, ordered by `effectiveAt` ascending. Public
+        course responses (`listCourses`, `getCourse`) instead return a single
         `price`, the currently active price, without `effectiveAt`.
 
 
@@ -159,19 +205,42 @@ paths:
       responses:
         "201":
           description: >
-            Course created.
+            Course created. The response is the full administrator view of
+            the course, including every entry of the price schedule with its
+            `id`.
           headers:
             Location:
               description: URL of the newly created course.
               schema:
                 type: string
                 format: uri-reference
-                examples:
-                  - /v1/courses/123e4567-e89b-12d3-a456-426614174000
+              examples:
+                - /v1/admin/courses/123e4567-e89b-12d3-a456-426614174000
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Course"
+                $ref: "#/components/schemas/AdminCourse"
+              examples:
+                reactFundamentals:
+                  value:
+                    id: 123e4567-e89b-12d3-a456-426614174000
+                    name: React Fundamentals
+                    description: Learn the fundamentals of React.
+                    status: published
+                    enrollmentCount: 0
+                    prices:
+                      - id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                        amount: 7900
+                        currency: USD
+                        effectiveAt: "2026-10-20T00:00:00-04:00"
+                      - id: 0b7d3f52-3c1a-4a0e-9f0b-5d3f8a6b1c42
+                        amount: 9900
+                        currency: USD
+                        effectiveAt: "2026-11-15T00:00:00-05:00"
+                    schedule:
+                      startTime: "2026-12-01T18:00:00-05:00"
+                      endTime: "2026-12-01T20:00:00-05:00"
+                      timeZone: America/New_York
         "400":
           $ref: "#/components/responses/ValidationFailed"
         "401":
@@ -182,6 +251,182 @@ paths:
           $ref: "#/components/responses/IdempotencyKeyInProgress"
         "422":
           $ref: "#/components/responses/IdempotencyKeyReused"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /admin/courses/{courseId}:
+    get:
+      tags:
+        - Admin
+      operationId: getCourseAsAdmin
+      summary: Get a course as an administrator
+      description: >
+        Returns a course with its full price schedule. Requires an
+        administrator.
+
+
+        Unlike `getCourse`, this returns the course regardless of whether it
+        is publicly visible, including archived courses and courses whose
+        prices all take effect in the future. It returns 404 only when no
+        course exists with the given ID.
+
+
+        The response includes the course's `status`. Instead of the single
+        currently active `price`, it contains `prices`: every entry in the
+        course's price schedule, ordered by
+        `effectiveAt` ascending. Each entry has an `id`, and entries whose
+        `effectiveAt` has passed are included.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CourseId"
+      responses:
+        "200":
+          description: Successfully retrieved the course.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCourse"
+        "400":
+          $ref: "#/components/responses/InvalidCourseId"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/AdminCourseNotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    put:
+      tags:
+        - Admin
+      operationId: updateCourse
+      summary: Update a course
+      description: >
+        Replaces a course's details and price schedule. Requires an
+        administrator.
+
+
+        Send the representation returned by `getCourseAsAdmin`, minus
+        `enrollmentCount` and the course `id`. Both are read-only and
+        ignored if present. Every other field is required. The server
+        validates everything and reports all failures at once in the
+        `errors` array of a 400 response. The update is atomic: if any
+        validation fails, nothing is changed.
+
+
+        **Details.** `name`, `description` and `schedule` follow the same
+        rules as `createCourse`, except that time checks apply only to values
+        that changed:
+
+        - `schedule.startTime` must be now or in the future only if it
+        differs from the stored value.
+
+        - `schedule.endTime` must be in the future only if it differs from
+        the stored value.
+
+        - `endTime` must always be after `startTime`, and each UTC offset
+        must always match the offset `timeZone` observes at that instant.
+
+
+        This lets an admin edit the description of a course that has already
+        started. Times are compared as instants, so the same instant written
+        with a different UTC offset counts as unchanged.
+
+
+        **Status.** `status` is required and is set to the value sent. Send
+        `archived` to hide the course from the public API, or `published` to
+        make it publicly viewable again (once a price is in effect). Status
+        can be changed at any time, including on a course with enrollments.
+
+
+        **Prices.** `prices` is matched against the stored schedule by `id`:
+
+        - An entry with an `id` is matched to the stored entry with that
+        `id`. An `id` that does not belong to this course is rejected.
+
+        - An entry without an `id` is created and gets a generated `id`.
+
+        - A stored entry that is omitted from `prices` is deleted.
+
+
+        An entry is in effect once its stored `effectiveAt` has passed.
+        In-effect entries are immutable, so price history cannot be
+        rewritten:
+
+        - An in-effect entry must be sent back unchanged (same `id`,
+        `amount`, `currency` and `effectiveAt`) and may not be omitted.
+        Unchanged in-effect entries skip the "now or in the future" and
+        amount checks, so a form can round-trip what it loaded.
+
+        - A new or modified entry must have an `effectiveAt` that is now or
+        in the future, plus the usual amount and currency checks.
+
+        - A stored entry that is not yet in effect can be modified or
+        omitted freely.
+
+        - `prices` must contain at least one entry, and no two entries may
+        share the same `effectiveAt`.
+
+
+        Whether an entry is in effect is evaluated when the request is
+        processed. If a future price takes effect while the form is open,
+        resubmitting it unchanged still succeeds, but an edit to it is
+        rejected.
+
+
+        The response is the updated course in the same representation as
+        `getCourseAsAdmin`. Price `id`s of unchanged and modified entries are
+        preserved, and new entries have generated ones.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CourseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCourseRequest"
+            examples:
+              reactFundamentals:
+                summary: Keep a past price, change a future one, add a new one
+                value:
+                  name: React Fundamentals
+                  description: Learn the fundamentals of React, with hands-on labs.
+                  status: published
+                  prices:
+                    - id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                      amount: 6900
+                      currency: USD
+                      effectiveAt: "2026-09-01T00:00:00-04:00"
+                    - id: 0b7d3f52-3c1a-4a0e-9f0b-5d3f8a6b1c42
+                      amount: 10900
+                      currency: USD
+                      effectiveAt: "2026-11-15T00:00:00-05:00"
+                    - amount: 11900
+                      currency: USD
+                      effectiveAt: "2026-11-25T00:00:00-05:00"
+                  schedule:
+                    startTime: "2026-12-01T18:00:00-05:00"
+                    endTime: "2026-12-01T20:00:00-05:00"
+                    timeZone: America/New_York
+      responses:
+        "200":
+          description: Course updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCourse"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/AdminCourseNotFound"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -236,6 +481,18 @@ components:
                   - field: /schedule/endTime
                     code: INVALID_RANGE
                     detail: End time must be after start time.
+            updateRejected:
+              value:
+                title: Validation failed
+                detail: The request contains 2 invalid fields.
+                code: VALIDATION_FAILED
+                errors:
+                  - field: /prices/0/amount
+                    code: IMMUTABLE
+                    detail: This price is already in effect and cannot be changed.
+                  - field: /prices
+                    code: MISSING_ENTRY
+                    detail: A price that is already in effect cannot be removed.
 
     IdempotencyKeyInProgress:
       description: >
@@ -289,7 +546,7 @@ components:
             forbidden:
               value:
                 title: Forbidden
-                detail: Only administrators can create courses.
+                detail: Administrator access is required.
                 code: FORBIDDEN
 
     InvalidCourseId:
@@ -309,6 +566,19 @@ components:
       description: >
         Course not found, archived, or does not have a currently active price
         (including a course whose prices all take effect in the future).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            notFound:
+              value:
+                title: Course not found
+                detail: No course exists with ID 123e4567-e89b-12d3-a456-426614174000.
+                code: COURSE_NOT_FOUND
+
+    AdminCourseNotFound:
+      description: No course exists with the given ID.
       content:
         application/problem+json:
           schema:
@@ -341,6 +611,26 @@ components:
       examples:
         - 123e4567-e89b-12d3-a456-426614174000
 
+    PriceId:
+      type: string
+      format: uuid
+      description: Identifier of an entry in a course's price schedule.
+      examples:
+        - 7c9e6679-7425-40de-944b-e07fc1f90ae7
+
+    CourseStatus:
+      type: string
+      enum:
+        - published
+        - archived
+      description: >
+        Whether an administrator has made the course available. `published`
+        courses are publicly viewable once a price is in effect. `archived`
+        courses are hidden from the public API regardless of their prices,
+        and can be published again at any time.
+      examples:
+        - published
+
     ListCoursesResponse:
       type: object
       required:
@@ -350,6 +640,16 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Course"
+
+    ListAdminCoursesResponse:
+      type: object
+      required:
+        - courses
+      properties:
+        courses:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminCourse"
 
     CourseName:
       type: string
@@ -367,8 +667,8 @@ components:
       examples:
         - Learn the fundamentals of React.
 
-    # Fields common to every representation of a course (public, create, and
-    # future admin read/update). Validation limits live here once so they
+    # Fields common to the public and admin representations and to the
+    # create and update requests. Validation limits live here once so they
     # cannot drift between operations.
     CourseDetails:
       type: object
@@ -409,14 +709,41 @@ components:
               examples:
                 - "2026-10-20T00:00:00-04:00"
 
+    # A stored price schedule entry: a ScheduledPrice plus its identifier.
+    AdminScheduledPrice:
+      allOf:
+        - $ref: "#/components/schemas/ScheduledPrice"
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              $ref: "#/components/schemas/PriceId"
+
+    # A price entry in an update request. Without an `id` it is created;
+    # with one it is matched to the stored entry.
+    UpdateScheduledPrice:
+      allOf:
+        - $ref: "#/components/schemas/ScheduledPrice"
+        - type: object
+          properties:
+            id:
+              $ref: "#/components/schemas/PriceId"
+
     CreateCourseRequest:
-      description: All fields are required.
+      description: All fields are required except `status`.
       allOf:
         - $ref: "#/components/schemas/CourseDetails"
         - type: object
           required:
             - prices
           properties:
+            status:
+              description: >
+                Optional. Defaults to `published`. Use `archived` to create
+                the course hidden from the public API.
+              default: published
+              $ref: "#/components/schemas/CourseStatus"
             prices:
               type: array
               minItems: 1
@@ -429,6 +756,33 @@ components:
                 and `getCourse` until the earliest `effectiveAt`.
               items:
                 $ref: "#/components/schemas/ScheduledPrice"
+
+    UpdateCourseRequest:
+      description: >
+        Full replacement of a course's details and price schedule. All
+        fields are required except `id` on each price. `enrollmentCount` and
+        the course `id` are read-only and ignored if sent.
+      allOf:
+        - $ref: "#/components/schemas/CourseDetails"
+        - type: object
+          required:
+            - status
+            - prices
+          properties:
+            status:
+              $ref: "#/components/schemas/CourseStatus"
+            prices:
+              type: array
+              minItems: 1
+              description: >
+                The complete price schedule after the update. Entries with an
+                `id` are matched to stored entries, entries without one are
+                created, and stored entries that are omitted are deleted.
+                Entries already in effect must be included unchanged.
+                `effectiveAt` values must be unique. Entries may be sent in
+                any order.
+              items:
+                $ref: "#/components/schemas/UpdateScheduledPrice"
 
     Course:
       allOf:
@@ -451,6 +805,41 @@ components:
             price:
               description: The course's currently active price.
               $ref: "#/components/schemas/Price"
+
+    AdminCourse:
+      description: >
+        A course as seen by an administrator. Has the same fields as `Course`,
+        plus `status`, except that the single active `price` is replaced by
+        the full `prices` schedule.
+      allOf:
+        - $ref: "#/components/schemas/CourseDetails"
+        - type: object
+          required:
+            - id
+            - status
+            - enrollmentCount
+            - prices
+          properties:
+            id:
+              $ref: "#/components/schemas/CourseId"
+            status:
+              $ref: "#/components/schemas/CourseStatus"
+            enrollmentCount:
+              type: integer
+              format: int32
+              minimum: 0
+              description: Number of users currently enrolled in the course.
+              examples:
+                - 12
+            prices:
+              type: array
+              minItems: 1
+              description: >
+                The course's full price schedule, ordered by `effectiveAt`
+                ascending. The entry in effect now is the last one whose
+                `effectiveAt` is in the past.
+              items:
+                $ref: "#/components/schemas/AdminScheduledPrice"
 
     Price:
       type: object
@@ -487,8 +876,9 @@ components:
           format: date-time
           description: >
             Course start time as an RFC 3339 date-time including its UTC offset.
-            Must be either now or in the future when creating a course. The
-            offset must match the offset `timeZone` observes at this instant.
+            Must be now or in the future when creating a course, or when
+            changing it on update. The offset must match the offset `timeZone`
+            observes at this instant.
           examples:
             - "2026-10-01T18:00:00-04:00"
         endTime:
@@ -496,8 +886,9 @@ components:
           format: date-time
           description: >
             Course end time as an RFC 3339 date-time including its UTC offset.
-            Always after `startTime`. The offset must match the offset
-            `timeZone` observes at this instant.
+            Always after `startTime`. Must be in the future when creating a
+            course, or when changing it on update. The offset must match the
+            offset `timeZone` observes at this instant.
           examples:
             - "2026-10-01T20:00:00-04:00"
         timeZone:
@@ -588,6 +979,12 @@ components:
             - `INVALID_RANGE`: the value is inconsistent with a related
               field, such as `endTime` not being after `startTime`.
             - `DUPLICATE_VALUE`: the value must be unique within its list.
+            - `IMMUTABLE`: the entry is already in effect and cannot be
+              changed. `field` points at the changed property, such as
+              `/prices/1/amount`.
+            - `MISSING_ENTRY`: an entry that is already in effect was omitted
+              from the list. `field` is the list, such as `/prices`.
+            - `UNKNOWN_ID`: the `id` does not match any entry of this course.
 
             Treat unrecognized values as a generic validation error.
           examples:
