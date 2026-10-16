@@ -179,7 +179,7 @@ describe("GET /v1/courses (e2e)", () => {
       },
     );
 
-    await archiveCourse(archived.course.id, NOW);
+    await archiveCourse(archived.course.id, archived.course.createdAt.add({seconds: 1}));
 
     const unpriced = await createCourse({
       title: "Unpriced Course",
