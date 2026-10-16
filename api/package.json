@@ -16,6 +16,7 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test:cov": "vitest run --coverage",
     "db:test:up": "docker compose -f docker-compose.test.yaml up -d",
+    "db:dev:migrate": "dotenv run --override --file .env -- yarn prisma db migrate --advance-ref db",
     "db:test:migrate": "dotenv run --override --file .env.test -- yarn prisma db migrate --advance-ref db",
     "generate:api-types": "openapi-typescript ./openapi/openapi-v1.yaml -o ./src/generated/api.d.ts",
     "contract:emit": "prisma contract emit",

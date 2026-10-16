@@ -1,5 +1,4 @@
 // use prisma-8
-
 enum PaymentProvider {
   STRIPE = "stripe"
   PAYPAL = "paypal"
@@ -13,50 +12,69 @@ enum PaymentStatus {
   REFUNDED = "refunded"
 }
 
+enum CourseStatusName {
+  DRAFTED = "drafted"
+  PUBLISHED = "published"
+  ARCHIVED = "archived"
+  DELETED = "deleted"
+}
+
 model Course {
-  id          Uuid   @id @default(uuid())
+  id          Uuid                       @id @default(uuid())
   title       String
   description String
   contentUrl  String
 
-  startsAt  DateTime
-  endsAt    DateTime
-  timeZone  String
+  startsAt    DateTime
+  endsAt      DateTime
+  timeZone    String
 
-  archivedAt DateTime?
+  createdAt   DateTime                   @default(now())
+  updatedAt   temporal.updatedAtJsDate()
 
-  createdAt DateTime                 @default(now())
-  updatedAt temporal.updatedAtJsDate()
-
+  statuses    CourseStatus[]
   prices      CoursePrice[]
   enrollments Enrollment[]
 
   @@index([startsAt])
 }
 
-model CoursePrice {
-  id       Uuid @id @default(uuid())
-  courseId Uuid
+model CourseStatus {
+  id        Uuid             @id @default(uuid())
+  courseId  Uuid
+  name      CourseStatusName
 
-  amount   Int
-  currency String
+  changedAt DateTime         @default(now())
+
+  course    Course           @relation(fields:[courseId], references:[id])
+
+  @@index([courseId, changedAt])
+}
+
+model CoursePrice {
+  id          Uuid      @id @default(uuid())
+  courseId    Uuid
+
+  amount      Int
+  currency    String
 
   effectiveAt DateTime
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
-  course   Course   @relation(fields: [courseId], references: [id])
-  payments Payment[]
+  course      Course    @relation(fields:[courseId], references:[id])
+  payments    Payment[]
 
   @@unique([courseId, effectiveAt])
   @@index([courseId, effectiveAt])
 }
 
 model Customer {
-  id    Uuid   @id @default(uuid())
-  email String @unique
+  id                Uuid                       @id @default(uuid())
+  name              String
+  email             String                     @unique
 
-  createdAt DateTime                 @default(now())
-  updatedAt temporal.updatedAtJsDate()
+  createdAt         DateTime                   @default(now())
+  updatedAt         temporal.updatedAtJsDate()
 
   providerCustomers PaymentProviderCustomer[]
   payments          Payment[]
@@ -64,17 +82,17 @@ model Customer {
 }
 
 model PaymentProviderCustomer {
-  id Uuid @id @default(uuid())
+  id                 Uuid            @id @default(uuid())
 
-  customerId Uuid
-  provider   PaymentProvider
+  customerId         Uuid
+  provider           PaymentProvider
 
   providerCustomerId String
 
-  createdAt DateTime @default(now())
+  createdAt          DateTime        @default(now())
 
-  customer Customer @relation(fields: [customerId], references: [id])
-  payments Payment[]
+  customer           Customer        @relation(fields:[customerId], references:[id])
+  payments           Payment[]
 
   @@unique([provider, providerCustomerId])
   @@unique([customerId, provider])
@@ -82,30 +100,30 @@ model PaymentProviderCustomer {
 }
 
 model Payment {
-  id Uuid @id @default(uuid())
+  id                 Uuid                     @id @default(uuid())
 
-  customerId    Uuid
-  coursePriceId Uuid
+  customerId         Uuid
+  coursePriceId      Uuid
 
-  provider PaymentProvider
-  status   PaymentStatus
+  provider           PaymentProvider
+  status             PaymentStatus
 
-  amount   Int
-  currency String
+  amount             Int
+  currency           String
 
   providerPaymentId  String
   providerCheckoutId String?
 
   providerCustomerId Uuid?
 
-  createdAt DateTime
-  paidAt    DateTime?
+  createdAt          DateTime
+  paidAt             DateTime?
 
-  customer         Customer                 @relation(fields: [customerId], references: [id])
-  coursePrice      CoursePrice              @relation(fields: [coursePriceId], references: [id])
-  providerCustomer PaymentProviderCustomer? @relation(fields: [providerCustomerId], references: [id])
+  customer           Customer                 @relation(fields:[customerId], references:[id])
+  coursePrice        CoursePrice              @relation(fields:[coursePriceId], references:[id])
+  providerCustomer   PaymentProviderCustomer? @relation(fields:[providerCustomerId], references:[id])
 
-  enrollment Enrollment?
+  enrollment         Enrollment?
 
   @@unique([provider, providerPaymentId])
   @@index([customerId])
@@ -114,16 +132,16 @@ model Payment {
 }
 
 model Enrollment {
-  id         Uuid @id @default(uuid())
-  courseId   Uuid
-  customerId Uuid
-  paymentId  Uuid @unique
+  id          Uuid     @id @default(uuid())
+  courseId    Uuid
+  customerId  Uuid
+  paymentId   Uuid     @unique
 
   purchasedAt DateTime @default(now())
 
-  course   Course   @relation(fields: [courseId], references: [id])
-  customer Customer @relation(fields: [customerId], references: [id])
-  payment  Payment  @relation(fields: [paymentId], references: [id])
+  course      Course   @relation(fields:[courseId], references:[id])
+  customer    Customer @relation(fields:[customerId], references:[id])
+  payment     Payment  @relation(fields:[paymentId], references:[id])
 
   @@unique([courseId, customerId])
   @@index([customerId])
@@ -133,7 +151,7 @@ model ProcessedPaymentEvent {
   provider    PaymentProvider
   eventId     String
   type        String
-  processedAt DateTime @default(now())
+  processedAt DateTime        @default(now())
 
   @@id([provider, eventId])
 }

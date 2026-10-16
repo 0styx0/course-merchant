@@ -12,6 +12,10 @@
       "model": "CoursePrice",
       "namespace": "public"
     },
+    "CourseStatus": {
+      "model": "CourseStatus",
+      "namespace": "public"
+    },
     "Customer": {
       "model": "Customer",
       "namespace": "public"
@@ -37,6 +41,27 @@
     "namespaces": {
       "public": {
         "enum": {
+          "CourseStatusName": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "DRAFTED",
+                "value": "drafted"
+              },
+              {
+                "name": "PUBLISHED",
+                "value": "published"
+              },
+              {
+                "name": "ARCHIVED",
+                "value": "archived"
+              },
+              {
+                "name": "DELETED",
+                "value": "deleted"
+              }
+            ]
+          },
           "PaymentProvider": {
             "codecId": "pg/text@1",
             "members": [
@@ -79,13 +104,6 @@
         "models": {
           "Course": {
             "fields": {
-              "archivedAt": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/timestamptz-temporal@1",
-                  "kind": "scalar"
-                }
-              },
               "contentUrl": {
                 "nullable": false,
                 "type": {
@@ -180,13 +198,25 @@
                   "model": "CoursePrice",
                   "namespace": "public"
                 }
+              },
+              "statuses": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "courseId"
+                  ]
+                },
+                "to": {
+                  "model": "CourseStatus",
+                  "namespace": "public"
+                }
               }
             },
             "storage": {
               "fields": {
-                "archivedAt": {
-                  "column": "archivedAt"
-                },
                 "contentUrl": {
                   "column": "contentUrl"
                 },
@@ -322,6 +352,80 @@
               "table": "CoursePrice"
             }
           },
+          "CourseStatus": {
+            "fields": {
+              "changedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "courseId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "CourseStatusName",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              }
+            },
+            "relations": {
+              "course": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "courseId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Course",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "changedAt": {
+                  "column": "changedAt"
+                },
+                "courseId": {
+                  "column": "courseId"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "name": {
+                  "column": "name"
+                }
+              },
+              "namespaceId": "public",
+              "table": "CourseStatus"
+            }
+          },
           "Customer": {
             "fields": {
               "createdAt": {
@@ -342,6 +446,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -410,6 +521,9 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "name": {
+                  "column": "name"
                 },
                 "updatedAt": {
                   "column": "updatedAt"
@@ -904,11 +1018,6 @@
           "table": {
             "Course": {
               "columns": {
-                "archivedAt": {
-                  "codecId": "pg/timestamptz-temporal@1",
-                  "nativeType": "timestamptz",
-                  "nullable": true
-                },
                 "contentUrl": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -1065,6 +1174,90 @@
                 }
               ]
             },
+            "CourseStatus": {
+              "checks": [
+                {
+                  "expression": "\"name\" IN ('drafted', 'published', 'archived', 'deleted')",
+                  "name": "CourseStatus_name_check_8f10b29c",
+                  "prefix": "CourseStatus_name_check"
+                }
+              ],
+              "columns": {
+                "changedAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "courseId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "CourseStatusName",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "courseId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "CourseStatus"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Course"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "courseId",
+                    "changedAt"
+                  ],
+                  "name": "CourseStatus_courseId_changedAt_idx_fa8d8656",
+                  "prefix": "CourseStatus_courseId_changedAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "courseId"
+                  ],
+                  "name": "CourseStatus_courseId_idx_12f72d2a",
+                  "prefix": "CourseStatus_courseId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "Customer": {
               "columns": {
                 "createdAt": {
@@ -1084,6 +1277,11 @@
                 "id": {
                   "codecId": "pg/uuid@1",
                   "nativeType": "uuid",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
                   "nullable": false
                 },
                 "updatedAt": {
@@ -1548,6 +1746,15 @@
             }
           },
           "valueSet": {
+            "CourseStatusName": {
+              "kind": "valueSet",
+              "values": [
+                "drafted",
+                "published",
+                "archived",
+                "deleted"
+              ]
+            },
             "PaymentProvider": {
               "kind": "valueSet",
               "values": [
@@ -1571,10 +1778,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "78d34f4f9b99ae69d09be86753e470bca1dce098cff49a9078aa511fd6b466fd"
+    "storageHash": "2154fe7def425e5940a8d2245914496f163d3ac7f6bdfe1c74be08e2bf96b5a5"
   },
   "execution": {
-    "executionHash": "afcca67edb2e13eb7125ae03d77ec2e4ddc3ad25e9aaf3e49f84dd2826ecced0",
+    "executionHash": "8cea5d45bc41e6c57d4e3e10c184836ef241e0b9e93bed4b0ad2e80c473ad770",
     "mutations": {
       "defaults": [
         {
@@ -1610,6 +1817,17 @@
           },
           "ref": {
             "entry": "CoursePrice",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "CourseStatus",
             "field": "id",
             "namespace": "public"
           }
