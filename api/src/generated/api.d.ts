@@ -163,12 +163,21 @@ export interface components {
          * @example 7c9e6679-7425-40de-944b-e07fc1f90ae7
          */
         PriceId: string;
+        CourseStatusDetails: {
+            name: components["schemas"]["CourseStatus"];
+            /**
+             * Format: date-time
+             * @description RFC 3339 date-time, including its UTC offset, when the status was last changed.
+             * @example 2026-10-15T14:30:00-04:00
+             */
+            changedAt: string;
+        };
         /**
          * @description Whether an administrator has made the course available. `published` courses are publicly viewable once a price is in effect. `archived` courses are hidden from the public API regardless of their prices, and can be published again at any time.
          * @example published
          * @enum {string}
          */
-        CourseStatus: "published" | "archived";
+        CourseStatus: "published" | "archived" | "drafted" | "deleted";
         ListCoursesResponse: {
             courses: components["schemas"]["Course"][];
         };
@@ -233,18 +242,37 @@ export interface components {
             /** @description The course's currently active price. */
             price: components["schemas"]["Price"];
         };
-        /** @description A course as seen by an administrator. Has the same fields as `Course`, plus `status`, except that the single active `price` is replaced by the full `prices` schedule. */
+        /** @description A course as seen by an administrator, including its current status, full price schedule, and enrolled customers with their payment details. */
         AdminCourse: components["schemas"]["CourseDetails"] & {
             id: components["schemas"]["CourseId"];
-            status: components["schemas"]["CourseStatus"];
-            /**
-             * Format: int32
-             * @description Number of users currently enrolled in the course.
-             * @example 12
-             */
-            enrollmentCount: number;
-            /** @description The course's full price schedule, ordered by `effectiveAt` ascending. The entry in effect now is the last one whose `effectiveAt` is in the past. */
+            status: components["schemas"]["CourseStatusDetails"];
+            /** @description Enrolled customers and their associated payment details. */
+            enrollments: components["schemas"]["AdminEnrollment"][];
+            /** @description The course's full price schedule, ordered by effectiveAt ascending. The entry in effect now is the last one whose effectiveAt is in the past. */
             prices: components["schemas"]["AdminScheduledPrice"][];
+        };
+        AdminEnrollment: {
+            customer: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** Format: email */
+                email: string;
+            };
+            payment: {
+                /** @enum {string} */
+                status: "pending" | "succeeded" | "failed" | "refunded";
+                /**
+                 * Format: int64
+                 * @description Payment amount in the smallest unit of the currency.
+                 */
+                amount: number;
+                /**
+                 * Format: date-time
+                 * @description Time the payment succeeded, or null if not yet paid.
+                 */
+                paidAt: string | null;
+            };
         };
         Price: {
             /**

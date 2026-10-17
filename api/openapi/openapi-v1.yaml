@@ -618,11 +618,28 @@ components:
       examples:
         - 7c9e6679-7425-40de-944b-e07fc1f90ae7
 
+    CourseStatusDetails:
+      type: object
+      required:
+        - name
+        - changedAt
+      properties:
+        name:
+          $ref: "#/components/schemas/CourseStatus"
+        changedAt:
+          type: string
+          format: date-time
+          description: RFC 3339 date-time, including its UTC offset, when the status was last changed.
+          examples:
+            - "2026-10-15T14:30:00-04:00"
+
     CourseStatus:
       type: string
       enum:
         - published
         - archived
+        - drafted
+        - deleted
       description: >
         Whether an administrator has made the course available. `published`
         courses are publicly viewable once a price is in effect. `archived`
@@ -808,38 +825,82 @@ components:
 
     AdminCourse:
       description: >
-        A course as seen by an administrator. Has the same fields as `Course`,
-        plus `status`, except that the single active `price` is replaced by
-        the full `prices` schedule.
+        A course as seen by an administrator, including its current status,
+        full price schedule, and enrolled customers with their payment details.
       allOf:
         - $ref: "#/components/schemas/CourseDetails"
         - type: object
           required:
             - id
             - status
-            - enrollmentCount
+            - enrollments
             - prices
           properties:
             id:
               $ref: "#/components/schemas/CourseId"
             status:
-              $ref: "#/components/schemas/CourseStatus"
-            enrollmentCount:
-              type: integer
-              format: int32
-              minimum: 0
-              description: Number of users currently enrolled in the course.
-              examples:
-                - 12
+              $ref: "#/components/schemas/CourseStatusDetails"
+            enrollments:
+              type: array
+              description: Enrolled customers and their associated payment details.
+              items:
+                $ref: "#/components/schemas/AdminEnrollment"
             prices:
               type: array
               minItems: 1
               description: >
-                The course's full price schedule, ordered by `effectiveAt`
+                The course's full price schedule, ordered by effectiveAt
                 ascending. The entry in effect now is the last one whose
-                `effectiveAt` is in the past.
+                effectiveAt is in the past.
               items:
                 $ref: "#/components/schemas/AdminScheduledPrice"
+
+    AdminEnrollment:
+      type: object
+      required:
+        - customer
+        - payment
+      properties:
+        customer:
+          type: object
+          required:
+            - id
+            - name
+            - email
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            email:
+              type: string
+              format: email
+        payment:
+          type: object
+          required:
+            - status
+            - amount
+            - paidAt
+          properties:
+            status:
+              type: string
+              enum:
+                - pending
+                - succeeded
+                - failed
+                - refunded
+            amount:
+              type: integer
+              format: int64
+              minimum: 0
+              maximum: 9007199254740991
+              description: Payment amount in the smallest unit of the currency.
+            paidAt:
+              type:
+                - string
+              format: date-time
+              description: Time the payment succeeded, or null if not yet paid.
 
     Price:
       type: object

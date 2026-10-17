@@ -117,13 +117,13 @@ model Payment {
   providerCustomerId Uuid?
 
   createdAt          DateTime
-  paidAt             DateTime?
+  paidAt             DateTime
 
   customer           Customer                 @relation(fields:[customerId], references:[id])
   coursePrice        CoursePrice              @relation(fields:[coursePriceId], references:[id])
   providerCustomer   PaymentProviderCustomer? @relation(fields:[providerCustomerId], references:[id])
 
-  enrollment         Enrollment?
+  enrollment         Enrollment
 
   @@unique([provider, providerPaymentId])
   @@index([customerId])
