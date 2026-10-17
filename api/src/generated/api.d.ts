@@ -271,7 +271,7 @@ export interface components {
                  * Format: date-time
                  * @description Time the payment succeeded, or null if not yet paid.
                  */
-                paidAt: string | null;
+                paidAt: string;
             };
         };
         Price: {

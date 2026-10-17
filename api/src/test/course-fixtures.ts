@@ -86,6 +86,7 @@ export async function createPayment(input: {
   coursePriceId: string;
   amount: number;
   currency: string;
+  paidAt?: Temporal.Instant
 }) {
   return db.orm.public.Payment.create({
     customerId: input.customerId,
@@ -96,6 +97,7 @@ export async function createPayment(input: {
     currency: input.currency,
     providerPaymentId: `test-payment-${crypto.randomUUID()}`,
     createdAt: Temporal.Now.instant(),
+    paidAt: input.paidAt || Temporal.Now.instant()
   });
 }
 
