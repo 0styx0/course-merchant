@@ -21,7 +21,8 @@ export async function createCourse(input: {
     endsAt: input.endsAt,
     timeZone: input.timeZone,
     statuses: (statuses) =>
-      statuses.create([{ name: "published" }]),
+      // use a status far in past, so tests can easly clobber it
+      statuses.create([{ name: "published", changedAt: instant("1970-01-01T10:00:00-04:00") }]),
   });
 }
 
