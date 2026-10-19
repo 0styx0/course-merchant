@@ -65,7 +65,7 @@ export interface paths {
          * Create a course
          * @description Creates a course. Requires an administrator.
          *
-         *     All fields are required except `status`. The server validates every field and reports all failures at once in the `errors` array of a 400 response, so clients can display every problem together.
+         *     All fields are required. The server validates every field and reports all failures at once in the `errors` array of a 400 response, so clients can display every problem together.
          *
          *     Validation rules:
          *     - `name`: 1 to 100 characters.
@@ -78,7 +78,7 @@ export interface paths {
          *     - `prices[].currency`: must be an existing ISO 4217 currency code.
          *     - `prices[].amount`: must be at least 50 (fifty cents for USD), because the payment processor does not accept smaller charges.
          *     - `prices[].effectiveAt`: must be now or in the future.
-         *     - `status`: optional, either `published` or `archived`. Defaults to `published`.
+         *     - `status`: see #/components/schemas/CourseStatus
          *
          *     A course is publicly visible only when its `status` is `published` and a price is in effect. If every entry in `prices` has a future `effectiveAt`, the course is hidden from `listCourses` and `getCourse` until the earliest `effectiveAt`. Include a price with an `effectiveAt` of now to make the course visible immediately. Create a course with `status: archived` to keep it hidden, regardless of its prices, until it is published.
          *
@@ -215,10 +215,10 @@ export interface components {
         UpdateScheduledPrice: components["schemas"]["ScheduledPrice"] & {
             id?: components["schemas"]["PriceId"];
         };
-        /** @description All fields are required except `status`. */
+        /** @description All fields are required. */
         CreateCourseRequest: components["schemas"]["CourseDetails"] & {
             /**
-             * @description Optional. Defaults to `published`. Use `archived` to create the course hidden from the public API.
+             * @description Use `archived` to create the course hidden from the public API.
              * @default published
              */
             status: components["schemas"]["CourseStatus"];

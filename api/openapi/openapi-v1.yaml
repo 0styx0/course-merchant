@@ -115,7 +115,7 @@ paths:
         Creates a course. Requires an administrator.
 
 
-        All fields are required except `status`. The server validates every
+        All fields are required. The server validates every
         field and reports all failures at once in the `errors` array of a 400
         response, so clients can display every problem together.
 
@@ -150,8 +150,7 @@ paths:
 
         - `prices[].effectiveAt`: must be now or in the future.
 
-        - `status`: optional, either `published` or `archived`. Defaults to
-        `published`.
+        - `status`: see #/components/schemas/CourseStatus
 
 
         A course is publicly visible only when its `status` is `published` and
@@ -633,6 +632,7 @@ components:
           examples:
             - "2026-10-15T14:30:00-04:00"
 
+    # append-only log. the one with the most recent changedAt is the courses' current status
     CourseStatus:
       type: string
       enum:
@@ -748,16 +748,17 @@ components:
               $ref: "#/components/schemas/PriceId"
 
     CreateCourseRequest:
-      description: All fields are required except `status`.
+      description: All fields are required.
       allOf:
         - $ref: "#/components/schemas/CourseDetails"
         - type: object
           required:
             - prices
+            - status
           properties:
             status:
               description: >
-                Optional. Defaults to `published`. Use `archived` to create
+                Use `archived` to create
                 the course hidden from the public API.
               default: published
               $ref: "#/components/schemas/CourseStatus"
@@ -902,6 +903,7 @@ components:
               format: date-time
               description: Time the payment succeeded, or null if not yet paid.
 
+    # A price can never be deleted, only overwritten by a price with a later effectiveAt
     Price:
       type: object
       required:
