@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service.js";
 import { Temporal } from "@js-temporal/polyfill";
-import { Models, models } from "@/prisma/contract.js";
+import { Models } from "@/prisma/contract.js";
 import { and } from "@prisma/orm-postgres/orm-client";
 
 export type CourseRepositoryModelPublic = {
@@ -127,16 +127,18 @@ export class CoursesRepository {
 
   async findAllCourseDetailsAdmin(): Promise<CourseRepositoryModelAdmin[]> {
     return await this.prisma.db.orm.public.Course
-      .where((course) =>
-        course.statuses.some((status) =>
-          and(
-            status.name.neq("deleted"),
-            course.statuses.none((laterStatus) =>
+    .where((course) =>
+      course.statuses.some((status) =>
+        and(
+          status.name.neq("deleted"),
+          status.course.some((sameCourse) =>
+            sameCourse.statuses.none((laterStatus) =>
               laterStatus.changedAt.gt(status.changedAt),
             ),
           ),
         ),
-      )
+      ),
+    )
       .include("prices", (prices) =>
         prices.orderBy((price) => price.effectiveAt.asc()),
       )
@@ -147,9 +149,7 @@ export class CoursesRepository {
           .limit(1),
       )
       .include("enrollments", (enrollments) =>
-        enrollments
-          .include("customer")
-          .include("payment"),
+        enrollments.include("customer").include("payment"),
       )
       .orderBy((course) => course.startsAt.desc())
       .all();

@@ -377,7 +377,7 @@ describe("AdminCoursesService integration", () => {
             payment: {
               status: "succeeded",
               amount: julyPrice.amount,
-              paidAt: adaPaidAt,
+              paidAt: "2026-09-29T09:00:00-04:00",
             },
           },
           {
@@ -389,7 +389,7 @@ describe("AdminCoursesService integration", () => {
             payment: {
               status: "succeeded",
               amount: augustPrice.amount,
-              paidAt: gracePaidAt,
+              paidAt: "2026-09-29T08:00:00-04:00",
             },
           },
         ]),
