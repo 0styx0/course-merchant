@@ -9,6 +9,7 @@ export type ListCoursesResponse =
 export type GetCourseResponse = components["schemas"]["Course"]
 
 export type GetCourseAdminResponse = components["schemas"]["AdminCourse"]
+export type ListCoursesAdminResponse = components["schemas"]["ListAdminCoursesResponse"]
 
 export type ProblemDetails = components["schemas"]["ProblemDetails"]
 

@@ -124,4 +124,34 @@ export class CoursesRepository {
       .where((course) => course.id.eq(courseId))
       .first();
   }
+
+  async findAllCourseDetailsAdmin(): Promise<CourseRepositoryModelAdmin[]> {
+    return await this.prisma.db.orm.public.Course
+      .where((course) =>
+        course.statuses.some((status) =>
+          and(
+            status.name.neq("deleted"),
+            course.statuses.none((laterStatus) =>
+              laterStatus.changedAt.gt(status.changedAt),
+            ),
+          ),
+        ),
+      )
+      .include("prices", (prices) =>
+        prices.orderBy((price) => price.effectiveAt.asc()),
+      )
+      .include("statuses", (statuses) =>
+        statuses
+          .select("name", "changedAt")
+          .orderBy((status) => status.changedAt.desc())
+          .limit(1),
+      )
+      .include("enrollments", (enrollments) =>
+        enrollments
+          .include("customer")
+          .include("payment"),
+      )
+      .orderBy((course) => course.startsAt.desc())
+      .all();
+  }
 }
