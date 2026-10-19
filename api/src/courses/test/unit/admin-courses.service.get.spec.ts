@@ -1,4 +1,3 @@
-import { Temporal } from "@js-temporal/polyfill";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { instant } from "../../../test/test-helpers.js";
@@ -6,7 +5,7 @@ import {
     CourseRepositoryModelAdmin,
     CoursesRepository,
 } from "../../courses.repository/courses.repository.js";
-import { CoursesService } from "../../courses.service.js";
+import { AdminCoursesService } from "@/courses/admin-courses.service.js";
 
 const COURSE_ID = "crs_01HZX3";
 
@@ -73,7 +72,7 @@ const repositoryCourse = {
 } satisfies CourseRepositoryModelAdmin;
 
 describe("CoursesService", () => {
-    let service: CoursesService;
+    let service: AdminCoursesService;
 
     let coursesRepository: {
         findCourseDetailsByIdAdmin: ReturnType<typeof vi.fn>;
@@ -84,7 +83,7 @@ describe("CoursesService", () => {
             findCourseDetailsByIdAdmin: vi.fn(),
         };
 
-        service = new CoursesService(
+        service = new AdminCoursesService(
             coursesRepository as unknown as CoursesRepository,
         );
     });

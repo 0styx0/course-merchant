@@ -1,5 +1,5 @@
 import { Controller, Get, Inject, Param } from '@nestjs/common';
-import { GetCourseAdminResponse, GetCourseResponse, ListCoursesResponse } from 'types.js';
+import { GetCourseResponse, ListCoursesResponse } from 'types.js';
 import { CoursesService } from './courses.service.js';
 import { ParseCourseIdPipe } from './pipes/parse-course-id.pipe.js';
 
@@ -23,12 +23,5 @@ export class CoursesController {
       @Param("courseId", ParseCourseIdPipe) courseId: string
   ): Promise<GetCourseResponse> {
     return this.coursesService.findById(courseId);
-  }
-
-  @Get(":courseId")
-  findByIdAdmin(
-      @Param("courseId", ParseCourseIdPipe) courseId: string
-  ): Promise<GetCourseAdminResponse> {
-    return this.coursesService.findByIdAdmin(courseId);
   }
 }

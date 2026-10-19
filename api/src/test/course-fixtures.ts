@@ -121,3 +121,11 @@ export function archiveCourse(courseId: string, archiveAt: Temporal.Instant) {
     changedAt: archiveAt,
   });
 }
+
+export function updateCourseStatus(courseId: string, status: Models.public_CourseStatus["name"], changedAt: Temporal.Instant) {
+  return db.orm.public.CourseStatus.create({
+    courseId,
+    name: status,
+    changedAt: changedAt,
+  });
+}

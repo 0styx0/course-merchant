@@ -20,25 +20,25 @@ import {
     createPricedCourse,
 } from "../../../test/course-fixtures.js";
 import { CoursesRepository } from "../../courses.repository/courses.repository.js";
-import { CoursesService } from "../../courses.service.js";
 import { PrismaModule } from "../../../prisma/prisma.module.js";
+import { AdminCoursesService } from "@/courses/admin-courses.service.js";
 
 const NOW = instant("2026-09-29T14:00:00.000Z");
 
 const NONEXISTENT_COURSE_ID =
     "123e4567-e89b-12d3-a456-426614174000";
 
-describe("CoursesService integration", () => {
-    let service: CoursesService;
+describe("AdminCoursesService integration", () => {
+    let service: AdminCoursesService;
     let testingModule: TestingModule;
 
     beforeAll(async () => {
         testingModule = await Test.createTestingModule({
             imports: [PrismaModule],
-            providers: [CoursesService, CoursesRepository],
+            providers: [AdminCoursesService, CoursesRepository],
         }).compile();
 
-        service = testingModule.get(CoursesService);
+        service = testingModule.get(AdminCoursesService);
     });
 
     beforeEach(() => {
