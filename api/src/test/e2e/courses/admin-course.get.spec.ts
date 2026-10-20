@@ -65,8 +65,8 @@ describe("Admin Courses Create API (e2e)", () => {
         name: "React Fundamentals",
         description: "Learn the fundamentals of React.",
         schedule: {
-          startTime: "2026-10-15T14:00:00-04:00",
-          endTime: "2026-10-15T16:00:00-04:00",
+          startTime: "2026-10-15T18:00:00Z",
+          endTime: "2026-10-15T20:00:00Z",
           timeZone: "America/New_York",
         },
         status: {
@@ -78,7 +78,7 @@ describe("Admin Courses Create API (e2e)", () => {
             id: price.id,
             amount: 9900,
             currency: "USD",
-            effectiveAt: "2025-12-31T19:00:00-05:00",
+            effectiveAt: "2026-01-01T00:00:00Z",
           },
         ],
         enrollments: [],
@@ -175,8 +175,8 @@ describe("Admin Courses Create API (e2e)", () => {
       expect(response.body.id).toBe(course.id);
       expect(response.body.name).toBe("Ended Course");
       expect(response.body.schedule).toEqual({
-        startTime: "2025-09-27T14:00:00-04:00",
-        endTime: "2025-09-27T16:00:00-04:00",
+        startTime: "2025-09-27T18:00:00Z",
+        endTime: "2025-09-27T20:00:00Z",
         timeZone: "America/New_York",
       });
     });
@@ -203,7 +203,7 @@ describe("Admin Courses Create API (e2e)", () => {
           id: price.id,
           amount: 12900,
           currency: "USD",
-          effectiveAt: "2026-12-31T19:00:00-05:00",
+          effectiveAt: "2027-01-01T00:00:00Z",
         },
       ]);
     });
@@ -243,19 +243,19 @@ describe("Admin Courses Create API (e2e)", () => {
           id: julyPrice.id,
           amount: 4900,
           currency: "USD",
-          effectiveAt: "2026-06-30T20:00:00-04:00",
+          effectiveAt: "2026-07-01T00:00:00Z",
         },
         {
           id: augustPrice.id,
           amount: 7900,
           currency: "USD",
-          effectiveAt: "2026-07-31T20:00:00-04:00",
+          effectiveAt: "2026-08-01T00:00:00Z",
         },
         {
           id: octoberPrice.id,
           amount: 12900,
           currency: "USD",
-          effectiveAt: "2026-09-30T20:00:00-04:00",
+          effectiveAt: "2026-10-01T00:00:00Z",
         },
       ]);
     });

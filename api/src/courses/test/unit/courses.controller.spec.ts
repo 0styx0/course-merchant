@@ -45,8 +45,8 @@ describe("CoursesController", () => {
               currency: "USD",
             },
             schedule: {
-              startTime: "2026-10-01T14:00:00-04:00",
-              endTime: "2026-10-01T16:00:00-04:00",
+              startTime: "2026-10-01T18:00:00Z",
+              endTime: "2026-10-01T20:00:00Z",
               timeZone: "America/New_York",
             },
           },
@@ -93,8 +93,8 @@ describe("CoursesController", () => {
           currency: "USD",
         },
         schedule: {
-          startTime: "2026-10-01T14:00:00-04:00",
-          endTime: "2026-10-01T16:00:00-04:00",
+          startTime: "2026-10-01T18:00:00Z",
+          endTime: "2026-10-01T20:00:00Z",
           timeZone: "America/New_York",
         },
       };

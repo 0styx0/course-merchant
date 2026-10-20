@@ -14,13 +14,13 @@ const repositoryCourse = {
   id: COURSE_ID,
   title: "React Fundamentals",
   description: "Learn the fundamentals of React",
-  startsAt: instant("2026-10-01T18:00:00.000Z"),
-  endsAt: instant("2026-10-01T20:00:00.000Z"),
+  startsAt: instant("2026-10-01T18:00:00Z"),
+  endsAt: instant("2026-10-01T20:00:00Z"),
   timeZone: "America/New_York",
   statuses: [
     {
       name: "published",
-      changedAt: instant("2026-09-29T14:00:00.000Z"),
+      changedAt: instant("2026-09-29T14:00:00Z"),
     },
   ],
   prices: [
@@ -28,7 +28,7 @@ const repositoryCourse = {
       id: "price_early",
       amount: 7900,
       currency: "USD",
-      effectiveAt: instant("2026-10-20T04:00:00.000Z"),
+      effectiveAt: instant("2026-10-20T04:00:00Z"),
     },
   ],
   enrollments: [],

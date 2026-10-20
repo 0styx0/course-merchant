@@ -9,7 +9,7 @@ import { CoursesService } from "../../courses.service.js";
 import { instant } from "../../../test/test-helpers.js";
 import { PrismaModule } from "../../../prisma/prisma.module.js";
 
-const NOW = instant("2026-09-29T14:00:00.000Z");
+const NOW = instant("2026-09-29T14:00:00Z");
 
 describe("CoursesService integration", () => {
   let service: CoursesService;
@@ -49,8 +49,8 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "React Fundamentals",
         description: "Learn React",
-        startsAt: instant("2026-10-01T18:00:00.000Z"),
-        endsAt: instant("2026-10-01T20:00:00.000Z"),
+        startsAt: instant("2026-10-01T18:00:00Z"),
+        endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
@@ -58,7 +58,7 @@ describe("CoursesService integration", () => {
         courseId: course.id,
         amount: 9900,
         currency: "USD",
-        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-09-01T00:00:00Z"),
       });
 
       const result = await service.findAll();
@@ -74,8 +74,8 @@ describe("CoursesService integration", () => {
             currency: "USD",
           },
           schedule: {
-            startTime: "2026-10-01T14:00:00-04:00",
-            endTime: "2026-10-01T16:00:00-04:00",
+            startTime: "2026-10-01T18:00:00Z",
+            endTime: "2026-10-01T20:00:00Z",
             timeZone: "America/New_York",
           },
         },
@@ -86,8 +86,8 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "In Progress",
         description: "Currently running",
-        startsAt: instant("2026-09-29T13:00:00.000Z"),
-        endsAt: instant("2026-09-29T15:00:00.000Z"),
+        startsAt: instant("2026-09-29T13:00:00Z"),
+        endsAt: instant("2026-09-29T15:00:00Z"),
         timeZone: "America/New_York",
       });
 
@@ -95,7 +95,7 @@ describe("CoursesService integration", () => {
         courseId: course.id,
         amount: 9900,
         currency: "USD",
-        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-09-01T00:00:00Z"),
       });
 
       const result = await service.findAll();
@@ -108,7 +108,7 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "Ending Now",
         description: "Ends now",
-        startsAt: instant("2026-09-29T13:00:00.000Z"),
+        startsAt: instant("2026-09-29T13:00:00Z"),
         endsAt: NOW,
         timeZone: "America/New_York",
       });
@@ -117,7 +117,7 @@ describe("CoursesService integration", () => {
         courseId: course.id,
         amount: 9900,
         currency: "USD",
-        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-09-01T00:00:00Z"),
       });
 
       const result = await service.findAll();
@@ -131,16 +131,16 @@ describe("CoursesService integration", () => {
       const later = await createCourse({
         title: "Later",
         description: "Later course",
-        startsAt: instant("2026-10-03T18:00:00.000Z"),
-        endsAt: instant("2026-10-03T20:00:00.000Z"),
+        startsAt: instant("2026-10-03T18:00:00Z"),
+        endsAt: instant("2026-10-03T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
       const earlier = await createCourse({
         title: "Earlier",
         description: "Earlier course",
-        startsAt: instant("2026-10-01T18:00:00.000Z"),
-        endsAt: instant("2026-10-01T20:00:00.000Z"),
+        startsAt: instant("2026-10-01T18:00:00Z"),
+        endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
@@ -148,14 +148,14 @@ describe("CoursesService integration", () => {
         courseId: later.id,
         amount: 9900,
         currency: "USD",
-        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-09-01T00:00:00Z"),
       });
 
       await createCoursePrice({
         courseId: earlier.id,
         amount: 4900,
         currency: "USD",
-        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-09-01T00:00:00Z"),
       });
 
       const result = await service.findAll();
@@ -170,16 +170,16 @@ describe("CoursesService integration", () => {
       const courseA = await createCourse({
         title: "Course A",
         description: "A",
-        startsAt: instant("2026-10-01T18:00:00.000Z"),
-        endsAt: instant("2026-10-01T20:00:00.000Z"),
+        startsAt: instant("2026-10-01T18:00:00Z"),
+        endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
       const courseB = await createCourse({
         title: "Course B",
         description: "B",
-        startsAt: instant("2026-10-01T18:00:00.000Z"),
-        endsAt: instant("2026-10-01T20:00:00.000Z"),
+        startsAt: instant("2026-10-01T18:00:00Z"),
+        endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
@@ -187,14 +187,14 @@ describe("CoursesService integration", () => {
         courseId: courseA.id,
         amount: 9900,
         currency: "USD",
-        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-09-01T00:00:00Z"),
       });
 
       await createCoursePrice({
         courseId: courseB.id,
         amount: 9900,
         currency: "USD",
-        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-09-01T00:00:00Z"),
       });
 
       const result = await service.findAll();
@@ -212,24 +212,24 @@ describe("CoursesService integration", () => {
       const ended = await createCourse({
         title: "Ended",
         description: "Finished",
-        startsAt: instant("2026-09-01T18:00:00.000Z"),
-        endsAt: instant("2026-09-01T20:00:00.000Z"),
+        startsAt: instant("2026-09-01T18:00:00Z"),
+        endsAt: instant("2026-09-01T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
       const later = await createCourse({
         title: "Later",
         description: "Later",
-        startsAt: instant("2026-10-03T18:00:00.000Z"),
-        endsAt: instant("2026-10-03T20:00:00.000Z"),
+        startsAt: instant("2026-10-03T18:00:00Z"),
+        endsAt: instant("2026-10-03T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
       const earlier = await createCourse({
         title: "Earlier",
         description: "Earlier",
-        startsAt: instant("2026-10-01T18:00:00.000Z"),
-        endsAt: instant("2026-10-01T20:00:00.000Z"),
+        startsAt: instant("2026-10-01T18:00:00Z"),
+        endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
@@ -238,7 +238,7 @@ describe("CoursesService integration", () => {
           courseId: course.id,
           amount: 9900,
           currency: "USD",
-          effectiveAt: instant("2026-08-01T00:00:00.000Z"),
+          effectiveAt: instant("2026-08-01T00:00:00Z"),
         });
       }
 
@@ -254,8 +254,8 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "Priced Course",
         description: "Price history",
-        startsAt: instant("2026-10-01T18:00:00.000Z"),
-        endsAt: instant("2026-10-01T20:00:00.000Z"),
+        startsAt: instant("2026-10-01T18:00:00Z"),
+        endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
@@ -263,21 +263,21 @@ describe("CoursesService integration", () => {
         courseId: course.id,
         amount: 4900,
         currency: "USD",
-        effectiveAt: instant("2026-08-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-08-01T00:00:00Z"),
       });
 
       await createCoursePrice({
         courseId: course.id,
         amount: 7900,
         currency: "USD",
-        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-09-01T00:00:00Z"),
       });
 
       await createCoursePrice({
         courseId: course.id,
         amount: 9900,
         currency: "USD",
-        effectiveAt: instant("2026-10-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-10-01T00:00:00Z"),
       });
 
       const result = await service.findAll();
@@ -292,8 +292,8 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "Boundary Price Course",
         description: "Price boundary",
-        startsAt: instant("2026-10-01T18:00:00.000Z"),
-        endsAt: instant("2026-10-01T20:00:00.000Z"),
+        startsAt: instant("2026-10-01T18:00:00Z"),
+        endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
@@ -316,8 +316,8 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "Future Price Course",
         description: "Future pricing",
-        startsAt: instant("2026-10-01T18:00:00.000Z"),
-        endsAt: instant("2026-10-01T20:00:00.000Z"),
+        startsAt: instant("2026-10-01T18:00:00Z"),
+        endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
@@ -325,14 +325,14 @@ describe("CoursesService integration", () => {
         courseId: course.id,
         amount: 7900,
         currency: "USD",
-        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-09-01T00:00:00Z"),
       });
 
       await createCoursePrice({
         courseId: course.id,
         amount: 9900,
         currency: "USD",
-        effectiveAt: instant("2026-10-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-10-01T00:00:00Z"),
       });
 
       const result = await service.findAll();
@@ -344,8 +344,8 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "Popular Course",
         description: "Many students",
-        startsAt: instant("2026-10-01T18:00:00.000Z"),
-        endsAt: instant("2026-10-01T20:00:00.000Z"),
+        startsAt: instant("2026-10-01T18:00:00Z"),
+        endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
@@ -353,7 +353,7 @@ describe("CoursesService integration", () => {
         courseId: course.id,
         amount: 9900,
         currency: "USD",
-        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-09-01T00:00:00Z"),
       });
 
       for (let i = 0; i < 3; i++) {
@@ -382,16 +382,16 @@ describe("CoursesService integration", () => {
       const courseA = await createCourse({
         title: "Course A",
         description: "A",
-        startsAt: instant("2026-10-01T18:00:00.000Z"),
-        endsAt: instant("2026-10-01T20:00:00.000Z"),
+        startsAt: instant("2026-10-01T18:00:00Z"),
+        endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
       const courseB = await createCourse({
         title: "Course B",
         description: "B",
-        startsAt: instant("2026-10-02T18:00:00.000Z"),
-        endsAt: instant("2026-10-02T20:00:00.000Z"),
+        startsAt: instant("2026-10-02T18:00:00Z"),
+        endsAt: instant("2026-10-02T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
@@ -399,14 +399,14 @@ describe("CoursesService integration", () => {
         courseId: courseA.id,
         amount: 9900,
         currency: "USD",
-        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-09-01T00:00:00Z"),
       });
 
       const priceB = await createCoursePrice({
         courseId: courseB.id,
         amount: 9900,
         currency: "USD",
-        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-09-01T00:00:00Z"),
       });
 
       const customer = await createCustomer({});
@@ -437,8 +437,8 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "Timezone Course",
         description: "Timezone test",
-        startsAt: instant("2027-01-15T18:00:00.000Z"),
-        endsAt: instant("2027-01-15T20:00:00.000Z"),
+        startsAt: instant("2027-01-15T18:00:00Z"),
+        endsAt: instant("2027-01-15T20:00:00Z"),
         timeZone: "America/New_York",
       });
 
@@ -446,14 +446,14 @@ describe("CoursesService integration", () => {
         courseId: course.id,
         amount: 9900,
         currency: "USD",
-        effectiveAt: instant("2026-09-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-09-01T00:00:00Z"),
       });
 
       const result = await service.findAll();
 
       expect(result.courses[0].schedule).toEqual({
-        startTime: "2027-01-15T13:00:00-05:00",
-        endTime: "2027-01-15T15:00:00-05:00",
+        startTime: "2027-01-15T18:00:00Z",
+        endTime: "2027-01-15T20:00:00Z",
         timeZone: "America/New_York",
       });
     });

@@ -9,8 +9,8 @@ const makeCourseRecord = (overrides = {}) => ({
   id: "course-1",
   title: "React Fundamentals",
   description: "Learn React",
-  startsAt: instant("2026-10-01T18:00:00.000Z"),
-  endsAt: instant("2026-10-01T20:00:00.000Z"),
+  startsAt: instant("2026-10-01T18:00:00Z"),
+  endsAt: instant("2026-10-01T20:00:00Z"),
   timeZone: "America/New_York",
   prices: [
     {
@@ -71,8 +71,8 @@ describe("CoursesService", () => {
               currency: "USD",
             },
             schedule: {
-              endTime: "2026-10-01T16:00:00-04:00",
-              startTime: "2026-10-01T14:00:00-04:00",
+              endTime: "2026-10-01T20:00:00Z",
+              startTime: "2026-10-01T18:00:00Z",
               timeZone: "America/New_York",
             },
           },
@@ -88,8 +88,8 @@ describe("CoursesService", () => {
         makeCourseRecord({
           id: "course-2",
           title: "Course Two",
-          startsAt: instant("2026-10-02T18:00:00.000Z"),
-          endsAt: instant("2026-10-02T20:00:00.000Z"),
+          startsAt: instant("2026-10-02T18:00:00Z"),
+          endsAt: instant("2026-10-02T20:00:00Z"),
         }),
       ]);
 
@@ -105,8 +105,8 @@ describe("CoursesService", () => {
               currency: "USD",
             },
             schedule: {
-              startTime: "2026-10-01T14:00:00-04:00",
-              endTime: "2026-10-01T16:00:00-04:00",
+              startTime: "2026-10-01T18:00:00Z",
+              endTime: "2026-10-01T20:00:00Z",
               timeZone: "America/New_York",
             },
           },
@@ -120,8 +120,8 @@ describe("CoursesService", () => {
               currency: "USD",
             },
             schedule: {
-              startTime: "2026-10-02T14:00:00-04:00",
-              endTime: "2026-10-02T16:00:00-04:00",
+              startTime: "2026-10-02T18:00:00Z",
+              endTime: "2026-10-02T20:00:00Z",
               timeZone: "America/New_York",
             },
           },
@@ -220,8 +220,8 @@ describe("CoursesService", () => {
         courses: [
           expect.objectContaining({
             schedule: {
-              endTime: "2026-10-01T16:00:00-04:00",
-              startTime: "2026-10-01T14:00:00-04:00",
+              endTime: "2026-10-01T20:00:00Z",
+              startTime: "2026-10-01T18:00:00Z",
               timeZone: "America/New_York",
             },
           }),
@@ -246,8 +246,8 @@ describe("CoursesService", () => {
               currency: "USD",
             },
             schedule: {
-              endTime: "2026-10-01T16:00:00-04:00",
-              startTime: "2026-10-01T14:00:00-04:00",
+              endTime: "2026-10-01T20:00:00Z",
+              startTime: "2026-10-01T18:00:00Z",
               timeZone: "America/New_York",
             },
           },

@@ -91,20 +91,20 @@ describe("Admin Courses API (e2e)", () => {
             name: "React Fundamentals",
             description: "Learn the fundamentals of React.",
             schedule: {
-              startTime: "2026-10-15T14:00:00-04:00",
-              endTime: "2026-10-15T16:00:00-04:00",
+              startTime: "2026-10-15T18:00:00Z",
+              endTime: "2026-10-15T20:00:00Z",
               timeZone: "America/New_York",
             },
             status: {
               name: "published",
-              changedAt: "2026-09-29T10:00:00-04:00",
+              changedAt: "2026-09-29T14:00:00Z",
             },
             prices: [
               {
                 id: price.id,
                 amount: 9900,
                 currency: "USD",
-                effectiveAt: "2025-12-31T19:00:00-05:00",
+                effectiveAt: "2026-01-01T00:00:00Z",
               },
             ],
             enrollments: [
@@ -117,7 +117,7 @@ describe("Admin Courses API (e2e)", () => {
                 payment: {
                   status: "succeeded",
                   amount: 9900,
-                  paidAt: "2026-09-29T11:00:00-04:00",
+                  paidAt: "2026-09-29T15:00:00Z",
                 },
               },
             ],
@@ -255,7 +255,7 @@ describe("Admin Courses API (e2e)", () => {
         expect.objectContaining({
           amount: 12900,
           currency: "USD",
-          effectiveAt: "2026-10-19T20:00:00-04:00",
+          effectiveAt: "2026-10-20T00:00:00Z",
         }),
       ]);
     });

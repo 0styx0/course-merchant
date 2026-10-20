@@ -22,8 +22,8 @@ export function toPublicCourseResponse(
             currency: price.currency,
         },
         schedule: {
-            startTime: formatDate(course.startsAt, course.timeZone),
-            endTime: formatDate(course.endsAt, course.timeZone),
+            startTime: formatDate(course.startsAt),
+            endTime: formatDate(course.endsAt),
             timeZone: course.timeZone,
         },
     };
@@ -33,7 +33,7 @@ export function toAdminCourseResponse(
     course: CourseRepositoryModelAdmin,
 ): GetCourseAdminResponse {
     const formatCourseDate = (time: Temporal.Instant) =>
-        formatDate(time, course.timeZone);
+        formatDate(time);
 
     return {
         id: course.id,

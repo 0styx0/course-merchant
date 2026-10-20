@@ -10,18 +10,18 @@ const repositoryCourse = {
   id: COURSE_ID,
   title: "React Fundamentals",
   description: "Learn the fundamentals of React",
-  startsAt: instant("2026-10-01T18:00:00.000Z"),
-  endsAt: instant("2026-10-01T20:00:00.000Z"),
+  startsAt: instant("2026-10-01T18:00:00Z"),
+  endsAt: instant("2026-10-01T20:00:00Z"),
   timeZone: "America/New_York",
 
   statuses: [
     {
       name: "published",
-      changedAt: instant("2026-09-29T14:00:00.000Z"),
+      changedAt: instant("2026-09-29T14:00:00Z"),
     },
     {
       name: "archived",
-      changedAt: instant("2026-09-28T14:00:00.000Z"),
+      changedAt: instant("2026-09-28T14:00:00Z"),
     },
   ],
 
@@ -30,13 +30,13 @@ const repositoryCourse = {
       id: "price_early",
       amount: 7900,
       currency: "USD",
-      effectiveAt: instant("2026-10-20T04:00:00.000Z"),
+      effectiveAt: instant("2026-10-20T04:00:00Z"),
     },
     {
       id: "price_later",
       amount: 9900,
       currency: "USD",
-      effectiveAt: instant("2026-11-15T05:00:00.000Z"),
+      effectiveAt: instant("2026-11-15T05:00:00Z"),
     },
   ],
 
@@ -50,7 +50,7 @@ const repositoryCourse = {
       payment: {
         status: "succeeded",
         amount: 7900,
-        paidAt: instant("2026-09-29T15:00:00.000Z"),
+        paidAt: instant("2026-09-29T15:00:00Z"),
       },
     },
     {
@@ -62,7 +62,7 @@ const repositoryCourse = {
       payment: {
         status: "refunded",
         amount: 9900,
-        paidAt: instant("2026-09-27T10:00:00.000Z"),
+        paidAt: instant("2026-09-27T10:00:00Z"),
       },
     },
   ],
@@ -76,14 +76,14 @@ describe("toAdminCourseResponse", () => {
       description: "Learn the fundamentals of React",
 
       schedule: {
-        startTime: "2026-10-01T14:00:00-04:00",
-        endTime: "2026-10-01T16:00:00-04:00",
+        startTime: "2026-10-01T18:00:00Z",
+        endTime: "2026-10-01T20:00:00Z",
         timeZone: "America/New_York",
       },
 
       status: {
         name: "published",
-        changedAt: "2026-09-29T10:00:00-04:00",
+        changedAt: "2026-09-29T14:00:00Z",
       },
 
       prices: [
@@ -91,13 +91,13 @@ describe("toAdminCourseResponse", () => {
           id: "price_early",
           amount: 7900,
           currency: "USD",
-          effectiveAt: "2026-10-20T00:00:00-04:00",
+          effectiveAt: "2026-10-20T04:00:00Z",
         },
         {
           id: "price_later",
           amount: 9900,
           currency: "USD",
-          effectiveAt: "2026-11-15T00:00:00-05:00",
+          effectiveAt: "2026-11-15T05:00:00Z",
         },
       ],
 
@@ -111,7 +111,7 @@ describe("toAdminCourseResponse", () => {
           payment: {
             status: "succeeded",
             amount: 7900,
-            paidAt: "2026-09-29T11:00:00-04:00",
+            paidAt: "2026-09-29T15:00:00Z",
           },
         },
         {
@@ -123,7 +123,7 @@ describe("toAdminCourseResponse", () => {
           payment: {
             status: "refunded",
             amount: 9900,
-            paidAt: "2026-09-27T06:00:00-04:00",
+            paidAt: "2026-09-27T10:00:00Z",
           },
         },
       ],
@@ -144,8 +144,8 @@ describe("toAdminCourseResponse", () => {
     const result = toAdminCourseResponse(repositoryCourse);
 
     expect(result.schedule).toEqual({
-      startTime: "2026-10-01T14:00:00-04:00",
-      endTime: "2026-10-01T16:00:00-04:00",
+      startTime: "2026-10-01T18:00:00Z",
+      endTime: "2026-10-01T20:00:00Z",
       timeZone: "America/New_York",
     });
   });
@@ -155,7 +155,7 @@ describe("toAdminCourseResponse", () => {
 
     expect(result.status).toEqual({
       name: "published",
-      changedAt: "2026-09-29T10:00:00-04:00",
+      changedAt: "2026-09-29T14:00:00Z",
     });
   });
 
@@ -167,13 +167,13 @@ describe("toAdminCourseResponse", () => {
         id: "price_early",
         amount: 7900,
         currency: "USD",
-        effectiveAt: "2026-10-20T00:00:00-04:00",
+        effectiveAt: "2026-10-20T04:00:00Z",
       },
       {
         id: "price_later",
         amount: 9900,
         currency: "USD",
-        effectiveAt: "2026-11-15T00:00:00-05:00",
+        effectiveAt: "2026-11-15T05:00:00Z",
       },
     ]);
   });
@@ -191,7 +191,7 @@ describe("toAdminCourseResponse", () => {
         payment: {
           status: "succeeded",
           amount: 7900,
-          paidAt: "2026-09-29T11:00:00-04:00",
+          paidAt: "2026-09-29T15:00:00Z",
         },
       },
       {
@@ -203,7 +203,7 @@ describe("toAdminCourseResponse", () => {
         payment: {
           status: "refunded",
           amount: 9900,
-          paidAt: "2026-09-27T06:00:00-04:00",
+          paidAt: "2026-09-27T10:00:00Z",
         },
       },
     ]);

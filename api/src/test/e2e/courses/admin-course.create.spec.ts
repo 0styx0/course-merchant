@@ -155,12 +155,12 @@ describe("POST /admin/courses (e2e)", () => {
       {
         amount: 2500,
         currency: "USD",
-        effectiveAt: instant(toDatabasePrecision(earlierEffectiveAt)),
+        effectiveAt: toDatabasePrecision(earlierEffectiveAt),
       },
       {
         amount: 5000,
         currency: "USD",
-        effectiveAt: instant(toDatabasePrecision(laterEffectiveAt)),
+        effectiveAt: toDatabasePrecision(laterEffectiveAt),
       },
     ]);
 

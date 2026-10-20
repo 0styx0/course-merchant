@@ -24,7 +24,7 @@ import { instant } from "@/test/test-helpers.js";
 import { AdminCoursesService } from "@/courses/admin-courses.service.js";
 import { AdminCoursesRepository } from "@/courses/courses.repository/admin-courses.repository.js";
 
-const NOW = instant("2026-09-29T14:00:00.000Z");
+const NOW = instant("2026-09-29T14:00:00Z");
 
 describe("AdminCoursesService integration", () => {
   let service: AdminCoursesService;
@@ -145,7 +145,7 @@ describe("AdminCoursesService integration", () => {
         {
           amount: 4900,
           currency: "USD",
-          effectiveAt: instant("2026-07-01T00:00:00.000Z"),
+          effectiveAt: instant("2026-07-01T00:00:00Z"),
         },
       );
 
@@ -154,14 +154,14 @@ describe("AdminCoursesService integration", () => {
         courseId: course.id,
         amount: 12900,
         currency: "USD",
-        effectiveAt: instant("2026-10-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-10-01T00:00:00Z"),
       });
 
       const augustPrice = await createCoursePrice({
         courseId: course.id,
         amount: 7900,
         currency: "USD",
-        effectiveAt: instant("2026-08-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-08-01T00:00:00Z"),
       });
 
       const result = await service.findAllAdmin();
@@ -176,19 +176,19 @@ describe("AdminCoursesService integration", () => {
           id: julyPrice.id,
           amount: 4900,
           currency: "USD",
-          effectiveAt: "2026-06-30T20:00:00-04:00",
+          effectiveAt: "2026-07-01T00:00:00Z",
         },
         {
           id: augustPrice.id,
           amount: 7900,
           currency: "USD",
-          effectiveAt: "2026-07-31T20:00:00-04:00",
+          effectiveAt: "2026-08-01T00:00:00Z",
         },
         {
           id: octoberPrice.id,
           amount: 12900,
           currency: "USD",
-          effectiveAt: "2026-09-30T20:00:00-04:00",
+          effectiveAt: "2026-10-01T00:00:00Z",
         },
       ]);
     });
@@ -202,7 +202,7 @@ describe("AdminCoursesService integration", () => {
         {
           amount: 12900,
           currency: "USD",
-          effectiveAt: instant("2027-01-01T00:00:00.000Z"),
+          effectiveAt: instant("2027-01-01T00:00:00Z"),
         },
       );
 
@@ -218,7 +218,7 @@ describe("AdminCoursesService integration", () => {
           id: price.id,
           amount: 12900,
           currency: "USD",
-          effectiveAt: "2026-12-31T19:00:00-05:00",
+          effectiveAt: "2027-01-01T00:00:00Z",
         },
       ]);
     });
@@ -228,12 +228,12 @@ describe("AdminCoursesService integration", () => {
         {
           title: "Ended Course",
           description: "This course has finished",
-          startsAt: instant("2025-09-27T18:00:00.000Z"),
-          endsAt: instant("2025-09-27T20:00:00.000Z"),
+          startsAt: instant("2025-09-27T18:00:00Z"),
+          endsAt: instant("2025-09-27T20:00:00Z"),
           timeZone: "America/New_York",
         },
         {
-          effectiveAt: instant("2025-01-01T00:00:00.000Z"),
+          effectiveAt: instant("2025-01-01T00:00:00Z"),
         },
       );
 
@@ -245,8 +245,8 @@ describe("AdminCoursesService integration", () => {
 
       expect(listedCourse).toBeDefined();
       expect(listedCourse!.schedule).toEqual({
-        startTime: "2025-09-27T14:00:00-04:00",
-        endTime: "2025-09-27T16:00:00-04:00",
+        startTime: "2025-09-27T18:00:00Z",
+        endTime: "2025-09-27T20:00:00Z",
         timeZone: "America/New_York",
       });
     });
@@ -255,33 +255,33 @@ describe("AdminCoursesService integration", () => {
       const { course: olderCourse } = await createPricedCourse(
         {
           title: "Older Course",
-          startsAt: instant("2026-10-01T18:00:00.000Z"),
-          endsAt: instant("2026-10-01T20:00:00.000Z"),
+          startsAt: instant("2026-10-01T18:00:00Z"),
+          endsAt: instant("2026-10-01T20:00:00Z"),
         },
         {
-          effectiveAt: instant("2026-01-01T00:00:00.000Z"),
+          effectiveAt: instant("2026-01-01T00:00:00Z"),
         },
       );
 
       const { course: newerCourse } = await createPricedCourse(
         {
           title: "Newer Course",
-          startsAt: instant("2026-12-01T18:00:00.000Z"),
-          endsAt: instant("2026-12-01T20:00:00.000Z"),
+          startsAt: instant("2026-12-01T18:00:00Z"),
+          endsAt: instant("2026-12-01T20:00:00Z"),
         },
         {
-          effectiveAt: instant("2026-01-01T00:00:00.000Z"),
+          effectiveAt: instant("2026-01-01T00:00:00Z"),
         },
       );
 
       const { course: middleCourse } = await createPricedCourse(
         {
           title: "Middle Course",
-          startsAt: instant("2026-11-01T18:00:00.000Z"),
-          endsAt: instant("2026-11-01T20:00:00.000Z"),
+          startsAt: instant("2026-11-01T18:00:00Z"),
+          endsAt: instant("2026-11-01T20:00:00Z"),
         },
         {
-          effectiveAt: instant("2026-01-01T00:00:00.000Z"),
+          effectiveAt: instant("2026-01-01T00:00:00Z"),
         },
       );
 
@@ -306,7 +306,7 @@ describe("AdminCoursesService integration", () => {
         {
           amount: 7900,
           currency: "USD",
-          effectiveAt: instant("2026-07-01T00:00:00.000Z"),
+          effectiveAt: instant("2026-07-01T00:00:00Z"),
         },
       );
 
@@ -314,14 +314,14 @@ describe("AdminCoursesService integration", () => {
         courseId: course.id,
         amount: 12900,
         currency: "USD",
-        effectiveAt: instant("2026-08-01T00:00:00.000Z"),
+        effectiveAt: instant("2026-08-01T00:00:00Z"),
       });
 
       const ada = await createCustomer({
         name: "Ada Lovelace",
       });
 
-      const adaPaidAt = instant("2026-09-29T13:00:00.000Z");
+      const adaPaidAt = instant("2026-09-29T13:00:00Z");
 
       const adaPayment = await createPayment({
         customerId: ada.id,
@@ -341,7 +341,7 @@ describe("AdminCoursesService integration", () => {
         name: "Grace Hopper",
       });
 
-      const gracePaidAt = instant("2026-09-29T12:00:00.000Z");
+      const gracePaidAt = instant("2026-09-29T12:00:00Z");
 
       const gracePayment = await createPayment({
         customerId: grace.id,
@@ -377,7 +377,7 @@ describe("AdminCoursesService integration", () => {
             payment: {
               status: "succeeded",
               amount: julyPrice.amount,
-              paidAt: "2026-09-29T09:00:00-04:00",
+              paidAt: "2026-09-29T13:00:00Z",
             },
           },
           {
@@ -389,7 +389,7 @@ describe("AdminCoursesService integration", () => {
             payment: {
               status: "succeeded",
               amount: augustPrice.amount,
-              paidAt: "2026-09-29T08:00:00-04:00",
+              paidAt: "2026-09-29T12:00:00Z",
             },
           },
         ]),

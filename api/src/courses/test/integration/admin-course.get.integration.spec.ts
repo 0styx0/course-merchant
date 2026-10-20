@@ -23,7 +23,7 @@ import { PrismaModule } from "../../../prisma/prisma.module.js";
 import { AdminCoursesService } from "@/courses/admin-courses.service.js";
 import { AdminCoursesRepository } from "@/courses/courses.repository/admin-courses.repository.js";
 
-const NOW = instant("2026-09-29T14:00:00.000Z");
+const NOW = instant("2026-09-29T14:00:00Z");
 
 const NONEXISTENT_COURSE_ID =
     "123e4567-e89b-12d3-a456-426614174000";
@@ -55,12 +55,12 @@ describe("AdminCoursesService integration", () => {
                 {
                     title: "React Fundamentals",
                     description: "Learn React",
-                    startsAt: instant("2026-10-01T18:00:00.000Z"),
-                    endsAt: instant("2026-10-01T20:00:00.000Z"),
+                    startsAt: instant("2026-10-01T18:00:00Z"),
+                    endsAt: instant("2026-10-01T20:00:00Z"),
                     timeZone: "America/New_York",
                 },
                 {
-                    effectiveAt: instant("2026-07-01T00:00:00.000Z"),
+                    effectiveAt: instant("2026-07-01T00:00:00Z"),
                 },
             );
 
@@ -71,8 +71,8 @@ describe("AdminCoursesService integration", () => {
                 name: "React Fundamentals",
                 description: "Learn React",
                 schedule: {
-                    startTime: "2026-10-01T14:00:00-04:00",
-                    endTime: "2026-10-01T16:00:00-04:00",
+                    startTime: "2026-10-01T18:00:00Z",
+                    endTime: "2026-10-01T20:00:00Z",
                     timeZone: "America/New_York",
                 },
                 status: {
@@ -84,7 +84,7 @@ describe("AdminCoursesService integration", () => {
                         id: price.id,
                         amount: price.amount,
                         currency: price.currency,
-                        effectiveAt: "2026-06-30T20:00:00-04:00",
+                        effectiveAt: "2026-07-01T00:00:00Z",
                     },
                 ],
                 enrollments: [],
@@ -123,12 +123,12 @@ describe("AdminCoursesService integration", () => {
                 {
                     title: "Ended Course",
                     description: "This course has finished",
-                    startsAt: instant("2026-09-27T18:00:00.000Z"),
-                    endsAt: instant("2026-09-27T20:00:00.000Z"),
+                    startsAt: instant("2026-09-27T18:00:00Z"),
+                    endsAt: instant("2026-09-27T20:00:00Z"),
                     timeZone: "America/New_York",
                 },
                 {
-                    effectiveAt: instant("2026-07-01T00:00:00.000Z"),
+                    effectiveAt: instant("2026-07-01T00:00:00Z"),
                 },
             );
 
@@ -137,8 +137,8 @@ describe("AdminCoursesService integration", () => {
             expect(result.id).toBe(course.id);
             expect(result.name).toBe("Ended Course");
             expect(result.schedule).toEqual({
-                startTime: "2026-09-27T14:00:00-04:00",
-                endTime: "2026-09-27T16:00:00-04:00",
+                startTime: "2026-09-27T18:00:00Z",
+                endTime: "2026-09-27T20:00:00Z",
                 timeZone: "America/New_York",
             });
         });
@@ -150,7 +150,7 @@ describe("AdminCoursesService integration", () => {
                     description: "Not publicly available yet",
                 },
                 {
-                    effectiveAt: instant("2026-10-01T00:00:00.000Z"),
+                    effectiveAt: instant("2026-10-01T00:00:00Z"),
                 },
             );
 
@@ -162,7 +162,7 @@ describe("AdminCoursesService integration", () => {
                     id: price.id,
                     amount: price.amount,
                     currency: price.currency,
-                    effectiveAt: "2026-09-30T20:00:00-04:00",
+                    effectiveAt: "2026-10-01T00:00:00Z",
                 },
             ]);
         });
@@ -171,7 +171,7 @@ describe("AdminCoursesService integration", () => {
             const { course, price: julyPrice } = await createPricedCourse(
                 {},
                 {
-                    effectiveAt: instant("2026-07-01T00:00:00.000Z"),
+                    effectiveAt: instant("2026-07-01T00:00:00Z"),
                 },
             );
 
@@ -181,14 +181,14 @@ describe("AdminCoursesService integration", () => {
                 courseId: course.id,
                 amount: 12900,
                 currency: "USD",
-                effectiveAt: instant("2026-10-01T00:00:00.000Z"),
+                effectiveAt: instant("2026-10-01T00:00:00Z"),
             });
 
             const augustPrice = await createCoursePrice({
                 courseId: course.id,
                 amount: 7900,
                 currency: "USD",
-                effectiveAt: instant("2026-08-01T00:00:00.000Z"),
+                effectiveAt: instant("2026-08-01T00:00:00Z"),
             });
 
             const result = await service.findByIdAdmin(course.id);
@@ -198,19 +198,19 @@ describe("AdminCoursesService integration", () => {
                     id: julyPrice.id,
                     amount: julyPrice.amount,
                     currency: julyPrice.currency,
-                    effectiveAt: "2026-06-30T20:00:00-04:00",
+                    effectiveAt: "2026-07-01T00:00:00Z",
                 },
                 {
                     id: augustPrice.id,
                     amount: augustPrice.amount,
                     currency: augustPrice.currency,
-                    effectiveAt: "2026-07-31T20:00:00-04:00",
+                    effectiveAt: "2026-08-01T00:00:00Z",
                 },
                 {
                     id: octoberPrice.id,
                     amount: octoberPrice.amount,
                     currency: octoberPrice.currency,
-                    effectiveAt: "2026-09-30T20:00:00-04:00",
+                    effectiveAt: "2026-10-01T00:00:00Z",
                 },
             ]);
         });
@@ -222,7 +222,7 @@ describe("AdminCoursesService integration", () => {
                     timeZone: "America/New_York",
                 },
                 {
-                    effectiveAt: instant("2026-07-01T00:00:00.000Z"),
+                    effectiveAt: instant("2026-07-01T00:00:00Z"),
                 },
             );
 
@@ -230,14 +230,14 @@ describe("AdminCoursesService integration", () => {
                 courseId: course.id,
                 amount: 12900,
                 currency: "USD",
-                effectiveAt: instant("2026-08-01T00:00:00.000Z"),
+                effectiveAt: instant("2026-08-01T00:00:00Z"),
             });
 
             const ada = await createCustomer({
                 name: "Ada Lovelace",
             });
 
-            const adaPaidAt = instant("2026-10-18T15:00:00.000Z");
+            const adaPaidAt = instant("2026-10-18T15:00:00Z");
 
             const adaPayment = await createPayment({
                 customerId: ada.id,
@@ -257,7 +257,7 @@ describe("AdminCoursesService integration", () => {
                 name: "Grace Hopper",
             });
 
-            const gracePaidAt = instant("2026-10-18T16:30:00.000Z");
+            const gracePaidAt = instant("2026-10-18T16:30:00Z");
 
             const gracePayment = await createPayment({
                 customerId: grace.id,
@@ -290,7 +290,7 @@ describe("AdminCoursesService integration", () => {
                         payment: {
                             status: "succeeded",
                             amount: julyPrice.amount,
-                            paidAt: "2026-10-18T11:00:00-04:00",
+                            paidAt: "2026-10-18T15:00:00Z",
                         },
                     },
                     {
@@ -302,7 +302,7 @@ describe("AdminCoursesService integration", () => {
                         payment: {
                             status: "succeeded",
                             amount: augustPrice.amount,
-                            paidAt: "2026-10-18T12:30:00-04:00",
+                            paidAt: "2026-10-18T16:30:00Z",
                         },
                     },
                 ]),

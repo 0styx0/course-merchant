@@ -16,15 +16,15 @@ import type {
 import { CoursesService } from "../../courses.service.js";
 import { toPublicCourseResponse } from "@/courses/courses.mapper.js";
 
-const NOW = instant("2026-09-29T14:00:00.000Z");
+const NOW = instant("2026-09-29T14:00:00Z");
 const COURSE_ID = "crs_01HZX3";
 
 const repositoryCourse = {
   id: COURSE_ID,
   title: "React Fundamentals",
   description: "Learn the fundamentals of React",
-  startsAt: instant("2026-10-01T18:00:00.000Z"),
-  endsAt: instant("2026-10-01T20:00:00.000Z"),
+  startsAt: instant("2026-10-01T18:00:00Z"),
+  endsAt: instant("2026-10-01T20:00:00Z"),
   timeZone: "America/New_York",
   prices: [
     {

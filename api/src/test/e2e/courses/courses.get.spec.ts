@@ -64,8 +64,8 @@ describe("Courses API (e2e)", () => {
           currency: "USD",
         },
         schedule: {
-          startTime: "2026-10-15T14:00:00-04:00",
-          endTime: "2026-10-15T16:00:00-04:00",
+          startTime: "2026-10-15T18:00:00Z",
+          endTime: "2026-10-15T20:00:00Z",
           timeZone: "America/New_York",
         },
       });

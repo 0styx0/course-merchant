@@ -90,8 +90,8 @@ describe("GET /v1/courses (e2e)", () => {
             currency: "USD",
           },
           schedule: {
-            startTime: "2026-10-01T10:00:00-04:00",
-            endTime: "2026-10-01T12:00:00-04:00",
+            startTime: "2026-10-01T14:00:00Z",
+            endTime: "2026-10-01T16:00:00Z",
             timeZone: "America/New_York",
           },
         },
@@ -105,8 +105,8 @@ describe("GET /v1/courses (e2e)", () => {
             currency: "USD",
           },
           schedule: {
-            startTime: "2026-10-02T10:00:00-04:00",
-            endTime: "2026-10-02T12:00:00-04:00",
+            startTime: "2026-10-02T14:00:00Z",
+            endTime: "2026-10-02T16:00:00Z",
             timeZone: "America/New_York",
           },
         },
@@ -222,8 +222,8 @@ describe("GET /v1/courses (e2e)", () => {
         currency: "USD",
       },
       schedule: {
-        startTime: "2026-10-15T10:00:00-04:00",
-        endTime: "2026-10-15T12:00:00-04:00",
+        startTime: "2026-10-15T14:00:00Z",
+        endTime: "2026-10-15T16:00:00Z",
         timeZone: "America/New_York",
       },
     });
