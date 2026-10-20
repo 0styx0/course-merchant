@@ -1,23 +1,22 @@
-import { BadRequestException } from "@nestjs/common";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { ZodValidationPipe } from "./create-course-validation.pipe.js";
+import { ValidationException } from "@/common/errors/validation.exception.js";
 
-
-function captureBadRequestException(
+function captureValidationException(
   action: () => unknown,
-): BadRequestException {
+): ValidationException {
   try {
     action();
   } catch (error) {
-    if (error instanceof BadRequestException) {
+    if (error instanceof ValidationException) {
       return error;
     }
 
     throw error;
   }
 
-  throw new Error("Expected a BadRequestException.");
+  throw new Error("Expected a ValidationException.");
 }
 
 describe("ZodValidationPipe", () => {
@@ -46,7 +45,7 @@ describe("ZodValidationPipe", () => {
   });
 
   describe("invalid input", () => {
-    it("returns all validation issues in a BadRequestException", () => {
+    it("returns all validation issues in a ValidationException", () => {
       const schema = z.strictObject({
         name: z.string().min(1, {
           error: "Name is required.",
@@ -58,7 +57,7 @@ describe("ZodValidationPipe", () => {
 
       const pipe = new ZodValidationPipe(schema);
 
-      const exception = captureBadRequestException(() =>
+      const exception = captureValidationException(() =>
         pipe.transform(
           {
             name: "",
@@ -69,22 +68,18 @@ describe("ZodValidationPipe", () => {
       );
 
       expect(exception.getStatus()).toBe(400);
-
-      expect(exception.getResponse()).toEqual({
-        code: "REQUEST_VALIDATION_FAILED",
-        errors: [
-          {
-            code: "too_small",
-            message: "Name is required.",
-            path: ["name"],
-          },
-          {
-            code: "invalid_type",
-            message: "Amount must be a number.",
-            path: ["amount"],
-          },
-        ],
-      });
+      expect(exception.errors).toEqual([
+        {
+          field: "/name",
+          code: "too_small",
+          message: "Name is required.",
+        },
+        {
+          field: "/amount",
+          code: "invalid_type",
+          message: "Amount must be a number.",
+        },
+      ]);
     });
   });
 
@@ -102,20 +97,18 @@ describe("ZodValidationPipe", () => {
 
       const pipe = new ZodValidationPipe(schema);
 
-      const exception = captureBadRequestException(() =>
+      const exception = captureValidationException(() =>
         pipe.transform("invalid schedule", { type: "body" }),
       );
 
-      expect(exception.getResponse()).toEqual({
-        code: "REQUEST_VALIDATION_FAILED",
-        errors: [
-          {
-            code: "SCHEDULE_END_TIME_INVALID_RANGE",
-            message: "End time must be after start time.",
-            path: [],
-          },
-        ],
-      });
+      expect(exception.getStatus()).toBe(400);
+      expect(exception.errors).toEqual([
+        {
+          field: "",
+          code: "SCHEDULE_END_TIME_INVALID_RANGE",
+          message: "End time must be after start time.",
+        },
+      ]);
     });
   });
 });
