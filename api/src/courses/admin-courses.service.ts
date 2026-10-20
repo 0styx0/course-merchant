@@ -1,15 +1,15 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { GetCourseAdminResponse, ListCoursesAdminResponse } from "types.js";
-import { CoursesRepository } from "./courses.repository/courses.repository.js";
 import { ApiException } from "../common/errors/api.exception.js";
 import { ErrorCodeCourseGet } from "../common/errors/error-codes.js";
 import { toAdminCourseResponse } from "./courses.mapper.js";
+import { AdminCoursesRepository } from "./courses.repository/admin-courses.repository.js";
 
 @Injectable()
 export class AdminCoursesService {
   constructor(
-    @Inject(CoursesRepository)
-    private readonly coursesRepository: CoursesRepository,
+    @Inject(AdminCoursesRepository)
+    private readonly coursesRepository: AdminCoursesRepository,
   ) { }
 
   async findByIdAdmin(courseId: string): Promise<GetCourseAdminResponse> {

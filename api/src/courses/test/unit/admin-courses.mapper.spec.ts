@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { instant } from "../../../test/test-helpers.js";
-import type {
-  CourseRepositoryModelAdmin,
-} from "../../courses.repository/courses.repository.js";
 import { toAdminCourseResponse } from "@/courses/courses.mapper.js";
+import { CourseRepositoryModelAdmin } from "@/courses/courses.repository/admin-courses.repository.js";
 
 const COURSE_ID = "crs_01HZX3";
 

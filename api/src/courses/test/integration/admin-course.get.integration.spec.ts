@@ -19,9 +19,9 @@ import {
     archiveCourse,
     createPricedCourse,
 } from "../../../test/course-fixtures.js";
-import { CoursesRepository } from "../../courses.repository/courses.repository.js";
 import { PrismaModule } from "../../../prisma/prisma.module.js";
 import { AdminCoursesService } from "@/courses/admin-courses.service.js";
+import { AdminCoursesRepository } from "@/courses/courses.repository/admin-courses.repository.js";
 
 const NOW = instant("2026-09-29T14:00:00.000Z");
 
@@ -35,7 +35,7 @@ describe("AdminCoursesService integration", () => {
     beforeAll(async () => {
         testingModule = await Test.createTestingModule({
             imports: [PrismaModule],
-            providers: [AdminCoursesService, CoursesRepository],
+            providers: [AdminCoursesService, AdminCoursesRepository],
         }).compile();
 
         service = testingModule.get(AdminCoursesService);

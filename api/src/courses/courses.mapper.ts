@@ -3,9 +3,9 @@ import { Temporal } from "@js-temporal/polyfill";
 import { formatDate } from "@/utils/formatters.js";
 import { GetCourseAdminResponse, GetCourseResponse } from "types.js";
 import type {
-    CourseRepositoryModelAdmin,
     CourseRepositoryModelPublic,
 } from "./courses.repository/courses.repository.js";
+import { CourseRepositoryModelAdmin } from "./courses.repository/admin-courses.repository.js";
 
 export function toPublicCourseResponse(
     course: CourseRepositoryModelPublic,

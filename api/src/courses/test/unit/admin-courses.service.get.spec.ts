@@ -2,11 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { instant } from "../../../test/test-helpers.js";
 import type {
-  CourseRepositoryModelAdmin,
   CoursesRepository,
 } from "../../courses.repository/courses.repository.js";
 import { AdminCoursesService } from "@/courses/admin-courses.service.js";
 import { toAdminCourseResponse } from "@/courses/courses.mapper.js";
+import { AdminCoursesRepository, CourseRepositoryModelAdmin } from "@/courses/courses.repository/admin-courses.repository.js";
 
 const COURSE_ID = "crs_01HZX3";
 
@@ -47,7 +47,7 @@ describe("AdminCoursesService", () => {
     };
 
     service = new AdminCoursesService(
-      coursesRepository as unknown as CoursesRepository,
+      coursesRepository as unknown as AdminCoursesRepository,
     );
   });
 
