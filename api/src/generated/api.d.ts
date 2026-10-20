@@ -301,7 +301,8 @@ export interface components {
              */
             endTime: string;
             /**
-             * @description IANA time zone identifier the course is held in. Use this, rather than the UTC offset in `startTime` and `endTime`, to display local times correctly across daylight saving changes.
+             * @description IANA time zone identifier the course is held in. Use this, rather than the UTC offset in `startTime` and `endTime`, to display local times correctly across daylight saving changes. Using separate field instead of relying on UTC in cases where people travel
+             *       to the course location
              * @example America/New_York
              */
             timeZone: string;
