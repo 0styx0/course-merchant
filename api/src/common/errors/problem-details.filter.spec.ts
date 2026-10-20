@@ -11,6 +11,7 @@ import {
   import { ApiException } from "./api.exception.js";
   import { ERROR_DEFINITIONS, ErrorCode } from "./error-codes.js";
   import { ProblemDetailsFilter } from "./problem-details.filter.js";
+import { ValidationException } from "./validation.exception.js";
   
   function run(exception: unknown) {
     const res: any = { headersSent: false };
@@ -70,6 +71,45 @@ import {
         expect(JSON.stringify(body)).not.toContain("secret-db-password");
       });
     });
+
+    describe("ValidationException", () => {
+      it("returns all validation errors in the response body", () => {
+        const errors = [
+          {
+            field: "/name",
+            code: "too_small",
+            message: "Name is required",
+          },
+          {
+            field: "/prices",
+            code: "invalid_type",
+            message: "Prices must be an array",
+          },
+        ];
+    
+        const { status, body } = run(new ValidationException(errors));
+    
+        expect(status).toBe(400);
+        expect(body.title).toBe("Validation failed");
+        expect(body.code).toBe("VALIDATION_FAILED");
+        expect(body.errors).toEqual(errors);
+        expect(body.detail).toBeUndefined();
+      });
+    
+      it("does not log validation errors", () => {
+        run(
+          new ValidationException([
+            {
+              field: "/name",
+              code: "too_small",
+              message: "Name is required",
+            },
+          ]),
+        );
+    
+        expect(errorSpy).not.toHaveBeenCalled();
+      });
+    });
   
     describe("HttpException", () => {
       it("derives status, title and a string code from the status", () => {
@@ -92,19 +132,6 @@ import {
         expect(status).toBe(503);
         expect(body.detail).toBeUndefined();
         expect(JSON.stringify(body)).not.toContain("10.0.0.5");
-      });
-  
-      it("joins array messages (validation errors) into detail", () => {
-        const { status, body } = run(
-          new BadRequestException({
-            statusCode: 400,
-            message: ["name must be a string", "price must not be less than 0"],
-            error: "Bad Request",
-          }),
-        );
-  
-        expect(status).toBe(400);
-        expect(body.detail).toBe("name must be a string; price must not be less than 0");
       });
   
       it("falls back safely for a status without standard text", () => {

@@ -9,11 +9,17 @@ export enum ErrorCodeCourseGet {
     INVALID_COURSE_ID = "INVALID_COURSE_ID",
 }
 
+export enum ErrorCodeValidation {
+    VALIDATION_FAILED = "VALIDATION_FAILED",
+}
+
 export const ErrorCode = {
     ...ErrorCodeCourseGet,
     ...ErrorCodeGeneric,
+    ...ErrorCodeValidation,
 };
-export type ErrorCode = ErrorCodeCourseGet | ErrorCodeGeneric;
+
+export type ErrorCode = ErrorCodeCourseGet | ErrorCodeGeneric | ErrorCodeValidation;
 
 interface ErrorDefinition {
     status: HttpStatus;
@@ -32,6 +38,10 @@ export const ERROR_DEFINITIONS = {
     [ErrorCode.INTERNAL_SERVER_ERROR]: {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
         title: "Internal server error",
+    },
+    [ErrorCode.VALIDATION_FAILED]: {
+        status: HttpStatus.BAD_REQUEST,
+        title: "Validation failed",
     },
 } satisfies Record<ErrorCode, ErrorDefinition>;
 

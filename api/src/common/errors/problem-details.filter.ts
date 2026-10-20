@@ -2,7 +2,8 @@ import { STATUS_CODES } from "node:http";
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from "@nestjs/common";
 import { Response } from "express";
 import { ApiException } from "./api.exception.js";
-import { ERROR_DEFINITIONS, ErrorCode } from "./error-codes.js";
+import { ERROR_DEFINITIONS, ErrorCode, ErrorCodeValidation } from "./error-codes.js";
+import { ValidationException } from "./validation.exception.js";
 
 @Catch()
 export class ProblemDetailsFilter implements ExceptionFilter {
@@ -21,6 +22,16 @@ export class ProblemDetailsFilter implements ExceptionFilter {
             }
             return res.status(status).type("application/problem+json").json(body);
         };
+
+        if (exception instanceof ValidationException) {
+            const code = ErrorCode.VALIDATION_FAILED
+            const error = ERROR_DEFINITIONS[code]
+            return send(error.status, {
+                title: error.title,
+                code,
+                errors: exception.errors,
+            });
+        }
 
         if (exception instanceof ApiException) {
             const { status } = ERROR_DEFINITIONS[exception.code];
