@@ -35,7 +35,8 @@
     "pg": "^8.23.0",
     "prisma": "^8.0.0-rc.15",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -50,7 +51,6 @@
     "@types/supertest": "^7.2.1",
     "@vitest/coverage-v8": "^5.0.2",
     "dotenv": "^18.0.3",
-    "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^16.0.0",

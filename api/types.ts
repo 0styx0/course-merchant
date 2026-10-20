@@ -13,3 +13,5 @@ export type ListCoursesAdminResponse = components["schemas"]["ListAdminCoursesRe
 
 export type ProblemDetails = components["schemas"]["ProblemDetails"]
 
+export type FieldError = components["schemas"]["FieldError"]
+
