@@ -79,10 +79,10 @@ const requiredString = z.string();
 const nonEmptyTrimmedString = z.string().trim().min(1);
 
 export const courseNameSchema =
-  nonEmptyTrimmedString.max(100);
+    nonEmptyTrimmedString.max(100);
 
 export const courseDescriptionSchema =
-  nonEmptyTrimmedString.max(5000);
+    nonEmptyTrimmedString.max(5000);
 
 export const createStatusSchema = z.enum([
     "published",
@@ -97,9 +97,7 @@ export const updateStatusSchema = z.enum([
     "deleted",
 ]);
 
-export const courseDateTimeSchema = z.iso.datetime({
-    offset: true,
-});
+export const courseDateTimeSchema = z.iso.datetime();
 
 export const courseStartTimeSchema = courseDateTimeSchema;
 export const courseEndTimeSchema = courseDateTimeSchema;
@@ -107,7 +105,9 @@ export const coursePriceEffectiveAtSchema = courseDateTimeSchema;
 
 export const courseTimeZoneSchema = requiredString.refine(
     (value) => {
-        // Fixed offsets are not IANA time-zone identifiers.
+
+        // time zones might be numbers, like -7. I don't like those.
+        //  allow only location names for clarity
         if (/^[+-]\d{2}(?::?\d{2})?$/.test(value)) {
             return false;
         }

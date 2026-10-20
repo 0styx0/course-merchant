@@ -24,11 +24,11 @@ type ValidationContext = Pick<
 >;
 
 type CourseSchedule = z.output<
-  typeof createCourseScheduleFieldsSchema
+  typeof courseScheduleFieldsSchema
 >;
 
 type ScheduledPrice = z.output<
-  typeof createScheduledPriceFieldsSchema
+  typeof scheduledPriceFieldsSchema
 >;
 
 function addValidationIssue(
@@ -44,121 +44,27 @@ function addValidationIssue(
   });
 }
 
-function isValidTemporalInstant(value: string): boolean {
-  try {
-    Temporal.Instant.from(value);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Retains the original field validation and additionally rejects
- * date-time strings that Temporal cannot interpret as an instant.
- *
- * The when guard prevents duplicate errors when the original field
- * schema has already rejected the input.
- */
-function withValidTemporalInstant<T extends z.ZodType<string>>(
-  schema: T,
-): T {
-  return schema.refine(isValidTemporalInstant, {
-    error: "Date-time must represent a valid instant.",
-    when(payload) {
-      return schema.safeParse(payload.value).success;
-    },
-  });
-}
-
-function isValidOffsetForTimeZone(
-  dateTime: string,
-  timeZone: string,
-): boolean {
-  try {
-    Temporal.ZonedDateTime.from(
-      `${dateTime}[${timeZone}]`,
-      { offset: "reject" },
-    );
-
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// Add strict Temporal validation while preserving the original fields.
-const createCourseScheduleFieldsSchema =
-  courseScheduleFieldsSchema.extend({
-    startTime: withValidTemporalInstant(
-      courseScheduleFieldsSchema.shape.startTime,
-    ),
-    endTime: withValidTemporalInstant(
-      courseScheduleFieldsSchema.shape.endTime,
-    ),
-  });
-
-const createScheduledPriceFieldsSchema =
-  scheduledPriceFieldsSchema.extend({
-    effectiveAt: withValidTemporalInstant(
-      scheduledPriceFieldsSchema.shape.effectiveAt,
-    ),
-  });
-
-// These schemas validate only the fields each refinement depends on.
-// Unrelated field errors will not prevent the refinement from running.
+// These schemas already validate UTC timestamp format and calendar values.
 const scheduleStartTimeInputSchema = z.object({
-  startTime: createCourseScheduleFieldsSchema.shape.startTime,
+  startTime: courseScheduleFieldsSchema.shape.startTime,
 });
 
 const scheduleEndTimeInputSchema = z.object({
-  endTime: createCourseScheduleFieldsSchema.shape.endTime,
+  endTime: courseScheduleFieldsSchema.shape.endTime,
 });
 
 const scheduleRangeInputSchema = z.object({
-  startTime: createCourseScheduleFieldsSchema.shape.startTime,
-  endTime: createCourseScheduleFieldsSchema.shape.endTime,
-});
-
-const scheduleStartOffsetInputSchema = z.object({
-  startTime: createCourseScheduleFieldsSchema.shape.startTime,
-  timeZone: createCourseScheduleFieldsSchema.shape.timeZone,
-});
-
-const scheduleEndOffsetInputSchema = z.object({
-  endTime: createCourseScheduleFieldsSchema.shape.endTime,
-  timeZone: createCourseScheduleFieldsSchema.shape.timeZone,
+  startTime: courseScheduleFieldsSchema.shape.startTime,
+  endTime: courseScheduleFieldsSchema.shape.endTime,
 });
 
 const priceEffectiveAtInputSchema = z.object({
-  effectiveAt: createScheduledPriceFieldsSchema.shape.effectiveAt,
+  effectiveAt: scheduledPriceFieldsSchema.shape.effectiveAt,
 });
 
 const priceEffectiveTimesInputSchema = z.array(
   priceEffectiveAtInputSchema,
 );
-
-function validateScheduleOffset(
-  schedule: CourseSchedule,
-  ctx: ValidationContext,
-  field: ScheduleTimeField,
-): void {
-  const dateTime = schedule[field];
-
-  if (isValidOffsetForTimeZone(dateTime, schedule.timeZone)) {
-    return;
-  }
-
-  const timeLabel = field === "startTime" ? "start" : "end";
-
-  addValidationIssue(ctx, {
-    path: [field],
-    code: COURSE_VALIDATION_ERRORS.schedule[field].invalidValue,
-    message:
-      `The ${timeLabel} time offset must match the specified time zone.`,
-    input: dateTime,
-  });
-}
 
 function validateScheduleRange(
   schedule: CourseSchedule,
@@ -194,38 +100,15 @@ function validateFutureScheduleTime(
   addValidationIssue(ctx, {
     path: [field],
     code: COURSE_VALIDATION_ERRORS.schedule[field].inPast,
-    message:
-      `${field === "startTime" ? "Start" : "End"} time cannot be in the past.`,
+    message: `${
+      field === "startTime" ? "Start" : "End"
+    } time cannot be in the past.`,
     input: schedule[field],
   });
 }
 
-const createCourseScheduleSchema =
-  createCourseScheduleFieldsSchema
-    .superRefine(
-      (schedule, ctx) => {
-        validateScheduleOffset(schedule, ctx, "startTime");
-      },
-      {
-        when(payload) {
-          return scheduleStartOffsetInputSchema.safeParse(
-            payload.value,
-          ).success;
-        },
-      },
-    )
-    .superRefine(
-      (schedule, ctx) => {
-        validateScheduleOffset(schedule, ctx, "endTime");
-      },
-      {
-        when(payload) {
-          return scheduleEndOffsetInputSchema.safeParse(
-            payload.value,
-          ).success;
-        },
-      },
-    )
+export const createCourseScheduleSchema =
+  courseScheduleFieldsSchema
     .superRefine(validateScheduleRange, {
       when(payload) {
         return scheduleRangeInputSchema.safeParse(
@@ -235,7 +118,11 @@ const createCourseScheduleSchema =
     })
     .superRefine(
       (schedule, ctx) => {
-        validateFutureScheduleTime(schedule, ctx, "startTime");
+        validateFutureScheduleTime(
+          schedule,
+          ctx,
+          "startTime",
+        );
       },
       {
         when(payload) {
@@ -247,7 +134,11 @@ const createCourseScheduleSchema =
     )
     .superRefine(
       (schedule, ctx) => {
-        validateFutureScheduleTime(schedule, ctx, "endTime");
+        validateFutureScheduleTime(
+          schedule,
+          ctx,
+          "endTime",
+        );
       },
       {
         when(payload) {
@@ -277,8 +168,8 @@ function validateFuturePriceEffectiveTime(
   });
 }
 
-const createScheduledPriceSchema =
-  createScheduledPriceFieldsSchema.superRefine(
+export const createScheduledPriceSchema =
+  scheduledPriceFieldsSchema.superRefine(
     validateFuturePriceEffectiveTime,
     {
       when(payload) {
@@ -296,7 +187,7 @@ function validateUniquePriceEffectiveTimes(
   const seenInstants = new Set<string>();
 
   prices.forEach((price, index) => {
-    // Normalize offsets so equivalent instants compare as equal.
+    // Normalize timestamps so equivalent instants compare equally.
     const instant = Temporal.Instant.from(
       price.effectiveAt,
     ).toString();
@@ -316,7 +207,7 @@ function validateUniquePriceEffectiveTimes(
   });
 }
 
-const createScheduledPricesSchema = z
+export const createScheduledPricesSchema = z
   .array(createScheduledPriceSchema)
   .min(1)
   .superRefine(validateUniquePriceEffectiveTimes, {

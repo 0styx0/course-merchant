@@ -29,63 +29,6 @@ function utcIn(hoursFromNow: number): string {
     return Temporal.Now.instant().add({ hours: hoursFromNow }).toString();
 }
 
-function formatZonedDateTime(
-    dateTime: ReturnType<typeof Temporal.Now.zonedDateTimeISO>,
-): string {
-    return dateTime.toString().replace(/\[.*$/, "");
-}
-
-function futureZonedDateTime(
-    timeZone: string,
-    month: number,
-    day: number,
-    hour: number,
-) {
-    const now = Temporal.Now.instant();
-    const year = now.toZonedDateTimeISO(timeZone).year;
-
-    const candidate = Temporal.ZonedDateTime.from({
-        timeZone,
-        year,
-        month,
-        day,
-        hour,
-        minute: 0,
-        second: 0,
-    });
-
-    if (Temporal.Instant.compare(candidate.toInstant(), now) > 0) {
-        return candidate;
-    }
-
-    return candidate.add({ years: 1 });
-}
-
-function nextDenverSpringForwardDate(): Temporal.PlainDate {
-    const today = Temporal.Now
-        .zonedDateTimeISO("America/Denver")
-        .toPlainDate();
-
-    for (let year = today.year; year <= today.year + 2; year++) {
-        // The second Sunday in March is between March 8 and March 14.
-        const march8 = Temporal.PlainDate.from({
-            year,
-            month: 3,
-            day: 8,
-        });
-
-        const secondSunday = march8.add({
-            days: (7 - march8.dayOfWeek) % 7,
-        });
-
-        if (Temporal.PlainDate.compare(secondSunday, today) > 0) {
-            return secondSunday;
-        }
-    }
-
-    throw new Error("Could not find the next spring daylight-saving transition.");
-}
-
 function makeValidRequest(): CourseRequestInput {
     const startTime = utcIn(24);
 
@@ -210,6 +153,28 @@ describe("createCourseRequestSchema", () => {
                 makePrice(utcIn(3)),
                 makePrice(utcIn(4)),
             ];
+
+            expect(createCourseRequestSchema.safeParse(request).success)
+                .toBe(true);
+        });
+
+        it("accepts canonical UTC timestamps ending in Z", () => {
+            const request = makeValidRequest();
+
+            request.schedule.startTime = "2030-01-01T18:00:00Z";
+            request.schedule.endTime = "2030-01-01T19:00:00Z";
+            request.prices[0].effectiveAt = "2030-01-01T17:00:00Z";
+
+            expect(createCourseRequestSchema.safeParse(request).success)
+                .toBe(true);
+        });
+
+        it("accepts canonical UTC timestamps with fractional seconds", () => {
+            const request = makeValidRequest();
+
+            request.schedule.startTime = "2030-01-01T18:00:00.123Z";
+            request.schedule.endTime = "2030-01-01T19:00:00.456Z";
+            request.prices[0].effectiveAt = "2030-01-01T17:00:00.789Z";
 
             expect(createCourseRequestSchema.safeParse(request).success)
                 .toBe(true);
@@ -463,52 +428,62 @@ describe("createCourseRequestSchema", () => {
         });
     });
 
-    describe("schedule time-zone offsets", () => {
-        it.each([
-            { season: "winter", month: 1 },
-            { season: "summer", month: 7 },
-        ])(
-            "accepts matching America/Denver offsets in $season",
-            ({ month }) => {
-                const start = futureZonedDateTime(
-                    "America/Denver",
-                    month,
-                    15,
-                    9,
-                );
-                const end = start.add({ hours: 1 });
+    describe("canonical UTC timestamp format", () => {
+        const nonCanonicalTimestamps = [
+            {
+                label: "a negative numeric offset",
+                value: "2030-01-01T19:00:00-05:00",
+            },
+            {
+                label: "a positive zero offset",
+                value: "2030-01-02T00:00:00+00:00",
+            },
+            {
+                label: "a timestamp without a time-zone designator",
+                value: "2030-01-02T00:00:00",
+            },
+        ];
 
+        it.each(nonCanonicalTimestamps)(
+            "rejects $label for schedule.startTime",
+            ({ value }) => {
                 const request = makeValidRequest();
 
-                request.schedule = {
-                    startTime: formatZonedDateTime(start),
-                    endTime: formatZonedDateTime(end),
-                    timeZone: "America/Denver",
-                };
+                request.schedule.startTime = value;
+                request.schedule.endTime = "2030-01-02T02:00:00Z";
 
-                expect(createCourseRequestSchema.safeParse(request).success)
-                    .toBe(true);
+                const issues = getIssues(request);
+
+                expectIssueAt(issues, ["schedule", "startTime"]);
             },
         );
 
-        it("rejects a nonexistent local time during the spring DST transition", () => {
-            const date = nextDenverSpringForwardDate().toString();
-            const request = makeValidRequest();
+        it.each(nonCanonicalTimestamps)(
+            "rejects $label for schedule.endTime",
+            ({ value }) => {
+                const request = makeValidRequest();
 
-            request.schedule = {
-                startTime: `${date}T02:30:00-07:00`,
-                endTime: `${date}T04:00:00-06:00`,
-                timeZone: "America/Denver",
-            };
+                request.schedule.startTime = "2030-01-01T18:00:00Z";
+                request.schedule.endTime = value;
 
-            const issues = getIssues(request);
+                const issues = getIssues(request);
 
-            expectIssueAt(
-                issues,
-                ["schedule", "startTime"],
-                "The start time offset must match the specified time zone.",
-            );
-        });
+                expectIssueAt(issues, ["schedule", "endTime"]);
+            },
+        );
+
+        it.each(nonCanonicalTimestamps)(
+            "rejects $label for prices[0].effectiveAt",
+            ({ value }) => {
+                const request = makeValidRequest();
+
+                request.prices[0].effectiveAt = value;
+
+                const issues = getIssues(request);
+
+                expectIssueAt(issues, ["prices", 0, "effectiveAt"]);
+            },
+        );
     });
 
     describe("price effective times", () => {
@@ -563,16 +538,10 @@ describe("createCourseRequestSchema", () => {
 
         it("rejects duplicate effective instants", () => {
             const request = makeValidRequest();
-            const instant = Temporal.Now.instant().add({ hours: 36 });
-
-            const utcTime = instant.toString();
-            const denverTime = formatZonedDateTime(
-                instant.toZonedDateTimeISO("America/Denver"),
-            );
 
             request.prices = [
-                makePrice(utcTime),
-                makePrice(denverTime),
+                makePrice("2030-01-01T12:00:00Z"),
+                makePrice("2030-01-01T12:00:00.000Z"),
             ];
 
             const issues = getIssues(request);
@@ -590,68 +559,68 @@ describe("createCourseRequestSchema", () => {
             label: string;
             makeInput: () => unknown;
         }> = [
-                {
-                    label: "a null schedule",
-                    makeInput: () => ({
-                        ...makeValidRequest(),
-                        schedule: null,
-                    }),
-                },
-                {
-                    label: "a numeric start time",
-                    makeInput: () => {
-                        const request = makeValidRequest();
+            {
+                label: "a null schedule",
+                makeInput: () => ({
+                    ...makeValidRequest(),
+                    schedule: null,
+                }),
+            },
+            {
+                label: "a numeric start time",
+                makeInput: () => {
+                    const request = makeValidRequest();
 
-                        return {
-                            ...request,
-                            schedule: {
-                                ...request.schedule,
-                                startTime: 123,
-                            },
-                        };
-                    },
+                    return {
+                        ...request,
+                        schedule: {
+                            ...request.schedule,
+                            startTime: 123,
+                        },
+                    };
                 },
-                {
-                    label: "a malformed start-time string",
-                    makeInput: () => {
-                        const request = makeValidRequest();
+            },
+            {
+                label: "a malformed start-time string",
+                makeInput: () => {
+                    const request = makeValidRequest();
 
-                        return {
-                            ...request,
-                            schedule: {
-                                ...request.schedule,
-                                startTime: "not-a-date",
-                            },
-                        };
-                    },
+                    return {
+                        ...request,
+                        schedule: {
+                            ...request.schedule,
+                            startTime: "not-a-date",
+                        },
+                    };
                 },
-                {
-                    label: "a null prices property",
-                    makeInput: () => ({
-                        ...makeValidRequest(),
-                        prices: null,
-                    }),
-                },
-                {
-                    label: "a null price entry",
-                    makeInput: () => ({
-                        ...makeValidRequest(),
-                        prices: [null],
-                    }),
-                },
-                {
-                    label: "a price with no effectiveAt",
-                    makeInput: () => ({
-                        ...makeValidRequest(),
-                        prices: [
-                            {
-                                amount: 5000,
-                                currency: "USD",
-                            },
-                        ],
-                    }),
-                },
-            ];
+            },
+            {
+                label: "a null prices property",
+                makeInput: () => ({
+                    ...makeValidRequest(),
+                    prices: null,
+                }),
+            },
+            {
+                label: "a null price entry",
+                makeInput: () => ({
+                    ...makeValidRequest(),
+                    prices: [null],
+                }),
+            },
+            {
+                label: "a price with no effectiveAt",
+                makeInput: () => ({
+                    ...makeValidRequest(),
+                    prices: [
+                        {
+                            amount: 5000,
+                            currency: "USD",
+                        },
+                    ],
+                }),
+            },
+        ];
 
         it.each(malformedInputs)(
             "returns a validation failure rather than throwing for $label",

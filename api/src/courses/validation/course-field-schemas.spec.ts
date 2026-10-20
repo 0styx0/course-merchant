@@ -171,8 +171,6 @@ describe("updateStatusSchema", () => {
 describe("courseDateTimeSchema", () => {
     it.each([
         "2026-01-15T12:30:00Z",
-        "2026-01-15T12:30:00+02:00",
-        "2026-01-15T12:30:00-07:00",
         "2026-01-15T12:30:00.123Z",
         "2026-01-15T12:30:00.123456Z",
     ])("accepts %s", (dateTime) => {
@@ -185,6 +183,8 @@ describe("courseDateTimeSchema", () => {
         "not-a-date",
         "",
         "2026-01-15T12:30:00+25:00",
+        "2026-01-15T12:30:00+02:00",
+        "2026-01-15T12:30:00-07:00",
     ])("rejects %s", (dateTime) => {
         expect(courseDateTimeSchema.safeParse(dateTime).success).toBe(false);
     });
@@ -306,8 +306,8 @@ describe("coursePriceAmountSchema", () => {
 
 describe("courseScheduleFieldsSchema", () => {
     const validSchedule = {
-        startTime: "2026-12-01T09:00:00-07:00",
-        endTime: "2026-12-01T10:00:00-07:00",
+        startTime: "2026-12-01T09:00:00Z",
+        endTime: "2026-12-01T10:00:00Z",
         timeZone: "America/Denver",
     };
 
