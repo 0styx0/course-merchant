@@ -12,10 +12,9 @@ import { CreateCourseRequest } from "types.js";
 function createMsPrecisionTemporal(
     time: string,
 ): string {
-    return Temporal.Instant.from(
-        time).round(
-            { smallestUnit: "microseconds" }
-        ).toString()
+    return Temporal.Instant.from(time).round(
+        { smallestUnit: "microseconds" }
+    ).toString()
 }
 
 describe("AdminCoursesService (integration)", () => {
