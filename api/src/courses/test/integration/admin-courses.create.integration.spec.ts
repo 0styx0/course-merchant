@@ -7,15 +7,7 @@ import { PrismaService } from "@/prisma/prisma.service.js";
 import { AdminCoursesService } from "@/courses/admin-courses.service.js";
 import { AdminCoursesRepository } from "@/courses/courses.repository/admin-courses.repository.js";
 import { CreateCourseRequest } from "types.js";
-
-// db supports ms, temporal supports to ns
-function createMsPrecisionTemporal(
-    time: string,
-): string {
-    return Temporal.Instant.from(time).round(
-        { smallestUnit: "microseconds" }
-    ).toString()
-}
+import { toDatabasePrecision } from "@/test/test-helpers.js";
 
 describe("AdminCoursesService (integration)", () => {
     let moduleRef: TestingModule;
@@ -94,13 +86,13 @@ describe("AdminCoursesService (integration)", () => {
             });
 
             expect(persisted.startsAt.toString()).toBe(
-                createMsPrecisionTemporal(
+                toDatabasePrecision(
                     request.schedule.startTime,
                 )
             );
 
             expect(persisted.endsAt.toString()).toBe(
-                createMsPrecisionTemporal(
+                toDatabasePrecision(
                     request.schedule.endTime
                 )
             );
@@ -118,7 +110,7 @@ describe("AdminCoursesService (integration)", () => {
             });
             expect(persisted.prices[0].id).toBeTruthy();
             expect(persisted.prices[0].effectiveAt.toString()).toBe(
-                createMsPrecisionTemporal(
+                toDatabasePrecision(
                     request.prices[0].effectiveAt,
                 )
             );
@@ -167,12 +159,12 @@ describe("AdminCoursesService (integration)", () => {
                 {
                     amount: 2500,
                     currency: "USD",
-                    effectiveAt: createMsPrecisionTemporal(earlierEffectiveAt),
+                    effectiveAt: toDatabasePrecision(earlierEffectiveAt),
                 },
                 {
                     amount: 5000,
                     currency: "USD",
-                    effectiveAt: createMsPrecisionTemporal(laterEffectiveAt),
+                    effectiveAt: toDatabasePrecision(laterEffectiveAt),
                 },
             ]);
 

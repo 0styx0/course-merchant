@@ -1,111 +1,201 @@
-import type { INestApplication } from "@nestjs/common";
+import { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import request from "supertest";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { Temporal } from "@js-temporal/polyfill";
-import { AdminCoursesController } from "@/courses/admin-courses.controller.js";
-import { AdminCoursesService } from "@/courses/admin-courses.service.js";
+import { randomUUID } from "node:crypto";
+import request from "supertest";
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+} from "vitest";
 
-describe("Course creation e2e", () => {
-    let app: INestApplication;
+import { AppModule } from "@/app.module.js";
+import { configureApp } from "@/configure-app.js";
+import { instant, toDatabasePrecision } from "@/test/test-helpers.js";
 
-    const service = {
-        createCourse: vi.fn(),
+describe("POST /admin/courses (e2e)", () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleRef.createNestApplication();
+    configureApp(app);
+
+    await app.init();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  function makeCreateRequest() {
+    const now = Temporal.Now.instant();
+    const startsAt = now.add({ hours: 3 });
+
+    return {
+      name: `E2E course ${randomUUID()}`,
+      description: "Course created by an E2E test.",
+      status: "drafted",
+      schedule: {
+        startTime: startsAt.toString(),
+        endTime: startsAt.add({ hours: 1 }).toString(),
+        timeZone: "UTC",
+      },
+      prices: [
+        {
+          amount: 2500,
+          currency: "USD",
+          effectiveAt: now.add({ hours: 1 }).toString(),
+        },
+      ],
+    };
+  }
+
+  async function getAdminCourse(courseId: string) {
+    return request(app.getHttpServer())
+      .get(`/v1/admin/courses/${courseId}`)
+      .expect(200);
+  }
+
+  it("creates a course with its initial status and price", async () => {
+    const body = makeCreateRequest();
+
+    const response = await request(app.getHttpServer())
+      .post("/v1/admin/courses")
+      .set("Idempotency-Key", randomUUID())
+      .send(body)
+      .expect(201);
+
+    expect(response.body).toMatchObject({
+      id: expect.any(String),
+      name: body.name,
+      description: body.description,
+      status: {
+        name: body.status,
+        changedAt: expect.any(String),
+      },
+      prices: [
+        {
+          id: expect.any(String),
+          amount: 2500,
+          currency: "USD",
+          effectiveAt: instant(
+            body.prices[0].effectiveAt,
+          ),
+        },
+      ],
+      schedule: {
+        startTime: instant(body.schedule.startTime),
+        endTime: instant(body.schedule.endTime),
+        timeZone: body.schedule.timeZone,
+      },
+      enrollments: [],
+    });
+
+    const getResponse = await getAdminCourse(response.body.id);
+
+    expect(getResponse.body).toEqual(response.body);
+  });
+
+  it("persists multiple prices and returns them in effective-time order", async () => {
+    const body = makeCreateRequest();
+    const startsAt = Temporal.Instant.from(
+      body.schedule.startTime,
+    );
+
+    const earlierEffectiveAt = startsAt
+      .subtract({ hours: 2 })
+      .toString();
+
+    const laterEffectiveAt = startsAt
+      .subtract({ hours: 1 })
+      .toString();
+
+    body.prices = [
+      {
+        amount: 5000,
+        currency: "USD",
+        effectiveAt: laterEffectiveAt,
+      },
+      {
+        amount: 2500,
+        currency: "USD",
+        effectiveAt: earlierEffectiveAt,
+      },
+    ];
+
+    const response = await request(app.getHttpServer())
+      .post("/v1/admin/courses")
+      .set("Idempotency-Key", randomUUID())
+      .send(body)
+      .expect(201);
+
+    const getResponse = await getAdminCourse(response.body.id);
+
+    expect(getResponse.body).toEqual(response.body);
+
+    expect(
+      getResponse.body.prices.map(
+        (price: {
+          amount: number;
+          currency: string;
+          effectiveAt: string;
+        }) => ({
+          amount: price.amount,
+          currency: price.currency,
+          effectiveAt: price.effectiveAt,
+        }),
+      ),
+    ).toEqual([
+      {
+        amount: 2500,
+        currency: "USD",
+        effectiveAt: instant(toDatabasePrecision(earlierEffectiveAt)),
+      },
+      {
+        amount: 5000,
+        currency: "USD",
+        effectiveAt: instant(toDatabasePrecision(laterEffectiveAt)),
+      },
+    ]);
+
+    expect(
+      new Set(
+        getResponse.body.prices.map(
+          (price: { id: string }) => price.id,
+        ),
+      ).size,
+    ).toBe(2);
+  });
+
+  it("returns all validation errors for an invalid request", async () => {
+    const body = {
+      ...makeCreateRequest(),
+      name: " ",
+      prices: [],
     };
 
-    beforeAll(async () => {
-        const moduleRef = await Test.createTestingModule({
-            controllers: [AdminCoursesController],
-            providers: [
-                {
-                    provide: AdminCoursesService,
-                    useValue: service,
-                },
-            ],
-        }).compile();
+    const response = await request(app.getHttpServer())
+      .post("/v1/admin/courses")
+      .set("Idempotency-Key", randomUUID())
+      .send(body)
+      .expect(400);
 
-        app = moduleRef.createNestApplication();
-        app.setGlobalPrefix("v1");
-        await app.init();
+    expect(response.body).toMatchObject({
+      code: "VALIDATION_FAILED",
+      errors: expect.arrayContaining([
+        expect.objectContaining({
+          field: "/name",
+        }),
+        expect.objectContaining({
+          field: "/prices",
+        }),
+      ]),
     });
-
-    afterAll(async () => {
-        await app.close();
-    });
-
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
-
-    function makeValidRequest() {
-        const now = Temporal.Now.instant();
-        const startsAt = now.add({ hours: 3 });
-
-        return {
-            name: "Integration course",
-            description: "A course used to test the HTTP endpoint.",
-            status: "drafted",
-            schedule: {
-                startTime: startsAt.toString(),
-                endTime: startsAt.add({ hours: 1 }).toString(),
-                timeZone: "UTC",
-            },
-            prices: [
-                {
-                    amount: 2500,
-                    currency: "USD",
-                    effectiveAt: now.add({ hours: 1 }).toString(),
-                },
-            ],
-        };
-    }
-
-    it("creates a course and returns 201", async () => {
-        service.createCourse.mockResolvedValue({
-            id: "course-123",
-            title: "Integration course",
-        });
-
-        const body = makeValidRequest();
-
-        const response = await request(app.getHttpServer())
-            .post("/v1/admin/courses")
-            .send(body)
-            .expect(201);
-
-        // integration tests cover specific matching
-        expect(response.body).toMatchObject({
-            id: "course-123",
-            title: "Integration course",
-        });
-
-        expect(service.createCourse).toHaveBeenCalledOnce();
-        expect(service.createCourse).toHaveBeenCalledWith(body);
-    });
-
-    it("returns 400 for invalid input without calling the service", async () => {
-        const body = {
-            ...makeValidRequest(),
-            name: " ",
-            prices: [],
-        };
-
-        const response = await request(app.getHttpServer())
-            .post("/v1/admin/courses")
-            .send(body)
-            .expect(400);
-
-        expect(response.body.errors).toEqual(
-            expect.arrayContaining([
-                expect.objectContaining({
-                    path: ["name"],
-                }),
-                expect.objectContaining({
-                    path: ["prices"],
-                }),
-            ]),
-        );
-
-        expect(service.createCourse).not.toHaveBeenCalled();
-    });
+  });
 });

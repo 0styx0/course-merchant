@@ -16,9 +16,9 @@ export class AdminCoursesService {
     private readonly coursesRepository: AdminCoursesRepository,
   ) { }
 
-  createCourse(
+  async createCourse(
     request: CreateCourseRequest,
-  ): Promise<CourseRepositoryModelAdmin> {
+  ): Promise<GetCourseAdminResponse> {
     const input: CourseRepositoryCreateInput = {
       title: request.name,
       description: request.description,
@@ -34,7 +34,8 @@ export class AdminCoursesService {
       })),
     };
 
-    return this.coursesRepository.createCourse(input);
+    const course = await this.coursesRepository.createCourse(input);
+    return toAdminCourseResponse(course)
   }
   
   async findByIdAdmin(courseId: string): Promise<GetCourseAdminResponse> {

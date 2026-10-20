@@ -31,7 +31,7 @@ export class AdminCoursesController {
     createCourse(
         @Body(new ZodValidationPipe(createCourseRequestSchema))
         request: CreateCourseRequest,
-    ) {
+    ): Promise<GetCourseAdminResponse> {
         return this.adminCoursesService.createCourse(request);
     }
 }

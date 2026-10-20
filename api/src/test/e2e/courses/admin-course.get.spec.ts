@@ -20,7 +20,7 @@ import {
 
 import { instant } from "../../test-helpers.js";
 
-describe("Admin Courses API (e2e)", () => {
+describe("Admin Courses Create API (e2e)", () => {
   let app: INestApplication;
 
   beforeAll(async () => {
