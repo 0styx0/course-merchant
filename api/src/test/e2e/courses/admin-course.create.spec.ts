@@ -1,5 +1,4 @@
 import { INestApplication } from "@nestjs/common";
-import { Test } from "@nestjs/testing";
 import { Temporal } from "@js-temporal/polyfill";
 import { randomUUID } from "node:crypto";
 import request from "supertest";
@@ -11,22 +10,15 @@ import {
   it,
 } from "vitest";
 
-import { AppModule } from "@/app.module.js";
-import { configureApp } from "@/configure-app.js";
 import { instant, toDatabasePrecision } from "@/test/test-helpers.js";
+import { createE2eApp } from "../e2e-helpers.js";
 
 describe("POST /admin/courses (e2e)", () => {
+
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleRef.createNestApplication();
-    configureApp(app);
-
-    await app.init();
+    app = await createE2eApp();
   });
 
   afterAll(async () => {

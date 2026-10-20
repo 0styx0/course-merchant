@@ -1,5 +1,3 @@
-import { AppModule } from "@/app.module.js";
-import { configureApp } from "@/configure-app.js";
 import {
   createCourse,
   createCoursePrice,
@@ -10,7 +8,6 @@ import {
   updateCourseStatus,
 } from "@/test/course-fixtures.js";
 import type { INestApplication } from "@nestjs/common";
-import { Test } from "@nestjs/testing";
 import { Temporal } from "@js-temporal/polyfill";
 import request from "supertest";
 import {
@@ -20,18 +17,13 @@ import {
   expect,
   it,
 } from "vitest";
+import { createE2eApp } from "../e2e-helpers.js";
 
 describe("Admin Courses API (e2e)", () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleRef.createNestApplication();
-    configureApp(app);
-    await app.init();
+    app = await createE2eApp();
   });
 
   afterAll(async () => {

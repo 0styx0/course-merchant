@@ -1,5 +1,3 @@
-import { AppModule } from "@/app.module.js";
-import { configureApp } from "@/configure-app.js";
 import {
   archiveCourse,
   createCourse,
@@ -7,7 +5,6 @@ import {
 } from "@/test/course-fixtures.js";
 import { instant } from "../../test-helpers.js";
 import type { INestApplication } from "@nestjs/common";
-import { Test } from "@nestjs/testing";
 import { Temporal } from "@js-temporal/polyfill";
 import request from "supertest";
 import {
@@ -18,23 +15,17 @@ import {
   it,
   vi,
 } from "vitest";
+import { createE2eApp } from "../e2e-helpers.js";
 
 const NOW = Temporal.Instant.from("2026-09-29T14:00:00Z");
 
 describe("GET /v1/courses (e2e)", () => {
+
   let app: INestApplication;
 
   beforeAll(async () => {
     vi.spyOn(Temporal.Now, "instant").mockReturnValue(NOW);
-
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleRef.createNestApplication();
-    configureApp(app);
-
-    await app.init();
+    app = await createE2eApp();
   });
 
   afterAll(async () => {
@@ -179,7 +170,7 @@ describe("GET /v1/courses (e2e)", () => {
       },
     );
 
-    await archiveCourse(archived.course.id, archived.course.createdAt.add({seconds: 1}));
+    await archiveCourse(archived.course.id, archived.course.createdAt.add({ seconds: 1 }));
 
     const unpriced = await createCourse({
       title: "Unpriced Course",
