@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service.js";
 import { Temporal } from "@js-temporal/polyfill";
-import { and } from "@prisma/orm-postgres/orm-client";
+import { visibleCoursesWithCurrentPrice } from "../course-visibility.js";
 
 export type CourseRepositoryModelPublic = {
   id: string;
@@ -26,28 +26,7 @@ export class CoursesRepository {
   ) { }
 
   private publicCourseDetails(now: Temporal.Instant) {
-    return this.prisma.db.orm.public.Course
-      .where((course) =>
-        course.statuses.some((status) =>
-          and(
-            status.name.eq("published"),
-            status.course.some((sameCourse) =>
-              sameCourse.statuses.none((laterStatus) =>
-                laterStatus.changedAt.gt(status.changedAt),
-              ),
-            ),
-          ),
-        ),
-      )
-      .where((course) =>
-        course.prices.some((price) => price.effectiveAt.lte(now)),
-      )
-      .include("prices", (prices) =>
-        prices
-          .where((price) => price.effectiveAt.lte(now))
-          .orderBy((price) => price.effectiveAt.desc())
-          .limit(1),
-      )
+    return visibleCoursesWithCurrentPrice(this.prisma.db.orm.public.Course, now)
       .include("enrollments", (enrollments) => enrollments.count());
   }
 

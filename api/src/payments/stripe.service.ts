@@ -59,10 +59,8 @@ export class StripeService {
   async createCheckoutSession(
     input: CreateCheckoutSessionInput,
   ): Promise<CreatedCheckoutSession> {
-    let session: Stripe.Checkout.Session;
-
-    try {
-      session = await this.stripe.checkout.sessions.create(
+    const session = await this.stripe.checkout.sessions
+      .create(
         {
           mode: "payment",
           // cards only: payment is confirmed instantly, so there is never a
@@ -86,14 +84,14 @@ export class StripeService {
           expires_at: Math.floor(input.expiresAt.epochMilliseconds / 1000),
         },
         { idempotencyKey: `checkout-${input.paymentId}` },
-      );
-    } catch (error) {
-      if (isStripeOutage(error)) {
-        throw new PaymentProviderUnavailableError({ cause: error });
-      }
+      )
+      .catch((error: unknown) => {
+        if (isStripeOutage(error)) {
+          throw new PaymentProviderUnavailableError({ cause: error });
+        }
 
-      throw error;
-    }
+        throw error;
+      });
 
     if (!session.url) {
       throw new Error(`Stripe returned Checkout Session ${session.id} without a URL.`);

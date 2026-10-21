@@ -2,14 +2,25 @@ import { Temporal } from "@js-temporal/polyfill";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { StartCheckoutRequest } from "types.js";
-import { CheckoutRepository } from "@/checkout/checkout.repository.js";
+import { CheckoutRepository, type CheckoutCourse } from "@/checkout/checkout.repository.js";
 import { CheckoutService } from "@/checkout/checkout.service.js";
-import { CoursesRepository } from "@/courses/courses.repository/courses.repository.js";
+import type { PaymentsConfig } from "@/config/payments-config.js";
 import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
+import {
+  PaymentProviderUnavailableError,
+  StripeService,
+} from "@/payments/stripe.service.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 
 const COURSE_ID = "8b0e1f5c-0000-4000-8000-000000000001";
 const CUSTOMER_ID = "8b0e1f5c-0000-4000-8000-000000000002";
+const PRICE_ID = "8b0e1f5c-0000-4000-8000-000000000003";
+const PAYMENT_ID = "8b0e1f5c-0000-4000-8000-000000000004";
+
+const config: PaymentsConfig = {
+  stripeSecretKey: "sk_test_unit",
+  webBaseUrl: "https://courses.example.com",
+};
 
 const request: StartCheckoutRequest = {
   courseId: COURSE_ID,
@@ -17,18 +28,14 @@ const request: StartCheckoutRequest = {
   email: "ada@example.com",
 };
 
-function makeCourse(overrides: { amount?: number; endsAt?: Temporal.Instant } = {}) {
-  const now = Temporal.Now.instant();
-
+function makeCourse(
+  overrides: { amount?: number; endsAt?: Temporal.Instant } = {},
+): CheckoutCourse {
   return {
     id: COURSE_ID,
     title: "React Fundamentals",
-    description: "Learn React",
-    startsAt: now.add({ hours: 24 }),
-    endsAt: overrides.endsAt ?? now.add({ hours: 26 }),
-    timeZone: "UTC",
-    prices: [{ amount: overrides.amount ?? 0, currency: "USD" }],
-    enrollments: 0,
+    endsAt: overrides.endsAt ?? Temporal.Now.instant().add({ hours: 26 }),
+    currentPrice: { id: PRICE_ID, amount: overrides.amount ?? 0, currency: "USD" },
   };
 }
 
@@ -39,20 +46,26 @@ describe("CheckoutService", () => {
   const tx = { orm: {} };
 
   let service: CheckoutService;
-  let coursesRepository: { findById: ReturnType<typeof vi.fn> };
   let checkoutRepository: {
+    findVisibleCourse: ReturnType<typeof vi.fn>;
     findOrCreateCustomer: ReturnType<typeof vi.fn>;
     findEnrollment: ReturnType<typeof vi.fn>;
     grantFreeAccess: ReturnType<typeof vi.fn>;
+    createPendingPayment: ReturnType<typeof vi.fn>;
+    saveProviderCheckoutId: ReturnType<typeof vi.fn>;
   };
   let emailOutbox: {
     enqueue: ReturnType<typeof vi.fn>;
     countQueuedSince: ReturnType<typeof vi.fn>;
   };
+  let stripe: { createCheckoutSession: ReturnType<typeof vi.fn> };
+  let prisma: { db: { transaction: ReturnType<typeof vi.fn> } };
+  // the order transactions commit and Stripe is called in
+  let events: string[];
 
   beforeEach(() => {
-    coursesRepository = { findById: vi.fn().mockResolvedValue(makeCourse()) };
     checkoutRepository = {
+      findVisibleCourse: vi.fn().mockResolvedValue(makeCourse()),
       findOrCreateCustomer: vi.fn().mockResolvedValue({
         id: CUSTOMER_ID,
         email: request.email,
@@ -60,22 +73,45 @@ describe("CheckoutService", () => {
       }),
       findEnrollment: vi.fn().mockResolvedValue(null),
       grantFreeAccess: vi.fn().mockResolvedValue(true),
+      createPendingPayment: vi.fn().mockResolvedValue({
+        id: PAYMENT_ID,
+        amount: 9900,
+        currency: "USD",
+      }),
+      saveProviderCheckoutId: vi.fn().mockResolvedValue(undefined),
     };
     emailOutbox = {
       enqueue: vi.fn().mockResolvedValue(undefined),
       countQueuedSince: vi.fn().mockResolvedValue(0),
     };
 
+    events = [];
+    stripe = {
+      createCheckoutSession: vi.fn(async () => {
+        events.push("stripe called");
+
+        return { id: "cs_test_123", url: "https://checkout.stripe.com/c/pay/cs_test_123" };
+      }),
+    };
+
     // runs the callback with a stand-in transaction, as the real one would
-    const prisma = {
-      db: { transaction: vi.fn((work: (scope: typeof tx) => unknown) => work(tx)) },
+    prisma = {
+      db: {
+        transaction: vi.fn(async (work: (scope: typeof tx) => unknown) => {
+          const result = await work(tx);
+          events.push("transaction committed");
+
+          return result;
+        }),
+      },
     };
 
     service = new CheckoutService(
       prisma as unknown as PrismaService,
-      coursesRepository as unknown as CoursesRepository,
       checkoutRepository as unknown as CheckoutRepository,
       emailOutbox as unknown as EmailOutboxRepository,
+      stripe as unknown as StripeService,
+      config,
     );
   });
 
@@ -83,7 +119,7 @@ describe("CheckoutService", () => {
 
   describe("course checks", () => {
     it("returns 404 COURSE_NOT_FOUND when the course isn't publicly viewable", async () => {
-      coursesRepository.findById.mockResolvedValue(null);
+      checkoutRepository.findVisibleCourse.mockResolvedValue(null);
 
       await expect(service.startCheckout(request)).rejects.toMatchObject({
         status: 404,
@@ -96,7 +132,7 @@ describe("CheckoutService", () => {
     });
 
     it("returns 409 COURSE_NOT_PURCHASABLE once the course has ended", async () => {
-      coursesRepository.findById.mockResolvedValue(
+      checkoutRepository.findVisibleCourse.mockResolvedValue(
         makeCourse({ endsAt: Temporal.Now.instant().subtract({ minutes: 1 }) }),
       );
 
@@ -108,6 +144,16 @@ describe("CheckoutService", () => {
         },
       });
       expect(checkoutRepository.findOrCreateCustomer).not.toHaveBeenCalled();
+    });
+
+    it("looks the course up outside the transaction", async () => {
+      await service.startCheckout(request);
+
+      expect(checkoutRepository.findVisibleCourse).toHaveBeenCalledExactlyOnceWith(
+        prisma.db,
+        COURSE_ID,
+        expect.any(Temporal.Instant),
+      );
     });
 
     it("creates the customer with the request's name and email", async () => {
@@ -141,12 +187,14 @@ describe("CheckoutService", () => {
       expect(checkoutRepository.grantFreeAccess).not.toHaveBeenCalled();
     });
 
-    it("answers the same way for a paid course", async () => {
-      coursesRepository.findById.mockResolvedValue(makeCourse({ amount: 9900 }));
+    it("answers the same way for a paid course, without charging again", async () => {
+      checkoutRepository.findVisibleCourse.mockResolvedValue(makeCourse({ amount: 9900 }));
 
       await expect(service.startCheckout(request)).resolves.toEqual({
         status: "check_email",
       });
+      expect(checkoutRepository.createPendingPayment).not.toHaveBeenCalled();
+      expect(stripe.createCheckoutSession).not.toHaveBeenCalled();
     });
   });
 
@@ -239,6 +287,107 @@ describe("CheckoutService", () => {
       });
       expect(checkoutRepository.grantFreeAccess).toHaveBeenCalled();
       expect(emailOutbox.enqueue).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("a paid course", () => {
+    beforeEach(() => {
+      checkoutRepository.findVisibleCourse.mockResolvedValue(makeCourse({ amount: 9900 }));
+    });
+
+    it("redirects the buyer to Stripe's checkout page", async () => {
+      await expect(service.startCheckout(request)).resolves.toEqual({
+        status: "redirect",
+        url: "https://checkout.stripe.com/c/pay/cs_test_123",
+      });
+    });
+
+    it.each([
+      ["a new buyer", null],
+      ["a refunded buyer", { id: "enrollment", revokedAt, suspendedAt: null }],
+    ])("records a pending payment at the current price for %s", async (_label, enrollment) => {
+      checkoutRepository.findEnrollment.mockResolvedValue(enrollment);
+
+      await service.startCheckout(request);
+
+      expect(checkoutRepository.createPendingPayment).toHaveBeenCalledExactlyOnceWith(tx, {
+        provider: "stripe",
+        customerId: CUSTOMER_ID,
+        coursePriceId: PRICE_ID,
+        amount: 9900,
+        currency: "USD",
+      });
+    });
+
+    it("creates the Stripe session for that payment", async () => {
+      const before = Temporal.Now.instant();
+      await service.startCheckout(request);
+      const after = Temporal.Now.instant();
+
+      expect(stripe.createCheckoutSession).toHaveBeenCalledExactlyOnceWith({
+        paymentId: PAYMENT_ID,
+        amount: 9900,
+        currency: "USD",
+        courseName: "React Fundamentals",
+        customerEmail: "ada@example.com",
+        successUrl: "https://courses.example.com/checkout/success",
+        cancelUrl: `https://courses.example.com/courses/${COURSE_ID}`,
+        expiresAt: expect.any(Temporal.Instant),
+      });
+
+      const { expiresAt } = stripe.createCheckoutSession.mock.calls[0][0];
+
+      expect(
+        Temporal.Instant.compare(expiresAt, before.add({ minutes: 31 })),
+      ).toBeGreaterThanOrEqual(0);
+      expect(
+        Temporal.Instant.compare(expiresAt, after.add({ minutes: 31 })),
+      ).toBeLessThanOrEqual(0);
+    });
+
+    it("calls Stripe only after the transaction has committed", async () => {
+      await service.startCheckout(request);
+
+      expect(events).toEqual(["transaction committed", "stripe called"]);
+    });
+
+    it("saves the session id on the payment outside the transaction", async () => {
+      await service.startCheckout(request);
+
+      expect(checkoutRepository.saveProviderCheckoutId).toHaveBeenCalledExactlyOnceWith(
+        prisma.db,
+        PAYMENT_ID,
+        "cs_test_123",
+      );
+    });
+
+    it("queues no email; access is granted once Stripe confirms payment", async () => {
+      await service.startCheckout(request);
+
+      expect(emailOutbox.enqueue).not.toHaveBeenCalled();
+      expect(checkoutRepository.grantFreeAccess).not.toHaveBeenCalled();
+    });
+
+    it("returns 503 PAYMENT_PROVIDER_UNAVAILABLE when Stripe can't be reached", async () => {
+      stripe.createCheckoutSession.mockRejectedValue(
+        new PaymentProviderUnavailableError(),
+      );
+
+      await expect(service.startCheckout(request)).rejects.toMatchObject({
+        status: 503,
+        response: {
+          code: "PAYMENT_PROVIDER_UNAVAILABLE",
+          detail: "Payments can't be taken right now. Try again later.",
+        },
+      });
+      expect(checkoutRepository.saveProviderCheckoutId).not.toHaveBeenCalled();
+    });
+
+    it("lets other Stripe errors through", async () => {
+      const error = new Error("Invalid currency: zzz");
+      stripe.createCheckoutSession.mockRejectedValue(error);
+
+      await expect(service.startCheckout(request)).rejects.toBe(error);
     });
   });
 });
