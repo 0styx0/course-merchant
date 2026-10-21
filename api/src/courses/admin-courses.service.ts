@@ -1,9 +1,11 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { CreateCourseRequest, GetCourseAdminResponse, ListCoursesAdminResponse } from "types.js";
+import { CreateCourseRequest, GetCourseAdminResponse, ListCoursesAdminResponse, UpdateCourseRequest } from "types.js";
 import { ApiException } from "../common/errors/api.exception.js";
 import { ErrorCodeCourseGet } from "../common/errors/error-codes.js";
+import { ValidationException } from "../common/errors/validation.exception.js";
 import { toAdminCourseResponse } from "./courses.mapper.js";
 import { AdminCoursesRepository, CourseRepositoryCreateInput, CourseRepositoryModelAdmin } from "./courses.repository/admin-courses.repository.js";
+import { findPriceChanges, findUpdateRuleViolations } from "./validation/course-update-rules.js";
 import { Temporal } from "@js-temporal/polyfill";
 
 // ask client if they ended up wanting. leaving in for db constraint
@@ -37,7 +39,58 @@ export class AdminCoursesService {
     const course = await this.coursesRepository.createCourse(input);
     return toAdminCourseResponse(course)
   }
-  
+
+  async updateCourse(
+    courseId: string,
+    request: UpdateCourseRequest,
+  ): Promise<GetCourseAdminResponse> {
+    const now = Temporal.Now.instant();
+    const stored = await this.coursesRepository.findCourseDetailsByIdAdmin(
+      courseId,
+    );
+
+    if (!stored) {
+      throw new ApiException(
+        ErrorCodeCourseGet.COURSE_NOT_FOUND,
+      );
+    }
+
+    const context = { request, stored, now };
+    const errors = findUpdateRuleViolations(context);
+
+    if (errors.length > 0) {
+      throw new ValidationException(errors);
+    }
+
+    const { newPrices, deletePriceIds } = findPriceChanges(context);
+    const currentStatus = stored.statuses[0].name;
+
+    const course = await this.coursesRepository.updateCourse(courseId, {
+      title: request.name,
+      description: request.description,
+      startsAt: Temporal.Instant.from(request.schedule.startTime),
+      endsAt: Temporal.Instant.from(request.schedule.endTime),
+      timeZone: request.schedule.timeZone,
+      nextStatus:
+        request.status === currentStatus ? null : request.status,
+      newPrices: newPrices.map((price) => ({
+        amount: price.amount,
+        currency: price.currency,
+        effectiveAt: Temporal.Instant.from(price.effectiveAt),
+      })),
+      deletePriceIds,
+      now,
+    });
+
+    if (!course) {
+      throw new ApiException(
+        ErrorCodeCourseGet.COURSE_NOT_FOUND,
+      );
+    }
+
+    return toAdminCourseResponse(course)
+  }
+
   async findByIdAdmin(courseId: string): Promise<GetCourseAdminResponse> {
     const course = await this.coursesRepository.findCourseDetailsByIdAdmin(
       courseId,

@@ -7,6 +7,7 @@ import {
   courseDetailsShape,
   createStatusSchema,
   scheduledPriceFieldsSchema,
+  updateStatusSchema,
 } from "./course-field-schemas.js";
 
 type ScheduleTimeField = "startTime" | "endTime";
@@ -107,15 +108,19 @@ function validateFutureScheduleTime(
   });
 }
 
+// Past-time checks for updates depend on the stored course, so they run in
+// the service instead (see course-update-rules.ts).
+export const updateCourseScheduleSchema =
+  courseScheduleFieldsSchema.superRefine(validateScheduleRange, {
+    when(payload) {
+      return scheduleRangeInputSchema.safeParse(
+        payload.value,
+      ).success;
+    },
+  });
+
 export const createCourseScheduleSchema =
-  courseScheduleFieldsSchema
-    .superRefine(validateScheduleRange, {
-      when(payload) {
-        return scheduleRangeInputSchema.safeParse(
-          payload.value,
-        ).success;
-      },
-    })
+  updateCourseScheduleSchema
     .superRefine(
       (schedule, ctx) => {
         validateFutureScheduleTime(
@@ -227,3 +232,22 @@ const createCourseRequestBaseSchema = z.strictObject({
 
 export const createCourseRequestSchema =
   createCourseRequestBaseSchema;
+
+// Prices may be empty and in the past here: whether that is allowed depends
+// on the stored prices, which the service checks.
+export const updateScheduledPricesSchema = z
+  .array(scheduledPriceFieldsSchema)
+  .superRefine(validateUniquePriceEffectiveTimes, {
+    when(payload) {
+      return priceEffectiveTimesInputSchema.safeParse(
+        payload.value,
+      ).success;
+    },
+  });
+
+export const updateCourseRequestSchema = z.strictObject({
+  ...courseDetailsShape,
+  status: updateStatusSchema,
+  schedule: updateCourseScheduleSchema,
+  prices: updateScheduledPricesSchema,
+});

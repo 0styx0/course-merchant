@@ -12,6 +12,7 @@ export type GetCourseAdminResponse = components["schemas"]["AdminCourse"]
 export type ListCoursesAdminResponse = components["schemas"]["ListAdminCoursesResponse"]
 
 export type CreateCourseRequest = components["schemas"]["CreateCourseRequest"]
+export type UpdateCourseRequest = components["schemas"]["UpdateCourseRequest"]
 
 export type ProblemDetails = components["schemas"]["ProblemDetails"]
 

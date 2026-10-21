@@ -51,6 +51,24 @@ export type CourseRepositoryCreateInput = {
   }[];
 };
 
+export type CourseRepositoryUpdateInput = {
+  title: string;
+  description: string;
+  startsAt: Temporal.Instant;
+  endsAt: Temporal.Instant;
+  timeZone: string;
+  // only set when the status changed, so the log records real transitions
+  nextStatus: Models.public_CourseStatus["name"] | null;
+  newPrices: {
+    amount: number;
+    currency: string;
+    effectiveAt: Temporal.Instant;
+  }[];
+  deletePriceIds: string[];
+  // prices in effect at this instant are never deleted
+  now: Temporal.Instant;
+};
+
 type CourseDelegate =
   PrismaService["db"]["orm"]["public"]["Course"];
 
@@ -157,6 +175,77 @@ export class AdminCoursesRepository {
       }
 
       return createdCourse;
+    });
+  }
+
+  /**
+   * Overwrites the course details, replaces future prices and appends the
+   * status. Returns null when the course does not exist.
+   */
+  async updateCourse(
+    courseId: string,
+    input: CourseRepositoryUpdateInput,
+  ): Promise<CourseRepositoryModelAdmin | null> {
+    return this.prisma.db.transaction(async (tx) => {
+      const course = await tx.orm.public.Course
+        .where((candidate) => candidate.id.eq(courseId))
+        .update({
+          title: input.title,
+          description: input.description,
+          startsAt: input.startsAt,
+          endsAt: input.endsAt,
+          timeZone: input.timeZone,
+        });
+
+      if (!course) {
+        return null;
+      }
+
+      // delete before inserting, so a replaced price can reuse its effectiveAt
+      if (input.deletePriceIds.length > 0) {
+        await tx.orm.public.CoursePrice
+          .where((price) =>
+            and(
+              price.courseId.eq(courseId),
+              price.id.in(input.deletePriceIds),
+              price.effectiveAt.gt(input.now),
+            ),
+          )
+          .deleteAndCount();
+      }
+
+      if (input.newPrices.length > 0) {
+        await tx.orm.public.CoursePrice.createAndCount(
+          input.newPrices.map((price) => ({
+            courseId,
+            amount: price.amount,
+            currency: price.currency,
+            effectiveAt: price.effectiveAt,
+          })),
+        );
+      }
+
+      if (input.nextStatus) {
+        await tx.orm.public.CourseStatus.create({
+          courseId,
+          name: input.nextStatus,
+        });
+      }
+
+      const updatedCourse = await this.adminCourseDetailsQuery(
+        tx.orm.public.Course,
+      )
+        .where((candidate) => candidate.id.eq(courseId))
+        .first();
+
+      if (!updatedCourse) {
+        // throwing prevents transaction commit
+        throw new Error(
+          `Updated course ${courseId} could not be loaded.`,
+        );
+      }
+
+      return updatedCourse;
     });
   }
 }

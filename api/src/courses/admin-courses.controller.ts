@@ -1,9 +1,9 @@
-import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
-import type { CreateCourseRequest, GetCourseAdminResponse, ListCoursesAdminResponse } from 'types.js';
+import { Body, Controller, Get, Inject, Param, Post, Put } from '@nestjs/common';
+import type { CreateCourseRequest, GetCourseAdminResponse, ListCoursesAdminResponse, UpdateCourseRequest } from 'types.js';
 import { ParseCourseIdPipe } from './pipes/parse-course-id.pipe.js';
 import { AdminCoursesService } from './admin-courses.service.js';
 import { ZodValidationPipe } from './pipes/create-course-validation.pipe.js';
-import { createCourseRequestSchema } from './validation/course-request-schemas.js';
+import { createCourseRequestSchema, updateCourseRequestSchema } from './validation/course-request-schemas.js';
 
 @Controller({
     path: "admin/courses",
@@ -33,5 +33,14 @@ export class AdminCoursesController {
         request: CreateCourseRequest,
     ): Promise<GetCourseAdminResponse> {
         return this.adminCoursesService.createCourse(request);
+    }
+
+    @Put(":courseId")
+    updateCourse(
+        @Param("courseId", ParseCourseIdPipe) courseId: string,
+        @Body(new ZodValidationPipe(updateCourseRequestSchema))
+        request: UpdateCourseRequest,
+    ): Promise<GetCourseAdminResponse> {
+        return this.adminCoursesService.updateCourse(courseId, request);
     }
 }

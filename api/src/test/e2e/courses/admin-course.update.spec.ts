@@ -1,0 +1,220 @@
+import { INestApplication } from "@nestjs/common";
+import { Temporal } from "@js-temporal/polyfill";
+import { randomUUID } from "node:crypto";
+import request from "supertest";
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+} from "vitest";
+
+import { createCourse, createCoursePrice } from "@/test/course-fixtures.js";
+import { createE2eApp } from "../e2e-helpers.js";
+
+describe("PUT /admin/courses/:courseId (e2e)", () => {
+
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    app = await createE2eApp();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  function makeCreateRequest() {
+    const now = Temporal.Now.instant();
+    const startsAt = now.add({ hours: 3 });
+
+    return {
+      name: `E2E course ${randomUUID()}`,
+      description: "Course created by an E2E test.",
+      status: "drafted",
+      schedule: {
+        startTime: startsAt.toString(),
+        endTime: startsAt.add({ hours: 1 }).toString(),
+        timeZone: "UTC",
+      },
+      prices: [
+        {
+          amount: 2500,
+          currency: "USD",
+          effectiveAt: now.add({ hours: 1 }).toString(),
+        },
+      ],
+    };
+  }
+
+  async function createViaApi() {
+    const response = await request(app.getHttpServer())
+      .post("/v1/admin/courses")
+      .send(makeCreateRequest())
+      .expect(201);
+
+    return response.body;
+  }
+
+  async function getAdminCourse(courseId: string) {
+    const response = await request(app.getHttpServer())
+      .get(`/v1/admin/courses/${courseId}`)
+      .expect(200);
+
+    return response.body;
+  }
+
+  // what a form sends back after loading getCourseAsAdmin
+  function toUpdateBody(course: {
+    name: string;
+    description: string;
+    status: { name: string };
+    schedule: unknown;
+    prices: { amount: number; currency: string; effectiveAt: string }[];
+  }) {
+    return {
+      name: course.name,
+      description: course.description,
+      status: course.status.name,
+      schedule: course.schedule,
+      prices: course.prices.map(({ amount, currency, effectiveAt }) => ({
+        amount,
+        currency,
+        effectiveAt,
+      })),
+    };
+  }
+
+  it("updates a course and returns the same representation as POST", async () => {
+    const created = await createViaApi();
+    const body = {
+      ...toUpdateBody(created),
+      name: "Updated name",
+      status: "published",
+    };
+
+    const response = await request(app.getHttpServer())
+      .put(`/v1/admin/courses/${created.id}`)
+      .send(body)
+      .expect(200);
+
+    expect(response.body).toEqual({
+      ...created,
+      name: "Updated name",
+      status: {
+        name: "published",
+        changedAt: expect.any(String),
+      },
+    });
+    expect(await getAdminCourse(created.id)).toEqual(response.body);
+  });
+
+  it("changes nothing when the loaded course is sent back", async () => {
+    const created = await createViaApi();
+
+    await request(app.getHttpServer())
+      .put(`/v1/admin/courses/${created.id}`)
+      .send(toUpdateBody(created))
+      .expect(200);
+
+    expect(await getAdminCourse(created.id)).toEqual(created);
+  });
+
+  it("edits a course that has already started", async () => {
+    const now = Temporal.Now.instant();
+    const course = await createCourse({
+      title: "Started course",
+      description: "Learn React",
+      startsAt: now.subtract({ hours: 1 }),
+      endsAt: now.add({ hours: 1 }),
+      timeZone: "UTC",
+    });
+
+    await createCoursePrice({
+      courseId: course.id,
+      amount: 5000,
+      currency: "USD",
+      effectiveAt: now.subtract({ hours: 48 }),
+    });
+
+    const loaded = await getAdminCourse(course.id);
+
+    const response = await request(app.getHttpServer())
+      .put(`/v1/admin/courses/${course.id}`)
+      .send({ ...toUpdateBody(loaded), description: "Now with hooks" })
+      .expect(200);
+
+    expect(response.body.description).toBe("Now with hooks");
+  });
+
+  it("returns all format errors with JSON pointers", async () => {
+    const created = await createViaApi();
+
+    const response = await request(app.getHttpServer())
+      .put(`/v1/admin/courses/${created.id}`)
+      .send({
+        ...toUpdateBody(created),
+        name: " ",
+        prices: [{ ...created.prices[0], amount: 10 }],
+      })
+      .expect("Content-Type", /^application\/problem\+json(?:;|$)/)
+      .expect(400);
+
+    expect(response.body).toMatchObject({
+      code: "VALIDATION_FAILED",
+      errors: expect.arrayContaining([
+        expect.objectContaining({ field: "/name" }),
+        expect.objectContaining({ field: "/prices/0/amount" }),
+        expect.objectContaining({ field: "/prices/0" }),
+      ]),
+    });
+  });
+
+  it("returns all errors that depend on the stored course", async () => {
+    const created = await createViaApi();
+    const past = Temporal.Now.instant().subtract({ hours: 1 }).toString();
+
+    const response = await request(app.getHttpServer())
+      .put(`/v1/admin/courses/${created.id}`)
+      .send({
+        ...toUpdateBody(created),
+        schedule: { ...created.schedule, startTime: past },
+        prices: [{ amount: 2500, currency: "USD", effectiveAt: past }],
+      })
+      .expect(400);
+
+    expect(response.body).toMatchObject({
+      code: "VALIDATION_FAILED",
+      errors: [
+        expect.objectContaining({
+          field: "/schedule/startTime",
+          code: "SCHEDULE_START_TIME_IN_PAST",
+        }),
+        expect.objectContaining({
+          field: "/prices/0/effectiveAt",
+          code: "PRICES_EFFECTIVE_AT_IN_PAST",
+        }),
+      ],
+    });
+    expect(await getAdminCourse(created.id)).toEqual(created);
+  });
+
+  it("returns 400 for a malformed course ID", async () => {
+    const response = await request(app.getHttpServer())
+      .put("/v1/admin/courses/not-a-uuid")
+      .send(makeCreateRequest())
+      .expect(400);
+
+    expect(response.body).toMatchObject({ code: "INVALID_COURSE_ID" });
+  });
+
+  it("returns 404 for a nonexistent course", async () => {
+    const response = await request(app.getHttpServer())
+      .put(`/v1/admin/courses/${randomUUID()}`)
+      .send(makeCreateRequest())
+      .expect(404);
+
+    expect(response.body).toMatchObject({ code: "COURSE_NOT_FOUND" });
+  });
+});

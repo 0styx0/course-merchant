@@ -303,21 +303,28 @@ paths:
       operationId: updateCourse
       summary: Update a course
       description: >
-        Replaces a course's details and price schedule. Requires an
-        administrator.
+        Replaces a course's details, status and future price schedule.
+        Requires an administrator.
 
 
-        Send the representation returned by `getCourseAsAdmin`, minus
-        `enrollmentCount` and the course `id`. Both are read-only and
-        ignored if present. Every other field is required. The server
-        validates everything and reports all failures at once in the
-        `errors` array of a 400 response. The update is atomic: if any
+        Send the representation returned by `getCourseAsAdmin`, minus the
+        course `id`, `enrollments`, the `changedAt` of `status`, and the `id`
+        of each price. The body is strict: unknown or read-only fields are
+        rejected. Every field is required.
+
+
+        Validation runs in two stages, each reporting all of its failures at
+        once in the `errors` array of a 400 response. Format errors (types,
+        lengths, date-time formats, currencies, `endTime` after `startTime`,
+        duplicate `effectiveAt` values) are reported first. Only a well-formed
+        request is then checked against the course's current state (past
+        times, the resulting price schedule). The update is atomic: if any
         validation fails, nothing is changed.
 
 
-        **Details.** `name`, `description` and `schedule` follow the same
-        rules as `createCourse`, except that time checks apply only to values
-        that changed:
+        **Details.** `name`, `description` and `schedule` overwrite the stored
+        values and follow the same rules as `createCourse`, except that the
+        past-time checks apply only to values that changed:
 
         - `schedule.startTime` must be now or in the future only if it
         differs from the stored value.
@@ -325,59 +332,50 @@ paths:
         - `schedule.endTime` must be in the future only if it differs from
         the stored value.
 
-        - `endTime` must always be after `startTime`, and each UTC offset
-        must always match the offset `timeZone` observes at that instant.
+        - `endTime` must always be after `startTime`.
 
 
         This lets an admin edit the description of a course that has already
-        started. Times are compared as instants, so the same instant written
-        with a different UTC offset counts as unchanged.
+        started. Times are compared as instants, at the microsecond precision
+        the server stores.
 
 
-        **Status.** `status` is required and is set to the value sent. Send
-        `archived` to hide the course from the public API, or `published` to
-        make it publicly viewable again (once a price is in effect). Status
-        can be changed at any time, including on a course with enrollments.
+        **Status.** `status` is required. When it differs from the course's
+        current status, it is appended to the course's status history and
+        `status.changedAt` is updated. Sending the current status changes
+        nothing. Send `archived` to hide the course from the public API,
+        `published` to make it publicly viewable again (once a price is in
+        effect), or `deleted` to remove it from `listCoursesAsAdmin`.
 
 
-        **Prices.** `prices` is matched against the stored schedule by `id`:
+        **Prices.** A stored price is in effect once its `effectiveAt` has
+        passed, evaluated when the request is processed. In-effect prices can
+        never be changed or deleted, since payments refer to them. `prices`
+        is the course's complete future schedule:
 
-        - An entry with an `id` is matched to the stored entry with that
-        `id`. An `id` that does not belong to this course is rejected.
+        - An entry that exactly matches a stored price (same `effectiveAt`
+        instant, `amount` and `currency`) is kept unchanged, including its
+        `id`. This lets a form send back the schedule it loaded, and makes
+        retries safe.
 
-        - An entry without an `id` is created and gets a generated `id`.
+        - Every other entry is new and must have an `effectiveAt` that is now
+        or in the future. Since in-effect prices are in the past, changing one
+        is rejected with `IN_PAST`.
 
-        - A stored entry that is omitted from `prices` is deleted.
+        - A stored price that is not yet in effect and has no exact match in
+        `prices` is deleted. To change a future price, send it with its new
+        `amount` or `currency`; it is replaced and gets a new `id`.
 
+        - In-effect prices omitted from `prices` are kept.
 
-        An entry is in effect once its stored `effectiveAt` has passed.
-        In-effect entries are immutable, so price history cannot be
-        rewritten:
+        - No two entries may share the same `effectiveAt`.
 
-        - An in-effect entry must be sent back unchanged (same `id`,
-        `amount`, `currency` and `effectiveAt`) and may not be omitted.
-        Unchanged in-effect entries skip the "now or in the future" and
-        amount checks, so a form can round-trip what it loaded.
-
-        - A new or modified entry must have an `effectiveAt` that is now or
-        in the future, plus the usual amount and currency checks.
-
-        - A stored entry that is not yet in effect can be modified or
-        omitted freely.
-
-        - `prices` must contain at least one entry, and no two entries may
-        share the same `effectiveAt`.
-
-
-        Whether an entry is in effect is evaluated when the request is
-        processed. If a future price takes effect while the form is open,
-        resubmitting it unchanged still succeeds, but an edit to it is
-        rejected.
+        - The resulting schedule must not be empty. If no stored price is in
+        effect, `prices` must contain at least one entry.
 
 
         The response is the updated course in the same representation as
-        `getCourseAsAdmin`. Price `id`s of unchanged and modified entries are
-        preserved, and new entries have generated ones.
+        `getCourseAsAdmin`.
       security:
         - bearerAuth: []
       parameters:
@@ -396,20 +394,18 @@ paths:
                   description: Learn the fundamentals of React, with hands-on labs.
                   status: published
                   prices:
-                    - id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
-                      amount: 6900
+                    - amount: 6900
                       currency: USD
-                      effectiveAt: "2026-09-01T00:00:00-04:00"
-                    - id: 0b7d3f52-3c1a-4a0e-9f0b-5d3f8a6b1c42
-                      amount: 10900
+                      effectiveAt: "2026-09-01T04:00:00Z"
+                    - amount: 10900
                       currency: USD
-                      effectiveAt: "2026-11-15T00:00:00-05:00"
+                      effectiveAt: "2026-11-15T05:00:00Z"
                     - amount: 11900
                       currency: USD
-                      effectiveAt: "2026-11-25T00:00:00-05:00"
+                      effectiveAt: "2026-11-25T05:00:00Z"
                   schedule:
-                    startTime: "2026-12-01T18:00:00-05:00"
-                    endTime: "2026-12-01T20:00:00-05:00"
+                    startTime: "2026-12-01T23:00:00Z"
+                    endTime: "2026-12-02T01:00:00Z"
                     timeZone: America/New_York
       responses:
         "200":
@@ -486,12 +482,12 @@ components:
                 detail: The request contains 2 invalid fields.
                 code: VALIDATION_FAILED
                 errors:
-                  - field: /prices/0/amount
-                    code: IMMUTABLE
-                    detail: This price is already in effect and cannot be changed.
-                  - field: /prices
-                    code: MISSING_ENTRY
-                    detail: A price that is already in effect cannot be removed.
+                  - field: /prices/0/effectiveAt
+                    code: IN_PAST
+                    detail: Price effective time cannot be in the past.
+                  - field: /schedule/startTime
+                    code: IN_PAST
+                    detail: Start time cannot be in the past.
 
     IdempotencyKeyInProgress:
       description: >
@@ -737,16 +733,6 @@ components:
             id:
               $ref: "#/components/schemas/PriceId"
 
-    # A price entry in an update request. Without an `id` it is created;
-    # with one it is matched to the stored entry.
-    UpdateScheduledPrice:
-      allOf:
-        - $ref: "#/components/schemas/ScheduledPrice"
-        - type: object
-          properties:
-            id:
-              $ref: "#/components/schemas/PriceId"
-
     CreateCourseRequest:
       description: All fields are required.
       allOf:
@@ -777,9 +763,8 @@ components:
 
     UpdateCourseRequest:
       description: >
-        Full replacement of a course's details and price schedule. All
-        fields are required except `id` on each price. `enrollmentCount` and
-        the course `id` are read-only and ignored if sent.
+        Full replacement of a course's details, status and future price
+        schedule. All fields are required, and unknown fields are rejected.
       allOf:
         - $ref: "#/components/schemas/CourseDetails"
         - type: object
@@ -791,16 +776,18 @@ components:
               $ref: "#/components/schemas/CourseStatus"
             prices:
               type: array
-              minItems: 1
+              minItems: 0
               description: >
-                The complete price schedule after the update. Entries with an
-                `id` are matched to stored entries, entries without one are
-                created, and stored entries that are omitted are deleted.
-                Entries already in effect must be included unchanged.
+                The complete future price schedule after the update. Entries
+                that exactly match a stored price are kept; every other entry
+                is created and must take effect now or in the future. Stored
+                prices not yet in effect without an exact match are deleted.
+                Prices already in effect are always kept and may be omitted.
                 `effectiveAt` values must be unique. Entries may be sent in
-                any order.
+                any order. Must contain at least one entry if no stored price
+                is in effect.
               items:
-                $ref: "#/components/schemas/UpdateScheduledPrice"
+                $ref: "#/components/schemas/ScheduledPrice"
 
     Course:
       allOf:
@@ -903,7 +890,8 @@ components:
               format: date-time
               description: Time the payment succeeded, or null if not yet paid.
 
-    # A price can never be deleted, only overwritten by a price with a later effectiveAt
+    # A price in effect can never be changed or deleted, only overwritten by a price with a later effectiveAt.
+    # A price not yet in effect can be replaced or deleted.
     Price:
       type: object
       required:
@@ -1044,12 +1032,6 @@ components:
             - `INVALID_RANGE`: the value is inconsistent with a related
               field, such as `endTime` not being after `startTime`.
             - `DUPLICATE_VALUE`: the value must be unique within its list.
-            - `IMMUTABLE`: the entry is already in effect and cannot be
-              changed. `field` points at the changed property, such as
-              `/prices/1/amount`.
-            - `MISSING_ENTRY`: an entry that is already in effect was omitted
-              from the list. `field` is the list, such as `/prices`.
-            - `UNKNOWN_ID`: the `id` does not match any entry of this course.
 
             Treat unrecognized values as a generic validation error.
           examples:

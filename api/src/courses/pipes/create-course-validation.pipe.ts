@@ -40,7 +40,7 @@ function getValidationCode(
   return typeof code === "string" ? code : undefined;
 }
 
-function toJsonPointer(path: PropertyKey[]): string {
+export function toJsonPointer(path: PropertyKey[]): string {
   if (path.length === 0) {
     return "";
   }
