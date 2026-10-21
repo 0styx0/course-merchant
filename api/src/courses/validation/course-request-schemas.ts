@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { FieldErrorCode } from "@/common/errors/error-codes.js";
 import {
+  courseContentUrlSchema,
   courseScheduleFieldsSchema,
   courseDetailsShape,
   createStatusSchema,
@@ -224,6 +225,7 @@ export const createScheduledPricesSchema = z
 
 const createCourseRequestBaseSchema = z.strictObject({
   ...courseDetailsShape,
+  contentUrl: courseContentUrlSchema,
   status: createStatusSchema,
   schedule: createCourseScheduleSchema,
   prices: createScheduledPricesSchema,
@@ -246,6 +248,7 @@ export const updateScheduledPricesSchema = z
 
 export const updateCourseRequestSchema = z.strictObject({
   ...courseDetailsShape,
+  contentUrl: courseContentUrlSchema,
   status: updateStatusSchema,
   schedule: updateCourseScheduleSchema,
   prices: updateScheduledPricesSchema,

@@ -1,0 +1,866 @@
+[
+  {
+    "id": "dropCheckConstraint.Payment.Payment_provider_check_9d8d413b",
+    "label": "Drop check constraint \"Payment_provider_check_9d8d413b\" on \"Payment\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "Payment_provider_check_9d8d413b",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Payment_provider_check_9d8d413b\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_provider_check_9d8d413b",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"Payment_provider_check_9d8d413b\"",
+        "sql": "ALTER TABLE \"public\".\"Payment\" DROP CONSTRAINT \"Payment_provider_check_9d8d413b\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Payment_provider_check_9d8d413b\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_provider_check_9d8d413b",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropCheckConstraint.Payment.Payment_status_check_e62c59b9",
+    "label": "Drop check constraint \"Payment_status_check_e62c59b9\" on \"Payment\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "Payment_status_check_e62c59b9",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Payment_status_check_e62c59b9\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_status_check_e62c59b9",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"Payment_status_check_e62c59b9\"",
+        "sql": "ALTER TABLE \"public\".\"Payment\" DROP CONSTRAINT \"Payment_status_check_e62c59b9\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Payment_status_check_e62c59b9\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_status_check_e62c59b9",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropConstraint.Payment.Payment_providerCustomerId_fkey",
+    "label": "Drop constraint \"Payment_providerCustomerId_fkey\" on \"Payment\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Payment_providerCustomerId_fkey",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Payment_providerCustomerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_providerCustomerId_fkey",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop constraint \"Payment_providerCustomerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Payment\" DROP CONSTRAINT \"Payment_providerCustomerId_fkey\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Payment_providerCustomerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_providerCustomerId_fkey",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropIndex.Payment.Payment_providerCustomerId_idx_5b70cca7",
+    "label": "Drop index \"Payment_providerCustomerId_idx_5b70cca7\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Payment_providerCustomerId_idx_5b70cca7",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Payment_providerCustomerId_idx_5b70cca7\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Payment_providerCustomerId_idx_5b70cca7\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop index \"Payment_providerCustomerId_idx_5b70cca7\"",
+        "sql": "DROP INDEX \"public\".\"Payment_providerCustomerId_idx_5b70cca7\"",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Payment_providerCustomerId_idx_5b70cca7\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Payment_providerCustomerId_idx_5b70cca7\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropColumn.Payment.providerCustomerId",
+    "label": "Drop column \"providerCustomerId\" from \"Payment\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "providerCustomerId",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"providerCustomerId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Payment",
+          "providerCustomerId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"providerCustomerId\"",
+        "sql": "ALTER TABLE \"public\".\"Payment\" DROP COLUMN \"providerCustomerId\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"providerCustomerId\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Payment",
+          "providerCustomerId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropTable.PaymentProviderCustomer",
+    "label": "Drop table \"PaymentProviderCustomer\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "PaymentProviderCustomer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"PaymentProviderCustomer\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentProviderCustomer\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop table \"PaymentProviderCustomer\"",
+        "sql": "DROP TABLE \"public\".\"PaymentProviderCustomer\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"PaymentProviderCustomer\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"PaymentProviderCustomer\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropCheckConstraint.ProcessedPaymentEvent.ProcessedPaymentEvent_provider_check_9d8d413b",
+    "label": "Drop check constraint \"ProcessedPaymentEvent_provider_check_9d8d413b\" on \"ProcessedPaymentEvent\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "ProcessedPaymentEvent_provider_check_9d8d413b",
+        "table": "ProcessedPaymentEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"ProcessedPaymentEvent_provider_check_9d8d413b\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "ProcessedPaymentEvent_provider_check_9d8d413b",
+          "public",
+          "\"public\".\"ProcessedPaymentEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"ProcessedPaymentEvent_provider_check_9d8d413b\"",
+        "sql": "ALTER TABLE \"public\".\"ProcessedPaymentEvent\" DROP CONSTRAINT \"ProcessedPaymentEvent_provider_check_9d8d413b\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"ProcessedPaymentEvent_provider_check_9d8d413b\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "ProcessedPaymentEvent_provider_check_9d8d413b",
+          "public",
+          "\"public\".\"ProcessedPaymentEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.EmailOutbox",
+    "label": "Create table \"EmailOutbox\"",
+    "summary": "Creates table \"EmailOutbox\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "EmailOutbox"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"EmailOutbox\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EmailOutbox\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"EmailOutbox\"",
+        "sql": "CREATE TABLE \"public\".\"EmailOutbox\" (\n  \"attempts\" int4 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"kind\" text NOT NULL,\n  \"lastError\" text,\n  \"nextAttemptAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"payload\" json NOT NULL,\n  \"recipient\" text NOT NULL,\n  \"sentAt\" timestamptz,\n  \"status\" text DEFAULT 'pending' NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"EmailOutbox_kind_check_cba6a3d8\" CHECK (\"kind\" IN ('access_granted', 'already_owned', 'access_suspended', 'dispute_alert')),\n  CONSTRAINT \"EmailOutbox_status_check_a1bd2f80\" CHECK (\"status\" IN ('pending', 'sent', 'failed'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"EmailOutbox\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EmailOutbox\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Enrollment.revokedAt",
+    "label": "Add column \"revokedAt\" to \"Enrollment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "revokedAt",
+        "table": "Enrollment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"revokedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Enrollment",
+          "revokedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"revokedAt\"",
+        "sql": "ALTER TABLE \"public\".\"Enrollment\" ADD COLUMN \"revokedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"revokedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Enrollment",
+          "revokedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Enrollment.suspendedAt",
+    "label": "Add column \"suspendedAt\" to \"Enrollment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "suspendedAt",
+        "table": "Enrollment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"suspendedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Enrollment",
+          "suspendedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"suspendedAt\"",
+        "sql": "ALTER TABLE \"public\".\"Enrollment\" ADD COLUMN \"suspendedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"suspendedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Enrollment",
+          "suspendedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Payment.refundedAt",
+    "label": "Add column \"refundedAt\" to \"Payment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "refundedAt",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"refundedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Payment",
+          "refundedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"refundedAt\"",
+        "sql": "ALTER TABLE \"public\".\"Payment\" ADD COLUMN \"refundedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"refundedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Payment",
+          "refundedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.dropNotNull.Enrollment.paymentId",
+    "label": "Drop NOT NULL on \"Enrollment\".\"paymentId\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "paymentId",
+        "table": "Enrollment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"paymentId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Enrollment",
+          "paymentId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop NOT NULL on \"paymentId\"",
+        "sql": "ALTER TABLE \"public\".\"Enrollment\" ALTER COLUMN \"paymentId\" DROP NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"paymentId\" is nullable",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "Enrollment",
+          "paymentId",
+          "YES"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "setDefault.Payment.createdAt",
+    "label": "Set default on \"Payment\".\"createdAt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "createdAt",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"createdAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Payment",
+          "createdAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "set default on \"createdAt\"",
+        "sql": "ALTER TABLE \"public\".\"Payment\" ALTER COLUMN \"createdAt\" SET DEFAULT (now())"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"createdAt\" has a default",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"column_default\" IS NOT NULL)) AS \"result\"",
+        "params": [
+          "public",
+          "Payment",
+          "createdAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.dropNotNull.Payment.providerPaymentId",
+    "label": "Drop NOT NULL on \"Payment\".\"providerPaymentId\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "providerPaymentId",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"providerPaymentId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Payment",
+          "providerPaymentId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop NOT NULL on \"providerPaymentId\"",
+        "sql": "ALTER TABLE \"public\".\"Payment\" ALTER COLUMN \"providerPaymentId\" DROP NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"providerPaymentId\" is nullable",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "Payment",
+          "providerPaymentId",
+          "YES"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.Payment.Payment_provider_check_ae06b403",
+    "label": "Add check constraint \"Payment_provider_check_ae06b403\" on \"Payment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "Payment_provider_check_ae06b403",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Payment_provider_check_ae06b403\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_provider_check_ae06b403",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"Payment_provider_check_ae06b403\"",
+        "sql": "ALTER TABLE \"public\".\"Payment\" ADD CONSTRAINT \"Payment_provider_check_ae06b403\" CHECK (\"provider\" IN ('stripe'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Payment_provider_check_ae06b403\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_provider_check_ae06b403",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.Payment.Payment_status_check_3e9c8ca3",
+    "label": "Add check constraint \"Payment_status_check_3e9c8ca3\" on \"Payment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "Payment_status_check_3e9c8ca3",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Payment_status_check_3e9c8ca3\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_status_check_3e9c8ca3",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"Payment_status_check_3e9c8ca3\"",
+        "sql": "ALTER TABLE \"public\".\"Payment\" ADD CONSTRAINT \"Payment_status_check_3e9c8ca3\" CHECK (\"status\" IN ('pending', 'succeeded', 'expired', 'refunded'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Payment_status_check_3e9c8ca3\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_status_check_3e9c8ca3",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Payment.Payment_provider_providerCheckoutId_key",
+    "label": "Add unique constraint on \"Payment\" (provider, providerCheckoutId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Payment_provider_providerCheckoutId_key",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Payment_provider_providerCheckoutId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_provider_providerCheckoutId_key",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Payment_provider_providerCheckoutId_key\"",
+        "sql": "ALTER TABLE \"public\".\"Payment\" ADD CONSTRAINT \"Payment_provider_providerCheckoutId_key\" UNIQUE (\"provider\", \"providerCheckoutId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Payment_provider_providerCheckoutId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Payment_provider_providerCheckoutId_key",
+          "public",
+          "\"public\".\"Payment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.ProcessedPaymentEvent.ProcessedPaymentEvent_provider_check_ae06b403",
+    "label": "Add check constraint \"ProcessedPaymentEvent_provider_check_ae06b403\" on \"ProcessedPaymentEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "ProcessedPaymentEvent_provider_check_ae06b403",
+        "table": "ProcessedPaymentEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"ProcessedPaymentEvent_provider_check_ae06b403\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "ProcessedPaymentEvent_provider_check_ae06b403",
+          "public",
+          "\"public\".\"ProcessedPaymentEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"ProcessedPaymentEvent_provider_check_ae06b403\"",
+        "sql": "ALTER TABLE \"public\".\"ProcessedPaymentEvent\" ADD CONSTRAINT \"ProcessedPaymentEvent_provider_check_ae06b403\" CHECK (\"provider\" IN ('stripe'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"ProcessedPaymentEvent_provider_check_ae06b403\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "ProcessedPaymentEvent_provider_check_ae06b403",
+          "public",
+          "\"public\".\"ProcessedPaymentEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.EmailOutbox.EmailOutbox_recipient_createdAt_idx_08a7b587",
+    "label": "Create index \"EmailOutbox_recipient_createdAt_idx_08a7b587\" on \"EmailOutbox\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "EmailOutbox_recipient_createdAt_idx_08a7b587",
+        "table": "EmailOutbox"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"EmailOutbox_recipient_createdAt_idx_08a7b587\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EmailOutbox_recipient_createdAt_idx_08a7b587\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"EmailOutbox_recipient_createdAt_idx_08a7b587\"",
+        "sql": "CREATE INDEX \"EmailOutbox_recipient_createdAt_idx_08a7b587\" ON \"public\".\"EmailOutbox\" (\"recipient\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"EmailOutbox_recipient_createdAt_idx_08a7b587\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EmailOutbox_recipient_createdAt_idx_08a7b587\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.EmailOutbox.EmailOutbox_status_nextAttemptAt_idx_8ba20615",
+    "label": "Create index \"EmailOutbox_status_nextAttemptAt_idx_8ba20615\" on \"EmailOutbox\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "EmailOutbox_status_nextAttemptAt_idx_8ba20615",
+        "table": "EmailOutbox"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"EmailOutbox_status_nextAttemptAt_idx_8ba20615\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EmailOutbox_status_nextAttemptAt_idx_8ba20615\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"EmailOutbox_status_nextAttemptAt_idx_8ba20615\"",
+        "sql": "CREATE INDEX \"EmailOutbox_status_nextAttemptAt_idx_8ba20615\" ON \"public\".\"EmailOutbox\" (\"status\", \"nextAttemptAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"EmailOutbox_status_nextAttemptAt_idx_8ba20615\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EmailOutbox_status_nextAttemptAt_idx_8ba20615\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Payment.Payment_status_createdAt_idx_58610442",
+    "label": "Create index \"Payment_status_createdAt_idx_58610442\" on \"Payment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Payment_status_createdAt_idx_58610442",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Payment_status_createdAt_idx_58610442\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Payment_status_createdAt_idx_58610442\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Payment_status_createdAt_idx_58610442\"",
+        "sql": "CREATE INDEX \"Payment_status_createdAt_idx_58610442\" ON \"public\".\"Payment\" (\"status\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Payment_status_createdAt_idx_58610442\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Payment_status_createdAt_idx_58610442\""
+        ]
+      }
+    ]
+  }
+]

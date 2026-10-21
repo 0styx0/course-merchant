@@ -7,9 +7,6 @@ import { AdminCoursesRepository, CourseRepositoryCreateInput, CourseRepositoryMo
 import { findPriceChanges, findUpdateRuleViolations } from "./validation/course-update-rules.js";
 import { Temporal } from "@js-temporal/polyfill";
 
-// ask client if they ended up wanting. leaving in for db constraint
-const TEMPORARY_CONTENT_URL = "TODO";
-
 @Injectable()
 export class AdminCoursesService {
   constructor(
@@ -23,7 +20,7 @@ export class AdminCoursesService {
     const input: CourseRepositoryCreateInput = {
       title: request.name,
       description: request.description,
-      contentUrl: TEMPORARY_CONTENT_URL,
+      contentUrl: request.contentUrl,
       startsAt: Temporal.Instant.from(request.schedule.startTime),
       endsAt: Temporal.Instant.from(request.schedule.endTime),
       timeZone: request.schedule.timeZone,
@@ -65,6 +62,7 @@ export class AdminCoursesService {
     const course = await this.coursesRepository.updateCourse(courseId, {
       title: request.name,
       description: request.description,
+      contentUrl: request.contentUrl,
       startsAt: Temporal.Instant.from(request.schedule.startTime),
       endsAt: Temporal.Instant.from(request.schedule.endTime),
       timeZone: request.schedule.timeZone,

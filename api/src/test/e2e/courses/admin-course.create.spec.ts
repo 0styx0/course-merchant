@@ -32,6 +32,7 @@ describe("POST /admin/courses (e2e)", () => {
     return {
       name: `E2E course ${randomUUID()}`,
       description: "Course created by an E2E test.",
+      contentUrl: "https://drive.google.com/drive/folders/e2e",
       status: "drafted",
       schedule: {
         startTime: startsAt.toString(),
@@ -172,6 +173,37 @@ describe("POST /admin/courses (e2e)", () => {
     expect(response.headers.location).toBe(
       `/v1/admin/courses/${response.body.id}`,
     );
+  });
+
+  it("returns the private content link to admins", async () => {
+    const body = makeCreateRequest();
+
+    const response = await request(app.getHttpServer())
+      .post("/v1/admin/courses")
+      .send(body)
+      .expect(201);
+
+    expect(response.body.contentUrl).toBe(body.contentUrl);
+    expect((await getAdminCourse(response.body.id)).body.contentUrl).toBe(
+      body.contentUrl,
+    );
+  });
+
+  it("rejects a currency the store doesn't accept", async () => {
+    const body = makeCreateRequest();
+
+    const response = await request(app.getHttpServer())
+      .post("/v1/admin/courses")
+      .send({ ...body, prices: [{ ...body.prices[0], currency: "EUR" }] })
+      .expect(400);
+
+    expect(response.body.errors).toEqual([
+      {
+        field: "/prices/0/currency",
+        code: "INVALID_VALUE",
+        detail: "Must be one of the accepted currencies: USD.",
+      },
+    ]);
   });
 
   it("rejects the deleted status", async () => {

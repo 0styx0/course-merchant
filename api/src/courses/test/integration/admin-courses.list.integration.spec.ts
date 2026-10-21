@@ -369,6 +369,8 @@ describe("AdminCoursesService integration", () => {
       expect(listedCourse!.enrollments).toEqual(
         expect.arrayContaining([
           {
+            revokedAt: null,
+            suspendedAt: null,
             customer: {
               id: ada.id,
               name: "Ada Lovelace",
@@ -381,6 +383,8 @@ describe("AdminCoursesService integration", () => {
             },
           },
           {
+            revokedAt: null,
+            suspendedAt: null,
             customer: {
               id: grace.id,
               name: "Grace Hopper",

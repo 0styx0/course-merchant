@@ -9,6 +9,7 @@ export type CourseRepositoryModelAdmin = {
   id: string;
   title: string;
   description: string;
+  contentUrl: string;
   startsAt: Temporal.Instant;
   endsAt: Temporal.Instant;
   timeZone: string;
@@ -23,16 +24,19 @@ export type CourseRepositoryModelAdmin = {
     changedAt: Temporal.Instant;
   }[];
   enrollments: {
+    revokedAt: Temporal.Instant | null;
+    suspendedAt: Temporal.Instant | null;
     customer: {
       id: string;
       name: string;
       email: string;
     };
+    // null for free courses
     payment: {
       status: Models.public_Payment["status"];
       amount: number;
       paidAt: Models.public_Payment["paidAt"];
-    };
+    } | null;
   }[];
 };
 
@@ -54,6 +58,7 @@ export type CourseRepositoryCreateInput = {
 export type CourseRepositoryUpdateInput = {
   title: string;
   description: string;
+  contentUrl: string;
   startsAt: Temporal.Instant;
   endsAt: Temporal.Instant;
   timeZone: string;
@@ -192,6 +197,7 @@ export class AdminCoursesRepository {
         .update({
           title: input.title,
           description: input.description,
+          contentUrl: input.contentUrl,
           startsAt: input.startsAt,
           endsAt: input.endsAt,
           timeZone: input.timeZone,

@@ -137,7 +137,13 @@ paths:
         - `prices`: at least one entry, and no two entries may share the same
         `effectiveAt`.
 
-        - `prices[].currency`: must be an existing ISO 4217 currency code.
+        - `contentUrl`: an absolute `http` or `https` URL, up to 2,048
+        characters. It is sent to buyers and never shown publicly.
+
+        - `prices[].currency`: must be a currency the store accepts. This is
+        the Stripe account's payout currency, USD unless the server is
+        configured otherwise, because charging in any other currency adds a
+        conversion fee to every sale.
 
         - `prices[].amount`: either 0 (free) or at least 50 (fifty cents for
         USD), because the payment processor does not accept smaller charges.
@@ -175,6 +181,7 @@ paths:
                 value:
                   name: React Fundamentals
                   description: Learn the fundamentals of React.
+                  contentUrl: https://drive.google.com/drive/folders/1a2b3c4d5e
                   status: published
                   prices:
                     - amount: 7900
@@ -211,6 +218,7 @@ paths:
                     id: 123e4567-e89b-12d3-a456-426614174000
                     name: React Fundamentals
                     description: Learn the fundamentals of React.
+                    contentUrl: https://drive.google.com/drive/folders/1a2b3c4d5e
                     status:
                       name: published
                       changedAt: "2026-10-15T18:30:00Z"
@@ -306,8 +314,9 @@ paths:
         validation fails, nothing is changed.
 
 
-        **Details.** `name`, `description` and `schedule` overwrite the stored
-        values and follow the same rules as `createCourse`, except that the
+        **Details.** `name`, `description`, `contentUrl` and `schedule`
+        overwrite the stored values and follow the same rules as
+        `createCourse`, except that the
         past-time checks apply only to values that changed:
 
         - `schedule.startTime` must be now or in the future only if it
@@ -376,6 +385,7 @@ paths:
                 value:
                   name: React Fundamentals
                   description: Learn the fundamentals of React, with hands-on labs.
+                  contentUrl: https://drive.google.com/drive/folders/1a2b3c4d5e
                   status: published
                   prices:
                     - amount: 6900
@@ -636,6 +646,17 @@ components:
       examples:
         - Learn the fundamentals of React.
 
+    CourseContentUrl:
+      type: string
+      format: uri
+      maxLength: 2048
+      description: >
+        Private link to the course material, such as a Google Drive folder or
+        a Zoom meeting. It is emailed to buyers and only ever returned to
+        administrators.
+      examples:
+        - https://drive.google.com/drive/folders/1a2b3c4d5e
+
     # Fields common to the public and admin representations and to the
     # create and update requests. Validation limits live here once so they
     # cannot drift between operations.
@@ -697,9 +718,12 @@ components:
         - $ref: "#/components/schemas/CourseDetails"
         - type: object
           required:
+            - contentUrl
             - prices
             - status
           properties:
+            contentUrl:
+              $ref: "#/components/schemas/CourseContentUrl"
             status:
               $ref: "#/components/schemas/CreateCourseStatus"
             prices:
@@ -723,9 +747,12 @@ components:
         - $ref: "#/components/schemas/CourseDetails"
         - type: object
           required:
+            - contentUrl
             - status
             - prices
           properties:
+            contentUrl:
+              $ref: "#/components/schemas/CourseContentUrl"
             status:
               $ref: "#/components/schemas/CourseStatus"
             prices:
@@ -774,12 +801,15 @@ components:
         - type: object
           required:
             - id
+            - contentUrl
             - status
             - enrollments
             - prices
           properties:
             id:
               $ref: "#/components/schemas/CourseId"
+            contentUrl:
+              $ref: "#/components/schemas/CourseContentUrl"
             status:
               $ref: "#/components/schemas/CourseStatusDetails"
             enrollments:
@@ -798,11 +828,32 @@ components:
                 $ref: "#/components/schemas/AdminScheduledPrice"
 
     AdminEnrollment:
+      description: >
+        A customer's enrollment. It gives access only while both `revokedAt`
+        and `suspendedAt` are null.
       type: object
       required:
         - customer
         - payment
+        - revokedAt
+        - suspendedAt
       properties:
+        revokedAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+          description: >
+            When a full refund removed access, in UTC. Cleared if the customer
+            buys the course again.
+        suspendedAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+          description: >
+            When a payment dispute suspended access, in UTC. Cleared by hand
+            by the owner.
         customer:
           type: object
           required:
@@ -819,7 +870,10 @@ components:
               type: string
               format: email
         payment:
-          type: object
+          description: The payment behind the enrollment, or null for a free course.
+          type:
+            - object
+            - "null"
           required:
             - status
             - amount
@@ -830,7 +884,7 @@ components:
               enum:
                 - pending
                 - succeeded
-                - failed
+                - expired
                 - refunded
             amount:
               type: integer
@@ -841,11 +895,12 @@ components:
             paidAt:
               type:
                 - string
+                - "null"
               format: date-time
               description: >
                 Time the payment succeeded, in UTC (ending in `Z`). Customers
-                are only enrolled once their payment succeeds, so this is
-                always set.
+                are only enrolled once their payment succeeds, so this is set
+                for every enrollment.
 
     # A price in effect can never be changed or deleted, only overwritten by a price with a later effectiveAt.
     # A price not yet in effect can be replaced or deleted.

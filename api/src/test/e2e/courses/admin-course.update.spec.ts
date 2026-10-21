@@ -32,6 +32,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
     return {
       name: `E2E course ${randomUUID()}`,
       description: "Course created by an E2E test.",
+      contentUrl: "https://drive.google.com/drive/folders/e2e",
       status: "drafted",
       schedule: {
         startTime: startsAt.toString(),
@@ -69,6 +70,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
   function toUpdateBody(course: {
     name: string;
     description: string;
+    contentUrl: string;
     status: { name: string };
     schedule: unknown;
     prices: { amount: number; currency: string; effectiveAt: string }[];
@@ -76,6 +78,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
     return {
       name: course.name,
       description: course.description,
+      contentUrl: course.contentUrl,
       status: course.status.name,
       schedule: course.schedule,
       prices: course.prices.map(({ amount, currency, effectiveAt }) => ({

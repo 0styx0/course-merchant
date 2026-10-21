@@ -14,6 +14,7 @@ const repositoryCourse = {
   id: COURSE_ID,
   title: "React Fundamentals",
   description: "Learn the fundamentals of React",
+  contentUrl: "https://drive.google.com/drive/folders/react",
   startsAt: instant("2026-10-01T18:00:00Z"),
   endsAt: instant("2026-10-01T20:00:00Z"),
   timeZone: "America/New_York",

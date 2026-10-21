@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import {
+    courseContentUrlSchema,
     courseCurrencySchema,
     courseDateTimeSchema,
     courseDescriptionSchema,
@@ -242,6 +243,25 @@ describe("courseTimeZoneSchema", () => {
     });
 });
 
+describe("courseContentUrlSchema", () => {
+    it.each([
+        "https://drive.google.com/drive/folders/1a2b3c",
+        "http://zoom.us/j/123456789",
+    ])("accepts %s", (url) => {
+        expect(courseContentUrlSchema.safeParse(url).success).toBe(true);
+    });
+
+    it.each([
+        "ftp://files.example.com/course",
+        "javascript:alert(1)",
+        "drive.google.com/folder",
+        "",
+        `https://example.com/${"a".repeat(2048)}`,
+    ])("rejects %s", (url) => {
+        expect(courseContentUrlSchema.safeParse(url).success).toBe(false);
+    });
+});
+
 describe("courseCurrencySchema", () => {
     it("accepts USD", () => {
         expect(courseCurrencySchema.safeParse("USD").success).toBe(true);
@@ -257,6 +277,15 @@ describe("courseCurrencySchema", () => {
         "ZZZ",
     ])("rejects %s", (currency) => {
         expect(courseCurrencySchema.safeParse(currency).success).toBe(false);
+    });
+
+    it("rejects a real currency the store doesn't accept", () => {
+        const result = courseCurrencySchema.safeParse("EUR");
+
+        expect(result.success).toBe(false);
+        expect(result.error?.issues[0].message).toBe(
+            "Must be one of the accepted currencies: USD.",
+        );
     });
 
     it.each([

@@ -9,7 +9,7 @@ beforeEach(async () => {
     await db.orm.public.Payment.where({}).deleteAll();
     
     await Promise.all([
-      db.orm.public.PaymentProviderCustomer.where({}).deleteAll(),
+      db.orm.public.EmailOutbox.where({}).deleteAll(),
       db.orm.public.CourseStatus.where({}).deleteAll(),
       db.orm.public.CoursePrice.where({}).deleteAll(),
     ]);

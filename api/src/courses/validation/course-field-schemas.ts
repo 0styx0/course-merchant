@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { FieldErrorCode } from "@/common/errors/error-codes.js";
+import { ALLOWED_CURRENCIES } from "@/config/allowed-currencies.js";
 
 const requiredString = z.string();
 
@@ -8,6 +9,11 @@ const nonEmptyTrimmedString = z.string().trim().min(1);
 
 export const courseNameSchema =
     nonEmptyTrimmedString.max(100);
+
+// private: emailed to buyers, only ever returned to admins
+export const courseContentUrlSchema = z
+    .url({ protocol: /^https?$/ })
+    .max(2048);
 
 export const courseDescriptionSchema =
     nonEmptyTrimmedString.max(5000);
@@ -54,20 +60,12 @@ export const courseTimeZoneSchema = requiredString.refine(
     },
 );
 
-// Uses currency identifiers supported by the Node.js runtime.
-const supportedCurrencies = new Set([
-    "USD",
-    ...(typeof Intl.supportedValuesOf === "function"
-        ? Intl.supportedValuesOf("currency")
-        : []),
-]);
-
 export const courseCurrencySchema = requiredString
     .regex(/^[A-Z]{3}$/)
     .refine(
-        (currency) => supportedCurrencies.has(currency),
+        (currency) => ALLOWED_CURRENCIES.has(currency),
         {
-            error: "Must be an existing ISO 4217 currency code.",
+            error: `Must be one of the accepted currencies: ${[...ALLOWED_CURRENCIES].join(", ")}.`,
         },
     );
 

@@ -70,6 +70,7 @@ describe("AdminCoursesService integration", () => {
                 id: course.id,
                 name: "React Fundamentals",
                 description: "Learn React",
+                contentUrl: "https://example.com/course",
                 schedule: {
                     startTime: "2026-10-01T18:00:00Z",
                     endTime: "2026-10-01T20:00:00Z",
@@ -282,6 +283,8 @@ describe("AdminCoursesService integration", () => {
             expect(result.enrollments).toEqual(
                 expect.arrayContaining([
                     {
+                        revokedAt: null,
+                        suspendedAt: null,
                         customer: {
                             id: ada.id,
                             name: "Ada Lovelace",
@@ -294,6 +297,8 @@ describe("AdminCoursesService integration", () => {
                         },
                     },
                     {
+                        revokedAt: null,
+                        suspendedAt: null,
                         customer: {
                             id: grace.id,
                             name: "Grace Hopper",

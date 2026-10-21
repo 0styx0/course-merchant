@@ -82,6 +82,7 @@ describe("Admin Courses API (e2e)", () => {
             id: course.id,
             name: "React Fundamentals",
             description: "Learn the fundamentals of React.",
+            contentUrl: "https://example.com/course",
             schedule: {
               startTime: "2026-10-15T18:00:00Z",
               endTime: "2026-10-15T20:00:00Z",
@@ -101,6 +102,8 @@ describe("Admin Courses API (e2e)", () => {
             ],
             enrollments: [
               {
+                revokedAt: null,
+                suspendedAt: null,
                 customer: {
                   id: customer.id,
                   name: "Ada Lovelace",

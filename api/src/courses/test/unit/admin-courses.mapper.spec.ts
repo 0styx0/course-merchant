@@ -10,6 +10,7 @@ const repositoryCourse = {
   id: COURSE_ID,
   title: "React Fundamentals",
   description: "Learn the fundamentals of React",
+  contentUrl: "https://drive.google.com/drive/folders/react",
   startsAt: instant("2026-10-01T18:00:00Z"),
   endsAt: instant("2026-10-01T20:00:00Z"),
   timeZone: "America/New_York",
@@ -42,6 +43,8 @@ const repositoryCourse = {
 
   enrollments: [
     {
+      revokedAt: null,
+      suspendedAt: null,
       customer: {
         id: "customer_1",
         name: "Ada Lovelace",
@@ -54,6 +57,8 @@ const repositoryCourse = {
       },
     },
     {
+      revokedAt: instant("2026-09-28T09:00:00Z"),
+      suspendedAt: null,
       customer: {
         id: "customer_2",
         name: "Grace Hopper",
@@ -74,6 +79,7 @@ describe("toAdminCourseResponse", () => {
       id: COURSE_ID,
       name: "React Fundamentals",
       description: "Learn the fundamentals of React",
+      contentUrl: "https://drive.google.com/drive/folders/react",
 
       schedule: {
         startTime: "2026-10-01T18:00:00Z",
@@ -103,6 +109,8 @@ describe("toAdminCourseResponse", () => {
 
       enrollments: [
         {
+          revokedAt: null,
+          suspendedAt: null,
           customer: {
             id: "customer_1",
             name: "Ada Lovelace",
@@ -115,6 +123,8 @@ describe("toAdminCourseResponse", () => {
           },
         },
         {
+          revokedAt: "2026-09-28T09:00:00Z",
+          suspendedAt: null,
           customer: {
             id: "customer_2",
             name: "Grace Hopper",
@@ -183,6 +193,8 @@ describe("toAdminCourseResponse", () => {
 
     expect(result.enrollments).toEqual([
       {
+        revokedAt: null,
+        suspendedAt: null,
         customer: {
           id: "customer_1",
           name: "Ada Lovelace",
@@ -195,6 +207,8 @@ describe("toAdminCourseResponse", () => {
         },
       },
       {
+        revokedAt: "2026-09-28T09:00:00Z",
+        suspendedAt: null,
         customer: {
           id: "customer_2",
           name: "Grace Hopper",
@@ -218,5 +232,36 @@ describe("toAdminCourseResponse", () => {
     const result = toAdminCourseResponse(course);
 
     expect(result.enrollments).toEqual([]);
+  });
+
+  it("maps a free enrollment's missing payment to null", () => {
+    const course = {
+      ...repositoryCourse,
+      enrollments: [
+        {
+          revokedAt: null,
+          suspendedAt: instant("2026-09-30T08:00:00Z"),
+          customer: {
+            id: "customer_3",
+            name: "Katherine Johnson",
+            email: "katherine@example.com",
+          },
+          payment: null,
+        },
+      ],
+    } satisfies CourseRepositoryModelAdmin;
+
+    expect(toAdminCourseResponse(course).enrollments).toEqual([
+      {
+        revokedAt: null,
+        suspendedAt: "2026-09-30T08:00:00Z",
+        customer: {
+          id: "customer_3",
+          name: "Katherine Johnson",
+          email: "katherine@example.com",
+        },
+        payment: null,
+      },
+    ]);
   });
 });

@@ -74,7 +74,8 @@ export interface paths {
          *     - `schedule.startTime`: must be an RFC 3339 date-time in UTC (ending in `Z`), and must be now or in the future.
          *     - `schedule.endTime`: must be an RFC 3339 date-time in UTC (ending in `Z`), in the future, and after `startTime`.
          *     - `prices`: at least one entry, and no two entries may share the same `effectiveAt`.
-         *     - `prices[].currency`: must be an existing ISO 4217 currency code.
+         *     - `contentUrl`: an absolute `http` or `https` URL, up to 2,048 characters. It is sent to buyers and never shown publicly.
+         *     - `prices[].currency`: must be a currency the store accepts. This is the Stripe account's payout currency, USD unless the server is configured otherwise, because charging in any other currency adds a conversion fee to every sale.
          *     - `prices[].amount`: either 0 (free) or at least 50 (fifty cents for USD), because the payment processor does not accept smaller charges.
          *     - `prices[].effectiveAt`: must be an RFC 3339 date-time in UTC (ending in `Z`), and must be now or in the future.
          *     - `status`: see #/components/schemas/CreateCourseStatus
@@ -114,7 +115,7 @@ export interface paths {
          *
          *     Validation runs in two stages, each reporting all of its failures at once in the `errors` array of a 400 response. Format errors (types, lengths, date-time formats, currencies, `endTime` after `startTime`, duplicate `effectiveAt` values) are reported first. Only a well-formed request is then checked against the course's current state (past times, the resulting price schedule). The update is atomic: if any validation fails, nothing is changed.
          *
-         *     **Details.** `name`, `description` and `schedule` overwrite the stored values and follow the same rules as `createCourse`, except that the past-time checks apply only to values that changed:
+         *     **Details.** `name`, `description`, `contentUrl` and `schedule` overwrite the stored values and follow the same rules as `createCourse`, except that the past-time checks apply only to values that changed:
          *     - `schedule.startTime` must be now or in the future only if it differs from the stored value.
          *     - `schedule.endTime` must be in the future only if it differs from the stored value.
          *     - `endTime` must always be after `startTime`.
@@ -194,6 +195,12 @@ export interface components {
          * @example Learn the fundamentals of React.
          */
         CourseDescription: string;
+        /**
+         * Format: uri
+         * @description Private link to the course material, such as a Google Drive folder or a Zoom meeting. It is emailed to buyers and only ever returned to administrators.
+         * @example https://drive.google.com/drive/folders/1a2b3c4d5e
+         */
+        CourseContentUrl: string;
         CourseDetails: {
             name: components["schemas"]["CourseName"];
             description: components["schemas"]["CourseDescription"];
@@ -214,12 +221,14 @@ export interface components {
         };
         /** @description All fields are required. */
         CreateCourseRequest: components["schemas"]["CourseDetails"] & {
+            contentUrl: components["schemas"]["CourseContentUrl"];
             status: components["schemas"]["CreateCourseStatus"];
             /** @description Price schedule for the course. Each entry takes effect at its `effectiveAt`, which must be now or in the future. Entries may be sent in any order and may use different currencies; `effectiveAt` values must be unique. If every entry takes effect in the future, the course is hidden from `listCourses` and `getCourse` until the earliest `effectiveAt`. */
             prices: components["schemas"]["ScheduledPrice"][];
         };
         /** @description Full replacement of a course's details, status and future price schedule. All fields are required, and unknown fields are rejected. */
         UpdateCourseRequest: components["schemas"]["CourseDetails"] & {
+            contentUrl: components["schemas"]["CourseContentUrl"];
             status: components["schemas"]["CourseStatus"];
             /** @description The complete future price schedule after the update. Entries that exactly match a stored price are kept; every other entry is created and must take effect now or in the future. Stored prices not yet in effect without an exact match are deleted. Prices already in effect are always kept and may be omitted. `effectiveAt` values must be unique. Entries may be sent in any order. Must contain at least one entry if no stored price is in effect. */
             prices: components["schemas"]["ScheduledPrice"][];
@@ -238,13 +247,25 @@ export interface components {
         /** @description A course as seen by an administrator, including its current status, full price schedule, and enrolled customers with their payment details. */
         AdminCourse: components["schemas"]["CourseDetails"] & {
             id: components["schemas"]["CourseId"];
+            contentUrl: components["schemas"]["CourseContentUrl"];
             status: components["schemas"]["CourseStatusDetails"];
             /** @description Enrolled customers and their associated payment details. */
             enrollments: components["schemas"]["AdminEnrollment"][];
             /** @description The course's full price schedule, ordered by effectiveAt ascending. The entry in effect now is the last one whose effectiveAt is in the past. */
             prices: components["schemas"]["AdminScheduledPrice"][];
         };
+        /** @description A customer's enrollment. It gives access only while both `revokedAt` and `suspendedAt` are null. */
         AdminEnrollment: {
+            /**
+             * Format: date-time
+             * @description When a full refund removed access, in UTC. Cleared if the customer buys the course again.
+             */
+            revokedAt: string | null;
+            /**
+             * Format: date-time
+             * @description When a payment dispute suspended access, in UTC. Cleared by hand by the owner.
+             */
+            suspendedAt: string | null;
             customer: {
                 /** Format: uuid */
                 id: string;
@@ -252,9 +273,10 @@ export interface components {
                 /** Format: email */
                 email: string;
             };
+            /** @description The payment behind the enrollment, or null for a free course. */
             payment: {
                 /** @enum {string} */
-                status: "pending" | "succeeded" | "failed" | "refunded";
+                status: "pending" | "succeeded" | "expired" | "refunded";
                 /**
                  * Format: int64
                  * @description Payment amount in the smallest unit of the currency.
@@ -262,10 +284,10 @@ export interface components {
                 amount: number;
                 /**
                  * Format: date-time
-                 * @description Time the payment succeeded, in UTC (ending in `Z`). Customers are only enrolled once their payment succeeds, so this is always set.
+                 * @description Time the payment succeeded, in UTC (ending in `Z`). Customers are only enrolled once their payment succeeds, so this is set for every enrollment.
                  */
-                paidAt: string;
-            };
+                paidAt: string | null;
+            } | null;
         };
         Price: {
             /**

@@ -40,6 +40,7 @@ describe("AdminCoursesService (integration)", () => {
         return {
             name: `Integration course ${randomUUID()}`,
             description: "Course created by an integration test.",
+            contentUrl: "https://drive.google.com/drive/folders/integration",
             status: "drafted",
             schedule: {
                 startTime: startsAt.toString(),
@@ -82,6 +83,7 @@ describe("AdminCoursesService (integration)", () => {
                 id: created.id,
                 title: request.name,
                 description: request.description,
+                contentUrl: request.contentUrl,
                 timeZone: request.schedule.timeZone,
             });
 

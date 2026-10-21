@@ -1,15 +1,28 @@
 // use prisma-8
+// add a value when a provider is integrated. payments record which provider
+// took them, so refunds and webhooks route to it even after a migration
 enum PaymentProvider {
   STRIPE = "stripe"
-  PAYPAL = "paypal"
-  SQUARE = "square"
 }
 
 enum PaymentStatus {
   PENDING = "pending"
   SUCCEEDED = "succeeded"
-  FAILED = "failed"
+  EXPIRED = "expired"
   REFUNDED = "refunded"
+}
+
+enum EmailKind {
+  ACCESS_GRANTED = "access_granted"
+  ALREADY_OWNED = "already_owned"
+  ACCESS_SUSPENDED = "access_suspended"
+  DISPUTE_ALERT = "dispute_alert"
+}
+
+enum EmailStatus {
+  PENDING = "pending"
+  SENT = "sent"
+  FAILED = "failed"
 }
 
 enum CourseStatusName {
@@ -76,31 +89,14 @@ model Customer {
   createdAt         DateTime                   @default(now())
   updatedAt         temporal.updatedAtJsDate()
 
-  providerCustomers PaymentProviderCustomer[]
   payments          Payment[]
   enrollments       Enrollment[]
 }
 
-model PaymentProviderCustomer {
-  id                 Uuid            @id @default(uuid())
-
-  customerId         Uuid
-  provider           PaymentProvider
-
-  providerCustomerId String
-
-  createdAt          DateTime        @default(now())
-
-  customer           Customer        @relation(fields:[customerId], references:[id])
-  payments           Payment[]
-
-  @@unique([provider, providerCustomerId])
-  @@unique([customerId, provider])
-  @@index([customerId])
-}
-
+// one checkout attempt. amount and currency are copied from the price when
+// checkout starts, so later price edits never change what was charged
 model Payment {
-  id                 Uuid                     @id @default(uuid())
+  id                 Uuid            @id @default(uuid())
 
   customerId         Uuid
   coursePriceId      Uuid
@@ -111,37 +107,44 @@ model Payment {
   amount             Int
   currency           String
 
-  providerPaymentId  String
+  // set once the provider has created the checkout / taken the payment
   providerCheckoutId String?
+  providerPaymentId  String?
 
-  providerCustomerId Uuid?
+  createdAt          DateTime        @default(now())
+  paidAt             DateTime?
+  refundedAt         DateTime?
 
-  createdAt          DateTime
-  paidAt             DateTime
+  customer           Customer        @relation(fields:[customerId], references:[id])
+  coursePrice        CoursePrice     @relation(fields:[coursePriceId], references:[id])
 
-  customer           Customer                 @relation(fields:[customerId], references:[id])
-  coursePrice        CoursePrice              @relation(fields:[coursePriceId], references:[id])
-  providerCustomer   PaymentProviderCustomer? @relation(fields:[providerCustomerId], references:[id])
+  enrollment         Enrollment?
 
-  enrollment         Enrollment
-
+  @@unique([provider, providerCheckoutId])
   @@unique([provider, providerPaymentId])
   @@index([customerId])
   @@index([coursePriceId])
-  @@index([providerCustomerId])
+  @@index([status, createdAt])
 }
 
+// gives access only while revokedAt and suspendedAt are both null.
+// a repurchase after a refund reactivates the same row
 model Enrollment {
-  id          Uuid     @id @default(uuid())
+  id          Uuid      @id @default(uuid())
   courseId    Uuid
   customerId  Uuid
-  paymentId   Uuid     @unique
+  // null for free courses
+  paymentId   Uuid?     @unique
 
-  purchasedAt DateTime @default(now())
+  purchasedAt DateTime  @default(now())
+  // set by a full refund
+  revokedAt   DateTime?
+  // set by a dispute. cleared by hand by the owner
+  suspendedAt DateTime?
 
-  course      Course   @relation(fields:[courseId], references:[id])
-  customer    Customer @relation(fields:[customerId], references:[id])
-  payment     Payment  @relation(fields:[paymentId], references:[id])
+  course      Course    @relation(fields:[courseId], references:[id])
+  customer    Customer  @relation(fields:[customerId], references:[id])
+  payment     Payment?  @relation(fields:[paymentId], references:[id])
 
   @@unique([courseId, customerId])
   @@index([customerId])
@@ -154,4 +157,24 @@ model ProcessedPaymentEvent {
   processedAt DateTime        @default(now())
 
   @@id([provider, eventId])
+}
+
+// written in the same transaction as the change that triggers the email,
+// so an email is never lost or sent twice
+model EmailOutbox {
+  id            Uuid        @id @default(uuid())
+  kind          EmailKind
+  recipient     String
+  payload       Json
+
+  status        EmailStatus @default(PENDING)
+  attempts      Int
+  nextAttemptAt DateTime    @default(now())
+  lastError     String?
+
+  createdAt     DateTime    @default(now())
+  sentAt        DateTime?
+
+  @@index([status, nextAttemptAt])
+  @@index([recipient, createdAt])
 }

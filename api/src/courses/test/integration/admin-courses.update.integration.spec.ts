@@ -80,6 +80,7 @@ describe("AdminCoursesService (integration)", () => {
         return {
             name: course.title,
             description: course.description,
+            contentUrl: course.contentUrl,
             status: course.statuses[0].name,
             schedule: {
                 startTime: course.startsAt.toString(),
@@ -101,6 +102,7 @@ describe("AdminCoursesService (integration)", () => {
                 ...toRequest(await findCourse(course.id)),
                 name: "React Advanced",
                 description: "Hooks in depth",
+                contentUrl: "https://zoom.us/j/123456789",
             };
 
             await service.updateCourse(course.id, request);
@@ -108,6 +110,7 @@ describe("AdminCoursesService (integration)", () => {
             expect(await findCourse(course.id)).toMatchObject({
                 title: "React Advanced",
                 description: "Hooks in depth",
+                contentUrl: "https://zoom.us/j/123456789",
             });
         });
 
@@ -212,6 +215,7 @@ describe("AdminCoursesService (integration)", () => {
                 repository.updateCourse(course.id, {
                     title: "Should not persist",
                     description: before.description,
+                    contentUrl: before.contentUrl,
                     startsAt: before.startsAt,
                     endsAt: before.endsAt,
                     timeZone: before.timeZone,

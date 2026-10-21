@@ -42,6 +42,7 @@ function makeRequest(stored: Stored): UpdateCourseRequest {
     return {
         name: "TypeScript Fundamentals",
         description: "Learn TypeScript from the ground up.",
+        contentUrl: "https://drive.google.com/drive/folders/typescript",
         status: "published",
         schedule: {
             startTime: stored.startsAt.toString(),
