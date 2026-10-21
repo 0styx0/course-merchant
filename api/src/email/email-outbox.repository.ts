@@ -3,7 +3,7 @@ import type { Temporal } from "@js-temporal/polyfill";
 import { and } from "@prisma/orm-postgres/orm-client";
 
 import type { Models } from "@/prisma/contract.js";
-import type { PrismaService } from "@/prisma/prisma.service.js";
+import type { DbScope } from "types.js";
 
 export type EmailKind = Models.public_EmailOutbox["kind"];
 
@@ -24,9 +24,6 @@ export type QueuedEmail = {
     payload: EmailPayloads[Kind];
   };
 }[EmailKind];
-
-/** `prisma.db` or the `tx` of an open transaction. */
-export type DbScope = Pick<PrismaService["db"], "orm">;
 
 @Injectable()
 export class EmailOutboxRepository {

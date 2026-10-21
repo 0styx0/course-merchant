@@ -1,4 +1,11 @@
 import { components } from "src/generated/api.js";
+import type { PrismaService } from "src/prisma/prisma.service.js";
+
+/**
+ * Where a repository method runs its queries: `prisma.db`, or the `tx` of an
+ * open transaction so several repositories can write atomically.
+ */
+export type DbScope = Pick<PrismaService["db"], "orm">;
 
 export type CourseResponse =
   components["schemas"]["Course"];
