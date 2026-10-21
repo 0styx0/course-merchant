@@ -13,6 +13,13 @@ export enum ErrorCodeValidation {
     VALIDATION_FAILED = "VALIDATION_FAILED",
 }
 
+export enum ErrorCodeCheckout {
+    COURSE_NOT_PURCHASABLE = "COURSE_NOT_PURCHASABLE",
+    CHECKOUT_NOT_FOUND = "CHECKOUT_NOT_FOUND",
+    TOO_MANY_REQUESTS = "TOO_MANY_REQUESTS",
+    PAYMENT_PROVIDER_UNAVAILABLE = "PAYMENT_PROVIDER_UNAVAILABLE",
+}
+
 // Codes for each entry of a validation response's `errors`. They are generic;
 // the entry's `field` says which field failed.
 export enum FieldErrorCode {
@@ -34,9 +41,10 @@ export const ErrorCode = {
     ...ErrorCodeCourseGet,
     ...ErrorCodeGeneric,
     ...ErrorCodeValidation,
+    ...ErrorCodeCheckout,
 };
 
-export type ErrorCode = ErrorCodeCourseGet | ErrorCodeGeneric | ErrorCodeValidation;
+export type ErrorCode = ErrorCodeCourseGet | ErrorCodeGeneric | ErrorCodeValidation | ErrorCodeCheckout;
 
 interface ErrorDefinition {
     status: HttpStatus;
@@ -59,6 +67,22 @@ export const ERROR_DEFINITIONS = {
     [ErrorCode.VALIDATION_FAILED]: {
         status: HttpStatus.BAD_REQUEST,
         title: "Validation failed",
+    },
+    [ErrorCode.COURSE_NOT_PURCHASABLE]: {
+        status: HttpStatus.CONFLICT,
+        title: "Course not purchasable",
+    },
+    [ErrorCode.CHECKOUT_NOT_FOUND]: {
+        status: HttpStatus.NOT_FOUND,
+        title: "Checkout not found",
+    },
+    [ErrorCode.TOO_MANY_REQUESTS]: {
+        status: HttpStatus.TOO_MANY_REQUESTS,
+        title: "Too many requests",
+    },
+    [ErrorCode.PAYMENT_PROVIDER_UNAVAILABLE]: {
+        status: HttpStatus.SERVICE_UNAVAILABLE,
+        title: "Payment provider unavailable",
     },
 } satisfies Record<ErrorCode, ErrorDefinition>;
 

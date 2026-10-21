@@ -142,10 +142,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/checkout-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start buying a course
+         * @description Starts a purchase for the buyer identified by `email`. The price is always the course's current price as stored on the server.
+         *
+         *     The response never reveals whether the email already owns the course. When `status` is `check_email`, an email has been queued for the buyer (unless the address has already received 5 emails in the last 24 hours, in which case nothing more is sent):
+         *     - the buyer already has access: the email repeats their course link;
+         *     - the buyer's access is suspended because of a payment dispute: the email asks them to contact the owner and contains no link;
+         *     - the course is free: the buyer is enrolled immediately and the email contains their course link.
+         *
+         *     Otherwise `status` is `redirect`, and the client sends the browser to `url`, the payment provider's hosted checkout page. Paying there does not grant access by itself; access is granted when the provider confirms the payment to the server. A buyer whose earlier purchase was fully refunded can buy the course again.
+         *
+         *     The course must be publicly viewable (`getCourse` returns it) and must not have ended.
+         */
+        post: operations["startCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/checkout-sessions/{checkoutId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check how a checkout ended
+         * @description Returns the state of a paid checkout, for the page the buyer returns to after paying. `checkoutId` is the payment provider's checkout identifier, which the provider places in the return URL.
+         *
+         *     `pending` means the provider hasn't confirmed the payment to the server yet; poll again shortly. Once `succeeded`, the access email has been queued.
+         */
+        get: operations["getCheckoutStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        StartCheckoutRequest: {
+            courseId: components["schemas"]["CourseId"];
+            /**
+             * @description The buyer's name, used in emails. Leading and trailing spaces are removed.
+             * @example Ada Lovelace
+             */
+            name: string;
+            /**
+             * Format: email
+             * @description Where the course link is sent. Compared without regard to case, so `Ada@Example.com` and `ada@example.com` are the same buyer.
+             * @example ada@example.com
+             */
+            email: string;
+        };
+        StartCheckoutResponse: components["schemas"]["CheckoutRedirect"] | components["schemas"]["CheckoutCheckEmail"];
+        CheckoutRedirect: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            status: "redirect";
+            /**
+             * Format: uri
+             * @description The payment provider's hosted checkout page.
+             */
+            url: string;
+        };
+        CheckoutCheckEmail: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            status: "check_email";
+        };
+        CheckoutStatus: {
+            /**
+             * @description `expired` means the buyer didn't pay before the checkout timed out. `refunded` means the payment was later fully refunded.
+             * @enum {string}
+             */
+            status: "pending" | "succeeded" | "expired" | "refunded";
+        };
         /**
          * Format: uuid
          * @description Public identifier of the course.
@@ -434,6 +526,42 @@ export interface components {
                 "application/problem+json": components["schemas"]["ProblemDetails"];
             };
         };
+        /** @description The course has ended and can no longer be bought. */
+        CourseNotPurchasable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description No checkout exists with the given identifier. */
+        CheckoutNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description Too many requests from this client. Retry after a short delay. */
+        TooManyRequests: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description The payment provider couldn't be reached. Retry later. */
+        PaymentProviderUnavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
         /** @description Internal server error. */
         InternalServerError: {
             headers: {
@@ -445,6 +573,11 @@ export interface components {
         };
     };
     parameters: {
+        /**
+         * @description The payment provider's checkout identifier.
+         * @example cs_test_a1b2c3
+         */
+        CheckoutId: string;
         /** @description Public identifier of the course. */
         CourseId: components["schemas"]["CourseId"];
     };
@@ -614,6 +747,64 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["AdminCourseNotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    startCheckout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Checkout started. Both outcomes use the same status code so the response doesn't reveal whether the email owns the course. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartCheckoutResponse"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            404: components["responses"]["CourseNotFound"];
+            409: components["responses"]["CourseNotPurchasable"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
+            503: components["responses"]["PaymentProviderUnavailable"];
+        };
+    };
+    getCheckoutStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description The payment provider's checkout identifier.
+                 * @example cs_test_a1b2c3
+                 */
+                checkoutId: components["parameters"]["CheckoutId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The checkout's current state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutStatus"];
+                };
+            };
+            404: components["responses"]["CheckoutNotFound"];
             500: components["responses"]["InternalServerError"];
         };
     };

@@ -17,6 +17,8 @@ tags:
     description: Public course operations
   - name: Admin
     description: Administrator-only operations
+  - name: Checkout
+    description: Buying a course
 
 paths:
   /courses:
@@ -419,6 +421,115 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /checkout-sessions:
+    post:
+      tags:
+        - Checkout
+      operationId: startCheckout
+      summary: Start buying a course
+      description: >
+        Starts a purchase for the buyer identified by `email`. The price is
+        always the course's current price as stored on the server.
+
+
+        The response never reveals whether the email already owns the
+        course. When `status` is `check_email`, an email has been queued
+        for the buyer (unless the address has already received 5 emails in
+        the last 24 hours, in which case nothing more is sent):
+
+        - the buyer already has access: the email repeats their course link;
+
+        - the buyer's access is suspended because of a payment dispute: the
+        email asks them to contact the owner and contains no link;
+
+        - the course is free: the buyer is enrolled immediately and the
+        email contains their course link.
+
+
+        Otherwise `status` is `redirect`, and the client sends the browser
+        to `url`, the payment provider's hosted checkout page. Paying there
+        does not grant access by itself; access is granted when the provider
+        confirms the payment to the server. A buyer whose earlier purchase was
+        fully refunded can buy the course again.
+
+
+        The course must be publicly viewable (`getCourse` returns it) and must
+        not have ended.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartCheckoutRequest"
+            examples:
+              buyer:
+                value:
+                  courseId: 123e4567-e89b-12d3-a456-426614174000
+                  name: Ada Lovelace
+                  email: ada@example.com
+      responses:
+        "200":
+          description: >
+            Checkout started. Both outcomes use the same status code so the
+            response doesn't reveal whether the email owns the course.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StartCheckoutResponse"
+              examples:
+                redirect:
+                  value:
+                    status: redirect
+                    url: https://checkout.stripe.com/c/pay/cs_test_a1b2c3
+                checkEmail:
+                  value:
+                    status: check_email
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "404":
+          $ref: "#/components/responses/CourseNotFound"
+        "409":
+          $ref: "#/components/responses/CourseNotPurchasable"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+        "503":
+          $ref: "#/components/responses/PaymentProviderUnavailable"
+
+  /checkout-sessions/{checkoutId}:
+    get:
+      tags:
+        - Checkout
+      operationId: getCheckoutStatus
+      summary: Check how a checkout ended
+      description: >
+        Returns the state of a paid checkout, for the page the buyer returns
+        to after paying. `checkoutId` is the payment provider's checkout
+        identifier, which the provider places in the return URL.
+
+
+        `pending` means the provider hasn't confirmed the payment to the
+        server yet; poll again shortly. Once `succeeded`, the access email
+        has been queued.
+      parameters:
+        - $ref: "#/components/parameters/CheckoutId"
+      responses:
+        "200":
+          description: The checkout's current state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutStatus"
+              examples:
+                pending:
+                  value:
+                    status: pending
+        "404":
+          $ref: "#/components/responses/CheckoutNotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -428,6 +539,17 @@ components:
       description: Access token for an authenticated administrator.
 
   parameters:
+    CheckoutId:
+      name: checkoutId
+      in: path
+      required: true
+      description: The payment provider's checkout identifier.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 255
+      example: cs_test_a1b2c3
+
     CourseId:
       name: courseId
       in: path
@@ -537,6 +659,58 @@ components:
                 detail: No course exists with ID 123e4567-e89b-12d3-a456-426614174000.
                 code: COURSE_NOT_FOUND
 
+    CourseNotPurchasable:
+      description: The course has ended and can no longer be bought.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            ended:
+              value:
+                title: Course not purchasable
+                detail: This course has ended and can no longer be bought.
+                code: COURSE_NOT_PURCHASABLE
+
+    CheckoutNotFound:
+      description: No checkout exists with the given identifier.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            notFound:
+              value:
+                title: Checkout not found
+                detail: No checkout exists with ID cs_test_a1b2c3.
+                code: CHECKOUT_NOT_FOUND
+
+    TooManyRequests:
+      description: Too many requests from this client. Retry after a short delay.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            tooMany:
+              value:
+                title: Too many requests
+                detail: Too many checkout attempts. Try again in a minute.
+                code: TOO_MANY_REQUESTS
+
+    PaymentProviderUnavailable:
+      description: The payment provider couldn't be reached. Retry later.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            unavailable:
+              value:
+                title: Payment provider unavailable
+                detail: Payments can't be taken right now. Try again later.
+                code: PAYMENT_PROVIDER_UNAVAILABLE
+
     InternalServerError:
       description: Internal server error.
       content:
@@ -551,6 +725,82 @@ components:
                 detail: ""
 
   schemas:
+    StartCheckoutRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - courseId
+        - name
+        - email
+      properties:
+        courseId:
+          $ref: "#/components/schemas/CourseId"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: The buyer's name, used in emails. Leading and trailing spaces are removed.
+          examples:
+            - Ada Lovelace
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: >
+            Where the course link is sent. Compared without regard to case,
+            so `Ada@Example.com` and `ada@example.com` are the same buyer.
+          examples:
+            - ada@example.com
+
+    StartCheckoutResponse:
+      oneOf:
+        - $ref: "#/components/schemas/CheckoutRedirect"
+        - $ref: "#/components/schemas/CheckoutCheckEmail"
+      discriminator:
+        propertyName: status
+        mapping:
+          redirect: "#/components/schemas/CheckoutRedirect"
+          check_email: "#/components/schemas/CheckoutCheckEmail"
+
+    CheckoutRedirect:
+      type: object
+      required:
+        - status
+        - url
+      properties:
+        status:
+          type: string
+          const: redirect
+        url:
+          type: string
+          format: uri
+          description: The payment provider's hosted checkout page.
+
+    CheckoutCheckEmail:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          const: check_email
+
+    CheckoutStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - pending
+            - succeeded
+            - expired
+            - refunded
+          description: >
+            `expired` means the buyer didn't pay before the checkout timed out.
+            `refunded` means the payment was later fully refunded.
+
     CourseId:
       type: string
       format: uuid
