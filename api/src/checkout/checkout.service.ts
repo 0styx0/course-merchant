@@ -103,10 +103,10 @@ export class CheckoutService {
     now: Temporal.Instant,
   ): Promise<CheckoutDecision> {
     return this.prisma.db.transaction(async (tx) => {
-      const customer = await this.checkoutRepository.findOrCreateCustomer(tx, {
-        email: request.email,
-        name: request.name,
-      });
+      const customer = await this.checkoutRepository.findOrCreateCustomer(
+        tx,
+        request.customer,
+      );
 
       const enrollment = await this.checkoutRepository.findEnrollment(
         tx,

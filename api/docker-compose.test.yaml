@@ -7,3 +7,11 @@ services:
       POSTGRES_DB: course_app_test
     ports:
       - "5433:5432"
+
+  # Stripe's official mock API server. It checks requests against Stripe's API
+  # spec and returns canned responses, so e2e tests run the real SDK over real
+  # HTTP without a Stripe account. Keep the version in step with the stripe SDK.
+  stripe-mock:
+    image: stripe/stripe-mock:v0.206.0
+    ports:
+      - "12111:12111"

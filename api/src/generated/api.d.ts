@@ -153,7 +153,7 @@ export interface paths {
         put?: never;
         /**
          * Start buying a course
-         * @description Starts a purchase for the buyer identified by `email`. The price is always the course's current price as stored on the server.
+         * @description Starts a purchase for the buyer identified by `customer.email`. The price is always the course's current price as stored on the server.
          *
          *     The response never reveals whether the email already owns the course. When `status` is `check_email`, an email has been queued for the buyer (unless the address has already received 5 emails in the last 24 hours, in which case nothing more is sent):
          *     - the buyer already has access: the email repeats their course link;
@@ -199,8 +199,12 @@ export interface components {
     schemas: {
         StartCheckoutRequest: {
             courseId: components["schemas"]["CourseId"];
+            customer: components["schemas"]["CheckoutCustomer"];
+        };
+        /** @description The person buying the course. */
+        CheckoutCustomer: {
             /**
-             * @description The buyer's name, used in emails. Leading and trailing spaces are removed.
+             * @description The buyer's name, used in emails. Leading and trailing spaces are removed. An existing customer keeps the name they first gave.
              * @example Ada Lovelace
              */
             name: string;

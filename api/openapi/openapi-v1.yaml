@@ -428,7 +428,7 @@ paths:
       operationId: startCheckout
       summary: Start buying a course
       description: >
-        Starts a purchase for the buyer identified by `email`. The price is
+        Starts a purchase for the buyer identified by `customer.email`. The price is
         always the course's current price as stored on the server.
 
 
@@ -465,8 +465,9 @@ paths:
               buyer:
                 value:
                   courseId: 123e4567-e89b-12d3-a456-426614174000
-                  name: Ada Lovelace
-                  email: ada@example.com
+                  customer:
+                    name: Ada Lovelace
+                    email: ada@example.com
       responses:
         "200":
           description: >
@@ -730,16 +731,28 @@ components:
       additionalProperties: false
       required:
         - courseId
-        - name
-        - email
+        - customer
       properties:
         courseId:
           $ref: "#/components/schemas/CourseId"
+        customer:
+          $ref: "#/components/schemas/CheckoutCustomer"
+
+    CheckoutCustomer:
+      description: The person buying the course.
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - email
+      properties:
         name:
           type: string
           minLength: 1
           maxLength: 100
-          description: The buyer's name, used in emails. Leading and trailing spaces are removed.
+          description: >
+            The buyer's name, used in emails. Leading and trailing spaces are
+            removed. An existing customer keeps the name they first gave.
           examples:
             - Ada Lovelace
         email:

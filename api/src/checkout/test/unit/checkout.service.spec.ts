@@ -24,8 +24,7 @@ const config: PaymentsConfig = {
 
 const request: StartCheckoutRequest = {
   courseId: COURSE_ID,
-  name: "Ada Lovelace",
-  email: "ada@example.com",
+  customer: { name: "Ada Lovelace", email: "ada@example.com" },
 };
 
 function makeCourse(
@@ -68,8 +67,7 @@ describe("CheckoutService", () => {
       findVisibleCourse: vi.fn().mockResolvedValue(makeCourse()),
       findOrCreateCustomer: vi.fn().mockResolvedValue({
         id: CUSTOMER_ID,
-        email: request.email,
-        name: request.name,
+        ...request.customer,
       }),
       findEnrollment: vi.fn().mockResolvedValue(null),
       grantFreeAccess: vi.fn().mockResolvedValue(true),
