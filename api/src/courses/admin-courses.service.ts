@@ -1,7 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { CreateCourseRequest, GetCourseAdminResponse, ListCoursesAdminResponse, UpdateCourseRequest } from "types.js";
-import { ApiException } from "../common/errors/api.exception.js";
-import { ErrorCodeCourseGet } from "../common/errors/error-codes.js";
+import { courseNotFound } from "./course-errors.js";
 import { ValidationException } from "../common/errors/validation.exception.js";
 import { toAdminCourseResponse } from "./courses.mapper.js";
 import { AdminCoursesRepository, CourseRepositoryCreateInput, CourseRepositoryModelAdmin } from "./courses.repository/admin-courses.repository.js";
@@ -50,9 +49,7 @@ export class AdminCoursesService {
     );
 
     if (!stored) {
-      throw new ApiException(
-        ErrorCodeCourseGet.COURSE_NOT_FOUND,
-      );
+      throw courseNotFound(courseId);
     }
 
     const context = { request, stored, now };
@@ -83,9 +80,7 @@ export class AdminCoursesService {
     });
 
     if (!course) {
-      throw new ApiException(
-        ErrorCodeCourseGet.COURSE_NOT_FOUND,
-      );
+      throw courseNotFound(courseId);
     }
 
     return toAdminCourseResponse(course)
@@ -97,9 +92,7 @@ export class AdminCoursesService {
     );
 
     if (!course) {
-      throw new ApiException(
-        ErrorCodeCourseGet.COURSE_NOT_FOUND,
-      );
+      throw courseNotFound(courseId);
     }
 
     return toAdminCourseResponse(course)

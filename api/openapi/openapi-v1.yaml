@@ -128,29 +128,24 @@ paths:
 
         - `schedule.timeZone`: must be a valid IANA time zone identifier.
 
-        - `schedule.startTime`: must be an RFC 3339 date-time with a UTC
-        offset, and must be now or in the future.
+        - `schedule.startTime`: must be an RFC 3339 date-time in UTC (ending
+        in `Z`), and must be now or in the future.
 
-        - `schedule.endTime`: must be an RFC 3339 date-time with a UTC offset,
-        in the future, and after `startTime`.
-
-        - `schedule.startTime` and `schedule.endTime`: the UTC offset must
-        match the offset `timeZone` observes at that instant. For example,
-        `2026-07-01T18:00:00-05:00` is rejected for `America/New_York`, which
-        is at -04:00 in July. A local time skipped by a daylight saving change
-        cannot match any offset and is rejected the same way.
+        - `schedule.endTime`: must be an RFC 3339 date-time in UTC (ending in
+        `Z`), in the future, and after `startTime`.
 
         - `prices`: at least one entry, and no two entries may share the same
         `effectiveAt`.
 
         - `prices[].currency`: must be an existing ISO 4217 currency code.
 
-        - `prices[].amount`: must be at least 50 (fifty cents for USD), because
-        the payment processor does not accept smaller charges.
+        - `prices[].amount`: either 0 (free) or at least 50 (fifty cents for
+        USD), because the payment processor does not accept smaller charges.
 
-        - `prices[].effectiveAt`: must be now or in the future.
+        - `prices[].effectiveAt`: must be an RFC 3339 date-time in UTC (ending
+        in `Z`), and must be now or in the future.
 
-        - `status`: see #/components/schemas/CourseStatus
+        - `status`: see #/components/schemas/CreateCourseStatus
 
 
         A course is publicly visible only when its `status` is `published` and
@@ -167,18 +162,8 @@ paths:
         with a generated `id`, ordered by `effectiveAt` ascending. Public
         course responses (`listCourses`, `getCourse`) instead return a single
         `price`, the currently active price, without `effectiveAt`.
-
-
-        Send an `Idempotency-Key` header to make retries safe. Retrying a
-        request with the same key and the same body returns the original
-        response instead of creating another course. Reusing a key with a
-        different body returns 422, and retrying while the original request is
-        still being processed returns 409. Keys are scoped to the authenticated
-        user.
       security:
         - bearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
@@ -190,16 +175,17 @@ paths:
                 value:
                   name: React Fundamentals
                   description: Learn the fundamentals of React.
+                  status: published
                   prices:
                     - amount: 7900
                       currency: USD
-                      effectiveAt: "2026-10-20T00:00:00-04:00"
+                      effectiveAt: "2026-10-20T04:00:00Z"
                     - amount: 9900
                       currency: USD
-                      effectiveAt: "2026-11-15T00:00:00-05:00"
+                      effectiveAt: "2026-11-15T05:00:00Z"
                   schedule:
-                    startTime: "2026-12-01T18:00:00-05:00"
-                    endTime: "2026-12-01T20:00:00-05:00"
+                    startTime: "2026-12-01T23:00:00Z"
+                    endTime: "2026-12-02T01:00:00Z"
                     timeZone: America/New_York
       responses:
         "201":
@@ -225,20 +211,22 @@ paths:
                     id: 123e4567-e89b-12d3-a456-426614174000
                     name: React Fundamentals
                     description: Learn the fundamentals of React.
-                    status: published
-                    enrollmentCount: 0
+                    status:
+                      name: published
+                      changedAt: "2026-10-15T18:30:00Z"
+                    enrollments: []
                     prices:
                       - id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
                         amount: 7900
                         currency: USD
-                        effectiveAt: "2026-10-20T00:00:00-04:00"
+                        effectiveAt: "2026-10-20T04:00:00Z"
                       - id: 0b7d3f52-3c1a-4a0e-9f0b-5d3f8a6b1c42
                         amount: 9900
                         currency: USD
-                        effectiveAt: "2026-11-15T00:00:00-05:00"
+                        effectiveAt: "2026-11-15T05:00:00Z"
                     schedule:
-                      startTime: "2026-12-01T18:00:00-05:00"
-                      endTime: "2026-12-01T20:00:00-05:00"
+                      startTime: "2026-12-01T23:00:00Z"
+                      endTime: "2026-12-02T01:00:00Z"
                       timeZone: America/New_York
         "400":
           $ref: "#/components/responses/ValidationFailed"
@@ -246,10 +234,6 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
-        "409":
-          $ref: "#/components/responses/IdempotencyKeyInProgress"
-        "422":
-          $ref: "#/components/responses/IdempotencyKeyReused"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -434,19 +418,6 @@ components:
       description: Access token for an authenticated administrator.
 
   parameters:
-    IdempotencyKey:
-      name: Idempotency-Key
-      in: header
-      required: false
-      description: >
-        Client-generated unique key (a UUID is recommended) that makes the
-        request safe to retry. Scoped to the authenticated user.
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 255
-      example: 8e03978e-40d5-43e8-bc93-6894a57f9324
-
     CourseId:
       name: courseId
       in: path
@@ -472,7 +443,7 @@ components:
                 errors:
                   - field: /prices/0/amount
                     code: BELOW_MINIMUM
-                    detail: Payment processor requires courses at least fifty cents.
+                    detail: Price must either be free or cost at least 0.50.
                   - field: /schedule/endTime
                     code: INVALID_RANGE
                     detail: End time must be after start time.
@@ -488,35 +459,6 @@ components:
                   - field: /schedule/startTime
                     code: IN_PAST
                     detail: Start time cannot be in the past.
-
-    IdempotencyKeyInProgress:
-      description: >
-        A request with the same `Idempotency-Key` is still being processed.
-        Retry after a short delay.
-      content:
-        application/problem+json:
-          schema:
-            $ref: "#/components/schemas/ProblemDetails"
-          examples:
-            inProgress:
-              value:
-                title: Request in progress
-                detail: A request with this idempotency key is still being processed.
-                code: IDEMPOTENCY_KEY_IN_PROGRESS
-
-    IdempotencyKeyReused:
-      description: >
-        The `Idempotency-Key` was already used with a different request body.
-      content:
-        application/problem+json:
-          schema:
-            $ref: "#/components/schemas/ProblemDetails"
-          examples:
-            reused:
-              value:
-                title: Idempotency key reused
-                detail: This idempotency key was already used with a different request.
-                code: IDEMPOTENCY_KEY_REUSED
 
     Unauthorized:
       description: Missing or invalid credentials.
@@ -624,9 +566,9 @@ components:
         changedAt:
           type: string
           format: date-time
-          description: RFC 3339 date-time, including its UTC offset, when the status was last changed.
+          description: RFC 3339 date-time in UTC (ending in `Z`) when the status was last changed.
           examples:
-            - "2026-10-15T14:30:00-04:00"
+            - "2026-10-15T18:30:00Z"
 
     # append-only log. the one with the most recent changedAt is the courses' current status
     CourseStatus:
@@ -638,9 +580,23 @@ components:
         - deleted
       description: >
         Whether an administrator has made the course available. `published`
-        courses are publicly viewable once a price is in effect. `archived`
-        courses are hidden from the public API regardless of their prices,
-        and can be published again at any time.
+        courses are publicly viewable once a price is in effect. `drafted`
+        and `archived` courses are hidden from the public API regardless of
+        their prices, and can be published at any time. `deleted` courses are
+        also hidden from `listCoursesAsAdmin`; a course can only be deleted by
+        updating it.
+      examples:
+        - published
+
+    CreateCourseStatus:
+      description: >
+        A `CourseStatus` a course can be created with. Use `drafted` or
+        `archived` to create the course hidden from the public API.
+      type: string
+      enum:
+        - published
+        - archived
+        - drafted
       examples:
         - published
 
@@ -702,8 +658,8 @@ components:
     ScheduledPrice:
       description: >
         A `Price` that takes effect at `effectiveAt`, with the additional
-        constraint that the amount is at least 50, the payment processor's
-        minimum charge in USD.
+        constraint that the amount is either 0 (free) or at least 50, the
+        payment processor's minimum charge in USD.
       allOf:
         - $ref: "#/components/schemas/Price"
         - type: object
@@ -711,16 +667,18 @@ components:
             - effectiveAt
           properties:
             amount:
-              minimum: 50
+              anyOf:
+                - const: 0
+                - minimum: 50
             effectiveAt:
               type: string
               format: date-time
               description: >
-                RFC 3339 date-time including its UTC offset, from which this
+                RFC 3339 date-time in UTC (ending in `Z`) from which this
                 price applies. A price stays in effect until the next entry's
                 `effectiveAt`, at which point it gets replaced with that next entry.
               examples:
-                - "2026-10-20T00:00:00-04:00"
+                - "2026-10-20T04:00:00Z"
 
     # A stored price schedule entry: a ScheduledPrice plus its identifier.
     AdminScheduledPrice:
@@ -743,11 +701,7 @@ components:
             - status
           properties:
             status:
-              description: >
-                Use `archived` to create
-                the course hidden from the public API.
-              default: published
-              $ref: "#/components/schemas/CourseStatus"
+              $ref: "#/components/schemas/CreateCourseStatus"
             prices:
               type: array
               minItems: 1
@@ -888,7 +842,10 @@ components:
               type:
                 - string
               format: date-time
-              description: Time the payment succeeded, or null if not yet paid.
+              description: >
+                Time the payment succeeded, in UTC (ending in `Z`). Customers
+                are only enrolled once their payment succeeds, so this is
+                always set.
 
     # A price in effect can never be changed or deleted, only overwritten by a price with a later effectiveAt.
     # A price not yet in effect can be replaced or deleted.
@@ -926,28 +883,26 @@ components:
           type: string
           format: date-time
           description: >
-            Course start time as an RFC 3339 date-time including its UTC offset.
+            Course start time as an RFC 3339 date-time in UTC (ending in `Z`).
             Must be now or in the future when creating a course, or when
-            changing it on update. The offset must match the offset `timeZone`
-            observes at this instant.
+            changing it on update.
           examples:
-            - "2026-10-01T18:00:00-04:00"
+            - "2026-10-01T22:00:00Z"
         endTime:
           type: string
           format: date-time
           description: >
-            Course end time as an RFC 3339 date-time including its UTC offset.
+            Course end time as an RFC 3339 date-time in UTC (ending in `Z`).
             Always after `startTime`. Must be in the future when creating a
-            course, or when changing it on update. The offset must match the
-            offset `timeZone` observes at this instant.
+            course, or when changing it on update.
           examples:
-            - "2026-10-01T20:00:00-04:00"
+            - "2026-10-02T00:00:00Z"
         timeZone:
           type: string
           description: >
-            IANA time zone identifier the course is held in. Use this, rather
-            than the UTC offset in `startTime` and `endTime`, to display local
-            times correctly across daylight saving changes.
+            IANA time zone identifier the course is held in. `startTime` and
+            `endTime` are always in UTC; use this to display them in local
+            time, correctly across daylight saving changes.
             Using separate field instead of relying on UTC in cases where people travel
               to the course location
           examples:
@@ -1021,17 +976,21 @@ components:
             - `REQUIRED`: the field is missing or null.
             - `INVALID_TYPE`: the value has the wrong JSON type.
             - `INVALID_FORMAT`: the value is not in the expected format, such
-              as a malformed date-time.
+              as a malformed date-time or one that is not in UTC.
             - `INVALID_VALUE`: the value is well formed but not accepted, such
-              as an unknown currency or time zone, or a UTC offset that does
-              not match the course's time zone at that instant.
-            - `TOO_SHORT`: the value is shorter than the minimum length.
-            - `TOO_LONG`: the value is longer than the maximum length.
+              as an unknown currency, time zone or status.
+            - `TOO_SHORT`: a string is shorter than the minimum length, or a
+              list has fewer entries than the minimum.
+            - `TOO_LONG`: a string is longer than the maximum length, or a
+              list has more entries than the maximum.
             - `BELOW_MINIMUM`: a number is below the minimum allowed.
+            - `ABOVE_MAXIMUM`: a number is above the maximum allowed.
             - `IN_PAST`: a date-time must be now or in the future.
             - `INVALID_RANGE`: the value is inconsistent with a related
               field, such as `endTime` not being after `startTime`.
             - `DUPLICATE_VALUE`: the value must be unique within its list.
+            - `UNKNOWN_FIELD`: the field is not part of the request. `field`
+              points at the unknown field.
 
             Treat unrecognized values as a generic validation error.
           examples:

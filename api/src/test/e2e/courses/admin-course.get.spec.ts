@@ -263,7 +263,7 @@ describe("Admin Courses Create API (e2e)", () => {
 
       expect(response.body).toEqual({
         title: "Invalid course ID",
-        detail: "",
+        detail: "'not-a-uuid' is not a valid course identifier.",
         code: "INVALID_COURSE_ID",
       });
     });
@@ -281,7 +281,7 @@ describe("Admin Courses Create API (e2e)", () => {
 
       expect(response.body).toEqual({
         title: "Course not found",
-        detail: "",
+        detail: `No course exists with ID ${courseId}.`,
         code: "COURSE_NOT_FOUND",
       });
     });

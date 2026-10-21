@@ -166,7 +166,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
       errors: expect.arrayContaining([
         expect.objectContaining({ field: "/name" }),
         expect.objectContaining({ field: "/prices/0/amount" }),
-        expect.objectContaining({ field: "/prices/0" }),
+        expect.objectContaining({ field: "/prices/0/id", code: "UNKNOWN_FIELD" }),
       ]),
     });
   });
@@ -189,11 +189,11 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
       errors: [
         expect.objectContaining({
           field: "/schedule/startTime",
-          code: "SCHEDULE_START_TIME_IN_PAST",
+          code: "IN_PAST",
         }),
         expect.objectContaining({
           field: "/prices/0/effectiveAt",
-          code: "PRICES_EFFECTIVE_AT_IN_PAST",
+          code: "IN_PAST",
         }),
       ],
     });

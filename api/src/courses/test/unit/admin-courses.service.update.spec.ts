@@ -190,7 +190,7 @@ describe("AdminCoursesService", () => {
           errors: [
             {
               field: "/prices/0/effectiveAt",
-              code: "PRICES_EFFECTIVE_AT_IN_PAST",
+              code: "IN_PAST",
             },
           ],
         },

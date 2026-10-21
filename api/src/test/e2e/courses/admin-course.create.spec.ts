@@ -59,7 +59,6 @@ describe("POST /admin/courses (e2e)", () => {
 
     const response = await request(app.getHttpServer())
       .post("/v1/admin/courses")
-      .set("Idempotency-Key", randomUUID())
       .send(body)
       .expect(201);
 
@@ -123,7 +122,6 @@ describe("POST /admin/courses (e2e)", () => {
 
     const response = await request(app.getHttpServer())
       .post("/v1/admin/courses")
-      .set("Idempotency-Key", randomUUID())
       .send(body)
       .expect(201);
 
@@ -165,6 +163,28 @@ describe("POST /admin/courses (e2e)", () => {
     ).toBe(2);
   });
 
+  it("returns the new course's URL in the Location header", async () => {
+    const response = await request(app.getHttpServer())
+      .post("/v1/admin/courses")
+      .send(makeCreateRequest())
+      .expect(201);
+
+    expect(response.headers.location).toBe(
+      `/v1/admin/courses/${response.body.id}`,
+    );
+  });
+
+  it("rejects the deleted status", async () => {
+    const response = await request(app.getHttpServer())
+      .post("/v1/admin/courses")
+      .send({ ...makeCreateRequest(), status: "deleted" })
+      .expect(400);
+
+    expect(response.body.errors).toEqual([
+      expect.objectContaining({ field: "/status", code: "INVALID_VALUE" }),
+    ]);
+  });
+
   it("returns all validation errors for an invalid request", async () => {
     const body = {
       ...makeCreateRequest(),
@@ -174,20 +194,25 @@ describe("POST /admin/courses (e2e)", () => {
 
     const response = await request(app.getHttpServer())
       .post("/v1/admin/courses")
-      .set("Idempotency-Key", randomUUID())
       .send(body)
       .expect(400);
 
-    expect(response.body).toMatchObject({
+    expect(response.body).toEqual({
+      title: "Validation failed",
+      detail: "The request contains 2 invalid fields.",
       code: "VALIDATION_FAILED",
-      errors: expect.arrayContaining([
-        expect.objectContaining({
+      errors: [
+        {
           field: "/name",
-        }),
-        expect.objectContaining({
+          code: "TOO_SHORT",
+          detail: expect.any(String),
+        },
+        {
           field: "/prices",
-        }),
-      ]),
+          code: "TOO_SHORT",
+          detail: expect.any(String),
+        },
+      ],
     });
   });
 });

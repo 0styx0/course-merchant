@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Inject, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, Post, Put, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import type { CreateCourseRequest, GetCourseAdminResponse, ListCoursesAdminResponse, UpdateCourseRequest } from 'types.js';
 import { ParseCourseIdPipe } from './pipes/parse-course-id.pipe.js';
 import { AdminCoursesService } from './admin-courses.service.js';
@@ -28,11 +29,16 @@ export class AdminCoursesController {
     }
 
     @Post()
-    createCourse(
+    async createCourse(
         @Body(new ZodValidationPipe(createCourseRequestSchema))
         request: CreateCourseRequest,
+        @Res({ passthrough: true }) response: Response,
     ): Promise<GetCourseAdminResponse> {
-        return this.adminCoursesService.createCourse(request);
+        const course = await this.adminCoursesService.createCourse(request);
+
+        response.location(`/v1/admin/courses/${course.id}`);
+
+        return course;
     }
 
     @Put(":courseId")

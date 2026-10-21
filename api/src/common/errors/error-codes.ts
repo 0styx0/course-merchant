@@ -13,6 +13,23 @@ export enum ErrorCodeValidation {
     VALIDATION_FAILED = "VALIDATION_FAILED",
 }
 
+// Codes for each entry of a validation response's `errors`. They are generic;
+// the entry's `field` says which field failed.
+export enum FieldErrorCode {
+    REQUIRED = "REQUIRED",
+    INVALID_TYPE = "INVALID_TYPE",
+    INVALID_FORMAT = "INVALID_FORMAT",
+    INVALID_VALUE = "INVALID_VALUE",
+    TOO_SHORT = "TOO_SHORT",
+    TOO_LONG = "TOO_LONG",
+    BELOW_MINIMUM = "BELOW_MINIMUM",
+    ABOVE_MAXIMUM = "ABOVE_MAXIMUM",
+    IN_PAST = "IN_PAST",
+    INVALID_RANGE = "INVALID_RANGE",
+    DUPLICATE_VALUE = "DUPLICATE_VALUE",
+    UNKNOWN_FIELD = "UNKNOWN_FIELD",
+}
+
 export const ErrorCode = {
     ...ErrorCodeCourseGet,
     ...ErrorCodeGeneric,

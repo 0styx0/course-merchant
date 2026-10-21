@@ -71,20 +71,17 @@ export interface paths {
          *     - `name`: 1 to 100 characters.
          *     - `description`: 1 to 5,000 characters.
          *     - `schedule.timeZone`: must be a valid IANA time zone identifier.
-         *     - `schedule.startTime`: must be an RFC 3339 date-time with a UTC offset, and must be now or in the future.
-         *     - `schedule.endTime`: must be an RFC 3339 date-time with a UTC offset, in the future, and after `startTime`.
-         *     - `schedule.startTime` and `schedule.endTime`: the UTC offset must match the offset `timeZone` observes at that instant. For example, `2026-07-01T18:00:00-05:00` is rejected for `America/New_York`, which is at -04:00 in July. A local time skipped by a daylight saving change cannot match any offset and is rejected the same way.
+         *     - `schedule.startTime`: must be an RFC 3339 date-time in UTC (ending in `Z`), and must be now or in the future.
+         *     - `schedule.endTime`: must be an RFC 3339 date-time in UTC (ending in `Z`), in the future, and after `startTime`.
          *     - `prices`: at least one entry, and no two entries may share the same `effectiveAt`.
          *     - `prices[].currency`: must be an existing ISO 4217 currency code.
-         *     - `prices[].amount`: must be at least 50 (fifty cents for USD), because the payment processor does not accept smaller charges.
-         *     - `prices[].effectiveAt`: must be now or in the future.
-         *     - `status`: see #/components/schemas/CourseStatus
+         *     - `prices[].amount`: either 0 (free) or at least 50 (fifty cents for USD), because the payment processor does not accept smaller charges.
+         *     - `prices[].effectiveAt`: must be an RFC 3339 date-time in UTC (ending in `Z`), and must be now or in the future.
+         *     - `status`: see #/components/schemas/CreateCourseStatus
          *
          *     A course is publicly visible only when its `status` is `published` and a price is in effect. If every entry in `prices` has a future `effectiveAt`, the course is hidden from `listCourses` and `getCourse` until the earliest `effectiveAt`. Include a price with an `effectiveAt` of now to make the course visible immediately. Create a course with `status: archived` to keep it hidden, regardless of its prices, until it is published.
          *
          *     The response is the same representation returned by `getCourseAsAdmin`: `prices` contains the full schedule, each entry with a generated `id`, ordered by `effectiveAt` ascending. Public course responses (`listCourses`, `getCourse`) instead return a single `price`, the currently active price, without `effectiveAt`.
-         *
-         *     Send an `Idempotency-Key` header to make retries safe. Retrying a request with the same key and the same body returns the original response instead of creating another course. Reusing a key with a different body returns 422, and retrying while the original request is still being processed returns 409. Keys are scoped to the authenticated user.
          */
         post: operations["createCourse"];
         delete?: never;
@@ -164,17 +161,23 @@ export interface components {
             name: components["schemas"]["CourseStatus"];
             /**
              * Format: date-time
-             * @description RFC 3339 date-time, including its UTC offset, when the status was last changed.
-             * @example 2026-10-15T14:30:00-04:00
+             * @description RFC 3339 date-time in UTC (ending in `Z`) when the status was last changed.
+             * @example 2026-10-15T18:30:00Z
              */
             changedAt: string;
         };
         /**
-         * @description Whether an administrator has made the course available. `published` courses are publicly viewable once a price is in effect. `archived` courses are hidden from the public API regardless of their prices, and can be published again at any time.
+         * @description Whether an administrator has made the course available. `published` courses are publicly viewable once a price is in effect. `drafted` and `archived` courses are hidden from the public API regardless of their prices, and can be published at any time. `deleted` courses are also hidden from `listCoursesAsAdmin`; a course can only be deleted by updating it.
          * @example published
          * @enum {string}
          */
         CourseStatus: "published" | "archived" | "drafted" | "deleted";
+        /**
+         * @description A `CourseStatus` a course can be created with. Use `drafted` or `archived` to create the course hidden from the public API.
+         * @example published
+         * @enum {string}
+         */
+        CreateCourseStatus: "published" | "archived" | "drafted";
         ListCoursesResponse: {
             courses: components["schemas"]["Course"][];
         };
@@ -196,13 +199,13 @@ export interface components {
             description: components["schemas"]["CourseDescription"];
             schedule: components["schemas"]["CourseSchedule"];
         };
-        /** @description A `Price` that takes effect at `effectiveAt`, with the additional constraint that the amount is at least 50, the payment processor's minimum charge in USD. */
+        /** @description A `Price` that takes effect at `effectiveAt`, with the additional constraint that the amount is either 0 (free) or at least 50, the payment processor's minimum charge in USD. */
         ScheduledPrice: components["schemas"]["Price"] & {
-            amount?: unknown;
+            amount?: 0 | unknown;
             /**
              * Format: date-time
-             * @description RFC 3339 date-time including its UTC offset, from which this price applies. A price stays in effect until the next entry's `effectiveAt`, at which point it gets replaced with that next entry.
-             * @example 2026-10-20T00:00:00-04:00
+             * @description RFC 3339 date-time in UTC (ending in `Z`) from which this price applies. A price stays in effect until the next entry's `effectiveAt`, at which point it gets replaced with that next entry.
+             * @example 2026-10-20T04:00:00Z
              */
             effectiveAt: string;
         };
@@ -211,11 +214,7 @@ export interface components {
         };
         /** @description All fields are required. */
         CreateCourseRequest: components["schemas"]["CourseDetails"] & {
-            /**
-             * @description Use `archived` to create the course hidden from the public API.
-             * @default published
-             */
-            status: components["schemas"]["CourseStatus"];
+            status: components["schemas"]["CreateCourseStatus"];
             /** @description Price schedule for the course. Each entry takes effect at its `effectiveAt`, which must be now or in the future. Entries may be sent in any order and may use different currencies; `effectiveAt` values must be unique. If every entry takes effect in the future, the course is hidden from `listCourses` and `getCourse` until the earliest `effectiveAt`. */
             prices: components["schemas"]["ScheduledPrice"][];
         };
@@ -263,7 +262,7 @@ export interface components {
                 amount: number;
                 /**
                  * Format: date-time
-                 * @description Time the payment succeeded, or null if not yet paid.
+                 * @description Time the payment succeeded, in UTC (ending in `Z`). Customers are only enrolled once their payment succeeds, so this is always set.
                  */
                 paidAt: string;
             };
@@ -284,18 +283,18 @@ export interface components {
         CourseSchedule: {
             /**
              * Format: date-time
-             * @description Course start time as an RFC 3339 date-time including its UTC offset. Must be now or in the future when creating a course, or when changing it on update. The offset must match the offset `timeZone` observes at this instant.
-             * @example 2026-10-01T18:00:00-04:00
+             * @description Course start time as an RFC 3339 date-time in UTC (ending in `Z`). Must be now or in the future when creating a course, or when changing it on update.
+             * @example 2026-10-01T22:00:00Z
              */
             startTime: string;
             /**
              * Format: date-time
-             * @description Course end time as an RFC 3339 date-time including its UTC offset. Always after `startTime`. Must be in the future when creating a course, or when changing it on update. The offset must match the offset `timeZone` observes at this instant.
-             * @example 2026-10-01T20:00:00-04:00
+             * @description Course end time as an RFC 3339 date-time in UTC (ending in `Z`). Always after `startTime`. Must be in the future when creating a course, or when changing it on update.
+             * @example 2026-10-02T00:00:00Z
              */
             endTime: string;
             /**
-             * @description IANA time zone identifier the course is held in. Use this, rather than the UTC offset in `startTime` and `endTime`, to display local times correctly across daylight saving changes. Using separate field instead of relying on UTC in cases where people travel
+             * @description IANA time zone identifier the course is held in. `startTime` and `endTime` are always in UTC; use this to display them in local time, correctly across daylight saving changes. Using separate field instead of relying on UTC in cases where people travel
              *       to the course location
              * @example America/New_York
              */
@@ -334,17 +333,21 @@ export interface components {
              *     - `REQUIRED`: the field is missing or null.
              *     - `INVALID_TYPE`: the value has the wrong JSON type.
              *     - `INVALID_FORMAT`: the value is not in the expected format, such
-             *       as a malformed date-time.
+             *       as a malformed date-time or one that is not in UTC.
              *     - `INVALID_VALUE`: the value is well formed but not accepted, such
-             *       as an unknown currency or time zone, or a UTC offset that does
-             *       not match the course's time zone at that instant.
-             *     - `TOO_SHORT`: the value is shorter than the minimum length.
-             *     - `TOO_LONG`: the value is longer than the maximum length.
+             *       as an unknown currency, time zone or status.
+             *     - `TOO_SHORT`: a string is shorter than the minimum length, or a
+             *       list has fewer entries than the minimum.
+             *     - `TOO_LONG`: a string is longer than the maximum length, or a
+             *       list has more entries than the maximum.
              *     - `BELOW_MINIMUM`: a number is below the minimum allowed.
+             *     - `ABOVE_MAXIMUM`: a number is above the maximum allowed.
              *     - `IN_PAST`: a date-time must be now or in the future.
              *     - `INVALID_RANGE`: the value is inconsistent with a related
              *       field, such as `endTime` not being after `startTime`.
              *     - `DUPLICATE_VALUE`: the value must be unique within its list.
+             *     - `UNKNOWN_FIELD`: the field is not part of the request. `field`
+             *       points at the unknown field.
              *
              *     Treat unrecognized values as a generic validation error.
              * @example INVALID_RANGE
@@ -362,24 +365,6 @@ export interface components {
             };
             content: {
                 "application/problem+json": components["schemas"]["ValidationProblemDetails"];
-            };
-        };
-        /** @description A request with the same `Idempotency-Key` is still being processed. Retry after a short delay. */
-        IdempotencyKeyInProgress: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["ProblemDetails"];
-            };
-        };
-        /** @description The `Idempotency-Key` was already used with a different request body. */
-        IdempotencyKeyReused: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["ProblemDetails"];
             };
         };
         /** @description Missing or invalid credentials. */
@@ -438,11 +423,6 @@ export interface components {
         };
     };
     parameters: {
-        /**
-         * @description Client-generated unique key (a UUID is recommended) that makes the request safe to retry. Scoped to the authenticated user.
-         * @example 8e03978e-40d5-43e8-bc93-6894a57f9324
-         */
-        IdempotencyKey: string;
         /** @description Public identifier of the course. */
         CourseId: components["schemas"]["CourseId"];
     };
@@ -525,13 +505,7 @@ export interface operations {
     createCourse: {
         parameters: {
             query?: never;
-            header?: {
-                /**
-                 * @description Client-generated unique key (a UUID is recommended) that makes the request safe to retry. Scoped to the authenticated user.
-                 * @example 8e03978e-40d5-43e8-bc93-6894a57f9324
-                 */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -558,8 +532,6 @@ export interface operations {
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
-            409: components["responses"]["IdempotencyKeyInProgress"];
-            422: components["responses"]["IdempotencyKeyReused"];
             500: components["responses"]["InternalServerError"];
         };
     };

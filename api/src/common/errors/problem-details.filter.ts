@@ -2,7 +2,7 @@ import { STATUS_CODES } from "node:http";
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from "@nestjs/common";
 import { Response } from "express";
 import { ApiException } from "./api.exception.js";
-import { ERROR_DEFINITIONS, ErrorCode, ErrorCodeValidation } from "./error-codes.js";
+import { ERROR_DEFINITIONS, ErrorCode } from "./error-codes.js";
 import { ValidationException } from "./validation.exception.js";
 
 @Catch()
@@ -28,6 +28,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
             const error = ERROR_DEFINITIONS[code]
             return send(error.status, {
                 title: error.title,
+                detail: describeValidationErrors(exception.errors.length),
                 code,
                 errors: exception.errors,
             });
@@ -47,13 +48,17 @@ export class ProblemDetailsFilter implements ExceptionFilter {
             return send(status, {
                 title: STATUS_CODES[status] ?? "Error",
                 code: String(status),
-                detail: (status < 500) ? clientDetail(exception) : undefined, // never leak 5xx messages
+                detail: (status < 500) ? clientDetail(exception) : "", // never leak 5xx messages
             });
         }
 
         const { status, title } = ERROR_DEFINITIONS[ErrorCode.INTERNAL_SERVER_ERROR];
-        return send(status, { title, code: ErrorCode.INTERNAL_SERVER_ERROR });
+        return send(status, { title, code: ErrorCode.INTERNAL_SERVER_ERROR, detail: "" });
     }
+}
+
+function describeValidationErrors(count: number): string {
+    return `The request contains ${count} invalid ${count === 1 ? "field" : "fields"}.`;
 }
 
 /**

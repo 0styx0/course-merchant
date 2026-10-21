@@ -2,8 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { GetCourseResponse, ListCoursesResponse } from "types.js";
 import { CourseRepositoryModelPublic, CoursesRepository } from "./courses.repository/courses.repository.js";
 import { Temporal } from "@js-temporal/polyfill";
-import { ApiException } from "../common/errors/api.exception.js";
-import { ErrorCodeCourseGet } from "../common/errors/error-codes.js";
+import { courseNotFound } from "./course-errors.js";
 import { toPublicCourseResponse } from "./courses.mapper.js";
 
 @Injectable()
@@ -20,7 +19,7 @@ export class CoursesService {
     return {
       courses: courses.map((course) => {
 
-        validatePublicCourse(course)
+        validatePublicCourse(course, course.id)
 
         return toPublicCourseResponse(course)
       }),
@@ -37,17 +36,15 @@ export class CoursesService {
       now,
     );
 
-    validatePublicCourse(course)
+    validatePublicCourse(course, courseId)
 
     return toPublicCourseResponse(course)
   }
 }
 
-function validatePublicCourse(course: CourseRepositoryModelPublic | null): asserts course is CourseRepositoryModelPublic {
+function validatePublicCourse(course: CourseRepositoryModelPublic | null, courseId: string): asserts course is CourseRepositoryModelPublic {
 
   if (!course || !course.prices.length) {
-    throw new ApiException(
-      ErrorCodeCourseGet.COURSE_NOT_FOUND,
-    );
+    throw courseNotFound(courseId);
   }
 }

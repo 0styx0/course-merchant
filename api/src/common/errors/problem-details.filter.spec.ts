@@ -9,7 +9,7 @@ import {
   } from "@nestjs/common";
   import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
   import { ApiException } from "./api.exception.js";
-  import { ERROR_DEFINITIONS, ErrorCode } from "./error-codes.js";
+  import { ERROR_DEFINITIONS, ErrorCode, FieldErrorCode } from "./error-codes.js";
   import { ProblemDetailsFilter } from "./problem-details.filter.js";
 import { ValidationException } from "./validation.exception.js";
   
@@ -77,13 +77,13 @@ import { ValidationException } from "./validation.exception.js";
         const errors = [
           {
             field: "/name",
-            code: "too_small",
-            message: "Name is required",
+            code: FieldErrorCode.TOO_SHORT,
+            detail: "Name is required",
           },
           {
             field: "/prices",
-            code: "invalid_type",
-            message: "Prices must be an array",
+            code: FieldErrorCode.INVALID_TYPE,
+            detail: "Prices must be an array",
           },
         ];
     
@@ -93,7 +93,7 @@ import { ValidationException } from "./validation.exception.js";
         expect(body.title).toBe("Validation failed");
         expect(body.code).toBe("VALIDATION_FAILED");
         expect(body.errors).toEqual(errors);
-        expect(body.detail).toBeUndefined();
+        expect(body.detail).toBe("The request contains 2 invalid fields.");
       });
     
       it("does not log validation errors", () => {
@@ -101,8 +101,8 @@ import { ValidationException } from "./validation.exception.js";
           new ValidationException([
             {
               field: "/name",
-              code: "too_small",
-              message: "Name is required",
+              code: FieldErrorCode.TOO_SHORT,
+              detail: "Name is required",
             },
           ]),
         );
@@ -130,7 +130,7 @@ import { ValidationException } from "./validation.exception.js";
         const { status, body } = run(new ServiceUnavailableException("db at 10.0.0.5 down"));
   
         expect(status).toBe(503);
-        expect(body.detail).toBeUndefined();
+        expect(body.detail).toBe("");
         expect(JSON.stringify(body)).not.toContain("10.0.0.5");
       });
   
@@ -151,6 +151,7 @@ import { ValidationException } from "./validation.exception.js";
         expect(status).toBe(def.status);
         expect(body.title).toBe(def.title);
         expect(body.code).toBe(ErrorCode.INTERNAL_SERVER_ERROR);
+        expect(body.detail).toBe("");
         expect(JSON.stringify(body)).not.toContain("secret-db-password");
       });
   

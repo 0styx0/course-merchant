@@ -117,13 +117,13 @@ describe("findUpdateRuleViolations", () => {
         ).toEqual([
             {
                 field: "/schedule/startTime",
-                code: "SCHEDULE_START_TIME_IN_PAST",
-                message: "Start time cannot be in the past.",
+                code: "IN_PAST",
+                detail: "Start time cannot be in the past.",
             },
             {
                 field: "/schedule/endTime",
-                code: "SCHEDULE_END_TIME_IN_PAST",
-                message: "End time cannot be in the past.",
+                code: "IN_PAST",
+                detail: "End time cannot be in the past.",
             },
         ]);
     });
@@ -139,8 +139,8 @@ describe("findUpdateRuleViolations", () => {
         ).toEqual([
             {
                 field: "/prices/0/effectiveAt",
-                code: "PRICES_EFFECTIVE_AT_IN_PAST",
-                message: "Price effective time cannot be in the past.",
+                code: "IN_PAST",
+                detail: "Price effective time cannot be in the past.",
             },
         ]);
     });
@@ -183,8 +183,8 @@ describe("findUpdateRuleViolations", () => {
         ).toEqual([
             {
                 field: "/prices",
-                code: "PRICES_TOO_SHORT",
-                message:
+                code: "TOO_SHORT",
+                detail:
                     "Prices must contain at least one entry when no price is in effect.",
             },
         ]);

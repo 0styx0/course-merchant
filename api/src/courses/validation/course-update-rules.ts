@@ -1,10 +1,10 @@
 import { Temporal } from "@js-temporal/polyfill";
 
+import { FieldErrorCode } from "@/common/errors/error-codes.js";
 import type { ValidationError } from "@/common/errors/validation.exception.js";
 import { toJsonPointer } from "../pipes/create-course-validation.pipe.js";
 import type { CourseRepositoryModelAdmin } from "../courses.repository/admin-courses.repository.js";
 import type { UpdateCourseRequest } from "types.js";
-import { COURSE_VALIDATION_ERRORS } from "./course-field-schemas.js";
 
 type StoredCourse = Pick<
   CourseRepositoryModelAdmin,
@@ -87,8 +87,8 @@ export function findUpdateRuleViolations({
   ) {
     errors.push({
       field: toJsonPointer(["schedule", "startTime"]),
-      code: COURSE_VALIDATION_ERRORS.schedule.startTime.inPast,
-      message: "Start time cannot be in the past.",
+      code: FieldErrorCode.IN_PAST,
+      detail: "Start time cannot be in the past.",
     });
   }
 
@@ -98,8 +98,8 @@ export function findUpdateRuleViolations({
   ) {
     errors.push({
       field: toJsonPointer(["schedule", "endTime"]),
-      code: COURSE_VALIDATION_ERRORS.schedule.endTime.inPast,
-      message: "End time cannot be in the past.",
+      code: FieldErrorCode.IN_PAST,
+      detail: "End time cannot be in the past.",
     });
   }
 
@@ -114,8 +114,8 @@ export function findUpdateRuleViolations({
 
     errors.push({
       field: toJsonPointer(["prices", index, "effectiveAt"]),
-      code: COURSE_VALIDATION_ERRORS.prices.effectiveAt.inPast,
-      message: "Price effective time cannot be in the past.",
+      code: FieldErrorCode.IN_PAST,
+      detail: "Price effective time cannot be in the past.",
     });
   });
 
@@ -126,8 +126,8 @@ export function findUpdateRuleViolations({
   if (!hasPriceInEffect && request.prices.length === 0) {
     errors.push({
       field: toJsonPointer(["prices"]),
-      code: COURSE_VALIDATION_ERRORS.prices.tooShort,
-      message:
+      code: FieldErrorCode.TOO_SHORT,
+      detail:
         "Prices must contain at least one entry when no price is in effect.",
     });
   }

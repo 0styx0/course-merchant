@@ -1,8 +1,8 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { z } from "zod";
 
+import { FieldErrorCode } from "@/common/errors/error-codes.js";
 import {
-  COURSE_VALIDATION_ERRORS,
   courseScheduleFieldsSchema,
   courseDetailsShape,
   createStatusSchema,
@@ -80,7 +80,7 @@ function validateScheduleRange(
 
   addValidationIssue(ctx, {
     path: ["endTime"],
-    code: COURSE_VALIDATION_ERRORS.schedule.endTime.invalidRange,
+    code: FieldErrorCode.INVALID_RANGE,
     message: "End time must be after start time.",
     input: schedule.endTime,
   });
@@ -100,7 +100,7 @@ function validateFutureScheduleTime(
 
   addValidationIssue(ctx, {
     path: [field],
-    code: COURSE_VALIDATION_ERRORS.schedule[field].inPast,
+    code: FieldErrorCode.IN_PAST,
     message: `${
       field === "startTime" ? "Start" : "End"
     } time cannot be in the past.`,
@@ -167,7 +167,7 @@ function validateFuturePriceEffectiveTime(
 
   addValidationIssue(ctx, {
     path: ["effectiveAt"],
-    code: COURSE_VALIDATION_ERRORS.prices.effectiveAt.inPast,
+    code: FieldErrorCode.IN_PAST,
     message: "Price effective time cannot be in the past.",
     input: price.effectiveAt,
   });
@@ -204,8 +204,7 @@ function validateUniquePriceEffectiveTimes(
 
     addValidationIssue(ctx, {
       path: [index, "effectiveAt"],
-      code:
-        COURSE_VALIDATION_ERRORS.prices.effectiveAt.duplicateValue,
+      code: FieldErrorCode.DUPLICATE_VALUE,
       message: "Price effective times must be unique.",
       input: price.effectiveAt,
     });
