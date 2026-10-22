@@ -23,19 +23,15 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
   - [x] `StripeService.verifyWebhookEvent`;
   - [x] `EnrollmentsRepository`, shared by checkout and fulfillment.
   - [x] `PaymentsRepository`: event dedupe, lookup by our payment id, and guarded `pending →` transitions.
+  - [x] `FulfillmentService` for `checkout.session.completed`, with `completedCheckoutFromEvent` reading Stripe's event in our terms.
 
   Remaining:
-  - [ ] **Next: `FulfillmentService`** for `checkout.session.completed`. It runs the *Webhook* flow's transaction:
-    - `recordProcessedEvent`; on `false`, stop (reply 200);
-    - read our payment id from `client_reference_id`. If it's missing or unknown (`findPaymentForFulfillment` → null), ignore the event (reply 200): it isn't a checkout we started;
-    - `markPaymentSucceeded` with the session id, its payment intent id, and `paidAt` from `event.created`; on `false`, stop;
-    - one small method per enrollment outcome, dispatched from `EnrollmentsRepository.findEnrollment` and `enrollment-access.ts`:
-      - none or revoked: `grantAccess` (`purchasedAt` = `paidAt`) and queue `access_granted`;
-      - active: queue `already_owned` with `refundIssued: true`, and return the payment id to refund after commit;
-      - suspended: queue `access_suspended`.
+  - [ ] **Next: `StripeService.refundPayment`**, for double purchases:
+    - `FulfillmentService.fulfillCheckout` calls it after the transaction commits, when the decision is `REFUND_DOUBLE_PURCHASE`, and then returns `void` instead of the decision;
+    - full refund of the payment intent (`providerPaymentId`), idempotency key `refund-<paymentId>`;
+    - on failure (`PaymentProviderUnavailableError` or otherwise), log and still let the webhook reply 200; the sweeper retries (step 6).
 
-    The email recipient is `customer.email` from `findPaymentForFulfillment`. Unit-test the dispatch; integration-test the transaction.
-  - [ ] `StripeService.refundPayment`, called after the transaction commits, for double purchases.
+    Unit-test it like `createCheckoutSession` (a real client with `createFetchHttpClient`), and unit-test the after-commit call order in `FulfillmentService`.
   - [ ] `checkout.session.expired`.
   - [ ] `StripeWebhookController`, its module, and an e2e test using signed events (`generateTestHeaderString`).
   - [ ] A manual check with `stripe listen` (see *Launch*).
@@ -56,7 +52,7 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
   - `charge.dispute.created`;
   - the estimated payout on the admin price field.
 
-  Open point: Stripe forgets idempotency keys after about 24 hours, so a sweeper retry of a double-purchase refund can't rely on `refund-<paymentId>` alone. Decide what else stops a second refund (Stripe rejects refunding a fully refunded charge; `charge.refunded` moves the payment out of the sweeper's query).
+  Open point: Stripe forgets idempotency keys after about 24 hours, so a sweeper retry of a double-purchase refund can't rely on `refund-<paymentId>` alone. Decide what else stops a second refund (Stripe rejects refunding a fully refunded charge; `charge.refunded` moves the payment out of the sweeper's query). The same refund rule also covers a double purchase whose two webhooks raced (see Decisions).
 - [ ] **Launch:** see the checklist at the end.
 
 ## Principles
@@ -146,6 +142,11 @@ It also covers a payment whose session was never created.
 | Payment transitions use `updateAndCount` with the `status = pending` condition, not `update` | `update` reads the row, then updates it by id alone, so two callers can both see `pending` and both "win" (caught by the concurrency test). `updateAndCount` puts the condition in the `UPDATE` itself | `.where(...).update(...)`, or a `forUpdate()` read then a write |
 | `markPaymentSucceeded` always sets `providerCheckoutId` | A payment has one session (idempotency key `checkout-<paymentId>`), so setting it equals filling it when missing, in one statement | A second update for a missing id only |
 | `findPaymentForFulfillment` doesn't return the payment's status | The guarded transition decides; an early status check would be a second answer that can race | Checking status before the update |
+| `FulfillmentService` takes a provider-neutral `CompletedCheckout`; `completedCheckoutFromEvent` in `stripe.service.ts` maps Stripe's event to it | Stripe's shapes stay in one file, and the sweeper can fulfill from a retrieved session that has no event | Passing `Stripe.CheckoutSessionCompletedEvent` into the service |
+| A completed checkout that is unpaid, or whose `client_reference_id` is missing, not a UUID, or unknown, is recorded and ignored | It isn't a paid checkout we started. A non-UUID id would make Postgres throw, so Stripe would retry for days | Failing the webhook |
+| A paid session without a payment intent throws | It breaks Stripe's own invariant; failing makes Stripe retry and puts it in the logs | Ignoring it |
+| Two payments for one course fulfilled concurrently: the one that loses `grantAccess` stops with no email or refund, and the sweeper's refund rule picks it up | Rare; keeps fulfillment a straight line. Accepted cost: that payment gets no `already_owned` email | Re-reading the enrollment and re-dispatching to the double-purchase path |
+| Fulfillment emails aren't capped per address | Only a real payment queues them, and a buyer who paid must get the link | Reusing checkout's cap |
 | Card only, no delayed methods | Payment is confirmed instantly, so there's no "processing" state | ACH and bank debits |
 | Currencies limited to the payout currency (`ALLOWED_CURRENCIES`, default USD) | Any other currency adds a conversion fee to every sale | Accepting any currency |
 

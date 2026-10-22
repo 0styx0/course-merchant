@@ -5,7 +5,14 @@ import { and } from "@prisma/orm-postgres/orm-client";
 import type { Models } from "@/prisma/contract.js";
 import type { DbScope } from "types.js";
 
-type PaymentProvider = Models.public_Payment["provider"];
+export type PaymentProvider = Models.public_Payment["provider"];
+
+/** A provider's webhook event, identified by the provider's own id. */
+export type ProviderEvent = {
+  provider: PaymentProvider;
+  eventId: string;
+  type: string;
+};
 
 /** What fulfillment needs to grant access and email the buyer. */
 export type FulfillmentPayment = {
@@ -38,7 +45,7 @@ export type FulfillmentPayment = {
 export class PaymentsRepository {
   async recordProcessedEvent(
     scope: DbScope,
-    event: { provider: PaymentProvider; eventId: string; type: string },
+    event: ProviderEvent,
   ): Promise<boolean> {
     // skips the insert, instead of failing, when the event is already
     // recorded: the fields name the @@id([provider, eventId]) key

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { PaymentsConfig } from "@/config/payments-config.js";
 import {
+  completedCheckoutFromEvent,
   InvalidWebhookSignatureError,
   PaymentProviderUnavailableError,
   StripeService,
@@ -285,5 +286,76 @@ describe("StripeService", () => {
 
       expect(requests).toEqual([]);
     });
+  });
+});
+
+describe("completedCheckoutFromEvent", () => {
+  // 2026-10-21T12:00:00Z, in the seconds Stripe uses
+  const CREATED = 1792584000;
+
+  // only the fields the mapper reads; the rest of Stripe's event is irrelevant
+  function makeEvent(
+    session: Partial<Stripe.Checkout.Session> = {},
+  ): Stripe.CheckoutSessionCompletedEvent {
+    return {
+      id: "evt_test_1",
+      type: "checkout.session.completed",
+      created: CREATED,
+      data: {
+        object: {
+          id: "cs_test_1",
+          client_reference_id: "8b0e1f5c-0000-4000-8000-000000000004",
+          payment_status: "paid",
+          payment_intent: "pi_test_1",
+          ...session,
+        },
+      },
+    } as unknown as Stripe.CheckoutSessionCompletedEvent;
+  }
+
+  it("reads a paid checkout in our terms", () => {
+    expect(completedCheckoutFromEvent(makeEvent())).toEqual({
+      event: {
+        provider: "stripe",
+        eventId: "evt_test_1",
+        type: "checkout.session.completed",
+      },
+      paymentId: "8b0e1f5c-0000-4000-8000-000000000004",
+      providerCheckoutId: "cs_test_1",
+      providerPayment: {
+        id: "pi_test_1",
+        paidAt: Temporal.Instant.from("2026-10-21T12:00:00Z"),
+      },
+    });
+  });
+
+  it("reads the payment intent id when it was expanded", () => {
+    const event = makeEvent({
+      payment_intent: { id: "pi_test_2" } as Stripe.PaymentIntent,
+    });
+
+    expect(completedCheckoutFromEvent(event).providerPayment?.id).toBe(
+      "pi_test_2",
+    );
+  });
+
+  it("passes a missing client_reference_id through as null", () => {
+    const event = makeEvent({ client_reference_id: null });
+
+    expect(completedCheckoutFromEvent(event).paymentId).toBeNull();
+  });
+
+  it("has no payment when the checkout completed unpaid", () => {
+    const event = makeEvent({ payment_status: "unpaid", payment_intent: null });
+
+    expect(completedCheckoutFromEvent(event).providerPayment).toBeNull();
+  });
+
+  it("throws when Stripe reports a paid checkout without a payment intent", () => {
+    const event = makeEvent({ payment_intent: null });
+
+    expect(() => completedCheckoutFromEvent(event)).toThrow(
+      "Stripe reported Checkout Session cs_test_1 as paid without a payment intent.",
+    );
   });
 });
