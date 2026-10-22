@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { PaymentsConfig } from "@/config/payments-config.js";
 import {
   completedCheckoutFromEvent,
+  expiredCheckoutFromEvent,
   InvalidWebhookSignatureError,
   PaymentProviderUnavailableError,
   StripeService,
@@ -433,5 +434,38 @@ describe("completedCheckoutFromEvent", () => {
     expect(() => completedCheckoutFromEvent(event)).toThrow(
       "Stripe reported Checkout Session cs_test_1 as paid without a payment intent.",
     );
+  });
+});
+
+describe("expiredCheckoutFromEvent", () => {
+  function makeEvent(
+    clientReferenceId: string | null,
+  ): Stripe.CheckoutSessionExpiredEvent {
+    return {
+      id: "evt_test_2",
+      type: "checkout.session.expired",
+      data: {
+        object: { id: "cs_test_1", client_reference_id: clientReferenceId },
+      },
+    } as unknown as Stripe.CheckoutSessionExpiredEvent;
+  }
+
+  it("reads an expired checkout in our terms", () => {
+    expect(
+      expiredCheckoutFromEvent(
+        makeEvent("8b0e1f5c-0000-4000-8000-000000000004"),
+      ),
+    ).toEqual({
+      event: {
+        provider: "stripe",
+        eventId: "evt_test_2",
+        type: "checkout.session.expired",
+      },
+      paymentId: "8b0e1f5c-0000-4000-8000-000000000004",
+    });
+  });
+
+  it("passes a missing client_reference_id through as null", () => {
+    expect(expiredCheckoutFromEvent(makeEvent(null)).paymentId).toBeNull();
   });
 });

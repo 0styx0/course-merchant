@@ -6,6 +6,7 @@ import {
   PAYMENTS_CONFIG,
   type PaymentsConfig,
 } from "@/config/payments-config.js";
+import type { ExpiredCheckout } from "./expiry.service.js";
 import type { CompletedCheckout } from "./fulfillment.service.js";
 
 export const STRIPE_CLIENT = Symbol("STRIPE_CLIENT");
@@ -204,6 +205,16 @@ export function completedCheckoutFromEvent(
           paidAt: Temporal.Instant.fromEpochMilliseconds(event.created * 1000),
         }
       : null,
+  };
+}
+
+/** Reads a `checkout.session.expired` event in our terms. */
+export function expiredCheckoutFromEvent(
+  event: Stripe.CheckoutSessionExpiredEvent,
+): ExpiredCheckout {
+  return {
+    event: { provider: "stripe", eventId: event.id, type: event.type },
+    paymentId: event.data.object.client_reference_id,
   };
 }
 

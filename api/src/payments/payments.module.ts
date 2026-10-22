@@ -7,6 +7,7 @@ import {
 import { EmailModule } from "@/email/email.module.js";
 import { EnrollmentsModule } from "@/enrollments/enrollments.module.js";
 import { PrismaModule } from "@/prisma/prisma.module.js";
+import { ExpiryService } from "./expiry.service.js";
 import { FulfillmentService } from "./fulfillment.service.js";
 import { PaymentsRepository } from "./payments.repository.js";
 import { StripeService, stripeClientProvider } from "./stripe.service.js";
@@ -20,12 +21,14 @@ import { StripeService, stripeClientProvider } from "./stripe.service.js";
     StripeService,
     PaymentsRepository,
     FulfillmentService,
+    ExpiryService,
   ],
   exports: [
     PAYMENTS_CONFIG,
     StripeService,
     PaymentsRepository,
     FulfillmentService,
+    ExpiryService,
   ],
 })
 export class PaymentsModule {}

@@ -27,13 +27,12 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
 
   Remaining:
   - [x] `StripeService.refundPayment`, called by `FulfillmentService.fulfillCheckout` after the transaction commits for a double purchase.
-  - [ ] **Next: `checkout.session.expired`**:
-    - a `PaymentsRepository` method that moves `pending → expired` with a conditional `updateAndCount`, found by our payment id (`client_reference_id`, validated like `findOurPayment`);
-    - record the event id in the same transaction, as `fulfillCheckout` does;
-    - a late `completed` for an expired payment is already ignored, because `markPaymentSucceeded` only moves `pending` payments.
-
-    Prefer a small service of its own (or a method beside `fulfillCheckout`) that takes a provider-neutral shape, with a mapper next to `completedCheckoutFromEvent`.
-  - [ ] `StripeWebhookController`, its module, and an e2e test using signed events (`generateTestHeaderString`).
+  - [x] `ExpiryService` for `checkout.session.expired`, with `expiredCheckoutFromEvent` beside the completed mapper.
+  - [ ] **Next: `StripeWebhookController`**:
+    - `POST /v1/webhooks/stripe` per the contract, in a module of its own;
+    - verify with `StripeService.verifyWebhookEvent` and map `InvalidWebhookSignatureError` to 400;
+    - dispatch by event type: `completed` to `FulfillmentService` through `completedCheckoutFromEvent`, `expired` to `ExpiryService` through `expiredCheckoutFromEvent`, and acknowledge any other type with 200;
+    - an e2e test using signed events (`generateTestHeaderString`).
   - [ ] A manual check with `stripe listen` (see *Launch*).
 - [ ] **4. Email delivery:**
   - an outbox worker on a `@nestjs/schedule` interval, retrying with backoff;
@@ -120,6 +119,7 @@ It also covers a payment whose session was never created.
 | Decision | Why | Rejected |
 |---|---|---|
 | Guest checkout; a customer is identified by lowercased email | No Stripe Customer objects to sync; saved cards would be the biggest lock-in risk | Stripe Customers, `PaymentProviderCustomer` (dropped) |
+| Expiry is its own `ExpiryService`, and records the event even though `markPaymentExpired` is idempotent | Fulfillment stays about granting access; recording keeps redelivery handling identical across event types | A method on `FulfillmentService`; skipping the event record |
 | Create the customer at checkout start | A pending `Payment` needs a `customerId` from the moment it's inserted | Creating it in the webhook |
 | The customer keeps the first name given; Stripe's payer name is ignored | Simple, and the name isn't used for anything that matters | Overwriting it on each purchase |
 | Request field is `customer.name`, not `name` | `name` alone reads as the course name | Top-level `name` and `email` |

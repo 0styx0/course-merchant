@@ -1,6 +1,5 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import type { Temporal } from "@js-temporal/polyfill";
-import { z } from "zod";
 
 import type { DbScope } from "types.js";
 import {
@@ -13,15 +12,13 @@ import {
 } from "@/enrollments/enrollment-access.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
+import { isOurPaymentId } from "./payment-id.js";
 import {
   PaymentsRepository,
   type FulfillmentPayment,
   type ProviderEvent,
 } from "./payments.repository.js";
 import { StripeService } from "./stripe.service.js";
-
-// any 8-4-4-4-12 hex id, which is what postgres accepts for a uuid column
-const paymentIdSchema = z.guid();
 
 /**
  * A checkout the provider reports as completed, in our terms, so the webhook
@@ -169,17 +166,11 @@ export class FulfillmentService {
     return this.grantPurchase({ tx, payment, providerPayment });
   }
 
-  /**
-   * A non-uuid id would make Postgres reject the query, and the provider would
-   * retry the event for days, so it's treated as unknown instead.
-   */
   private async findOurPayment(
     tx: DbScope,
     paymentId: string | null,
   ): Promise<FulfillmentPayment | null> {
-    const isOurId = paymentIdSchema.safeParse(paymentId).success;
-
-    if (!paymentId || !isOurId) {
+    if (!isOurPaymentId(paymentId)) {
       return null;
     }
 
