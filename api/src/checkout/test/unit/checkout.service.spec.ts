@@ -6,6 +6,7 @@ import { CheckoutRepository, type CheckoutCourse } from "@/checkout/checkout.rep
 import { CheckoutService } from "@/checkout/checkout.service.js";
 import type { PaymentsConfig } from "@/config/payments-config.js";
 import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
+import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import {
   PaymentProviderUnavailableError,
   StripeService,
@@ -46,11 +47,13 @@ describe("CheckoutService", () => {
   const tx = { orm: {} };
 
   let service: CheckoutService;
+  let enrollmentsRepository: {
+    findEnrollment: ReturnType<typeof vi.fn>;
+    grantAccess: ReturnType<typeof vi.fn>;
+  };
   let checkoutRepository: {
     findVisibleCourse: ReturnType<typeof vi.fn>;
     findOrCreateCustomer: ReturnType<typeof vi.fn>;
-    findEnrollment: ReturnType<typeof vi.fn>;
-    grantFreeAccess: ReturnType<typeof vi.fn>;
     createPendingPayment: ReturnType<typeof vi.fn>;
     saveProviderCheckoutId: ReturnType<typeof vi.fn>;
     findPaymentStatusByCheckoutId: ReturnType<typeof vi.fn>;
@@ -65,14 +68,16 @@ describe("CheckoutService", () => {
   let events: string[];
 
   beforeEach(() => {
+    enrollmentsRepository = {
+      findEnrollment: vi.fn().mockResolvedValue(null),
+      grantAccess: vi.fn().mockResolvedValue(true),
+    };
     checkoutRepository = {
       findVisibleCourse: vi.fn().mockResolvedValue(makeCourse()),
       findOrCreateCustomer: vi.fn().mockResolvedValue({
         id: CUSTOMER_ID,
         ...request.customer,
       }),
-      findEnrollment: vi.fn().mockResolvedValue(null),
-      grantFreeAccess: vi.fn().mockResolvedValue(true),
       createPendingPayment: vi.fn().mockResolvedValue({
         id: PAYMENT_ID,
         amount: 9900,
@@ -110,6 +115,7 @@ describe("CheckoutService", () => {
     service = new CheckoutService(
       prisma as unknown as PrismaService,
       checkoutRepository as unknown as CheckoutRepository,
+      enrollmentsRepository as unknown as EnrollmentsRepository,
       emailOutbox as unknown as EmailOutboxRepository,
       stripe as unknown as StripeService,
       config,
@@ -169,7 +175,7 @@ describe("CheckoutService", () => {
 
   describe("a buyer who already has access", () => {
     beforeEach(() => {
-      checkoutRepository.findEnrollment.mockResolvedValue({
+      enrollmentsRepository.findEnrollment.mockResolvedValue({
         id: "enrollment",
         revokedAt: null,
         suspendedAt: null,
@@ -185,7 +191,7 @@ describe("CheckoutService", () => {
         recipient: "ada@example.com",
         payload: { ...emailIds, refundIssued: false },
       });
-      expect(checkoutRepository.grantFreeAccess).not.toHaveBeenCalled();
+      expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();
     });
 
     it("answers the same way for a paid course, without charging again", async () => {
@@ -204,7 +210,7 @@ describe("CheckoutService", () => {
       ["suspended", { revokedAt: null, suspendedAt }],
       ["suspended and refunded", { revokedAt, suspendedAt }],
     ])("is emailed without a link when %s", async (_label, timestamps) => {
-      checkoutRepository.findEnrollment.mockResolvedValue({
+      enrollmentsRepository.findEnrollment.mockResolvedValue({
         id: "enrollment",
         ...timestamps,
       });
@@ -217,7 +223,7 @@ describe("CheckoutService", () => {
         recipient: "ada@example.com",
         payload: emailIds,
       });
-      expect(checkoutRepository.grantFreeAccess).not.toHaveBeenCalled();
+      expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();
     });
   });
 
@@ -226,17 +232,17 @@ describe("CheckoutService", () => {
       ["a new buyer", null],
       ["a refunded buyer", { id: "enrollment", revokedAt, suspendedAt: null }],
     ])("grants access to %s and emails the link", async (_label, enrollment) => {
-      checkoutRepository.findEnrollment.mockResolvedValue(enrollment);
+      enrollmentsRepository.findEnrollment.mockResolvedValue(enrollment);
 
       await expect(service.startCheckout(request)).resolves.toEqual({
         status: "check_email",
       });
-      expect(checkoutRepository.grantFreeAccess).toHaveBeenCalledWith(
-        tx,
-        COURSE_ID,
-        CUSTOMER_ID,
-        expect.any(Temporal.Instant),
-      );
+      expect(enrollmentsRepository.grantAccess).toHaveBeenCalledWith(tx, {
+        courseId: COURSE_ID,
+        customerId: CUSTOMER_ID,
+        paymentId: null,
+        now: expect.any(Temporal.Instant),
+      });
       expect(emailOutbox.enqueue).toHaveBeenCalledExactlyOnceWith(tx, {
         kind: "access_granted",
         recipient: "ada@example.com",
@@ -245,7 +251,7 @@ describe("CheckoutService", () => {
     });
 
     it("sends nothing when a concurrent request granted access first", async () => {
-      checkoutRepository.grantFreeAccess.mockResolvedValue(false);
+      enrollmentsRepository.grantAccess.mockResolvedValue(false);
 
       await expect(service.startCheckout(request)).resolves.toEqual({
         status: "check_email",
@@ -286,7 +292,7 @@ describe("CheckoutService", () => {
       await expect(service.startCheckout(request)).resolves.toEqual({
         status: "check_email",
       });
-      expect(checkoutRepository.grantFreeAccess).toHaveBeenCalled();
+      expect(enrollmentsRepository.grantAccess).toHaveBeenCalled();
       expect(emailOutbox.enqueue).not.toHaveBeenCalled();
     });
   });
@@ -307,7 +313,7 @@ describe("CheckoutService", () => {
       ["a new buyer", null],
       ["a refunded buyer", { id: "enrollment", revokedAt, suspendedAt: null }],
     ])("records a pending payment at the current price for %s", async (_label, enrollment) => {
-      checkoutRepository.findEnrollment.mockResolvedValue(enrollment);
+      enrollmentsRepository.findEnrollment.mockResolvedValue(enrollment);
 
       await service.startCheckout(request);
 
@@ -366,7 +372,7 @@ describe("CheckoutService", () => {
       await service.startCheckout(request);
 
       expect(emailOutbox.enqueue).not.toHaveBeenCalled();
-      expect(checkoutRepository.grantFreeAccess).not.toHaveBeenCalled();
+      expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();
     });
 
     it("returns 503 PAYMENT_PROVIDER_UNAVAILABLE when Stripe can't be reached", async () => {

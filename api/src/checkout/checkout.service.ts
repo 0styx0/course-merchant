@@ -20,7 +20,8 @@ import {
   type CheckoutCustomer,
   type PendingPayment,
 } from "./checkout.repository.js";
-import { EnrollmentAccess, enrollmentAccess } from "./enrollment-access.js";
+import { EnrollmentAccess, enrollmentAccess } from "@/enrollments/enrollment-access.js";
+import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 
 // Anyone can start a checkout for any address, so cap how many emails one
 // inbox receives. Over the cap the response is unchanged; nothing is queued.
@@ -69,6 +70,8 @@ export class CheckoutService {
     private readonly prisma: PrismaService,
     @Inject(CheckoutRepository)
     private readonly checkoutRepository: CheckoutRepository,
+    @Inject(EnrollmentsRepository)
+    private readonly enrollmentsRepository: EnrollmentsRepository,
     @Inject(EmailOutboxRepository)
     private readonly emailOutbox: EmailOutboxRepository,
     @Inject(StripeService)
@@ -113,7 +116,7 @@ export class CheckoutService {
         request.customer,
       );
 
-      const enrollment = await this.checkoutRepository.findEnrollment(
+      const enrollment = await this.enrollmentsRepository.findEnrollment(
         tx,
         course.id,
         customer.id,
@@ -227,11 +230,14 @@ export class CheckoutService {
   private async enrollInFreeCourse(
     context: CheckoutContext,
   ): Promise<CheckoutDecision> {
-    const accessGranted = await this.checkoutRepository.grantFreeAccess(
+    const accessGranted = await this.enrollmentsRepository.grantAccess(
       context.tx,
-      context.course.id,
-      context.customer.id,
-      context.now,
+      {
+        courseId: context.course.id,
+        customerId: context.customer.id,
+        paymentId: null,
+        now: context.now,
+      },
     );
 
     // false only if a concurrent request granted access first, and that

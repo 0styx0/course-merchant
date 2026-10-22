@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { describe, expect, it } from "vitest";
 
-import { EnrollmentAccess, enrollmentAccess } from "@/checkout/enrollment-access.js";
+import { EnrollmentAccess, enrollmentAccess } from "@/enrollments/enrollment-access.js";
 
 const at = Temporal.Instant.from("2026-10-21T12:00:00Z");
 
