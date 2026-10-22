@@ -19,6 +19,10 @@ tags:
     description: Administrator-only operations
   - name: Checkout
     description: Buying a course
+  - name: Webhooks
+    description: >
+      Called by third-party services, never by browsers or the web app. Each
+      request is authenticated by the sender's signature rather than a login.
 
 paths:
   /courses:
@@ -531,6 +535,64 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /webhooks/stripe:
+    post:
+      tags:
+        - Webhooks
+      operationId: receiveStripeEvent
+      summary: Receive a payment event from Stripe
+      description: >
+        For Stripe only. Stripe calls this to report what happened to a
+        checkout; it's how the server learns a payment succeeded, and the
+        only way a paid enrollment is created.
+
+
+        The `Stripe-Signature` header must be a valid signature of the exact
+        request body, made with this endpoint's signing secret. Requests
+        without one are rejected with 400.
+
+
+        Handled event types:
+
+        - `checkout.session.completed` with `payment_status` `paid`: the
+        payment succeeds and the buyer is enrolled (or their refunded
+        enrollment reactivated) and emailed their course link. If the buyer
+        already has access, as when they paid twice in two tabs, the payment
+        is refunded automatically instead.
+
+        - `checkout.session.expired`: a payment still pending is marked
+        `expired`.
+
+
+        Other event types are acknowledged with 200 and ignored. Each event
+        is processed at most once, so a repeated delivery returns 200 and
+        changes nothing. A 500 means the event wasn't processed; Stripe
+        retries it later.
+      security: []
+      parameters:
+        - name: Stripe-Signature
+          in: header
+          required: true
+          description: Stripe's signature of the request body.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: >
+                A Stripe Event object. Its shape is defined by Stripe; see
+                Stripe's API reference for events.
+      responses:
+        "200":
+          description: Event received, whether processed now, processed before, or ignored.
+        "400":
+          $ref: "#/components/responses/InvalidWebhookSignature"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -711,6 +773,19 @@ components:
                 title: Payment provider unavailable
                 detail: Payments can't be taken right now. Try again later.
                 code: PAYMENT_PROVIDER_UNAVAILABLE
+
+    InvalidWebhookSignature:
+      description: The request's signature is missing or doesn't match its body.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            invalidSignature:
+              value:
+                title: Invalid webhook signature
+                detail: The Stripe-Signature header doesn't match the request body.
+                code: INVALID_WEBHOOK_SIGNATURE
 
     InternalServerError:
       description: Internal server error.

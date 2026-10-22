@@ -193,6 +193,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/webhooks/stripe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a payment event from Stripe
+         * @description For Stripe only. Stripe calls this to report what happened to a checkout; it's how the server learns a payment succeeded, and the only way a paid enrollment is created.
+         *
+         *     The `Stripe-Signature` header must be a valid signature of the exact request body, made with this endpoint's signing secret. Requests without one are rejected with 400.
+         *
+         *     Handled event types:
+         *     - `checkout.session.completed` with `payment_status` `paid`: the payment succeeds and the buyer is enrolled (or their refunded enrollment reactivated) and emailed their course link. If the buyer already has access, as when they paid twice in two tabs, the payment is refunded automatically instead.
+         *     - `checkout.session.expired`: a payment still pending is marked `expired`.
+         *
+         *     Other event types are acknowledged with 200 and ignored. Each event is processed at most once, so a repeated delivery returns 200 and changes nothing. A 500 means the event wasn't processed; Stripe retries it later.
+         */
+        post: operations["receiveStripeEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -566,6 +594,15 @@ export interface components {
                 "application/problem+json": components["schemas"]["ProblemDetails"];
             };
         };
+        /** @description The request's signature is missing or doesn't match its body. */
+        InvalidWebhookSignature: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
         /** @description Internal server error. */
         InternalServerError: {
             headers: {
@@ -809,6 +846,33 @@ export interface operations {
                 };
             };
             404: components["responses"]["CheckoutNotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    receiveStripeEvent: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stripe's signature of the request body. */
+                "Stripe-Signature": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Event received, whether processed now, processed before, or ignored. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["InvalidWebhookSignature"];
             500: components["responses"]["InternalServerError"];
         };
     };

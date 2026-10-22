@@ -20,6 +20,10 @@ export enum ErrorCodeCheckout {
     PAYMENT_PROVIDER_UNAVAILABLE = "PAYMENT_PROVIDER_UNAVAILABLE",
 }
 
+export enum ErrorCodeWebhook {
+    INVALID_WEBHOOK_SIGNATURE = "INVALID_WEBHOOK_SIGNATURE",
+}
+
 // Codes for each entry of a validation response's `errors`. They are generic;
 // the entry's `field` says which field failed.
 export enum FieldErrorCode {
@@ -42,9 +46,15 @@ export const ErrorCode = {
     ...ErrorCodeGeneric,
     ...ErrorCodeValidation,
     ...ErrorCodeCheckout,
+    ...ErrorCodeWebhook,
 };
 
-export type ErrorCode = ErrorCodeCourseGet | ErrorCodeGeneric | ErrorCodeValidation | ErrorCodeCheckout;
+export type ErrorCode =
+    | ErrorCodeCourseGet
+    | ErrorCodeGeneric
+    | ErrorCodeValidation
+    | ErrorCodeCheckout
+    | ErrorCodeWebhook;
 
 interface ErrorDefinition {
     status: HttpStatus;
@@ -83,6 +93,10 @@ export const ERROR_DEFINITIONS = {
     [ErrorCode.PAYMENT_PROVIDER_UNAVAILABLE]: {
         status: HttpStatus.SERVICE_UNAVAILABLE,
         title: "Payment provider unavailable",
+    },
+    [ErrorCode.INVALID_WEBHOOK_SIGNATURE]: {
+        status: HttpStatus.BAD_REQUEST,
+        title: "Invalid webhook signature",
     },
 } satisfies Record<ErrorCode, ErrorDefinition>;
 
