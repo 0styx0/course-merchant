@@ -268,6 +268,18 @@ describe("CheckoutRepository (integration)", () => {
       });
     });
 
+    it("finds a payment's status by the provider's checkout id", async () => {
+      const pending = await repository.createPendingPayment(db, await makePaymentInput());
+      await repository.saveProviderCheckoutId(db, pending.id, "cs_test_123");
+
+      expect(
+        await repository.findPaymentStatusByCheckoutId(db, "stripe", "cs_test_123"),
+      ).toBe("pending");
+      expect(
+        await repository.findPaymentStatusByCheckoutId(db, "stripe", "cs_test_other"),
+      ).toBeNull();
+    });
+
     it("saves the provider's checkout id on the payment", async () => {
       const pending = await repository.createPendingPayment(db, await makePaymentInput());
 

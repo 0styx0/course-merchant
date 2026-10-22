@@ -1,7 +1,12 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 
-import type { DbScope, StartCheckoutRequest, StartCheckoutResponse } from "types.js";
+import type {
+  CheckoutStatusResponse,
+  DbScope,
+  StartCheckoutRequest,
+  StartCheckoutResponse,
+} from "types.js";
 import { ApiException } from "@/common/errors/api.exception.js";
 import { ErrorCodeCheckout } from "@/common/errors/error-codes.js";
 import { PAYMENTS_CONFIG, type PaymentsConfig } from "@/config/payments-config.js";
@@ -118,6 +123,26 @@ export class CheckoutService {
 
       return this.respondToAccess(enrollmentAccess(enrollment), context);
     });
+  }
+
+  /**
+   * How a paid checkout ended, for the page the buyer returns to. Read from
+   * our own records, so it only reports what Stripe has confirmed to us.
+   */
+  async getCheckoutStatus(checkoutId: string): Promise<CheckoutStatusResponse> {
+    const status = await this.checkoutRepository.findPaymentStatusByCheckoutId(
+      this.prisma.db,
+      "stripe",
+      checkoutId,
+    );
+
+    if (!status) {
+      throw new ApiException(ErrorCodeCheckout.CHECKOUT_NOT_FOUND, {
+        detail: `No checkout exists with ID ${checkoutId}.`,
+      });
+    }
+
+    return { status };
   }
 
   /**

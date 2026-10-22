@@ -8,6 +8,8 @@ import type { DbScope } from "types.js";
 
 type PaymentProvider = Models.public_Payment["provider"];
 
+export type PaymentStatus = Models.public_Payment["status"];
+
 /** A course the public can see, with what it costs right now. */
 export type CheckoutCourse = {
   id: string;
@@ -182,5 +184,22 @@ export class CheckoutRepository {
     await scope.orm.public.Payment
       .where((payment) => payment.id.eq(paymentId))
       .update({ providerCheckoutId });
+  }
+
+  async findPaymentStatusByCheckoutId(
+    scope: DbScope,
+    provider: PaymentProvider,
+    providerCheckoutId: string,
+  ): Promise<PaymentStatus | null> {
+    const payment = await scope.orm.public.Payment
+      .where((candidate) =>
+        and(
+          candidate.provider.eq(provider),
+          candidate.providerCheckoutId.eq(providerCheckoutId),
+        ),
+      )
+      .first();
+
+    return payment?.status ?? null;
   }
 }

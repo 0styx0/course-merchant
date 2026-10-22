@@ -1,6 +1,10 @@
-import { Body, Controller, HttpCode, HttpStatus, Inject, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Param, Post } from "@nestjs/common";
 
-import type { StartCheckoutRequest, StartCheckoutResponse } from "types.js";
+import type {
+  CheckoutStatusResponse,
+  StartCheckoutRequest,
+  StartCheckoutResponse,
+} from "types.js";
 import { ZodValidationPipe } from "@/courses/pipes/create-course-validation.pipe.js";
 import { CheckoutService } from "./checkout.service.js";
 import { startCheckoutRequestSchema } from "./validation/start-checkout-request.schema.js";
@@ -24,5 +28,13 @@ export class CheckoutController {
     request: StartCheckoutRequest,
   ): Promise<StartCheckoutResponse> {
     return this.checkoutService.startCheckout(request);
+  }
+
+  // an unknown or malformed id simply isn't found, so it needs no format check
+  @Get(":checkoutId")
+  getCheckoutStatus(
+    @Param("checkoutId") checkoutId: string,
+  ): Promise<CheckoutStatusResponse> {
+    return this.checkoutService.getCheckoutStatus(checkoutId);
   }
 }

@@ -52,6 +52,7 @@ describe("CheckoutService", () => {
     grantFreeAccess: ReturnType<typeof vi.fn>;
     createPendingPayment: ReturnType<typeof vi.fn>;
     saveProviderCheckoutId: ReturnType<typeof vi.fn>;
+    findPaymentStatusByCheckoutId: ReturnType<typeof vi.fn>;
   };
   let emailOutbox: {
     enqueue: ReturnType<typeof vi.fn>;
@@ -77,6 +78,7 @@ describe("CheckoutService", () => {
         currency: "USD",
       }),
       saveProviderCheckoutId: vi.fn().mockResolvedValue(undefined),
+      findPaymentStatusByCheckoutId: vi.fn().mockResolvedValue("pending"),
     };
     emailOutbox = {
       enqueue: vi.fn().mockResolvedValue(undefined),
@@ -386,6 +388,39 @@ describe("CheckoutService", () => {
       stripe.createCheckoutSession.mockRejectedValue(error);
 
       await expect(service.startCheckout(request)).rejects.toBe(error);
+    });
+  });
+
+  describe("getCheckoutStatus", () => {
+    it.each(["pending", "succeeded", "expired", "refunded"])(
+      "reports a %s payment",
+      async (status) => {
+        checkoutRepository.findPaymentStatusByCheckoutId.mockResolvedValue(status);
+
+        await expect(service.getCheckoutStatus("cs_test_123")).resolves.toEqual({
+          status,
+        });
+      },
+    );
+
+    it("looks the payment up by its Stripe session id", async () => {
+      await service.getCheckoutStatus("cs_test_123");
+
+      expect(
+        checkoutRepository.findPaymentStatusByCheckoutId,
+      ).toHaveBeenCalledExactlyOnceWith(prisma.db, "stripe", "cs_test_123");
+    });
+
+    it("returns 404 CHECKOUT_NOT_FOUND for an unknown session", async () => {
+      checkoutRepository.findPaymentStatusByCheckoutId.mockResolvedValue(null);
+
+      await expect(service.getCheckoutStatus("cs_test_unknown")).rejects.toMatchObject({
+        status: 404,
+        response: {
+          code: "CHECKOUT_NOT_FOUND",
+          detail: "No checkout exists with ID cs_test_unknown.",
+        },
+      });
     });
   });
 });
