@@ -28,12 +28,8 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
   Remaining:
   - [x] `StripeService.refundPayment`, called by `FulfillmentService.fulfillCheckout` after the transaction commits for a double purchase.
   - [x] `ExpiryService` for `checkout.session.expired`, with `expiredCheckoutFromEvent` beside the completed mapper.
-  - [ ] **Next: `StripeWebhookController`**:
-    - `POST /v1/webhooks/stripe` per the contract, in a module of its own;
-    - verify with `StripeService.verifyWebhookEvent` and map `InvalidWebhookSignatureError` to 400;
-    - dispatch by event type: `completed` to `FulfillmentService` through `completedCheckoutFromEvent`, `expired` to `ExpiryService` through `expiredCheckoutFromEvent`, and acknowledge any other type with 200;
-    - an e2e test using signed events (`generateTestHeaderString`).
-  - [ ] A manual check with `stripe listen` (see *Launch*).
+  - [x] `StripeWebhookController` in `WebhooksModule`: verifies the signature, dispatches `completed` and `expired`, acknowledges other types.
+  - [ ] **Next: a manual check with `stripe listen`** (see *Launch*): forward events to `/v1/webhooks/stripe`, pay with a test card, and confirm the enrollment, the queued email and a repeated delivery.
 - [ ] **4. Email delivery:**
   - an outbox worker on a `@nestjs/schedule` interval, retrying with backoff;
   - one provider on a free tier;
@@ -82,7 +78,7 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
 
 An address that has received 5 or more emails in the last 24 hours (counted from `EmailOutbox`) still gets `check_email`, but nothing is queued.
 
-**Webhook (step 3, being built):**
+**Webhook (step 3, built):**
 1. Verify the signature (400 if it's invalid).
 2. In one transaction:
    1. record the event id; if it's already recorded, reply 200 and stop;
@@ -150,6 +146,8 @@ It also covers a payment whose session was never created.
 | Any refund failure is logged and swallowed, not just `PaymentProviderUnavailableError` | The event is already recorded, so Stripe redelivering it would do nothing; the sweeper owns the retry | Failing the webhook so Stripe retries |
 | The refund uses `reason: "duplicate"` and `metadata.paymentId` | Labels it in the Dashboard for the accountant and shows our id; `charge.refunded` still finds the payment by payment intent, not by this metadata | No reason or metadata |
 | Fulfillment emails aren't capped per address | Only a real payment queues them, and a buyer who paid must get the link | Reusing checkout's cap |
+| The controller maps `InvalidWebhookSignatureError` to `INVALID_WEBHOOK_SIGNATURE` itself, and a missing `rawBody` is verified as an empty body | Only this controller needs the mapping; an empty body fails the signature check, so there is no separate case | An exception filter; a special case for a missing body |
+| Unhandled event types are acknowledged with 200 | Stripe retries non-2xx for days; an event we don't act on needs no retry | 400 or 501 |
 | Card only, no delayed methods | Payment is confirmed instantly, so there's no "processing" state | ACH and bank debits |
 | Currencies limited to the payout currency (`ALLOWED_CURRENCIES`, default USD) | Any other currency adds a conversion fee to every sale | Accepting any currency |
 
