@@ -17,23 +17,23 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
   - `GET /v1/checkout-sessions/{id}` status;
   - `StripeService.createCheckoutSession`;
   - email queueing.
-- [ ] **3. Webhooks and fulfillment.** Done so far:
+- [x] **3. Webhooks and fulfillment:**
   - [x] contract entry for `POST /v1/webhooks/stripe`;
   - [x] signing secret and `rawBody`;
   - [x] `StripeService.verifyWebhookEvent`;
   - [x] `EnrollmentsRepository`, shared by checkout and fulfillment.
   - [x] `PaymentsRepository`: event dedupe, lookup by our payment id, and guarded `pending →` transitions.
   - [x] `FulfillmentService` for `checkout.session.completed`, with `completedCheckoutFromEvent` reading Stripe's event in our terms.
-
-  Remaining:
   - [x] `StripeService.refundPayment`, called by `FulfillmentService.fulfillCheckout` after the transaction commits for a double purchase.
   - [x] `ExpiryService` for `checkout.session.expired`, with `expiredCheckoutFromEvent` beside the completed mapper.
   - [x] `StripeWebhookController` in `WebhooksModule`: verifies the signature, dispatches `completed` and `expired`, acknowledges other types.
-  - [ ] **Next: a manual check with `stripe listen`** (see *Launch*): forward events to `/v1/webhooks/stripe`, pay with a test card, and confirm the enrollment, the queued email and a repeated delivery.
+
+  The manual `stripe listen` check is deferred to the *Launch* checklist, to run through the web checkout once step 5 exists.
 - [ ] **4. Email delivery:**
-  - an outbox worker on a `@nestjs/schedule` interval, retrying with backoff;
-  - one provider on a free tier;
-  - templates for each `EmailKind`.
+  - [x] `EmailOutboxRepository.findDue`, `markSent` and `markFailedAttempt`, with the backoff in `retry-policy.ts`.
+  - [ ] **Next: templates for each `EmailKind` and a sender for one provider on a free tier.** Pick the provider and the template approach before coding.
+  - [ ] `EmailWorker` on a `@nestjs/schedule` interval: sends due emails one at a time, skips a tick while the previous one is still running.
+  - [ ] Admin course view shows each enrollment's email status (pending, sent, failed). This is the only alert for a failed email. It needs a contract change first.
 - [ ] **5. Web:**
   - buy form on the course page;
   - `/checkout/success`, polling the status endpoint;
@@ -148,6 +148,10 @@ It also covers a payment whose session was never created.
 | Fulfillment emails aren't capped per address | Only a real payment queues them, and a buyer who paid must get the link | Reusing checkout's cap |
 | The controller maps `InvalidWebhookSignatureError` to `INVALID_WEBHOOK_SIGNATURE` itself, and a missing `rawBody` is verified as an empty body | Only this controller needs the mapping; an empty body fails the signature check, so there is no separate case | An exception filter; a special case for a missing body |
 | Unhandled event types are acknowledged with 200 | Stripe retries non-2xx for days; an event we don't act on needs no retry | 400 or 501 |
+| Manual `stripe listen` check deferred to *Launch*, run through the web checkout | The frontend makes the requests better than hand-made ones, and one pass then covers every layer | Running it now with hand-made requests |
+| Outbox retries: 1 minute doubling to a 1-hour cap, 8 attempts, then `failed` | About 2 hours of retrying covers a provider outage; the policy is a pure function | A fixed delay; retrying forever |
+| No lease on emails being sent: one process, and the worker skips a tick while the last is running | Simplest. Accepted cost: a crash between the provider accepting an email and `markSent` sends it twice, and two API instances would double-send | A lease via `nextAttemptAt`; `FOR UPDATE SKIP LOCKED` |
+| A `failed` email stays in the table with no owner alert; the admin course view shows email status | One place to look, nothing extra to run | Emailing or paging the owner |
 | Card only, no delayed methods | Payment is confirmed instantly, so there's no "processing" state | ACH and bank debits |
 | Currencies limited to the payout currency (`ALLOWED_CURRENCIES`, default USD) | Any other currency adds a conversion fee to every sale | Accepting any currency |
 

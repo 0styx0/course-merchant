@@ -4,8 +4,10 @@ import { and } from "@prisma/orm-postgres/orm-client";
 
 import type { Models } from "@/prisma/contract.js";
 import type { DbScope } from "types.js";
+import { nextAttemptAfterFailure } from "./retry-policy.js";
 
 export type EmailKind = Models.public_EmailOutbox["kind"];
+export type OutboxEmail = Models.public_EmailOutbox;
 
 // Payloads hold ids, not rendered content, so an email always shows the
 // course's current details (such as an updated content link) when it's sent.
@@ -56,5 +58,51 @@ export class EmailOutboxRepository {
     ).aggregate((aggregate) => ({ queued: aggregate.count() }));
 
     return queued;
+  }
+
+  /** Pending emails whose next attempt is due, oldest first. */
+  async findDue(
+    scope: DbScope,
+    now: Temporal.Instant,
+    limit: number,
+  ): Promise<OutboxEmail[]> {
+    return scope.orm.public.EmailOutbox.where((email) =>
+      and(email.status.eq("pending"), email.nextAttemptAt.lte(now)),
+    )
+      .orderBy((email) => email.createdAt.asc())
+      .limit(limit)
+      .all();
+  }
+
+  async markSent(
+    scope: DbScope,
+    emailId: string,
+    sentAt: Temporal.Instant,
+  ): Promise<void> {
+    await scope.orm.public.EmailOutbox.where((email) =>
+      and(email.id.eq(emailId), email.status.eq("pending")),
+    ).updateAndCount({ status: "sent", sentAt });
+  }
+
+  /**
+   * Counts a failed send and schedules the retry, or marks the email failed
+   * once its attempts are used up.
+   */
+  async markFailedAttempt(
+    scope: DbScope,
+    email: OutboxEmail,
+    error: string,
+    now: Temporal.Instant,
+  ): Promise<void> {
+    const attempts = email.attempts + 1;
+    const nextAttemptAt = nextAttemptAfterFailure(attempts, now);
+
+    await scope.orm.public.EmailOutbox.where((candidate) =>
+      and(candidate.id.eq(email.id), candidate.status.eq("pending")),
+    ).updateAndCount({
+      attempts,
+      lastError: error,
+      ...(nextAttemptAt ? { nextAttemptAt } : { status: "failed" }),
+    });
   }
 }
