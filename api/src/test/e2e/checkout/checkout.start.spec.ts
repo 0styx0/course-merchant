@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { db } from "@/prisma/db.js";
 import { createPricedCourse } from "@/test/course-fixtures.js";
-import { createE2eApp } from "../e2e-helpers.js";
+import { createE2eApp, httpServer } from "../e2e-helpers.js";
 import { useStripeMock } from "../stripe-mock.js";
 
 // stripe-mock returns the same canned page for every session
@@ -38,9 +38,7 @@ describe("POST /v1/checkout-sessions (e2e)", () => {
   }
 
   function startCheckout(body: object) {
-    return request(app.getHttpServer())
-      .post("/v1/checkout-sessions")
-      .send(body);
+    return request(httpServer(app)).post("/v1/checkout-sessions").send(body);
   }
 
   const customer = { name: "Ada Lovelace", email: "ada@example.com" };

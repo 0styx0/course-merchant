@@ -12,7 +12,4 @@ if (!courseListHandler) {
   throw new Error(`[MSW Setup] Unknown MOCK_COURSES scenario: ${scenario}`);
 }
 
-export const server = setupServer(
-  courseListHandler,
-  courseByIdHandler
-);
+export const server = setupServer(courseListHandler, courseByIdHandler);

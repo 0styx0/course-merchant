@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { instant } from "../../../test/test-helpers.js";
-import type { CoursesRepository } from "../../courses.repository/courses.repository.js";
 import { AdminCoursesService } from "@/courses/admin-courses.service.js";
 import { toAdminCourseResponse } from "@/courses/courses.mapper.js";
 import {

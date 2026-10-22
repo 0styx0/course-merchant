@@ -74,10 +74,10 @@ function isNumeric(origin: string): boolean {
 function getValidationCode(
   issue: z.core.$ZodIssueCustom,
 ): FieldErrorCode | undefined {
-  const code = issue.params?.validationCode;
+  const code: unknown = issue.params?.validationCode;
 
   // undefined = fallback in the caller
-  return Object.values(FieldErrorCode).includes(code) ? code : undefined;
+  return Object.values(FieldErrorCode).find((known) => known === code);
 }
 
 export function toJsonPointer(path: PropertyKey[]): string {

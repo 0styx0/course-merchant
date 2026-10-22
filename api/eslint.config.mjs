@@ -1,12 +1,16 @@
 // @ts-check
-import eslint from "@eslint/js.js";
+import eslint from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier";
-import globals from "globals.js";
-import tseslint from "typescript-eslint.js";
+import globals from "globals";
+import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["eslint.config.mjs"],
+    ignores: [
+      "eslint.config.mjs",
+      "src/generated/**",
+      "src/prisma/contract.d.ts",
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -17,7 +21,7 @@ export default tseslint.config(
         ...globals.node,
         ...globals.jest,
       },
-      sourceType: "commonjs",
+      sourceType: "module",
       parserOptions: {
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
@@ -29,6 +33,16 @@ export default tseslint.config(
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-floating-promises": "warn",
       "@typescript-eslint/no-unsafe-argument": "warn",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_" },
+      ],
     },
+  },
+  {
+    // vitest's asymmetric matchers (expect.any, expect.objectContaining, ...)
+    // are typed `any`, so every use inside an expected object would be flagged
+    files: ["**/*.spec.ts"],
+    rules: { "@typescript-eslint/no-unsafe-assignment": "off" },
   },
 );

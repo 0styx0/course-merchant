@@ -17,30 +17,26 @@ type InternalServerErrorResponse =
 
 export const courseByIdUrl = `${apiBaseUrl}/v1/courses/:courseId`;
 
-export const courseResponse: GetCourseResponse =
-  coursesResponse.courses[0];
+export const courseResponse: GetCourseResponse = coursesResponse.courses[0];
 
 export const courseByIdSuccess = http.get(courseByIdUrl, () => {
   return HttpResponse.json(courseResponse);
 });
 
-export const courseByIdNotFound = http.get(
-  courseByIdUrl,
-  ({ params }) => {
-    const body = {
-      title: "Course not found",
-      detail: `No course exists with ID ${params.courseId}.`,
-      code: "COURSE_NOT_FOUND",
-    } satisfies CourseNotFoundResponse;
+export const courseByIdNotFound = http.get(courseByIdUrl, ({ params }) => {
+  const body = {
+    title: "Course not found",
+    detail: `No course exists with ID ${params.courseId}.`,
+    code: "COURSE_NOT_FOUND",
+  } satisfies CourseNotFoundResponse;
 
-    return HttpResponse.json(body, {
-      status: 404,
-      headers: {
-        "Content-Type": "application/problem+json",
-      },
-    });
-  },
-);
+  return HttpResponse.json(body, {
+    status: 404,
+    headers: {
+      "Content-Type": "application/problem+json",
+    },
+  });
+});
 
 export const courseByIdInvalidId = http.get(courseByIdUrl, ({ params }) => {
   const body = {

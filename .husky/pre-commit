@@ -1,5 +1,8 @@
 #!/usr/bin/env sh
 
+# format staged files (re-staged automatically)
+yarn lint-staged
+
 # run type checking for both modules
 yarn --cwd api generate:api-types
 yarn --cwd web generate:api-types

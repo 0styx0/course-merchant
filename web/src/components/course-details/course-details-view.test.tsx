@@ -35,7 +35,7 @@ describe("CourseDetailsView", () => {
       screen.getByRole("heading", {
         level: 1,
         name: "React Fundamentals",
-      })
+      }),
     ).toBeVisible();
 
     expect(screen.getByText("Learn the fundamentals of React.")).toBeVisible();
@@ -44,10 +44,10 @@ describe("CourseDetailsView", () => {
 
     const dateFormatter = formatDate("America/New_York");
     const formattedStart = dateFormatter.format(
-      new Date("2026-10-01T14:00:00-04:00")
+      new Date("2026-10-01T14:00:00-04:00"),
     );
     const formattedEnd = dateFormatter.format(
-      new Date("2026-10-01T16:00:00-04:00")
+      new Date("2026-10-01T16:00:00-04:00"),
     );
 
     const startTime = screen.getByText(formattedStart);
@@ -92,10 +92,10 @@ describe("CourseDetailsView", () => {
     render(<CourseDetailsView result={result} />);
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Internal server error"
+      "Internal server error",
     );
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "An unexpected error occurred."
+      "An unexpected error occurred.",
     );
 
     expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();

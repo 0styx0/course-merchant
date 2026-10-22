@@ -11,7 +11,6 @@ import { toAdminCourseResponse } from "./courses.mapper.js";
 import {
   AdminCoursesRepository,
   CourseRepositoryCreateInput,
-  CourseRepositoryModelAdmin,
 } from "./courses.repository/admin-courses.repository.js";
 import {
   findPriceChanges,

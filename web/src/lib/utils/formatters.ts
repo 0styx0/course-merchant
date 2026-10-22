@@ -6,7 +6,6 @@ export function formatPrice(amount: number, currency: string) {
 }
 
 export function formatDate(timeZone: string) {
-
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: "short",

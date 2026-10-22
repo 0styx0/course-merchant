@@ -22,12 +22,11 @@ const course: Course = {
 };
 
 describe("CoursesView", () => {
-    
   it("renders the loading state", () => {
     render(<CoursesLoading />);
 
     expect(
-      screen.getByRole("heading", { name: "Courses" })
+      screen.getByRole("heading", { name: "Courses" }),
     ).toBeInTheDocument();
 
     expect(screen.getByText("Loading courses...")).toBeInTheDocument();
@@ -43,21 +42,17 @@ describe("CoursesView", () => {
           error: {
             title: "error title",
             detail: "error details",
-            code: "code_red"
+            code: "code_red",
           },
         }}
-      />
+      />,
     );
 
     expect(
-      screen.getByRole("heading", { name: "Courses" })
+      screen.getByRole("heading", { name: "Courses" }),
     ).toBeInTheDocument();
 
-    expect(
-      screen.getByText(
-        "error details"
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByText("error details")).toBeInTheDocument();
 
     expect(screen.queryByRole("article")).not.toBeInTheDocument();
   });
@@ -71,15 +66,15 @@ describe("CoursesView", () => {
             courses: [],
           },
         }}
-      />
+      />,
     );
 
     expect(
-      screen.getByRole("heading", { name: "Courses" })
+      screen.getByRole("heading", { name: "Courses" }),
     ).toBeInTheDocument();
 
     expect(
-      screen.getByText("Check back later for new courses.")
+      screen.getByText("Check back later for new courses."),
     ).toBeInTheDocument();
 
     expect(screen.queryByRole("article")).not.toBeInTheDocument();
@@ -100,7 +95,7 @@ describe("CoursesView", () => {
             ],
           },
         }}
-      />
+      />,
     );
 
     const courses = screen.getByRole("region", { name: "Courses" });

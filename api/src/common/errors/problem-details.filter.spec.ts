@@ -1,6 +1,5 @@
 import {
   ArgumentsHost,
-  BadRequestException,
   ForbiddenException,
   HttpException,
   Logger,
@@ -14,10 +13,15 @@ import { ProblemDetailsFilter } from "./problem-details.filter.js";
 import { ValidationException } from "./validation.exception.js";
 
 function run(exception: unknown) {
-  const res: any = { headersSent: false };
-  res.status = vi.fn().mockReturnValue(res);
-  res.type = vi.fn().mockReturnValue(res);
-  res.json = vi.fn().mockReturnValue(res);
+  const res = {
+    headersSent: false,
+    status: vi.fn(),
+    type: vi.fn(),
+    json: vi.fn(),
+  };
+  res.status.mockReturnValue(res);
+  res.type.mockReturnValue(res);
+  res.json.mockReturnValue(res);
 
   const host = {
     switchToHttp: () => ({ getResponse: () => res }),
@@ -69,7 +73,7 @@ describe("ProblemDetailsFilter", () => {
       const { body } = run(
         new ApiException(ErrorCode.INTERNAL_SERVER_ERROR, {
           cause: new Error("secret-db-password"),
-        } as any),
+        } as ConstructorParameters<typeof ApiException>[1]),
       );
 
       expect(JSON.stringify(body)).not.toContain("secret-db-password");

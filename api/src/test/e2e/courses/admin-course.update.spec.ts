@@ -5,7 +5,12 @@ import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createCourse, createCoursePrice } from "@/test/course-fixtures.js";
-import { createE2eApp } from "../e2e-helpers.js";
+import {
+  createE2eApp,
+  httpServer,
+  type TypedResponse,
+} from "../e2e-helpers.js";
+import type { GetCourseAdminResponse, ProblemDetails } from "types.js";
 
 describe("PUT /admin/courses/:courseId (e2e)", () => {
   let app: INestApplication;
@@ -43,7 +48,9 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
   }
 
   async function createViaApi() {
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<GetCourseAdminResponse> = await request(
+      httpServer(app),
+    )
       .post("/v1/admin/courses")
       .send(makeCreateRequest())
       .expect(201);
@@ -52,7 +59,9 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
   }
 
   async function getAdminCourse(courseId: string) {
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<GetCourseAdminResponse> = await request(
+      httpServer(app),
+    )
       .get(`/v1/admin/courses/${courseId}`)
       .expect(200);
 
@@ -90,7 +99,9 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
       status: "published",
     };
 
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<GetCourseAdminResponse> = await request(
+      httpServer(app),
+    )
       .put(`/v1/admin/courses/${created.id}`)
       .send(body)
       .expect(200);
@@ -109,7 +120,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
   it("changes nothing when the loaded course is sent back", async () => {
     const created = await createViaApi();
 
-    await request(app.getHttpServer())
+    await request(httpServer(app))
       .put(`/v1/admin/courses/${created.id}`)
       .send(toUpdateBody(created))
       .expect(200);
@@ -136,7 +147,9 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
 
     const loaded = await getAdminCourse(course.id);
 
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<GetCourseAdminResponse> = await request(
+      httpServer(app),
+    )
       .put(`/v1/admin/courses/${course.id}`)
       .send({ ...toUpdateBody(loaded), description: "Now with hooks" })
       .expect(200);
@@ -147,7 +160,9 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
   it("returns all format errors with JSON pointers", async () => {
     const created = await createViaApi();
 
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<ProblemDetails> = await request(
+      httpServer(app),
+    )
       .put(`/v1/admin/courses/${created.id}`)
       .send({
         ...toUpdateBody(created),
@@ -174,7 +189,9 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
     const created = await createViaApi();
     const past = Temporal.Now.instant().subtract({ hours: 1 }).toString();
 
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<ProblemDetails> = await request(
+      httpServer(app),
+    )
       .put(`/v1/admin/courses/${created.id}`)
       .send({
         ...toUpdateBody(created),
@@ -200,7 +217,9 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
   });
 
   it("returns 400 for a malformed course ID", async () => {
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<ProblemDetails> = await request(
+      httpServer(app),
+    )
       .put("/v1/admin/courses/not-a-uuid")
       .send(makeCreateRequest())
       .expect(400);
@@ -209,7 +228,9 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
   });
 
   it("returns 404 for a nonexistent course", async () => {
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<ProblemDetails> = await request(
+      httpServer(app),
+    )
       .put(`/v1/admin/courses/${randomUUID()}`)
       .send(makeCreateRequest())
       .expect(404);

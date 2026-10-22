@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import type { StartCheckoutRequest } from "types.js";
 import {
@@ -67,9 +67,11 @@ describe("CheckoutService", () => {
   };
   let emailOutbox: {
     enqueue: ReturnType<typeof vi.fn>;
-    countQueuedSince: ReturnType<typeof vi.fn>;
+    countQueuedSince: Mock<EmailOutboxRepository["countQueuedSince"]>;
   };
-  let stripe: { createCheckoutSession: ReturnType<typeof vi.fn> };
+  let stripe: {
+    createCheckoutSession: Mock<StripeService["createCheckoutSession"]>;
+  };
   let prisma: { db: { transaction: ReturnType<typeof vi.fn> } };
   // the order transactions commit and Stripe is called in
   let events: string[];
@@ -100,13 +102,13 @@ describe("CheckoutService", () => {
 
     events = [];
     stripe = {
-      createCheckoutSession: vi.fn(async () => {
+      createCheckoutSession: vi.fn(() => {
         events.push("stripe called");
 
-        return {
+        return Promise.resolve({
           id: "cs_test_123",
           url: "https://checkout.stripe.com/c/pay/cs_test_123",
-        };
+        });
       }),
     };
 

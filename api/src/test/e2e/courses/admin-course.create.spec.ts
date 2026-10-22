@@ -5,7 +5,16 @@ import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { instant, toDatabasePrecision } from "@/test/test-helpers.js";
-import { createE2eApp } from "../e2e-helpers.js";
+import {
+  createE2eApp,
+  httpServer,
+  type TypedResponse,
+} from "../e2e-helpers.js";
+import type {
+  GetCourseAdminResponse,
+  ProblemDetails,
+  ValidationProblemDetails,
+} from "types.js";
 
 describe("POST /admin/courses (e2e)", () => {
   let app: INestApplication;
@@ -42,8 +51,10 @@ describe("POST /admin/courses (e2e)", () => {
     };
   }
 
-  async function getAdminCourse(courseId: string) {
-    return request(app.getHttpServer())
+  async function getAdminCourse(
+    courseId: string,
+  ): Promise<TypedResponse<GetCourseAdminResponse>> {
+    return request(httpServer(app))
       .get(`/v1/admin/courses/${courseId}`)
       .expect(200);
   }
@@ -51,7 +62,9 @@ describe("POST /admin/courses (e2e)", () => {
   it("creates a course with its initial status and price", async () => {
     const body = makeCreateRequest();
 
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<GetCourseAdminResponse> = await request(
+      httpServer(app),
+    )
       .post("/v1/admin/courses")
       .send(body)
       .expect(201);
@@ -106,7 +119,9 @@ describe("POST /admin/courses (e2e)", () => {
       },
     ];
 
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<GetCourseAdminResponse> = await request(
+      httpServer(app),
+    )
       .post("/v1/admin/courses")
       .send(body)
       .expect(201);
@@ -143,7 +158,9 @@ describe("POST /admin/courses (e2e)", () => {
   });
 
   it("returns the new course's URL in the Location header", async () => {
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<GetCourseAdminResponse> = await request(
+      httpServer(app),
+    )
       .post("/v1/admin/courses")
       .send(makeCreateRequest())
       .expect(201);
@@ -156,7 +173,9 @@ describe("POST /admin/courses (e2e)", () => {
   it("returns the private content link to admins", async () => {
     const body = makeCreateRequest();
 
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<GetCourseAdminResponse> = await request(
+      httpServer(app),
+    )
       .post("/v1/admin/courses")
       .send(body)
       .expect(201);
@@ -170,7 +189,9 @@ describe("POST /admin/courses (e2e)", () => {
   it("rejects a currency the store doesn't accept", async () => {
     const body = makeCreateRequest();
 
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<ValidationProblemDetails> = await request(
+      httpServer(app),
+    )
       .post("/v1/admin/courses")
       .send({ ...body, prices: [{ ...body.prices[0], currency: "EUR" }] })
       .expect(400);
@@ -185,7 +206,9 @@ describe("POST /admin/courses (e2e)", () => {
   });
 
   it("rejects the deleted status", async () => {
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<ValidationProblemDetails> = await request(
+      httpServer(app),
+    )
       .post("/v1/admin/courses")
       .send({ ...makeCreateRequest(), status: "deleted" })
       .expect(400);
@@ -202,7 +225,9 @@ describe("POST /admin/courses (e2e)", () => {
       prices: [],
     };
 
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<ProblemDetails> = await request(
+      httpServer(app),
+    )
       .post("/v1/admin/courses")
       .send(body)
       .expect(400);

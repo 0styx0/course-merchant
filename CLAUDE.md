@@ -36,7 +36,9 @@ Web (`web/`):
 - `yarn test:unit` — Vitest + jsdom + Testing Library; single file: `yarn vitest run src/path/to/file.test.tsx`
 - `yarn test:integration` — Playwright (boots `next dev` with `PLAYWRIGHT=1`); single file: `yarn playwright test tests/integration/courses/course.get.spec.ts`
 
-Git hooks (`.husky/`): **pre-commit** regenerates API types in both packages, type-checks both, and runs unit tests for whichever package has staged changes. **pre-push** runs API integration + e2e and web Playwright tests (needs Docker).
+Linting and formatting: ESLint (`yarn lint`, errors fail) then Prettier with a per-package `.prettierrc` (2 spaces; otherwise Prettier defaults). `yarn format` / `yarn format:check` in each package; markdown and generated files are ignored (`.prettierignore`).
+
+Git hooks (`.husky/`): **pre-commit** lints (`eslint --fix`) and formats staged files via lint-staged, then regenerates API types in both packages, type-checks both, and runs unit tests for whichever package has staged changes. **pre-push** runs API integration + e2e and web Playwright tests (needs Docker).
 
 ## Contract-first API
 
@@ -61,7 +63,7 @@ All routes are URI-versioned (`/v1/...`): controllers declare `version: "1"`, an
 - **Migration trap:** the generated `migration.ts` imports `…/contract'` without a suffix; change it to `…/contract.js'` (nodenext). Self-emit (`node migration.ts`) is broken here by a `@prisma/cli-engine` version mismatch ("does not provide an export named 'configSchema'"), so a migration that needs a hand-written data transform needs that fixed first; plain planned migrations don't.
 - Queries use the fluent ORM on `db.orm.public.<Model>` (`.where(c => c.field.eq(x))`, `.include`, `.select`, `.upsert`, `.first()`, `.all()`; combinators like `and` from `@prisma/orm-postgres/orm-client`).
 - Idioms in use: `createAndCount(rows, { onConflict: "skip", conflictOn: [...] })` for insert-if-absent (Postgres `ON CONFLICT DO NOTHING`; 0 means it already existed); `.where(...).update(...)` returns the row or `null`, which makes forward-only state changes safe against races. Don't catch driver errors by code.
-- Timestamps are `Temporal.Instant` (`@js-temporal/polyfill`), not `Date`. The API only emits UTC instants ending in `Z`.
+- Timestamps are `Temporal.Instant` (`@js-temporal/polyfill`), not `Date`. The API only emits UTC instants ending in `Z`. The generated contract types name the global `Temporal` namespace, which TypeScript 5.9 lacks; [temporal-global.d.ts](api/src/temporal-global.d.ts) aliases it to the polyfill, otherwise every timestamp column is `any`.
 - Newer repositories (checkout, email, enrollments) take a `scope: DbScope` (from `types.ts`) as their first argument — either `prisma.db` or the `tx` from `prisma.db.transaction(async (tx) => …)` — so the service owns the transaction and several repositories can write atomically. Never make network calls (e.g. Stripe) inside a transaction.
 
 **Domain rules that span files.**
@@ -78,7 +80,7 @@ All routes are URI-versioned (`/v1/...`): controllers declare `version: "1"`, an
 
 **Tests.** Unit tests sit in `test/unit/` or beside the file; integration tests in `<module>/test/integration/`; e2e in `src/test/e2e/`.
 - Integration/e2e run serially and share `src/test/integration.setup.ts`, which wipes every table before each test in FK order — **add new tables there**.
-- E2E builds the real app with `createE2eApp(overrides)` and hits it with supertest; pass `useStripeMock` / `useUnreachableStripe` (`src/test/e2e/stripe-mock.ts`) so the real SDK talks to stripe-mock. Shared fixtures are in `src/test/course-fixtures.ts`.
+- E2E builds the real app with `createE2eApp(overrides)` and hits it with supertest (`httpServer(app)` and `TypedResponse<Schema>` from `e2e-helpers.ts` keep `res.body` typed); pass `useStripeMock` / `useUnreachableStripe` (`src/test/e2e/stripe-mock.ts`) so the real SDK talks to stripe-mock. Shared fixtures are in `src/test/course-fixtures.ts`.
 
 ## Web architecture
 

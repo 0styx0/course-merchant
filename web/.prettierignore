@@ -1,0 +1,8 @@
+.next
+node_modules
+src/lib/api/generated.ts
+test-results
+playwright-report
+public
+*.md
+yarn.lock

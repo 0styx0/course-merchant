@@ -3,8 +3,6 @@ import { db } from "../prisma/db.js";
 import { instant } from "./test-helpers.js";
 import { Models } from "@/prisma/contract.js";
 
-type Course = Models.public_Course;
-
 export async function createCourse(input: {
   title: string;
   description: string;

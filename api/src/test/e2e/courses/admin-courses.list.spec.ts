@@ -11,7 +11,12 @@ import type { INestApplication } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createE2eApp } from "../e2e-helpers.js";
+import {
+  createE2eApp,
+  httpServer,
+  type TypedResponse,
+} from "../e2e-helpers.js";
+import type { ListCoursesAdminResponse } from "types.js";
 
 describe("Admin Courses API (e2e)", () => {
   let app: INestApplication;
@@ -65,7 +70,9 @@ describe("Admin Courses API (e2e)", () => {
       const changedAt = Temporal.Instant.from("2026-09-29T14:00:00Z");
       await updateCourseStatus(course.id, "published", changedAt);
 
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<ListCoursesAdminResponse> = await request(
+        httpServer(app),
+      )
         .get("/v1/admin/courses")
         .expect("Content-Type", /^application\/json(?:;|$)/)
         .expect(200);
@@ -118,7 +125,7 @@ describe("Admin Courses API (e2e)", () => {
         Temporal.Instant.from(
           response.body.courses.find(
             (item: { id: string }) => item.id === course.id,
-          ).enrollments[0].payment.paidAt,
+          )!.enrollments[0].payment!.paidAt!,
         ),
       ).toEqual(paidAt);
     });
@@ -137,7 +144,9 @@ describe("Admin Courses API (e2e)", () => {
         Temporal.Instant.from("2026-09-29T14:00:00Z"),
       );
 
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<ListCoursesAdminResponse> = await request(
+        httpServer(app),
+      )
         .get("/v1/admin/courses")
         .expect(200);
 
@@ -167,7 +176,9 @@ describe("Admin Courses API (e2e)", () => {
         Temporal.Instant.from("2026-09-29T14:00:00Z"),
       );
 
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<ListCoursesAdminResponse> = await request(
+        httpServer(app),
+      )
         .get("/v1/admin/courses")
         .expect(200);
 
@@ -185,7 +196,9 @@ describe("Admin Courses API (e2e)", () => {
         Temporal.Instant.from("2026-09-29T14:00:00Z"),
       );
 
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<ListCoursesAdminResponse> = await request(
+        httpServer(app),
+      )
         .get("/v1/admin/courses")
         .expect(200);
 
@@ -223,7 +236,9 @@ describe("Admin Courses API (e2e)", () => {
         effectiveAt: Temporal.Instant.from("2026-10-20T00:00:00Z"),
       });
 
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<ListCoursesAdminResponse> = await request(
+        httpServer(app),
+      )
         .get("/v1/admin/courses")
         .expect(200);
 
@@ -238,7 +253,7 @@ describe("Admin Courses API (e2e)", () => {
         (item: { id: string }) => item.id === futureCourse.id,
       );
 
-      expect(futureCourseResult.prices).toEqual([
+      expect(futureCourseResult?.prices).toEqual([
         expect.objectContaining({
           amount: 12900,
           currency: "USD",
@@ -260,7 +275,9 @@ describe("Admin Courses API (e2e)", () => {
         endsAt: Temporal.Instant.from("2026-12-01T20:00:00Z"),
       });
 
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<ListCoursesAdminResponse> = await request(
+        httpServer(app),
+      )
         .get("/v1/admin/courses")
         .expect(200);
 
@@ -273,7 +290,9 @@ describe("Admin Courses API (e2e)", () => {
 
     it("returns an empty list when no courses exist", async () => {
       // This test requires an isolated or cleaned test database.
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<ListCoursesAdminResponse> = await request(
+        httpServer(app),
+      )
         .get("/v1/admin/courses")
         .expect("Content-Type", /^application\/json(?:;|$)/)
         .expect(200);

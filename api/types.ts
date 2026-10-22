@@ -28,4 +28,7 @@ export type CheckoutStatusResponse = components["schemas"]["CheckoutStatus"];
 
 export type ProblemDetails = components["schemas"]["ProblemDetails"];
 
+export type ValidationProblemDetails =
+  components["schemas"]["ValidationProblemDetails"];
+
 export type FieldError = components["schemas"]["FieldError"];

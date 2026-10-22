@@ -1,0 +1,12 @@
+{
+  "api/**/*.ts": [
+    "yarn --cwd api eslint --fix --no-warn-ignored",
+    "yarn --cwd api prettier --write"
+  ],
+  "api/**/*.{mjs,json,yaml,yml}": "yarn --cwd api prettier --write --ignore-unknown",
+  "web/**/*.{ts,tsx,mts,mjs}": [
+    "yarn --cwd web eslint --fix --no-warn-ignored",
+    "yarn --cwd web prettier --write"
+  ],
+  "web/**/*.{json,css,yaml,yml}": "yarn --cwd web prettier --write --ignore-unknown"
+}

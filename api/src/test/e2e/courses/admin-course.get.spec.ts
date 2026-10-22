@@ -10,7 +10,12 @@ import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { instant } from "../../test-helpers.js";
-import { createE2eApp } from "../e2e-helpers.js";
+import {
+  createE2eApp,
+  httpServer,
+  type TypedResponse,
+} from "../e2e-helpers.js";
+import type { GetCourseAdminResponse, ProblemDetails } from "types.js";
 
 describe("Admin Courses Create API (e2e)", () => {
   let app: INestApplication;
@@ -40,7 +45,9 @@ describe("Admin Courses Create API (e2e)", () => {
         },
       );
 
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<GetCourseAdminResponse> = await request(
+        httpServer(app),
+      )
         .get(`/v1/admin/courses/${course.id}`)
         .expect("Content-Type", /^application\/json(?:;|$)/)
         .expect(200);
@@ -87,7 +94,9 @@ describe("Admin Courses Create API (e2e)", () => {
 
       await updateCourseStatus(course.id, "archived", archivedAt);
 
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<GetCourseAdminResponse> = await request(
+        httpServer(app),
+      )
         .get(`/v1/admin/courses/${course.id}`)
         .expect(200);
 
@@ -115,7 +124,9 @@ describe("Admin Courses Create API (e2e)", () => {
 
       await updateCourseStatus(course.id, "published", publishedAt);
 
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<GetCourseAdminResponse> = await request(
+        httpServer(app),
+      )
         .get(`/v1/admin/courses/${course.id}`)
         .expect(200);
 
@@ -142,7 +153,9 @@ describe("Admin Courses Create API (e2e)", () => {
         },
       );
 
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<GetCourseAdminResponse> = await request(
+        httpServer(app),
+      )
         .get(`/v1/admin/courses/${course.id}`)
         .expect(200);
 
@@ -168,7 +181,9 @@ describe("Admin Courses Create API (e2e)", () => {
         },
       );
 
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<GetCourseAdminResponse> = await request(
+        httpServer(app),
+      )
         .get(`/v1/admin/courses/${course.id}`)
         .expect(200);
 
@@ -208,7 +223,9 @@ describe("Admin Courses Create API (e2e)", () => {
         effectiveAt: instant("2026-08-01T00:00:00Z"),
       });
 
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<GetCourseAdminResponse> = await request(
+        httpServer(app),
+      )
         .get(`/v1/admin/courses/${course.id}`)
         .expect(200);
 
@@ -235,7 +252,9 @@ describe("Admin Courses Create API (e2e)", () => {
     });
 
     it("returns 400 for a malformed course ID", async () => {
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<ProblemDetails> = await request(
+        httpServer(app),
+      )
         .get("/v1/admin/courses/not-a-uuid")
         .expect("Content-Type", /^application\/problem\+json(?:;|$)/)
         .expect(400);
@@ -250,7 +269,9 @@ describe("Admin Courses Create API (e2e)", () => {
     it("returns 404 for a nonexistent course", async () => {
       const courseId = randomUUID();
 
-      const response = await request(app.getHttpServer())
+      const response: TypedResponse<ProblemDetails> = await request(
+        httpServer(app),
+      )
         .get(`/v1/admin/courses/${courseId}`)
         .expect("Content-Type", /^application\/problem\+json(?:;|$)/)
         .expect(404);

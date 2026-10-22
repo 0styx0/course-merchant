@@ -79,7 +79,7 @@ function clientDetail(exception: HttpException): string {
   const response = exception.getResponse();
   const message =
     typeof response === "object" && response !== null && "message" in response
-      ? (response as { message: unknown }).message
+      ? response.message
       : exception.message;
 
   return Array.isArray(message) ? message.join("; ") : String(message);

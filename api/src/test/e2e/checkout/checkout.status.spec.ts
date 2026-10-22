@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { db } from "@/prisma/db.js";
 import { createPricedCourse } from "@/test/course-fixtures.js";
-import { createE2eApp } from "../e2e-helpers.js";
+import { createE2eApp, httpServer } from "../e2e-helpers.js";
 import { useStripeMock } from "../stripe-mock.js";
 
 describe("GET /v1/checkout-sessions/:checkoutId (e2e)", () => {
@@ -28,7 +28,7 @@ describe("GET /v1/checkout-sessions/:checkoutId (e2e)", () => {
       { amount: 9900, effectiveAt: now.subtract({ hours: 1 }) },
     );
 
-    await request(app.getHttpServer())
+    await request(httpServer(app))
       .post("/v1/checkout-sessions")
       .send({
         courseId: course.id,
@@ -42,9 +42,7 @@ describe("GET /v1/checkout-sessions/:checkoutId (e2e)", () => {
   }
 
   function getStatus(checkoutId: string) {
-    return request(app.getHttpServer()).get(
-      `/v1/checkout-sessions/${checkoutId}`,
-    );
+    return request(httpServer(app)).get(`/v1/checkout-sessions/${checkoutId}`);
   }
 
   it("reports pending until Stripe confirms the payment", async () => {

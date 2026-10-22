@@ -6,9 +6,9 @@ import { cleanup } from "@testing-library/react";
 
 beforeAll(() => {
   server.listen({
-    onUnhandledRequest: "error"
+    onUnhandledRequest: "error",
   });
-})
+});
 afterEach(() => {
   cleanup();
   server.resetHandlers();

@@ -55,7 +55,6 @@ export const coursesEmpty = http.get(coursesUrl, () => {
   } satisfies CoursesResponse);
 });
 
-
 export const coursesError = http.get(coursesUrl, () => {
   const body = {
     title: "Internal server error",
@@ -76,7 +75,6 @@ export const coursesSlow = http.get(coursesUrl, async () => {
 
   return HttpResponse.json(coursesResponse);
 });
-
 
 export const courseListHandlers = {
   success: coursesSuccess,

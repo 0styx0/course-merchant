@@ -18,5 +18,5 @@ export default defineConfig({
     command: "PLAYWRIGHT=1 yarn dev",
     url: "http://localhost:3000/health",
     reuseExistingServer: !process.env.CI,
-  } ,
+  },
 });

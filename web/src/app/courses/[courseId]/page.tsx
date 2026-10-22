@@ -7,6 +7,5 @@ type CoursePageProps = {
 export default async function CoursePage({ params }: CoursePageProps) {
   const { courseId } = await params;
 
-return (
-  <CourseDetails courseId={courseId} />
-)}
+  return <CourseDetails courseId={courseId} />;
+}

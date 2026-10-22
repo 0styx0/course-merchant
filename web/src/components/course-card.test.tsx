@@ -36,13 +36,9 @@ describe("CourseCard", () => {
 
     expect(screen.getByText("$99.00")).toBeInTheDocument();
 
-    expect(
-      screen.getByText("2026-10-01T14:00:00-04:00"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("2026-10-01T14:00:00-04:00")).toBeInTheDocument();
 
-    expect(
-      screen.getByText("2026-10-01T16:00:00-04:00"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("2026-10-01T16:00:00-04:00")).toBeInTheDocument();
 
     expect(screen.getByText("America/New_York")).toBeInTheDocument();
 

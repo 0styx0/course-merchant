@@ -38,9 +38,9 @@ function serviceWith(
   const fetchFn = vi.fn(
     async (url: string | URL | Request, init?: RequestInit) => {
       const request = {
-        url: String(url),
+        url: url instanceof Request ? url.url : url.toString(),
         headers: new Headers(init?.headers),
-        body: new URLSearchParams(String(init?.body ?? "")),
+        body: new URLSearchParams(init?.body as string | undefined),
       };
 
       requests.push(request);
@@ -50,7 +50,7 @@ function serviceWith(
   );
 
   const stripe = new Stripe("sk_test_unit", {
-    httpClient: Stripe.createFetchHttpClient(fetchFn as typeof fetch),
+    httpClient: Stripe.createFetchHttpClient(fetchFn),
     maxNetworkRetries: 0,
   });
 

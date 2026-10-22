@@ -8,7 +8,12 @@ import type { INestApplication } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { createE2eApp } from "../e2e-helpers.js";
+import {
+  createE2eApp,
+  httpServer,
+  type TypedResponse,
+} from "../e2e-helpers.js";
+import type { ListCoursesResponse } from "types.js";
 
 const NOW = Temporal.Instant.from("2026-09-29T14:00:00Z");
 
@@ -56,7 +61,9 @@ describe("GET /v1/courses (e2e)", () => {
       },
     );
 
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<ListCoursesResponse> = await request(
+      httpServer(app),
+    )
       .get("/v1/courses")
       .expect("Content-Type", /^application\/json(?:;|$)/)
       .expect(200);
@@ -188,7 +195,9 @@ describe("GET /v1/courses (e2e)", () => {
       },
     );
 
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<ListCoursesResponse> = await request(
+      httpServer(app),
+    )
       .get("/v1/courses")
       .expect("Content-Type", /^application\/json(?:;|$)/)
       .expect(200);

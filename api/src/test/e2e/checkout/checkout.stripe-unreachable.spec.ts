@@ -5,8 +5,13 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { db } from "@/prisma/db.js";
 import { createPricedCourse } from "@/test/course-fixtures.js";
-import { createE2eApp } from "../e2e-helpers.js";
+import {
+  createE2eApp,
+  httpServer,
+  type TypedResponse,
+} from "../e2e-helpers.js";
 import { useUnreachableStripe } from "../stripe-mock.js";
+import type { ProblemDetails } from "types.js";
 
 // A separate file because each app shares one database client, which closing
 // the app shuts down: one app per file keeps the others' client open.
@@ -28,7 +33,9 @@ describe("POST /v1/checkout-sessions when Stripe can't be reached (e2e)", () => 
       { amount: 9900, effectiveAt: now.subtract({ hours: 1 }) },
     );
 
-    const response = await request(app.getHttpServer())
+    const response: TypedResponse<ProblemDetails> = await request(
+      httpServer(app),
+    )
       .post("/v1/checkout-sessions")
       .send({
         courseId: course.id,
