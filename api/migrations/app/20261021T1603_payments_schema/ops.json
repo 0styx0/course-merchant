@@ -2,7 +2,7 @@
   {
     "id": "dropCheckConstraint.Payment.Payment_provider_check_9d8d413b",
     "label": "Drop check constraint \"Payment_provider_check_9d8d413b\" on \"Payment\"",
-    "operationClass": "destructive",
+    "operationClass": "widening",
     "target": {
       "id": "postgres",
       "details": {
@@ -44,7 +44,7 @@
   {
     "id": "dropCheckConstraint.Payment.Payment_status_check_e62c59b9",
     "label": "Drop check constraint \"Payment_status_check_e62c59b9\" on \"Payment\"",
-    "operationClass": "destructive",
+    "operationClass": "widening",
     "target": {
       "id": "postgres",
       "details": {
@@ -86,7 +86,7 @@
   {
     "id": "dropConstraint.Payment.Payment_providerCustomerId_fkey",
     "label": "Drop constraint \"Payment_providerCustomerId_fkey\" on \"Payment\"",
-    "operationClass": "destructive",
+    "operationClass": "widening",
     "target": {
       "id": "postgres",
       "details": {
@@ -128,7 +128,7 @@
   {
     "id": "dropIndex.Payment.Payment_providerCustomerId_idx_5b70cca7",
     "label": "Drop index \"Payment_providerCustomerId_idx_5b70cca7\"",
-    "operationClass": "destructive",
+    "operationClass": "widening",
     "target": {
       "id": "postgres",
       "details": {
@@ -246,7 +246,7 @@
   {
     "id": "dropCheckConstraint.ProcessedPaymentEvent.ProcessedPaymentEvent_provider_check_9d8d413b",
     "label": "Drop check constraint \"ProcessedPaymentEvent_provider_check_9d8d413b\" on \"ProcessedPaymentEvent\"",
-    "operationClass": "destructive",
+    "operationClass": "widening",
     "target": {
       "id": "postgres",
       "details": {
@@ -317,9 +317,11 @@
     "postcheck": [
       {
         "description": "verify table \"EmailOutbox\" exists",
-        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
         "params": [
-          "\"public\".\"EmailOutbox\""
+          "\"public\".\"EmailOutbox\"",
+          "r",
+          "p"
         ]
       }
     ]
@@ -363,6 +365,16 @@
           "Enrollment",
           "revokedAt"
         ]
+      },
+      {
+        "description": "verify column \"revokedAt\" has type \"timestamp with time zone\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "Enrollment",
+          "revokedAt",
+          "timestamp with time zone"
+        ]
       }
     ]
   },
@@ -405,6 +417,16 @@
           "Enrollment",
           "suspendedAt"
         ]
+      },
+      {
+        "description": "verify column \"suspendedAt\" has type \"timestamp with time zone\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "Enrollment",
+          "suspendedAt",
+          "timestamp with time zone"
+        ]
       }
     ]
   },
@@ -446,6 +468,16 @@
           "public",
           "Payment",
           "refundedAt"
+        ]
+      },
+      {
+        "description": "verify column \"refundedAt\" has type \"timestamp with time zone\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "Payment",
+          "refundedAt",
+          "timestamp with time zone"
         ]
       }
     ]
@@ -523,17 +555,7 @@
         "sql": "ALTER TABLE \"public\".\"Payment\" ALTER COLUMN \"createdAt\" SET DEFAULT (now())"
       }
     ],
-    "postcheck": [
-      {
-        "description": "verify column \"createdAt\" has a default",
-        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"column_default\" IS NOT NULL)) AS \"result\"",
-        "params": [
-          "public",
-          "Payment",
-          "createdAt"
-        ]
-      }
-    ]
+    "postcheck": []
   },
   {
     "id": "alterNullability.dropNotNull.Payment.providerPaymentId",
@@ -610,12 +632,13 @@
     ],
     "postcheck": [
       {
-        "description": "verify constraint \"Payment_provider_check_ae06b403\" exists",
-        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "description": "verify check constraint \"Payment_provider_check_ae06b403\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4)) AS \"result\"",
         "params": [
           "Payment_provider_check_ae06b403",
           "public",
-          "\"public\".\"Payment\""
+          "\"public\".\"Payment\"",
+          "c"
         ]
       }
     ]
@@ -652,12 +675,13 @@
     ],
     "postcheck": [
       {
-        "description": "verify constraint \"Payment_status_check_3e9c8ca3\" exists",
-        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "description": "verify check constraint \"Payment_status_check_3e9c8ca3\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4)) AS \"result\"",
         "params": [
           "Payment_status_check_3e9c8ca3",
           "public",
-          "\"public\".\"Payment\""
+          "\"public\".\"Payment\"",
+          "c"
         ]
       }
     ]
@@ -694,12 +718,14 @@
     ],
     "postcheck": [
       {
-        "description": "verify constraint \"Payment_provider_providerCheckoutId_key\" exists",
-        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "description": "verify unique constraint \"Payment_provider_providerCheckoutId_key\" exists on (provider, providerCheckoutId)",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb)) AS \"result\"",
         "params": [
           "Payment_provider_providerCheckoutId_key",
           "public",
-          "\"public\".\"Payment\""
+          "\"public\".\"Payment\"",
+          "u",
+          "[\"provider\",\"providerCheckoutId\"]"
         ]
       }
     ]
@@ -736,12 +762,13 @@
     ],
     "postcheck": [
       {
-        "description": "verify constraint \"ProcessedPaymentEvent_provider_check_ae06b403\" exists",
-        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "description": "verify check constraint \"ProcessedPaymentEvent_provider_check_ae06b403\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4)) AS \"result\"",
         "params": [
           "ProcessedPaymentEvent_provider_check_ae06b403",
           "public",
-          "\"public\".\"ProcessedPaymentEvent\""
+          "\"public\".\"ProcessedPaymentEvent\"",
+          "c"
         ]
       }
     ]
@@ -777,10 +804,15 @@
     ],
     "postcheck": [
       {
-        "description": "verify index \"EmailOutbox_recipient_createdAt_idx_08a7b587\" exists",
-        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "description": "verify index \"EmailOutbox_recipient_createdAt_idx_08a7b587\" exists on \"EmailOutbox\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
         "params": [
-          "\"public\".\"EmailOutbox_recipient_createdAt_idx_08a7b587\""
+          "\"public\".\"EmailOutbox_recipient_createdAt_idx_08a7b587\"",
+          "i",
+          "I",
+          "\"public\".\"EmailOutbox\"",
+          "btree",
+          "[\"recipient\",\"createdAt\"]"
         ]
       }
     ]
@@ -816,10 +848,15 @@
     ],
     "postcheck": [
       {
-        "description": "verify index \"EmailOutbox_status_nextAttemptAt_idx_8ba20615\" exists",
-        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "description": "verify index \"EmailOutbox_status_nextAttemptAt_idx_8ba20615\" exists on \"EmailOutbox\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
         "params": [
-          "\"public\".\"EmailOutbox_status_nextAttemptAt_idx_8ba20615\""
+          "\"public\".\"EmailOutbox_status_nextAttemptAt_idx_8ba20615\"",
+          "i",
+          "I",
+          "\"public\".\"EmailOutbox\"",
+          "btree",
+          "[\"status\",\"nextAttemptAt\"]"
         ]
       }
     ]
@@ -855,10 +892,15 @@
     ],
     "postcheck": [
       {
-        "description": "verify index \"Payment_status_createdAt_idx_58610442\" exists",
-        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "description": "verify index \"Payment_status_createdAt_idx_58610442\" exists on \"Payment\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
         "params": [
-          "\"public\".\"Payment_status_createdAt_idx_58610442\""
+          "\"public\".\"Payment_status_createdAt_idx_58610442\"",
+          "i",
+          "I",
+          "\"public\".\"Payment\"",
+          "btree",
+          "[\"status\",\"createdAt\"]"
         ]
       }
     ]

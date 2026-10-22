@@ -11,7 +11,11 @@ Arguments (optional): a design doc area (`payments`, `courses`) or a free-text t
 ## 1. Find the work
 
 - With no argument, read the Status section of each file in `docs/` and take the item marked **Next**. If there is none, or more than one, ask which.
-- Read only what that item needs: the doc's sections about it, and the files it links. Don't explore the codebase broadly.
+- Read what the item needs: the doc's sections about it, and the files it links.
+- Before outlining, look for existing patterns and helpers:
+  - read one existing sibling of each kind of file you'll add (for example an existing repository and its integration spec) and follow its conventions;
+  - for each helper you think you need, grep for an existing one in `src/common/`, `src/test/` and the modules involved, and reuse it.
+- Search for specific things; skip wide, open-ended surveys of the codebase.
 - Run `git status --short`. Leave uncommitted changes from other work alone, and mention them if they touch the same files.
 
 ## 2. Outline, then stop

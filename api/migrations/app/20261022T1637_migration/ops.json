@@ -1,0 +1,41 @@
+[
+  {
+    "id": "dropIndex.CoursePrice.CoursePrice_courseId_effectiveAt_idx_89f66b61",
+    "label": "Drop index \"CoursePrice_courseId_effectiveAt_idx_89f66b61\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "CoursePrice_courseId_effectiveAt_idx_89f66b61",
+        "table": "CoursePrice"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"CoursePrice_courseId_effectiveAt_idx_89f66b61\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"CoursePrice_courseId_effectiveAt_idx_89f66b61\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop index \"CoursePrice_courseId_effectiveAt_idx_89f66b61\"",
+        "sql": "DROP INDEX \"public\".\"CoursePrice_courseId_effectiveAt_idx_89f66b61\"",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"CoursePrice_courseId_effectiveAt_idx_89f66b61\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"CoursePrice_courseId_effectiveAt_idx_89f66b61\""
+        ]
+      }
+    ]
+  }
+]

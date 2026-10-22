@@ -33,7 +33,7 @@ enum CourseStatusName {
 }
 
 model Course {
-  id          Uuid                       @id @default(uuid())
+  id          Uuid                       @id @onCreate(uuid())
   title       String
   description String
   contentUrl  String
@@ -53,7 +53,7 @@ model Course {
 }
 
 model CourseStatus {
-  id        Uuid             @id @default(uuid())
+  id        Uuid             @id @onCreate(uuid())
   courseId  Uuid
   name      CourseStatusName
 
@@ -65,7 +65,7 @@ model CourseStatus {
 }
 
 model CoursePrice {
-  id          Uuid      @id @default(uuid())
+  id          Uuid      @id @onCreate(uuid())
   courseId    Uuid
 
   amount      Int
@@ -78,11 +78,10 @@ model CoursePrice {
   payments    Payment[]
 
   @@unique([courseId, effectiveAt])
-  @@index([courseId, effectiveAt])
 }
 
 model Customer {
-  id                Uuid                       @id @default(uuid())
+  id                Uuid                       @id @onCreate(uuid())
   name              String
   email             String                     @unique
 
@@ -96,7 +95,7 @@ model Customer {
 // one checkout attempt. amount and currency are copied from the price when
 // checkout starts, so later price edits never change what was charged
 model Payment {
-  id                 Uuid            @id @default(uuid())
+  id                 Uuid            @id @onCreate(uuid())
 
   customerId         Uuid
   coursePriceId      Uuid
@@ -130,7 +129,7 @@ model Payment {
 // gives access only while revokedAt and suspendedAt are both null.
 // a repurchase after a refund reactivates the same row
 model Enrollment {
-  id          Uuid      @id @default(uuid())
+  id          Uuid      @id @onCreate(uuid())
   courseId    Uuid
   customerId  Uuid
   // null for free courses
@@ -162,7 +161,7 @@ model ProcessedPaymentEvent {
 // written in the same transaction as the change that triggers the email,
 // so an email is never lost or sent twice
 model EmailOutbox {
-  id            Uuid        @id @default(uuid())
+  id            Uuid        @id @onCreate(uuid())
   kind          EmailKind
   recipient     String
   payload       Json

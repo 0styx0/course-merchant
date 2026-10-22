@@ -1,8 +1,8 @@
 #!/usr/bin/env -S node
-import type { Contract as Start } from '../../snapshots/2154fe7def425e5940a8d2245914496f163d3ac7f6bdfe1c74be08e2bf96b5a5/contract.js';
-import startContract from '../../snapshots/2154fe7def425e5940a8d2245914496f163d3ac7f6bdfe1c74be08e2bf96b5a5/contract.json' with { type: 'json' };
-import type { Contract as End } from '../../snapshots/6a69acbae0b46328828144e14f31137dc85aad16b8283d8b0fa0e923a559e6b0/contract.js';
-import endContract from '../../snapshots/6a69acbae0b46328828144e14f31137dc85aad16b8283d8b0fa0e923a559e6b0/contract.json' with { type: 'json' };
+import type { Contract as Start } from '../../snapshots/5176033ef8832376160b10847a41b9bb3760ae808596b4420ccbd5e7e8bb5509/contract.js';
+import startContract from '../../snapshots/5176033ef8832376160b10847a41b9bb3760ae808596b4420ccbd5e7e8bb5509/contract.json' with { type: 'json' };
+import type { Contract as End } from '../../snapshots/a7ac2c29656f076d765668c1b715305057fd7623b36c11ceab4d4380ccbd5485/contract.js';
+import endContract from '../../snapshots/a7ac2c29656f076d765668c1b715305057fd7623b36c11ceab4d4380ccbd5485/contract.json' with { type: 'json' };
 import {
   Migration,
   MigrationCLI,
@@ -111,8 +111,10 @@ export default class M extends Migration<Start, End> {
       this.setDefault({
         schema: 'public',
         table: 'Payment',
-        column: 'createdAt',
-        defaultSql: 'DEFAULT (now())',
+        column: col('createdAt', 'timestamptz', {
+          default: fn('now()'),
+          codecRef: { codecId: 'pg/timestamptz-temporal@1' },
+        }),
       }),
       this.dropNotNull({ schema: 'public', table: 'Payment', column: 'providerPaymentId' }),
       this.addCheckConstraint({
