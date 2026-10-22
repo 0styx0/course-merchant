@@ -16,7 +16,8 @@ export async function createE2eApp(
     }),
   ).compile();
 
-  const app = moduleRef.createNestApplication();
+  // same as main.ts, so webhook signatures can be checked in tests
+  const app = moduleRef.createNestApplication({ rawBody: true });
 
   configureApp(app);
 

@@ -19,6 +19,7 @@ const PAYMENT_ID = "8b0e1f5c-0000-4000-8000-000000000004";
 
 const config: PaymentsConfig = {
   stripeSecretKey: "sk_test_unit",
+  stripeWebhookSecret: "whsec_unit",
   webBaseUrl: "https://courses.example.com",
 };
 

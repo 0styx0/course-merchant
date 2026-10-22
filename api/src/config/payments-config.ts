@@ -7,12 +7,18 @@ const paymentsEnvSchema = z.object({
   STRIPE_SECRET_KEY: z
     .string()
     .regex(/^(sk|rk)_(test|live)_/, "must be a Stripe secret or restricted key"),
+  // proves a webhook request really came from Stripe. Each webhook endpoint
+  // (and each `stripe listen` session) has its own
+  STRIPE_WEBHOOK_SECRET: z
+    .string()
+    .regex(/^whsec_/, "must be a Stripe webhook signing secret"),
   // the public site buyers return to after paying
   WEB_BASE_URL: z.url({ protocol: /^https?$/ }),
 });
 
 export type PaymentsConfig = {
   stripeSecretKey: string;
+  stripeWebhookSecret: string;
   webBaseUrl: string;
 };
 
@@ -37,6 +43,7 @@ export function loadPaymentsConfig(
 
   return {
     stripeSecretKey: result.data.STRIPE_SECRET_KEY,
+    stripeWebhookSecret: result.data.STRIPE_WEBHOOK_SECRET,
     webBaseUrl: result.data.WEB_BASE_URL.replace(/\/$/, ""),
   };
 }
