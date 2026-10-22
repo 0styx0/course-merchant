@@ -65,26 +65,24 @@ export interface paths {
          * Create a course
          * @description Creates a course. Requires an administrator.
          *
-         *     All fields are required except `status`. The server validates every field and reports all failures at once in the `errors` array of a 400 response, so clients can display every problem together.
+         *     All fields are required. The server validates every field and reports all failures at once in the `errors` array of a 400 response, so clients can display every problem together.
          *
          *     Validation rules:
          *     - `name`: 1 to 100 characters.
          *     - `description`: 1 to 5,000 characters.
          *     - `schedule.timeZone`: must be a valid IANA time zone identifier.
-         *     - `schedule.startTime`: must be an RFC 3339 date-time with a UTC offset, and must be now or in the future.
-         *     - `schedule.endTime`: must be an RFC 3339 date-time with a UTC offset, in the future, and after `startTime`.
-         *     - `schedule.startTime` and `schedule.endTime`: the UTC offset must match the offset `timeZone` observes at that instant. For example, `2026-07-01T18:00:00-05:00` is rejected for `America/New_York`, which is at -04:00 in July. A local time skipped by a daylight saving change cannot match any offset and is rejected the same way.
+         *     - `schedule.startTime`: must be an RFC 3339 date-time in UTC (ending in `Z`), and must be now or in the future.
+         *     - `schedule.endTime`: must be an RFC 3339 date-time in UTC (ending in `Z`), in the future, and after `startTime`.
          *     - `prices`: at least one entry, and no two entries may share the same `effectiveAt`.
-         *     - `prices[].currency`: must be an existing ISO 4217 currency code.
-         *     - `prices[].amount`: must be at least 50 (fifty cents for USD), because the payment processor does not accept smaller charges.
-         *     - `prices[].effectiveAt`: must be now or in the future.
-         *     - `status`: optional, either `published` or `archived`. Defaults to `published`.
+         *     - `contentUrl`: an absolute `http` or `https` URL, up to 2,048 characters. It is sent to buyers and never shown publicly.
+         *     - `prices[].currency`: must be a currency the store accepts. This is the Stripe account's payout currency, USD unless the server is configured otherwise, because charging in any other currency adds a conversion fee to every sale.
+         *     - `prices[].amount`: either 0 (free) or at least 50 (fifty cents for USD), because the payment processor does not accept smaller charges.
+         *     - `prices[].effectiveAt`: must be an RFC 3339 date-time in UTC (ending in `Z`), and must be now or in the future.
+         *     - `status`: see #/components/schemas/CreateCourseStatus
          *
          *     A course is publicly visible only when its `status` is `published` and a price is in effect. If every entry in `prices` has a future `effectiveAt`, the course is hidden from `listCourses` and `getCourse` until the earliest `effectiveAt`. Include a price with an `effectiveAt` of now to make the course visible immediately. Create a course with `status: archived` to keep it hidden, regardless of its prices, until it is published.
          *
          *     The response is the same representation returned by `getCourseAsAdmin`: `prices` contains the full schedule, each entry with a generated `id`, ordered by `effectiveAt` ascending. Public course responses (`listCourses`, `getCourse`) instead return a single `price`, the currently active price, without `effectiveAt`.
-         *
-         *     Send an `Idempotency-Key` header to make retries safe. Retrying a request with the same key and the same body returns the original response instead of creating another course. Reusing a key with a different body returns 422, and retrying while the original request is still being processed returns 409. Keys are scoped to the authenticated user.
          */
         post: operations["createCourse"];
         delete?: never;
@@ -111,36 +109,112 @@ export interface paths {
         get: operations["getCourseAsAdmin"];
         /**
          * Update a course
-         * @description Replaces a course's details and price schedule. Requires an administrator.
+         * @description Replaces a course's details, status and future price schedule. Requires an administrator.
          *
-         *     Send the representation returned by `getCourseAsAdmin`, minus `enrollmentCount` and the course `id`. Both are read-only and ignored if present. Every other field is required. The server validates everything and reports all failures at once in the `errors` array of a 400 response. The update is atomic: if any validation fails, nothing is changed.
+         *     Send the representation returned by `getCourseAsAdmin`, minus the course `id`, `enrollments`, the `changedAt` of `status`, and the `id` of each price. The body is strict: unknown or read-only fields are rejected. Every field is required.
          *
-         *     **Details.** `name`, `description` and `schedule` follow the same rules as `createCourse`, except that time checks apply only to values that changed:
+         *     Validation runs in two stages, each reporting all of its failures at once in the `errors` array of a 400 response. Format errors (types, lengths, date-time formats, currencies, `endTime` after `startTime`, duplicate `effectiveAt` values) are reported first. Only a well-formed request is then checked against the course's current state (past times, the resulting price schedule). The update is atomic: if any validation fails, nothing is changed.
+         *
+         *     **Details.** `name`, `description`, `contentUrl` and `schedule` overwrite the stored values and follow the same rules as `createCourse`, except that the past-time checks apply only to values that changed:
          *     - `schedule.startTime` must be now or in the future only if it differs from the stored value.
          *     - `schedule.endTime` must be in the future only if it differs from the stored value.
-         *     - `endTime` must always be after `startTime`, and each UTC offset must always match the offset `timeZone` observes at that instant.
+         *     - `endTime` must always be after `startTime`.
          *
-         *     This lets an admin edit the description of a course that has already started. Times are compared as instants, so the same instant written with a different UTC offset counts as unchanged.
+         *     This lets an admin edit the description of a course that has already started. Times are compared as instants, at the microsecond precision the server stores.
          *
-         *     **Status.** `status` is required and is set to the value sent. Send `archived` to hide the course from the public API, or `published` to make it publicly viewable again (once a price is in effect). Status can be changed at any time, including on a course with enrollments.
+         *     **Status.** `status` is required. When it differs from the course's current status, it is appended to the course's status history and `status.changedAt` is updated. Sending the current status changes nothing. Send `archived` to hide the course from the public API, `published` to make it publicly viewable again (once a price is in effect), or `deleted` to remove it from `listCoursesAsAdmin`.
          *
-         *     **Prices.** `prices` is matched against the stored schedule by `id`:
-         *     - An entry with an `id` is matched to the stored entry with that `id`. An `id` that does not belong to this course is rejected.
-         *     - An entry without an `id` is created and gets a generated `id`.
-         *     - A stored entry that is omitted from `prices` is deleted.
+         *     **Prices.** A stored price is in effect once its `effectiveAt` has passed, evaluated when the request is processed. In-effect prices can never be changed or deleted, since payments refer to them. `prices` is the course's complete future schedule:
+         *     - An entry that exactly matches a stored price (same `effectiveAt` instant, `amount` and `currency`) is kept unchanged, including its `id`. This lets a form send back the schedule it loaded, and makes retries safe.
+         *     - Every other entry is new and must have an `effectiveAt` that is now or in the future. Since in-effect prices are in the past, changing one is rejected with `IN_PAST`.
+         *     - A stored price that is not yet in effect and has no exact match in `prices` is deleted. To change a future price, send it with its new `amount` or `currency`; it is replaced and gets a new `id`.
+         *     - In-effect prices omitted from `prices` are kept.
+         *     - No two entries may share the same `effectiveAt`.
+         *     - The resulting schedule must not be empty. If no stored price is in effect, `prices` must contain at least one entry.
          *
-         *     An entry is in effect once its stored `effectiveAt` has passed. In-effect entries are immutable, so price history cannot be rewritten:
-         *     - An in-effect entry must be sent back unchanged (same `id`, `amount`, `currency` and `effectiveAt`) and may not be omitted. Unchanged in-effect entries skip the "now or in the future" and amount checks, so a form can round-trip what it loaded.
-         *     - A new or modified entry must have an `effectiveAt` that is now or in the future, plus the usual amount and currency checks.
-         *     - A stored entry that is not yet in effect can be modified or omitted freely.
-         *     - `prices` must contain at least one entry, and no two entries may share the same `effectiveAt`.
-         *
-         *     Whether an entry is in effect is evaluated when the request is processed. If a future price takes effect while the form is open, resubmitting it unchanged still succeeds, but an edit to it is rejected.
-         *
-         *     The response is the updated course in the same representation as `getCourseAsAdmin`. Price `id`s of unchanged and modified entries are preserved, and new entries have generated ones.
+         *     The response is the updated course in the same representation as `getCourseAsAdmin`.
          */
         put: operations["updateCourse"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/checkout-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start buying a course
+         * @description Starts a purchase for the buyer identified by `customer.email`. The price is always the course's current price as stored on the server.
+         *
+         *     The response never reveals whether the email already owns the course. When `status` is `check_email`, an email has been queued for the buyer (unless the address has already received 5 emails in the last 24 hours, in which case nothing more is sent):
+         *     - the buyer already has access: the email repeats their course link;
+         *     - the buyer's access is suspended because of a payment dispute: the email asks them to contact the owner and contains no link;
+         *     - the course is free: the buyer is enrolled immediately and the email contains their course link.
+         *
+         *     Otherwise `status` is `redirect`, and the client sends the browser to `url`, the payment provider's hosted checkout page. Paying there does not grant access by itself; access is granted when the provider confirms the payment to the server. A buyer whose earlier purchase was fully refunded can buy the course again.
+         *
+         *     The course must be publicly viewable (`getCourse` returns it) and must not have ended.
+         */
+        post: operations["startCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/checkout-sessions/{checkoutId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check how a checkout ended
+         * @description Returns the state of a paid checkout, for the page the buyer returns to after paying. `checkoutId` is the payment provider's checkout identifier, which the provider places in the return URL.
+         *
+         *     `pending` means the provider hasn't confirmed the payment to the server yet; poll again shortly. Once `succeeded`, the access email has been queued.
+         */
+        get: operations["getCheckoutStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/stripe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a payment event from Stripe
+         * @description For Stripe only. Stripe calls this to report what happened to a checkout; it's how the server learns a payment succeeded, and the only way a paid enrollment is created.
+         *
+         *     The `Stripe-Signature` header must be a valid signature of the exact request body, made with this endpoint's signing secret. Requests without one are rejected with 400.
+         *
+         *     Handled event types:
+         *     - `checkout.session.completed` with `payment_status` `paid`: the payment succeeds and the buyer is enrolled (or their refunded enrollment reactivated) and emailed their course link. If the buyer already has access, as when they paid twice in two tabs, the payment is refunded automatically instead.
+         *     - `checkout.session.expired`: a payment still pending is marked `expired`.
+         *
+         *     Other event types are acknowledged with 200 and ignored. Each event is processed at most once, so a repeated delivery returns 200 and changes nothing. A 500 means the event wasn't processed; Stripe retries it later.
+         */
+        post: operations["receiveStripeEvent"];
         delete?: never;
         options?: never;
         head?: never;
@@ -151,6 +225,51 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        StartCheckoutRequest: {
+            courseId: components["schemas"]["CourseId"];
+            customer: components["schemas"]["CheckoutCustomer"];
+        };
+        /** @description The person buying the course. */
+        CheckoutCustomer: {
+            /**
+             * @description The buyer's name, used in emails. Leading and trailing spaces are removed. An existing customer keeps the name they first gave.
+             * @example Ada Lovelace
+             */
+            name: string;
+            /**
+             * Format: email
+             * @description Where the course link is sent. Compared without regard to case, so `Ada@Example.com` and `ada@example.com` are the same buyer.
+             * @example ada@example.com
+             */
+            email: string;
+        };
+        StartCheckoutResponse: components["schemas"]["CheckoutRedirect"] | components["schemas"]["CheckoutCheckEmail"];
+        CheckoutRedirect: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            status: "redirect";
+            /**
+             * Format: uri
+             * @description The payment provider's hosted checkout page.
+             */
+            url: string;
+        };
+        CheckoutCheckEmail: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            status: "check_email";
+        };
+        CheckoutStatus: {
+            /**
+             * @description `expired` means the buyer didn't pay before the checkout timed out. `refunded` means the payment was later fully refunded.
+             * @enum {string}
+             */
+            status: "pending" | "succeeded" | "expired" | "refunded";
+        };
         /**
          * Format: uuid
          * @description Public identifier of the course.
@@ -163,12 +282,27 @@ export interface components {
          * @example 7c9e6679-7425-40de-944b-e07fc1f90ae7
          */
         PriceId: string;
+        CourseStatusDetails: {
+            name: components["schemas"]["CourseStatus"];
+            /**
+             * Format: date-time
+             * @description RFC 3339 date-time in UTC (ending in `Z`) when the status was last changed.
+             * @example 2026-10-15T18:30:00Z
+             */
+            changedAt: string;
+        };
         /**
-         * @description Whether an administrator has made the course available. `published` courses are publicly viewable once a price is in effect. `archived` courses are hidden from the public API regardless of their prices, and can be published again at any time.
+         * @description Whether an administrator has made the course available. `published` courses are publicly viewable once a price is in effect. `drafted` and `archived` courses are hidden from the public API regardless of their prices, and can be published at any time. `deleted` courses are also hidden from `listCoursesAsAdmin`; a course can only be deleted by updating it.
          * @example published
          * @enum {string}
          */
-        CourseStatus: "published" | "archived";
+        CourseStatus: "published" | "archived" | "drafted" | "deleted";
+        /**
+         * @description A `CourseStatus` a course can be created with. Use `drafted` or `archived` to create the course hidden from the public API.
+         * @example published
+         * @enum {string}
+         */
+        CreateCourseStatus: "published" | "archived" | "drafted";
         ListCoursesResponse: {
             courses: components["schemas"]["Course"][];
         };
@@ -185,42 +319,43 @@ export interface components {
          * @example Learn the fundamentals of React.
          */
         CourseDescription: string;
+        /**
+         * Format: uri
+         * @description Private link to the course material, such as a Google Drive folder or a Zoom meeting. It is emailed to buyers and only ever returned to administrators.
+         * @example https://drive.google.com/drive/folders/1a2b3c4d5e
+         */
+        CourseContentUrl: string;
         CourseDetails: {
             name: components["schemas"]["CourseName"];
             description: components["schemas"]["CourseDescription"];
             schedule: components["schemas"]["CourseSchedule"];
         };
-        /** @description A `Price` that takes effect at `effectiveAt`, with the additional constraint that the amount is at least 50, the payment processor's minimum charge in USD. */
+        /** @description A `Price` that takes effect at `effectiveAt`, with the additional constraint that the amount is either 0 (free) or at least 50, the payment processor's minimum charge in USD. */
         ScheduledPrice: components["schemas"]["Price"] & {
-            amount?: unknown;
+            amount?: 0 | unknown;
             /**
              * Format: date-time
-             * @description RFC 3339 date-time including its UTC offset, from which this price applies. A price stays in effect until the next entry's `effectiveAt`, at which point it gets replaced with that next entry.
-             * @example 2026-10-20T00:00:00-04:00
+             * @description RFC 3339 date-time in UTC (ending in `Z`) from which this price applies. A price stays in effect until the next entry's `effectiveAt`, at which point it gets replaced with that next entry.
+             * @example 2026-10-20T04:00:00Z
              */
             effectiveAt: string;
         };
         AdminScheduledPrice: components["schemas"]["ScheduledPrice"] & {
             id: components["schemas"]["PriceId"];
         };
-        UpdateScheduledPrice: components["schemas"]["ScheduledPrice"] & {
-            id?: components["schemas"]["PriceId"];
-        };
-        /** @description All fields are required except `status`. */
+        /** @description All fields are required. */
         CreateCourseRequest: components["schemas"]["CourseDetails"] & {
-            /**
-             * @description Optional. Defaults to `published`. Use `archived` to create the course hidden from the public API.
-             * @default published
-             */
-            status: components["schemas"]["CourseStatus"];
+            contentUrl: components["schemas"]["CourseContentUrl"];
+            status: components["schemas"]["CreateCourseStatus"];
             /** @description Price schedule for the course. Each entry takes effect at its `effectiveAt`, which must be now or in the future. Entries may be sent in any order and may use different currencies; `effectiveAt` values must be unique. If every entry takes effect in the future, the course is hidden from `listCourses` and `getCourse` until the earliest `effectiveAt`. */
             prices: components["schemas"]["ScheduledPrice"][];
         };
-        /** @description Full replacement of a course's details and price schedule. All fields are required except `id` on each price. `enrollmentCount` and the course `id` are read-only and ignored if sent. */
+        /** @description Full replacement of a course's details, status and future price schedule. All fields are required, and unknown fields are rejected. */
         UpdateCourseRequest: components["schemas"]["CourseDetails"] & {
+            contentUrl: components["schemas"]["CourseContentUrl"];
             status: components["schemas"]["CourseStatus"];
-            /** @description The complete price schedule after the update. Entries with an `id` are matched to stored entries, entries without one are created, and stored entries that are omitted are deleted. Entries already in effect must be included unchanged. `effectiveAt` values must be unique. Entries may be sent in any order. */
-            prices: components["schemas"]["UpdateScheduledPrice"][];
+            /** @description The complete future price schedule after the update. Entries that exactly match a stored price are kept; every other entry is created and must take effect now or in the future. Stored prices not yet in effect without an exact match are deleted. Prices already in effect are always kept and may be omitted. `effectiveAt` values must be unique. Entries may be sent in any order. Must contain at least one entry if no stored price is in effect. */
+            prices: components["schemas"]["ScheduledPrice"][];
         };
         Course: components["schemas"]["CourseDetails"] & {
             id: components["schemas"]["CourseId"];
@@ -233,18 +368,50 @@ export interface components {
             /** @description The course's currently active price. */
             price: components["schemas"]["Price"];
         };
-        /** @description A course as seen by an administrator. Has the same fields as `Course`, plus `status`, except that the single active `price` is replaced by the full `prices` schedule. */
+        /** @description A course as seen by an administrator, including its current status, full price schedule, and enrolled customers with their payment details. */
         AdminCourse: components["schemas"]["CourseDetails"] & {
             id: components["schemas"]["CourseId"];
-            status: components["schemas"]["CourseStatus"];
-            /**
-             * Format: int32
-             * @description Number of users currently enrolled in the course.
-             * @example 12
-             */
-            enrollmentCount: number;
-            /** @description The course's full price schedule, ordered by `effectiveAt` ascending. The entry in effect now is the last one whose `effectiveAt` is in the past. */
+            contentUrl: components["schemas"]["CourseContentUrl"];
+            status: components["schemas"]["CourseStatusDetails"];
+            /** @description Enrolled customers and their associated payment details. */
+            enrollments: components["schemas"]["AdminEnrollment"][];
+            /** @description The course's full price schedule, ordered by effectiveAt ascending. The entry in effect now is the last one whose effectiveAt is in the past. */
             prices: components["schemas"]["AdminScheduledPrice"][];
+        };
+        /** @description A customer's enrollment. It gives access only while both `revokedAt` and `suspendedAt` are null. */
+        AdminEnrollment: {
+            /**
+             * Format: date-time
+             * @description When a full refund removed access, in UTC. Cleared if the customer buys the course again.
+             */
+            revokedAt: string | null;
+            /**
+             * Format: date-time
+             * @description When a payment dispute suspended access, in UTC. Cleared by hand by the owner.
+             */
+            suspendedAt: string | null;
+            customer: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** Format: email */
+                email: string;
+            };
+            /** @description The payment behind the enrollment, or null for a free course. */
+            payment: {
+                /** @enum {string} */
+                status: "pending" | "succeeded" | "expired" | "refunded";
+                /**
+                 * Format: int64
+                 * @description Payment amount in the smallest unit of the currency.
+                 */
+                amount: number;
+                /**
+                 * Format: date-time
+                 * @description Time the payment succeeded, in UTC (ending in `Z`). Customers are only enrolled once their payment succeeds, so this is set for every enrollment.
+                 */
+                paidAt: string | null;
+            } | null;
         };
         Price: {
             /**
@@ -262,18 +429,19 @@ export interface components {
         CourseSchedule: {
             /**
              * Format: date-time
-             * @description Course start time as an RFC 3339 date-time including its UTC offset. Must be now or in the future when creating a course, or when changing it on update. The offset must match the offset `timeZone` observes at this instant.
-             * @example 2026-10-01T18:00:00-04:00
+             * @description Course start time as an RFC 3339 date-time in UTC (ending in `Z`). Must be now or in the future when creating a course, or when changing it on update.
+             * @example 2026-10-01T22:00:00Z
              */
             startTime: string;
             /**
              * Format: date-time
-             * @description Course end time as an RFC 3339 date-time including its UTC offset. Always after `startTime`. Must be in the future when creating a course, or when changing it on update. The offset must match the offset `timeZone` observes at this instant.
-             * @example 2026-10-01T20:00:00-04:00
+             * @description Course end time as an RFC 3339 date-time in UTC (ending in `Z`). Always after `startTime`. Must be in the future when creating a course, or when changing it on update.
+             * @example 2026-10-02T00:00:00Z
              */
             endTime: string;
             /**
-             * @description IANA time zone identifier the course is held in. Use this, rather than the UTC offset in `startTime` and `endTime`, to display local times correctly across daylight saving changes.
+             * @description IANA time zone identifier the course is held in. `startTime` and `endTime` are always in UTC; use this to display them in local time, correctly across daylight saving changes. Using separate field instead of relying on UTC in cases where people travel
+             *       to the course location
              * @example America/New_York
              */
             timeZone: string;
@@ -311,23 +479,21 @@ export interface components {
              *     - `REQUIRED`: the field is missing or null.
              *     - `INVALID_TYPE`: the value has the wrong JSON type.
              *     - `INVALID_FORMAT`: the value is not in the expected format, such
-             *       as a malformed date-time.
+             *       as a malformed date-time or one that is not in UTC.
              *     - `INVALID_VALUE`: the value is well formed but not accepted, such
-             *       as an unknown currency or time zone, or a UTC offset that does
-             *       not match the course's time zone at that instant.
-             *     - `TOO_SHORT`: the value is shorter than the minimum length.
-             *     - `TOO_LONG`: the value is longer than the maximum length.
+             *       as an unknown currency, time zone or status.
+             *     - `TOO_SHORT`: a string is shorter than the minimum length, or a
+             *       list has fewer entries than the minimum.
+             *     - `TOO_LONG`: a string is longer than the maximum length, or a
+             *       list has more entries than the maximum.
              *     - `BELOW_MINIMUM`: a number is below the minimum allowed.
+             *     - `ABOVE_MAXIMUM`: a number is above the maximum allowed.
              *     - `IN_PAST`: a date-time must be now or in the future.
              *     - `INVALID_RANGE`: the value is inconsistent with a related
              *       field, such as `endTime` not being after `startTime`.
              *     - `DUPLICATE_VALUE`: the value must be unique within its list.
-             *     - `IMMUTABLE`: the entry is already in effect and cannot be
-             *       changed. `field` points at the changed property, such as
-             *       `/prices/1/amount`.
-             *     - `MISSING_ENTRY`: an entry that is already in effect was omitted
-             *       from the list. `field` is the list, such as `/prices`.
-             *     - `UNKNOWN_ID`: the `id` does not match any entry of this course.
+             *     - `UNKNOWN_FIELD`: the field is not part of the request. `field`
+             *       points at the unknown field.
              *
              *     Treat unrecognized values as a generic validation error.
              * @example INVALID_RANGE
@@ -345,24 +511,6 @@ export interface components {
             };
             content: {
                 "application/problem+json": components["schemas"]["ValidationProblemDetails"];
-            };
-        };
-        /** @description A request with the same `Idempotency-Key` is still being processed. Retry after a short delay. */
-        IdempotencyKeyInProgress: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["ProblemDetails"];
-            };
-        };
-        /** @description The `Idempotency-Key` was already used with a different request body. */
-        IdempotencyKeyReused: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["ProblemDetails"];
             };
         };
         /** @description Missing or invalid credentials. */
@@ -410,6 +558,51 @@ export interface components {
                 "application/problem+json": components["schemas"]["ProblemDetails"];
             };
         };
+        /** @description The course has ended and can no longer be bought. */
+        CourseNotPurchasable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description No checkout exists with the given identifier. */
+        CheckoutNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description Too many requests from this client. Retry after a short delay. */
+        TooManyRequests: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description The payment provider couldn't be reached. Retry later. */
+        PaymentProviderUnavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description The request's signature is missing or doesn't match its body. */
+        InvalidWebhookSignature: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
         /** @description Internal server error. */
         InternalServerError: {
             headers: {
@@ -422,10 +615,10 @@ export interface components {
     };
     parameters: {
         /**
-         * @description Client-generated unique key (a UUID is recommended) that makes the request safe to retry. Scoped to the authenticated user.
-         * @example 8e03978e-40d5-43e8-bc93-6894a57f9324
+         * @description The payment provider's checkout identifier.
+         * @example cs_test_a1b2c3
          */
-        IdempotencyKey: string;
+        CheckoutId: string;
         /** @description Public identifier of the course. */
         CourseId: components["schemas"]["CourseId"];
     };
@@ -508,13 +701,7 @@ export interface operations {
     createCourse: {
         parameters: {
             query?: never;
-            header?: {
-                /**
-                 * @description Client-generated unique key (a UUID is recommended) that makes the request safe to retry. Scoped to the authenticated user.
-                 * @example 8e03978e-40d5-43e8-bc93-6894a57f9324
-                 */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -541,8 +728,6 @@ export interface operations {
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
-            409: components["responses"]["IdempotencyKeyInProgress"];
-            422: components["responses"]["IdempotencyKeyReused"];
             500: components["responses"]["InternalServerError"];
         };
     };
@@ -603,6 +788,91 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["AdminCourseNotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    startCheckout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Checkout started. Both outcomes use the same status code so the response doesn't reveal whether the email owns the course. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartCheckoutResponse"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            404: components["responses"]["CourseNotFound"];
+            409: components["responses"]["CourseNotPurchasable"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
+            503: components["responses"]["PaymentProviderUnavailable"];
+        };
+    };
+    getCheckoutStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description The payment provider's checkout identifier.
+                 * @example cs_test_a1b2c3
+                 */
+                checkoutId: components["parameters"]["CheckoutId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The checkout's current state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutStatus"];
+                };
+            };
+            404: components["responses"]["CheckoutNotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    receiveStripeEvent: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stripe's signature of the request body. */
+                "Stripe-Signature": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Event received, whether processed now, processed before, or ignored. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["InvalidWebhookSignature"];
             500: components["responses"]["InternalServerError"];
         };
     };
