@@ -9,6 +9,7 @@ import {
   PaymentProviderUnavailableError,
   StripeService,
   type CreateCheckoutSessionInput,
+  type RefundPaymentInput,
 } from "./stripe.service.js";
 
 const config: PaymentsConfig = {
@@ -194,6 +195,81 @@ describe("StripeService", () => {
 
       await expect(service.createCheckoutSession(makeInput())).rejects.toThrow(
         "Stripe returned Checkout Session cs_test_123 without a URL.",
+      );
+    });
+  });
+
+  describe("refundPayment", () => {
+    const refundInput: RefundPaymentInput = {
+      paymentId: "9f1c2d3e-0000-4000-8000-000000000001",
+      providerPaymentId: "pi_test_1",
+    };
+
+    const refund = { id: "re_test_1", object: "refund", status: "succeeded" };
+
+    it("refunds the whole payment as a duplicate", async () => {
+      const { service, requests } = serviceWith(() =>
+        jsonResponse(200, refund),
+      );
+
+      await service.refundPayment(refundInput);
+
+      expect(requests).toHaveLength(1);
+      expect(requests[0].url).toMatch(/\/v1\/refunds$/);
+      expect(Object.fromEntries(requests[0].body)).toEqual({
+        payment_intent: "pi_test_1",
+        reason: "duplicate",
+        "metadata[paymentId]": "9f1c2d3e-0000-4000-8000-000000000001",
+      });
+    });
+
+    it("keys the request by payment id so retries don't refund twice", async () => {
+      const { service, requests } = serviceWith(() =>
+        jsonResponse(200, refund),
+      );
+
+      await service.refundPayment(refundInput);
+
+      expect(requests[0].headers.get("Idempotency-Key")).toBe(
+        "refund-9f1c2d3e-0000-4000-8000-000000000001",
+      );
+    });
+
+    it("reports an unreachable Stripe as unavailable", async () => {
+      const { service } = serviceWith(() => {
+        throw new TypeError("fetch failed");
+      });
+
+      await expect(service.refundPayment(refundInput)).rejects.toBeInstanceOf(
+        PaymentProviderUnavailableError,
+      );
+    });
+
+    it.each([
+      [500, "api_error"],
+      [429, "rate_limit_error"],
+    ])("reports a %i %s from Stripe as unavailable", async (status, type) => {
+      const { service } = serviceWith(() =>
+        jsonResponse(status, { error: { type, message: "Try again later." } }),
+      );
+
+      await expect(service.refundPayment(refundInput)).rejects.toBeInstanceOf(
+        PaymentProviderUnavailableError,
+      );
+    });
+
+    it("passes a rejected request through unchanged", async () => {
+      const { service } = serviceWith(() =>
+        jsonResponse(400, {
+          error: {
+            type: "invalid_request_error",
+            message: "Charge already refunded.",
+          },
+        }),
+      );
+
+      await expect(service.refundPayment(refundInput)).rejects.toBeInstanceOf(
+        Stripe.errors.StripeInvalidRequestError,
       );
     });
   });

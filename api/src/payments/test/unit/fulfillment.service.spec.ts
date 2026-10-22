@@ -1,14 +1,23 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { Logger } from "@nestjs/common";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+} from "vitest";
 
 import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import {
-  FulfillmentNextStep,
   FulfillmentService,
   type CompletedCheckout,
 } from "@/payments/fulfillment.service.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
+import { StripeService } from "@/payments/stripe.service.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 
 const COURSE_ID = "8b0e1f5c-0000-4000-8000-000000000001";
@@ -51,6 +60,7 @@ describe("FulfillmentService", () => {
     grantAccess: Mock<EnrollmentsRepository["grantAccess"]>;
   };
   let emailOutbox: { enqueue: Mock<EmailOutboxRepository["enqueue"]> };
+  let stripeService: { refundPayment: Mock<StripeService["refundPayment"]> };
   let prisma: { db: { transaction: ReturnType<typeof vi.fn> } };
   // whether each repository call ran inside the transaction
   let inTransaction: boolean;
@@ -104,6 +114,12 @@ describe("FulfillmentService", () => {
     emailOutbox = {
       enqueue: tracked<EmailOutboxRepository["enqueue"]>("enqueue", undefined),
     };
+    stripeService = {
+      refundPayment: tracked<StripeService["refundPayment"]>(
+        "refundPayment",
+        undefined,
+      ),
+    };
 
     // runs the callback with a stand-in transaction, as the real one would
     prisma = {
@@ -125,23 +141,28 @@ describe("FulfillmentService", () => {
       paymentsRepository as unknown as PaymentsRepository,
       enrollmentsRepository,
       emailOutbox as unknown as EmailOutboxRepository,
+      stripeService as unknown as StripeService,
     );
   });
 
-  const done = { nextStep: FulfillmentNextStep.DONE };
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   const emailIds = { courseId: COURSE_ID, customerId: CUSTOMER_ID };
 
   function expectNothingFulfilled() {
     expect(paymentsRepository.markPaymentSucceeded).not.toHaveBeenCalled();
     expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();
     expect(emailOutbox.enqueue).not.toHaveBeenCalled();
+    expect(stripeService.refundPayment).not.toHaveBeenCalled();
   }
 
   describe("events it doesn't fulfill", () => {
     it("stops at an event it has already processed", async () => {
       paymentsRepository.recordProcessedEvent.mockResolvedValue(false);
 
-      expect(await service.fulfillCheckout(makeCheckout())).toEqual(done);
+      await service.fulfillCheckout(makeCheckout());
       expect(
         paymentsRepository.findPaymentForFulfillment,
       ).not.toHaveBeenCalled();
@@ -160,16 +181,14 @@ describe("FulfillmentService", () => {
     });
 
     it("ignores a checkout completed without payment", async () => {
-      expect(
-        await service.fulfillCheckout(makeCheckout({ providerPayment: null })),
-      ).toEqual(done);
+      await service.fulfillCheckout(makeCheckout({ providerPayment: null }));
+
       expectNothingFulfilled();
     });
 
     it("ignores a checkout without our payment id", async () => {
-      expect(
-        await service.fulfillCheckout(makeCheckout({ paymentId: null })),
-      ).toEqual(done);
+      await service.fulfillCheckout(makeCheckout({ paymentId: null }));
+
       expect(
         paymentsRepository.findPaymentForFulfillment,
       ).not.toHaveBeenCalled();
@@ -177,9 +196,8 @@ describe("FulfillmentService", () => {
     });
 
     it("ignores a payment id that isn't a uuid, without querying it", async () => {
-      expect(
-        await service.fulfillCheckout(makeCheckout({ paymentId: "order-42" })),
-      ).toEqual(done);
+      await service.fulfillCheckout(makeCheckout({ paymentId: "order-42" }));
+
       expect(
         paymentsRepository.findPaymentForFulfillment,
       ).not.toHaveBeenCalled();
@@ -189,14 +207,14 @@ describe("FulfillmentService", () => {
     it("ignores a payment we don't know", async () => {
       paymentsRepository.findPaymentForFulfillment.mockResolvedValue(null);
 
-      expect(await service.fulfillCheckout(makeCheckout())).toEqual(done);
+      await service.fulfillCheckout(makeCheckout());
       expectNothingFulfilled();
     });
 
     it("stops when the payment was already moved out of pending", async () => {
       paymentsRepository.markPaymentSucceeded.mockResolvedValue(false);
 
-      expect(await service.fulfillCheckout(makeCheckout())).toEqual(done);
+      await service.fulfillCheckout(makeCheckout());
       expect(enrollmentsRepository.findEnrollment).not.toHaveBeenCalled();
       expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();
       expect(emailOutbox.enqueue).not.toHaveBeenCalled();
@@ -226,7 +244,7 @@ describe("FulfillmentService", () => {
     });
 
     it("grants access bought at the payment time and emails the buyer", async () => {
-      expect(await service.fulfillCheckout(makeCheckout())).toEqual(done);
+      await service.fulfillCheckout(makeCheckout());
       expect(enrollmentsRepository.findEnrollment).toHaveBeenCalledWith(
         tx,
         COURSE_ID,
@@ -248,7 +266,7 @@ describe("FulfillmentService", () => {
     it("emails nothing when a concurrent payment granted access first", async () => {
       enrollmentsRepository.grantAccess.mockResolvedValue(false);
 
-      expect(await service.fulfillCheckout(makeCheckout())).toEqual(done);
+      await service.fulfillCheckout(makeCheckout());
       expect(emailOutbox.enqueue).not.toHaveBeenCalled();
     });
   });
@@ -273,11 +291,45 @@ describe("FulfillmentService", () => {
       });
     });
 
-    it("asks for this payment to be refunded", async () => {
-      expect(await service.fulfillCheckout(makeCheckout())).toEqual({
-        nextStep: FulfillmentNextStep.REFUND_DOUBLE_PURCHASE,
+    it("refunds this payment", async () => {
+      await service.fulfillCheckout(makeCheckout());
+
+      expect(stripeService.refundPayment).toHaveBeenCalledTimes(1);
+      expect(stripeService.refundPayment).toHaveBeenCalledWith({
         paymentId: PAYMENT_ID,
+        providerPaymentId: "pi_test_1",
       });
+    });
+
+    it("refunds only after the transaction has committed", async () => {
+      await service.fulfillCheckout(makeCheckout());
+
+      expect(prisma.db.transaction).toHaveBeenCalledTimes(1);
+      expect(callsOutsideTransaction).toEqual(["refundPayment"]);
+    });
+
+    it("still resolves, and logs, when the refund fails", async () => {
+      const errorSpy = vi
+        .spyOn(Logger.prototype, "error")
+        .mockImplementation(() => {});
+      stripeService.refundPayment.mockRejectedValue(new Error("stripe down"));
+
+      await expect(
+        service.fulfillCheckout(makeCheckout()),
+      ).resolves.toBeUndefined();
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(PAYMENT_ID),
+        expect.stringContaining("stripe down"),
+      );
+    });
+
+    it("doesn't refund when the transaction fails", async () => {
+      emailOutbox.enqueue.mockRejectedValue(new Error("outbox unavailable"));
+
+      await expect(service.fulfillCheckout(makeCheckout())).rejects.toThrow(
+        "outbox unavailable",
+      );
+      expect(stripeService.refundPayment).not.toHaveBeenCalled();
     });
   });
 
@@ -289,7 +341,7 @@ describe("FulfillmentService", () => {
         suspendedAt,
       });
 
-      expect(await service.fulfillCheckout(makeCheckout())).toEqual(done);
+      await service.fulfillCheckout(makeCheckout());
       expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();
       expect(emailOutbox.enqueue).toHaveBeenCalledWith(tx, {
         kind: "access_suspended",
@@ -305,5 +357,11 @@ describe("FulfillmentService", () => {
     expect(prisma.db.transaction).toHaveBeenCalledTimes(1);
     expect(emailOutbox.enqueue).toHaveBeenCalled();
     expect(callsOutsideTransaction).toEqual([]);
+  });
+
+  it("never calls the provider for an ordinary purchase", async () => {
+    await service.fulfillCheckout(makeCheckout());
+
+    expect(stripeService.refundPayment).not.toHaveBeenCalled();
   });
 });

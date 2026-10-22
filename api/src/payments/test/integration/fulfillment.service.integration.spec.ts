@@ -8,11 +8,14 @@ import {
 } from "@/email/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import {
-  FulfillmentNextStep,
   FulfillmentService,
   type CompletedCheckout,
 } from "@/payments/fulfillment.service.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
+import {
+  StripeService,
+  type RefundPaymentInput,
+} from "@/payments/stripe.service.js";
 import { db } from "@/prisma/db.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import {
@@ -28,25 +31,48 @@ class FailingEmailOutbox extends EmailOutboxRepository {
   }
 }
 
+// records the refunds it is asked for, or fails them, instead of calling Stripe
+class FakeStripeService extends StripeService {
+  readonly refunds: RefundPaymentInput[] = [];
+
+  constructor(private readonly failure?: Error) {
+    super(undefined as never, undefined as never);
+  }
+
+  override refundPayment(input: RefundPaymentInput): Promise<void> {
+    this.refunds.push(input);
+
+    return this.failure ? Promise.reject(this.failure) : Promise.resolve();
+  }
+}
+
 describe("FulfillmentService (integration)", () => {
   const paidAt = Temporal.Instant.from("2026-10-21T12:00:00Z");
 
-  function serviceWith(emailOutbox = new EmailOutboxRepository()) {
+  function serviceWith(
+    emailOutbox = new EmailOutboxRepository(),
+    stripeService = new FakeStripeService(),
+  ) {
     return new FulfillmentService(
       new PrismaService(),
       new PaymentsRepository(),
       new EnrollmentsRepository(),
       emailOutbox,
+      stripeService,
     );
   }
 
-  const service = serviceWith();
+  let stripeService: FakeStripeService;
+  let service: FulfillmentService;
 
   let courseId: string;
   let price: { id: string; amount: number; currency: string };
   let customer: { id: string; email: string };
 
   beforeEach(async () => {
+    stripeService = new FakeStripeService();
+    service = serviceWith(undefined, stripeService);
+
     const pricedCourse = await createPricedCourse();
     courseId = pricedCourse.course.id;
     price = pricedCourse.price;
@@ -101,9 +127,7 @@ describe("FulfillmentService (integration)", () => {
     const payment = await createOurPayment();
     const checkout = completedCheckout(payment.id);
 
-    expect(await service.fulfillCheckout(checkout)).toEqual({
-      nextStep: FulfillmentNextStep.DONE,
-    });
+    await service.fulfillCheckout(checkout);
 
     expect(await findPaymentRow(payment.id)).toMatchObject({
       status: "succeeded",
@@ -111,6 +135,7 @@ describe("FulfillmentService (integration)", () => {
       providerPaymentId: checkout.providerPayment!.id,
       paidAt,
     });
+    expect(stripeService.refunds).toEqual([]);
     expect(await findEnrollments()).toEqual([
       expect.objectContaining({
         courseId,
@@ -169,14 +194,15 @@ describe("FulfillmentService (integration)", () => {
     const secondPayment = await createOurPayment();
 
     await service.fulfillCheckout(completedCheckout(firstPayment.id));
-    const decision = await service.fulfillCheckout(
-      completedCheckout(secondPayment.id),
-    );
+    const secondCheckout = completedCheckout(secondPayment.id);
+    await service.fulfillCheckout(secondCheckout);
 
-    expect(decision).toEqual({
-      nextStep: FulfillmentNextStep.REFUND_DOUBLE_PURCHASE,
-      paymentId: secondPayment.id,
-    });
+    expect(stripeService.refunds).toEqual([
+      {
+        paymentId: secondPayment.id,
+        providerPaymentId: secondCheckout.providerPayment!.id,
+      },
+    ]);
     expect(await findPaymentRow(secondPayment.id)).toMatchObject({
       status: "succeeded",
     });
@@ -189,6 +215,24 @@ describe("FulfillmentService (integration)", () => {
         { courseId, customerId: customer.id, refundIssued: true },
       ]),
     );
+  });
+
+  it("keeps a double purchase fulfilled when its refund fails", async () => {
+    const failingStripe = new FakeStripeService(new Error("stripe down"));
+    const failingService = serviceWith(undefined, failingStripe);
+    const firstPayment = await createOurPayment();
+    const secondPayment = await createOurPayment();
+    await failingService.fulfillCheckout(completedCheckout(firstPayment.id));
+
+    await expect(
+      failingService.fulfillCheckout(completedCheckout(secondPayment.id)),
+    ).resolves.toBeUndefined();
+
+    expect(failingStripe.refunds).toHaveLength(1);
+    expect(await findPaymentRow(secondPayment.id)).toMatchObject({
+      status: "succeeded",
+    });
+    expect(await findProcessedEvents()).toHaveLength(2);
   });
 
   it("grants access once when two payments for the course are fulfilled concurrently", async () => {

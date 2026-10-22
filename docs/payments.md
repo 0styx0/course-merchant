@@ -26,13 +26,13 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
   - [x] `FulfillmentService` for `checkout.session.completed`, with `completedCheckoutFromEvent` reading Stripe's event in our terms.
 
   Remaining:
-  - [ ] **Next: `StripeService.refundPayment`**, for double purchases:
-    - `FulfillmentService.fulfillCheckout` calls it after the transaction commits, when the decision is `REFUND_DOUBLE_PURCHASE`, and then returns `void` instead of the decision;
-    - full refund of the payment intent (`providerPaymentId`), idempotency key `refund-<paymentId>`;
-    - on failure (`PaymentProviderUnavailableError` or otherwise), log and still let the webhook reply 200; the sweeper retries (step 6).
+  - [x] `StripeService.refundPayment`, called by `FulfillmentService.fulfillCheckout` after the transaction commits for a double purchase.
+  - [ ] **Next: `checkout.session.expired`**:
+    - a `PaymentsRepository` method that moves `pending → expired` with a conditional `updateAndCount`, found by our payment id (`client_reference_id`, validated like `findOurPayment`);
+    - record the event id in the same transaction, as `fulfillCheckout` does;
+    - a late `completed` for an expired payment is already ignored, because `markPaymentSucceeded` only moves `pending` payments.
 
-    Unit-test it like `createCheckoutSession` (a real client with `createFetchHttpClient`), and unit-test the after-commit call order in `FulfillmentService`.
-  - [ ] `checkout.session.expired`.
+    Prefer a small service of its own (or a method beside `fulfillCheckout`) that takes a provider-neutral shape, with a mapper next to `completedCheckoutFromEvent`.
   - [ ] `StripeWebhookController`, its module, and an e2e test using signed events (`generateTestHeaderString`).
   - [ ] A manual check with `stripe listen` (see *Launch*).
 - [ ] **4. Email delivery:**
@@ -146,6 +146,9 @@ It also covers a payment whose session was never created.
 | A completed checkout that is unpaid, or whose `client_reference_id` is missing, not a UUID, or unknown, is recorded and ignored | It isn't a paid checkout we started. A non-UUID id would make Postgres throw, so Stripe would retry for days | Failing the webhook |
 | A paid session without a payment intent throws | It breaks Stripe's own invariant; failing makes Stripe retry and puts it in the logs | Ignoring it |
 | Two payments for one course fulfilled concurrently: the one that loses `grantAccess` stops with no email or refund, and the sweeper's refund rule picks it up | Rare; keeps fulfillment a straight line. Accepted cost: that payment gets no `already_owned` email | Re-reading the enrollment and re-dispatching to the double-purchase path |
+| `fulfillCheckout` returns `void`; the refund decision is internal | The webhook only needs "handled"; the after-commit step belongs to the service, so the controller and sweeper don't repeat it | Returning the decision to the controller |
+| Any refund failure is logged and swallowed, not just `PaymentProviderUnavailableError` | The event is already recorded, so Stripe redelivering it would do nothing; the sweeper owns the retry | Failing the webhook so Stripe retries |
+| The refund uses `reason: "duplicate"` and `metadata.paymentId` | Labels it in the Dashboard for the accountant and shows our id; `charge.refunded` still finds the payment by payment intent, not by this metadata | No reason or metadata |
 | Fulfillment emails aren't capped per address | Only a real payment queues them, and a buyer who paid must get the link | Reusing checkout's cap |
 | Card only, no delayed methods | Payment is confirmed instantly, so there's no "processing" state | ACH and bank debits |
 | Currencies limited to the payout currency (`ALLOWED_CURRENCIES`, default USD) | Any other currency adds a conversion fee to every sale | Accepting any currency |

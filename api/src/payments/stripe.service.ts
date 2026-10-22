@@ -38,6 +38,14 @@ export type CreatedCheckoutSession = {
   url: string;
 };
 
+export type RefundPaymentInput = {
+  // our Payment id. Used as the idempotency key, so a retried call doesn't
+  // refund twice
+  paymentId: string;
+  // Stripe's payment intent for the charge being refunded
+  providerPaymentId: string;
+};
+
 export class PaymentProviderUnavailableError extends Error {
   constructor(options?: { cause?: unknown }) {
     super("Stripe is unavailable.", options);
@@ -147,6 +155,31 @@ export class StripeService {
     }
 
     return { id: session.id, url: session.url };
+  }
+
+  /**
+   * Refunds a payment in full, as a duplicate of one the buyer already holds.
+   *
+   * @throws PaymentProviderUnavailableError when Stripe can't be reached or
+   * fails on its side, so the caller can retry later
+   */
+  async refundPayment(input: RefundPaymentInput): Promise<void> {
+    await this.stripe.refunds
+      .create(
+        {
+          payment_intent: input.providerPaymentId,
+          reason: "duplicate",
+          metadata: { paymentId: input.paymentId },
+        },
+        { idempotencyKey: `refund-${input.paymentId}` },
+      )
+      .catch((error: unknown) => {
+        if (isStripeOutage(error)) {
+          throw new PaymentProviderUnavailableError({ cause: error });
+        }
+
+        throw error;
+      });
   }
 }
 

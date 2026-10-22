@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import type { Temporal } from "@js-temporal/polyfill";
 import { z } from "zod";
 
@@ -18,6 +18,7 @@ import {
   type FulfillmentPayment,
   type ProviderEvent,
 } from "./payments.repository.js";
+import { StripeService } from "./stripe.service.js";
 
 // any 8-4-4-4-12 hex id, which is what postgres accepts for a uuid column
 const paymentIdSchema = z.guid();
@@ -36,16 +37,22 @@ export type CompletedCheckout = {
   providerPayment: { id: string; paidAt: Temporal.Instant } | null;
 };
 
-export enum FulfillmentNextStep {
+type ProviderPayment = NonNullable<CompletedCheckout["providerPayment"]>;
+
+enum FulfillmentNextStep {
   // everything was recorded; nothing left to do
   DONE = "DONE",
   // the buyer already had access, so this payment is refunded after commit
   REFUND_DOUBLE_PURCHASE = "REFUND_DOUBLE_PURCHASE",
 }
 
-export type FulfillmentDecision =
+type FulfillmentDecision =
   | { nextStep: FulfillmentNextStep.DONE }
-  | { nextStep: FulfillmentNextStep.REFUND_DOUBLE_PURCHASE; paymentId: string };
+  | {
+      nextStep: FulfillmentNextStep.REFUND_DOUBLE_PURCHASE;
+      paymentId: string;
+      providerPaymentId: string;
+    };
 
 const DONE: FulfillmentDecision = { nextStep: FulfillmentNextStep.DONE };
 
@@ -53,16 +60,19 @@ const DONE: FulfillmentDecision = { nextStep: FulfillmentNextStep.DONE };
 type FulfillmentContext = {
   tx: DbScope;
   payment: FulfillmentPayment;
-  paidAt: Temporal.Instant;
+  providerPayment: ProviderPayment;
 };
 
 /**
  * Grants access for a paid checkout and queues the buyer's email, in one
  * transaction, so a failure part-way leaves the event unrecorded and the
- * provider's retry runs it again.
+ * provider's retry runs it again. Anything that calls the provider happens
+ * after that transaction commits.
  */
 @Injectable()
 export class FulfillmentService {
+  private readonly logger = new Logger(FulfillmentService.name);
+
   constructor(
     @Inject(PrismaService)
     private readonly prisma: PrismaService,
@@ -72,9 +82,19 @@ export class FulfillmentService {
     private readonly enrollmentsRepository: EnrollmentsRepository,
     @Inject(EmailOutboxRepository)
     private readonly emailOutbox: EmailOutboxRepository,
+    @Inject(StripeService)
+    private readonly stripeService: StripeService,
   ) {}
 
-  fulfillCheckout(checkout: CompletedCheckout): Promise<FulfillmentDecision> {
+  async fulfillCheckout(checkout: CompletedCheckout): Promise<void> {
+    const decision = await this.recordFulfillment(checkout);
+
+    await this.carryOut(decision);
+  }
+
+  private recordFulfillment(
+    checkout: CompletedCheckout,
+  ): Promise<FulfillmentDecision> {
     return this.prisma.db.transaction(async (tx) => {
       const isNewEvent = await this.paymentsRepository.recordProcessedEvent(
         tx,
@@ -83,6 +103,36 @@ export class FulfillmentService {
 
       return isNewEvent ? this.fulfillNewEvent(tx, checkout) : DONE;
     });
+  }
+
+  private async carryOut(decision: FulfillmentDecision): Promise<void> {
+    switch (decision.nextStep) {
+      case FulfillmentNextStep.DONE:
+        return;
+      case FulfillmentNextStep.REFUND_DOUBLE_PURCHASE:
+        return this.refundDoublePurchase(decision);
+    }
+  }
+
+  /**
+   * A failed refund must not fail the webhook: the event is already recorded,
+   * so a redelivery would do nothing, and the sweeper retries the refund.
+   */
+  private async refundDoublePurchase(decision: {
+    paymentId: string;
+    providerPaymentId: string;
+  }): Promise<void> {
+    try {
+      await this.stripeService.refundPayment({
+        paymentId: decision.paymentId,
+        providerPaymentId: decision.providerPaymentId,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Refund of double purchase ${decision.paymentId} failed; the sweeper will retry it.`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
   }
 
   private async fulfillNewEvent(
@@ -116,7 +166,7 @@ export class FulfillmentService {
       return DONE;
     }
 
-    return this.grantPurchase({ tx, payment, paidAt: providerPayment.paidAt });
+    return this.grantPurchase({ tx, payment, providerPayment });
   }
 
   /**
@@ -175,7 +225,7 @@ export class FulfillmentService {
         courseId: payment.courseId,
         customerId: payment.customer.id,
         paymentId: payment.id,
-        now: context.paidAt,
+        now: context.providerPayment.paidAt,
       },
     );
 
@@ -205,6 +255,7 @@ export class FulfillmentService {
     return {
       nextStep: FulfillmentNextStep.REFUND_DOUBLE_PURCHASE,
       paymentId: context.payment.id,
+      providerPaymentId: context.providerPayment.id,
     };
   }
 
