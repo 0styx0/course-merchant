@@ -2,11 +2,19 @@ import { Temporal } from "@js-temporal/polyfill";
 import Stripe from "stripe";
 import { describe, expect, it, vi } from "vitest";
 
+import type { PaymentsConfig } from "@/config/payments-config.js";
 import {
+  InvalidWebhookSignatureError,
   PaymentProviderUnavailableError,
   StripeService,
   type CreateCheckoutSessionInput,
 } from "./stripe.service.js";
+
+const config: PaymentsConfig = {
+  stripeSecretKey: "sk_test_unit",
+  stripeWebhookSecret: "whsec_unit_test_secret",
+  webBaseUrl: "https://courses.example.com",
+};
 
 type StripeRequest = {
   url: string;
@@ -42,7 +50,7 @@ function serviceWith(respond: (request: StripeRequest) => Response | Promise<Res
     maxNetworkRetries: 0,
   });
 
-  return { service: new StripeService(stripe), requests };
+  return { service: new StripeService(stripe, config), requests, stripe };
 }
 
 function makeInput(): CreateCheckoutSessionInput {
@@ -173,6 +181,91 @@ describe("StripeService", () => {
       await expect(service.createCheckoutSession(makeInput())).rejects.toThrow(
         "Stripe returned Checkout Session cs_test_123 without a URL.",
       );
+    });
+  });
+
+  describe("verifyWebhookEvent", () => {
+    const eventBody = JSON.stringify({
+      id: "evt_test_123",
+      object: "event",
+      type: "checkout.session.completed",
+      data: { object: { id: "cs_test_123", object: "checkout.session" } },
+    });
+
+    // signs the body the way Stripe does, using the SDK's documented helper
+    function sign(
+      stripe: Stripe,
+      body: string,
+      options: { secret?: string; timestamp?: number } = {},
+    ) {
+      return stripe.webhooks.generateTestHeaderString({
+        payload: body,
+        secret: options.secret ?? config.stripeWebhookSecret,
+        timestamp: options.timestamp,
+      });
+    }
+
+    it("returns the event when the signature matches the body", () => {
+      const { service, stripe } = serviceWith(() => jsonResponse(200, {}));
+
+      const event = service.verifyWebhookEvent(
+        Buffer.from(eventBody),
+        sign(stripe, eventBody),
+      );
+
+      expect(event).toMatchObject({
+        id: "evt_test_123",
+        type: "checkout.session.completed",
+      });
+    });
+
+    it("rejects a body changed after it was signed", () => {
+      const { service, stripe } = serviceWith(() => jsonResponse(200, {}));
+      const signature = sign(stripe, eventBody);
+      const changedBody = eventBody.replace("cs_test_123", "cs_test_999");
+
+      expect(() =>
+        service.verifyWebhookEvent(Buffer.from(changedBody), signature),
+      ).toThrow(InvalidWebhookSignatureError);
+    });
+
+    it("rejects a signature made with another secret", () => {
+      const { service, stripe } = serviceWith(() => jsonResponse(200, {}));
+
+      expect(() =>
+        service.verifyWebhookEvent(
+          Buffer.from(eventBody),
+          sign(stripe, eventBody, { secret: "whsec_someone_else" }),
+        ),
+      ).toThrow(InvalidWebhookSignatureError);
+    });
+
+    it("rejects a request without a signature", () => {
+      const { service } = serviceWith(() => jsonResponse(200, {}));
+
+      expect(() =>
+        service.verifyWebhookEvent(Buffer.from(eventBody), undefined),
+      ).toThrow(InvalidWebhookSignatureError);
+    });
+
+    it("rejects a signature from long ago, so old requests can't be replayed", () => {
+      const { service, stripe } = serviceWith(() => jsonResponse(200, {}));
+      const oneHourAgoInSeconds = Math.floor(Date.now() / 1000) - 60 * 60;
+
+      expect(() =>
+        service.verifyWebhookEvent(
+          Buffer.from(eventBody),
+          sign(stripe, eventBody, { timestamp: oneHourAgoInSeconds }),
+        ),
+      ).toThrow(InvalidWebhookSignatureError);
+    });
+
+    it("never calls Stripe", () => {
+      const { service, stripe, requests } = serviceWith(() => jsonResponse(200, {}));
+
+      service.verifyWebhookEvent(Buffer.from(eventBody), sign(stripe, eventBody));
+
+      expect(requests).toEqual([]);
     });
   });
 });

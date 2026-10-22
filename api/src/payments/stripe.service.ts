@@ -41,6 +41,13 @@ export class PaymentProviderUnavailableError extends Error {
   }
 }
 
+export class InvalidWebhookSignatureError extends Error {
+  constructor(options?: { cause?: unknown }) {
+    super("The webhook's Stripe-Signature header doesn't match its body.", options);
+    this.name = "InvalidWebhookSignatureError";
+  }
+}
+
 /**
  * The only place the app calls Stripe. Services use this rather than the SDK,
  * so tests can replace it and Stripe's request details stay in one file.
@@ -50,7 +57,40 @@ export class StripeService {
   constructor(
     @Inject(STRIPE_CLIENT)
     private readonly stripe: Stripe,
+    @Inject(PAYMENTS_CONFIG)
+    private readonly config: PaymentsConfig,
   ) {}
+
+  /**
+   * Checks that a webhook request really came from Stripe and returns its
+   * event. The signature covers the exact bytes Stripe sent, so `rawBody`
+   * must be the unparsed request body.
+   *
+   * @throws InvalidWebhookSignatureError when the signature is missing,
+   * doesn't match the body, or is too old (the SDK's replay protection)
+   */
+  verifyWebhookEvent(
+    rawBody: Buffer,
+    signatureHeader: string | undefined,
+  ): Stripe.Event {
+    if (!signatureHeader) {
+      throw new InvalidWebhookSignatureError();
+    }
+
+    try {
+      return this.stripe.webhooks.constructEvent(
+        rawBody,
+        signatureHeader,
+        this.config.stripeWebhookSecret,
+      );
+    } catch (error) {
+      if (error instanceof Stripe.errors.StripeSignatureVerificationError) {
+        throw new InvalidWebhookSignatureError({ cause: error });
+      }
+
+      throw error;
+    }
+  }
 
   /**
    * @throws PaymentProviderUnavailableError when Stripe can't be reached or
