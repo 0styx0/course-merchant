@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AdminCoursesService } from "@/courses/admin-courses.service.js";
 import { toAdminCourseResponse } from "@/courses/courses.mapper.js";
-import { AdminCoursesRepository, CourseRepositoryModelAdmin } from "@/courses/courses.repository/admin-courses.repository.js";
+import {
+  AdminCoursesRepository,
+  CourseRepositoryModelAdmin,
+} from "@/courses/courses.repository/admin-courses.repository.js";
 import type { UpdateCourseRequest } from "types.js";
 
 const COURSE_ID = "crs_01HZX3";
@@ -30,22 +33,24 @@ function makeRepositoryCourse() {
         id: "price_past",
         amount: 7900,
         currency: "USD",
-        effectiveAt: now.subtract({ hours: 48 }).round({ smallestUnit: "microseconds" }),
+        effectiveAt: now
+          .subtract({ hours: 48 })
+          .round({ smallestUnit: "microseconds" }),
       },
       {
         id: "price_future",
         amount: 9900,
         currency: "USD",
-        effectiveAt: now.add({ hours: 12 }).round({ smallestUnit: "microseconds" }),
+        effectiveAt: now
+          .add({ hours: 12 })
+          .round({ smallestUnit: "microseconds" }),
       },
     ],
     enrollments: [],
   } satisfies CourseRepositoryModelAdmin;
 }
 
-function makeRequest(
-  course: CourseRepositoryModelAdmin,
-): UpdateCourseRequest {
+function makeRequest(course: CourseRepositoryModelAdmin): UpdateCourseRequest {
   return {
     name: course.title,
     description: course.description,
@@ -93,9 +98,7 @@ describe("AdminCoursesService", () => {
         makeRequest(repositoryCourse),
       );
 
-      expect(result).toEqual(
-        toAdminCourseResponse(repositoryCourse),
-      );
+      expect(result).toEqual(toAdminCourseResponse(repositoryCourse));
     });
 
     it("overwrites the course details", async () => {
@@ -122,10 +125,7 @@ describe("AdminCoursesService", () => {
     });
 
     it("does not append an unchanged status", async () => {
-      await service.updateCourse(
-        COURSE_ID,
-        makeRequest(repositoryCourse),
-      );
+      await service.updateCourse(COURSE_ID, makeRequest(repositoryCourse));
 
       expect(coursesRepository.updateCourse).toHaveBeenCalledWith(
         COURSE_ID,

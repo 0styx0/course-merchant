@@ -57,9 +57,7 @@ describe("AdminCoursesService integration", () => {
 
       const result = await service.findAllAdmin();
 
-      const listedCourse = result.courses.find(
-        (item) => item.id === course.id,
-      );
+      const listedCourse = result.courses.find((item) => item.id === course.id);
 
       expect(listedCourse).toBeDefined();
       expect(listedCourse!.status.name).toBe("published");
@@ -70,17 +68,11 @@ describe("AdminCoursesService integration", () => {
 
       const archivedAt = course.createdAt.add({ seconds: 1 });
 
-      await updateCourseStatus(
-        course.id,
-        "archived",
-        archivedAt,
-      );
+      await updateCourseStatus(course.id, "archived", archivedAt);
 
       const result = await service.findAllAdmin();
 
-      const listedCourse = result.courses.find(
-        (item) => item.id === course.id,
-      );
+      const listedCourse = result.courses.find((item) => item.id === course.id);
 
       expect(listedCourse).toBeDefined();
       expect(listedCourse!.status.name).toBe("archived");
@@ -102,9 +94,7 @@ describe("AdminCoursesService integration", () => {
 
       const result = await service.findAllAdmin();
 
-      expect(
-        result.courses.some((item) => item.id === course.id),
-      ).toBe(false);
+      expect(result.courses.some((item) => item.id === course.id)).toBe(false);
     });
 
     it("includes a course whose latest status is published, even if an older status was deleted", async () => {
@@ -118,17 +108,11 @@ describe("AdminCoursesService integration", () => {
 
       const publishedAt = course.createdAt.add({ seconds: 2 });
 
-      await updateCourseStatus(
-        course.id,
-        "published",
-        publishedAt,
-      );
+      await updateCourseStatus(course.id, "published", publishedAt);
 
       const result = await service.findAllAdmin();
 
-      const listedCourse = result.courses.find(
-        (item) => item.id === course.id,
-      );
+      const listedCourse = result.courses.find((item) => item.id === course.id);
 
       expect(listedCourse).toBeDefined();
       expect(listedCourse!.status.name).toBe("published");
@@ -166,9 +150,7 @@ describe("AdminCoursesService integration", () => {
 
       const result = await service.findAllAdmin();
 
-      const listedCourse = result.courses.find(
-        (item) => item.id === course.id,
-      );
+      const listedCourse = result.courses.find((item) => item.id === course.id);
 
       expect(listedCourse).toBeDefined();
       expect(listedCourse!.prices).toEqual([
@@ -208,9 +190,7 @@ describe("AdminCoursesService integration", () => {
 
       const result = await service.findAllAdmin();
 
-      const listedCourse = result.courses.find(
-        (item) => item.id === course.id,
-      );
+      const listedCourse = result.courses.find((item) => item.id === course.id);
 
       expect(listedCourse).toBeDefined();
       expect(listedCourse!.prices).toEqual([
@@ -239,9 +219,7 @@ describe("AdminCoursesService integration", () => {
 
       const result = await service.findAllAdmin();
 
-      const listedCourse = result.courses.find(
-        (item) => item.id === course.id,
-      );
+      const listedCourse = result.courses.find((item) => item.id === course.id);
 
       expect(listedCourse).toBeDefined();
       expect(listedCourse!.schedule).toEqual({
@@ -359,9 +337,7 @@ describe("AdminCoursesService integration", () => {
 
       const result = await service.findAllAdmin();
 
-      const listedCourse = result.courses.find(
-        (item) => item.id === course.id,
-      );
+      const listedCourse = result.courses.find((item) => item.id === course.id);
 
       expect(listedCourse).toBeDefined();
       expect(listedCourse!.enrollments).toHaveLength(2);
@@ -405,9 +381,7 @@ describe("AdminCoursesService integration", () => {
 
       const result = await service.findAllAdmin();
 
-      const listedCourse = result.courses.find(
-        (item) => item.id === course.id,
-      );
+      const listedCourse = result.courses.find((item) => item.id === course.id);
 
       expect(listedCourse).toBeDefined();
       expect(listedCourse!.enrollments).toEqual([]);

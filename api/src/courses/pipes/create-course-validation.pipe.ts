@@ -1,5 +1,8 @@
 import { FieldErrorCode } from "@/common/errors/error-codes.js";
-import { ValidationError, ValidationException } from "@/common/errors/validation.exception.js";
+import {
+  ValidationError,
+  ValidationException,
+} from "@/common/errors/validation.exception.js";
 import { ArgumentMetadata, PipeTransform } from "@nestjs/common";
 import z from "zod";
 
@@ -8,10 +11,7 @@ export class ZodValidationPipe<
 > implements PipeTransform<unknown, z.output<TSchema>> {
   constructor(private readonly schema: TSchema) {}
 
-  transform(
-    value: unknown,
-    _metadata: ArgumentMetadata,
-  ): z.output<TSchema> {
+  transform(value: unknown, _metadata: ArgumentMetadata): z.output<TSchema> {
     // reportInput tells a missing or null field apart from a wrong type
     const result = this.schema.safeParse(value, { reportInput: true });
 
@@ -25,9 +25,7 @@ export class ZodValidationPipe<
   }
 }
 
-function toValidationErrors(
-  issue: z.core.$ZodIssue,
-): ValidationError[] {
+function toValidationErrors(issue: z.core.$ZodIssue): ValidationError[] {
   // one entry per unknown key, so each points at the offending field
   if (issue.code === "unrecognized_keys") {
     return issue.keys.map((key) => ({
@@ -79,9 +77,7 @@ function getValidationCode(
   const code = issue.params?.validationCode;
 
   // undefined = fallback in the caller
-  return Object.values(FieldErrorCode).includes(code)
-    ? code
-    : undefined;
+  return Object.values(FieldErrorCode).includes(code) ? code : undefined;
 }
 
 export function toJsonPointer(path: PropertyKey[]): string {

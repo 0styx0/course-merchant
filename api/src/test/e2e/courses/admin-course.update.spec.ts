@@ -2,19 +2,12 @@ import { INestApplication } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 import { randomUUID } from "node:crypto";
 import request from "supertest";
-import {
-  afterAll,
-  beforeAll,
-  describe,
-  expect,
-  it,
-} from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createCourse, createCoursePrice } from "@/test/course-fixtures.js";
 import { createE2eApp } from "../e2e-helpers.js";
 
 describe("PUT /admin/courses/:courseId (e2e)", () => {
-
   let app: INestApplication;
 
   beforeAll(async () => {
@@ -169,7 +162,10 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
       errors: expect.arrayContaining([
         expect.objectContaining({ field: "/name" }),
         expect.objectContaining({ field: "/prices/0/amount" }),
-        expect.objectContaining({ field: "/prices/0/id", code: "UNKNOWN_FIELD" }),
+        expect.objectContaining({
+          field: "/prices/0/id",
+          code: "UNKNOWN_FIELD",
+        }),
       ]),
     });
   });

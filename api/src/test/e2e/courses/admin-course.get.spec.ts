@@ -7,19 +7,12 @@ import type { INestApplication } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { Temporal } from "@js-temporal/polyfill";
 import request from "supertest";
-import {
-  afterAll,
-  beforeAll,
-  describe,
-  expect,
-  it,
-} from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { instant } from "../../test-helpers.js";
 import { createE2eApp } from "../e2e-helpers.js";
 
 describe("Admin Courses Create API (e2e)", () => {
-
   let app: INestApplication;
 
   beforeAll(async () => {
@@ -92,11 +85,7 @@ describe("Admin Courses Create API (e2e)", () => {
 
       const archivedAt = course.createdAt.add({ seconds: 2 });
 
-      await updateCourseStatus(
-        course.id,
-        "archived",
-        archivedAt,
-      );
+      await updateCourseStatus(course.id, "archived", archivedAt);
 
       const response = await request(app.getHttpServer())
         .get(`/v1/admin/courses/${course.id}`)
@@ -122,17 +111,9 @@ describe("Admin Courses Create API (e2e)", () => {
       const archivedAt = course.createdAt.add({ seconds: 2 });
       const publishedAt = course.createdAt.add({ seconds: 3 });
 
-      await updateCourseStatus(
-        course.id,
-        "archived",
-        archivedAt,
-      );
+      await updateCourseStatus(course.id, "archived", archivedAt);
 
-      await updateCourseStatus(
-        course.id,
-        "published",
-        publishedAt,
-      );
+      await updateCourseStatus(course.id, "published", publishedAt);
 
       const response = await request(app.getHttpServer())
         .get(`/v1/admin/courses/${course.id}`)
@@ -256,10 +237,7 @@ describe("Admin Courses Create API (e2e)", () => {
     it("returns 400 for a malformed course ID", async () => {
       const response = await request(app.getHttpServer())
         .get("/v1/admin/courses/not-a-uuid")
-        .expect(
-          "Content-Type",
-          /^application\/problem\+json(?:;|$)/,
-        )
+        .expect("Content-Type", /^application\/problem\+json(?:;|$)/)
         .expect(400);
 
       expect(response.body).toEqual({
@@ -274,10 +252,7 @@ describe("Admin Courses Create API (e2e)", () => {
 
       const response = await request(app.getHttpServer())
         .get(`/v1/admin/courses/${courseId}`)
-        .expect(
-          "Content-Type",
-          /^application\/problem\+json(?:;|$)/,
-        )
+        .expect("Content-Type", /^application\/problem\+json(?:;|$)/)
         .expect(404);
 
       expect(response.body).toEqual({

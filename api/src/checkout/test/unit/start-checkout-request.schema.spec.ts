@@ -22,9 +22,15 @@ describe("startCheckoutRequestSchema", () => {
 
   it.each([
     ["an empty customer name", withCustomer({ name: "   " })],
-    ["a customer name over 100 characters", withCustomer({ name: "a".repeat(101) })],
+    [
+      "a customer name over 100 characters",
+      withCustomer({ name: "a".repeat(101) }),
+    ],
     ["a malformed email", withCustomer({ email: "ada.example.com" })],
-    ["an email over 254 characters", withCustomer({ email: `${"a".repeat(250)}@x.io` })],
+    [
+      "an email over 254 characters",
+      withCustomer({ email: `${"a".repeat(250)}@x.io` }),
+    ],
     ["an unknown customer field", withCustomer({ phone: "555-0100" })],
     ["a missing customer", { courseId: valid.courseId }],
     ["a malformed course id", { ...valid, courseId: "123" }],

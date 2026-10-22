@@ -19,16 +19,21 @@ describe("loadPaymentsConfig", () => {
 
   it("drops a trailing slash from the site URL", () => {
     expect(
-      loadPaymentsConfig({ ...validEnv, WEB_BASE_URL: "https://courses.example.com/" })
-        .webBaseUrl,
+      loadPaymentsConfig({
+        ...validEnv,
+        WEB_BASE_URL: "https://courses.example.com/",
+      }).webBaseUrl,
     ).toBe("https://courses.example.com");
   });
 
-  it.each(["sk_test_abc", "sk_live_abc", "rk_live_abc"])("accepts the key %s", (key) => {
-    expect(() =>
-      loadPaymentsConfig({ ...validEnv, STRIPE_SECRET_KEY: key }),
-    ).not.toThrow();
-  });
+  it.each(["sk_test_abc", "sk_live_abc", "rk_live_abc"])(
+    "accepts the key %s",
+    (key) => {
+      expect(() =>
+        loadPaymentsConfig({ ...validEnv, STRIPE_SECRET_KEY: key }),
+      ).not.toThrow();
+    },
+  );
 
   it("rejects a publishable key without echoing it", () => {
     expect(() =>

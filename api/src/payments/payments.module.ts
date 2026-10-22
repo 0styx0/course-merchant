@@ -1,6 +1,9 @@
 import { Module } from "@nestjs/common";
 
-import { loadPaymentsConfig, PAYMENTS_CONFIG } from "@/config/payments-config.js";
+import {
+  loadPaymentsConfig,
+  PAYMENTS_CONFIG,
+} from "@/config/payments-config.js";
 import { StripeService, stripeClientProvider } from "./stripe.service.js";
 
 @Module({

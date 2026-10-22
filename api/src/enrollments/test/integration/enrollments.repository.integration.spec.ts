@@ -30,15 +30,18 @@ describe("EnrollmentsRepository (integration)", () => {
 
   function enroll(
     customerId: string,
-    fields: { revokedAt?: Temporal.Instant; suspendedAt?: Temporal.Instant } = {},
+    fields: {
+      revokedAt?: Temporal.Instant;
+      suspendedAt?: Temporal.Instant;
+    } = {},
   ) {
     return db.orm.public.Enrollment.create({ courseId, customerId, ...fields });
   }
 
   function findEnrollmentRow(customerId: string) {
-    return db.orm.public.Enrollment
-      .where((enrollment) => enrollment.customerId.eq(customerId))
-      .first();
+    return db.orm.public.Enrollment.where((enrollment) =>
+      enrollment.customerId.eq(customerId),
+    ).first();
   }
 
   const now = Temporal.Instant.from("2026-10-21T12:00:00Z");
@@ -87,9 +90,9 @@ describe("EnrollmentsRepository (integration)", () => {
     it("enrolls a new customer", async () => {
       const customer = await createCustomer({});
 
-      expect(
-        await repository.grantAccess(db, freeAccess(customer.id)),
-      ).toBe(true);
+      expect(await repository.grantAccess(db, freeAccess(customer.id))).toBe(
+        true,
+      );
       expect(await findEnrollmentRow(customer.id)).toMatchObject({
         courseId,
         paymentId: null,
@@ -103,18 +106,18 @@ describe("EnrollmentsRepository (integration)", () => {
       const customer = await createCustomer({});
       await enroll(otherCustomer.id);
 
-      expect(
-        await repository.grantAccess(db, freeAccess(customer.id)),
-      ).toBe(true);
+      expect(await repository.grantAccess(db, freeAccess(customer.id))).toBe(
+        true,
+      );
     });
 
     it("leaves an active enrollment alone", async () => {
       const customer = await createCustomer({});
       const enrollment = await enroll(customer.id);
 
-      expect(
-        await repository.grantAccess(db, freeAccess(customer.id)),
-      ).toBe(false);
+      expect(await repository.grantAccess(db, freeAccess(customer.id))).toBe(
+        false,
+      );
       expect(await findEnrollmentRow(customer.id)).toEqual(enrollment);
     });
 
@@ -124,9 +127,9 @@ describe("EnrollmentsRepository (integration)", () => {
         revokedAt: Temporal.Instant.from("2026-10-01T00:00:00Z"),
       });
 
-      expect(
-        await repository.grantAccess(db, freeAccess(customer.id)),
-      ).toBe(true);
+      expect(await repository.grantAccess(db, freeAccess(customer.id))).toBe(
+        true,
+      );
       expect(await findEnrollmentRow(customer.id)).toMatchObject({
         paymentId: null,
         revokedAt: null,
@@ -135,7 +138,10 @@ describe("EnrollmentsRepository (integration)", () => {
     });
 
     it.each([
-      ["suspended", { suspendedAt: Temporal.Instant.from("2026-10-01T00:00:00Z") }],
+      [
+        "suspended",
+        { suspendedAt: Temporal.Instant.from("2026-10-01T00:00:00Z") },
+      ],
       [
         "suspended and revoked",
         {
@@ -147,9 +153,9 @@ describe("EnrollmentsRepository (integration)", () => {
       const customer = await createCustomer({});
       const enrollment = await enroll(customer.id, fields);
 
-      expect(
-        await repository.grantAccess(db, freeAccess(customer.id)),
-      ).toBe(false);
+      expect(await repository.grantAccess(db, freeAccess(customer.id))).toBe(
+        false,
+      );
       expect(await findEnrollmentRow(customer.id)).toEqual(enrollment);
     });
 

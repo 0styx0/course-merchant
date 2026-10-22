@@ -1,4 +1,4 @@
-import 'dotenv/config.js';
+import "dotenv/config.js";
 import { z } from "zod";
 
 const paymentsEnvSchema = z.object({
@@ -6,7 +6,10 @@ const paymentsEnvSchema = z.object({
   // Sessions and create refunds
   STRIPE_SECRET_KEY: z
     .string()
-    .regex(/^(sk|rk)_(test|live)_/, "must be a Stripe secret or restricted key"),
+    .regex(
+      /^(sk|rk)_(test|live)_/,
+      "must be a Stripe secret or restricted key",
+    ),
   // proves a webhook request really came from Stripe. Each webhook endpoint
   // (and each `stripe listen` session) has its own
   STRIPE_WEBHOOK_SECRET: z

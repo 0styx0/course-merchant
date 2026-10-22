@@ -1,0 +1,8 @@
+dist
+node_modules
+src/generated
+src/prisma/contract.json
+src/prisma/contract.d.ts
+migrations
+*.md
+yarn.lock

@@ -12,7 +12,11 @@ export type EmailKind = Models.public_EmailOutbox["kind"];
 type EmailPayloads = {
   access_granted: { courseId: string; customerId: string };
   // refundIssued: the buyer paid twice and the second payment was refunded
-  already_owned: { courseId: string; customerId: string; refundIssued: boolean };
+  already_owned: {
+    courseId: string;
+    customerId: string;
+    refundIssued: boolean;
+  };
   access_suspended: { courseId: string; customerId: string };
   dispute_alert: { paymentId: string };
 };
@@ -47,11 +51,9 @@ export class EmailOutboxRepository {
     recipient: string,
     since: Temporal.Instant,
   ): Promise<number> {
-    const { queued } = await scope.orm.public.EmailOutbox
-      .where((email) =>
-        and(email.recipient.eq(recipient), email.createdAt.gte(since)),
-      )
-      .aggregate((aggregate) => ({ queued: aggregate.count() }));
+    const { queued } = await scope.orm.public.EmailOutbox.where((email) =>
+      and(email.recipient.eq(recipient), email.createdAt.gte(since)),
+    ).aggregate((aggregate) => ({ queued: aggregate.count() }));
 
     return queued;
   }

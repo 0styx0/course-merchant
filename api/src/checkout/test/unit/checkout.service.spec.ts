@@ -2,7 +2,10 @@ import { Temporal } from "@js-temporal/polyfill";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { StartCheckoutRequest } from "types.js";
-import { CheckoutRepository, type CheckoutCourse } from "@/checkout/checkout.repository.js";
+import {
+  CheckoutRepository,
+  type CheckoutCourse,
+} from "@/checkout/checkout.repository.js";
 import { CheckoutService } from "@/checkout/checkout.service.js";
 import type { PaymentsConfig } from "@/config/payments-config.js";
 import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
@@ -36,7 +39,11 @@ function makeCourse(
     id: COURSE_ID,
     title: "React Fundamentals",
     endsAt: overrides.endsAt ?? Temporal.Now.instant().add({ hours: 26 }),
-    currentPrice: { id: PRICE_ID, amount: overrides.amount ?? 0, currency: "USD" },
+    currentPrice: {
+      id: PRICE_ID,
+      amount: overrides.amount ?? 0,
+      currency: "USD",
+    },
   };
 }
 
@@ -96,7 +103,10 @@ describe("CheckoutService", () => {
       createCheckoutSession: vi.fn(async () => {
         events.push("stripe called");
 
-        return { id: "cs_test_123", url: "https://checkout.stripe.com/c/pay/cs_test_123" };
+        return {
+          id: "cs_test_123",
+          url: "https://checkout.stripe.com/c/pay/cs_test_123",
+        };
       }),
     };
 
@@ -156,7 +166,9 @@ describe("CheckoutService", () => {
     it("looks the course up outside the transaction", async () => {
       await service.startCheckout(request);
 
-      expect(checkoutRepository.findVisibleCourse).toHaveBeenCalledExactlyOnceWith(
+      expect(
+        checkoutRepository.findVisibleCourse,
+      ).toHaveBeenCalledExactlyOnceWith(
         prisma.db,
         COURSE_ID,
         expect.any(Temporal.Instant),
@@ -195,7 +207,9 @@ describe("CheckoutService", () => {
     });
 
     it("answers the same way for a paid course, without charging again", async () => {
-      checkoutRepository.findVisibleCourse.mockResolvedValue(makeCourse({ amount: 9900 }));
+      checkoutRepository.findVisibleCourse.mockResolvedValue(
+        makeCourse({ amount: 9900 }),
+      );
 
       await expect(service.startCheckout(request)).resolves.toEqual({
         status: "check_email",
@@ -231,24 +245,27 @@ describe("CheckoutService", () => {
     it.each([
       ["a new buyer", null],
       ["a refunded buyer", { id: "enrollment", revokedAt, suspendedAt: null }],
-    ])("grants access to %s and emails the link", async (_label, enrollment) => {
-      enrollmentsRepository.findEnrollment.mockResolvedValue(enrollment);
+    ])(
+      "grants access to %s and emails the link",
+      async (_label, enrollment) => {
+        enrollmentsRepository.findEnrollment.mockResolvedValue(enrollment);
 
-      await expect(service.startCheckout(request)).resolves.toEqual({
-        status: "check_email",
-      });
-      expect(enrollmentsRepository.grantAccess).toHaveBeenCalledWith(tx, {
-        courseId: COURSE_ID,
-        customerId: CUSTOMER_ID,
-        paymentId: null,
-        now: expect.any(Temporal.Instant),
-      });
-      expect(emailOutbox.enqueue).toHaveBeenCalledExactlyOnceWith(tx, {
-        kind: "access_granted",
-        recipient: "ada@example.com",
-        payload: emailIds,
-      });
-    });
+        await expect(service.startCheckout(request)).resolves.toEqual({
+          status: "check_email",
+        });
+        expect(enrollmentsRepository.grantAccess).toHaveBeenCalledWith(tx, {
+          courseId: COURSE_ID,
+          customerId: CUSTOMER_ID,
+          paymentId: null,
+          now: expect.any(Temporal.Instant),
+        });
+        expect(emailOutbox.enqueue).toHaveBeenCalledExactlyOnceWith(tx, {
+          kind: "access_granted",
+          recipient: "ada@example.com",
+          payload: emailIds,
+        });
+      },
+    );
 
     it("sends nothing when a concurrent request granted access first", async () => {
       enrollmentsRepository.grantAccess.mockResolvedValue(false);
@@ -266,7 +283,8 @@ describe("CheckoutService", () => {
       await service.startCheckout(request);
       const after = Temporal.Now.instant();
 
-      const [scope, recipient, since] = emailOutbox.countQueuedSince.mock.calls[0];
+      const [scope, recipient, since] =
+        emailOutbox.countQueuedSince.mock.calls[0];
 
       expect(scope).toBe(tx);
       expect(recipient).toBe("ada@example.com");
@@ -299,7 +317,9 @@ describe("CheckoutService", () => {
 
   describe("a paid course", () => {
     beforeEach(() => {
-      checkoutRepository.findVisibleCourse.mockResolvedValue(makeCourse({ amount: 9900 }));
+      checkoutRepository.findVisibleCourse.mockResolvedValue(
+        makeCourse({ amount: 9900 }),
+      );
     });
 
     it("redirects the buyer to Stripe's checkout page", async () => {
@@ -312,19 +332,24 @@ describe("CheckoutService", () => {
     it.each([
       ["a new buyer", null],
       ["a refunded buyer", { id: "enrollment", revokedAt, suspendedAt: null }],
-    ])("records a pending payment at the current price for %s", async (_label, enrollment) => {
-      enrollmentsRepository.findEnrollment.mockResolvedValue(enrollment);
+    ])(
+      "records a pending payment at the current price for %s",
+      async (_label, enrollment) => {
+        enrollmentsRepository.findEnrollment.mockResolvedValue(enrollment);
 
-      await service.startCheckout(request);
+        await service.startCheckout(request);
 
-      expect(checkoutRepository.createPendingPayment).toHaveBeenCalledExactlyOnceWith(tx, {
-        provider: "stripe",
-        customerId: CUSTOMER_ID,
-        coursePriceId: PRICE_ID,
-        amount: 9900,
-        currency: "USD",
-      });
-    });
+        expect(
+          checkoutRepository.createPendingPayment,
+        ).toHaveBeenCalledExactlyOnceWith(tx, {
+          provider: "stripe",
+          customerId: CUSTOMER_ID,
+          coursePriceId: PRICE_ID,
+          amount: 9900,
+          currency: "USD",
+        });
+      },
+    );
 
     it("creates the Stripe session for that payment", async () => {
       const before = Temporal.Now.instant();
@@ -361,11 +386,9 @@ describe("CheckoutService", () => {
     it("saves the session id on the payment outside the transaction", async () => {
       await service.startCheckout(request);
 
-      expect(checkoutRepository.saveProviderCheckoutId).toHaveBeenCalledExactlyOnceWith(
-        prisma.db,
-        PAYMENT_ID,
-        "cs_test_123",
-      );
+      expect(
+        checkoutRepository.saveProviderCheckoutId,
+      ).toHaveBeenCalledExactlyOnceWith(prisma.db, PAYMENT_ID, "cs_test_123");
     });
 
     it("queues no email; access is granted once Stripe confirms payment", async () => {
@@ -402,11 +425,15 @@ describe("CheckoutService", () => {
     it.each(["pending", "succeeded", "expired", "refunded"])(
       "reports a %s payment",
       async (status) => {
-        checkoutRepository.findPaymentStatusByCheckoutId.mockResolvedValue(status);
-
-        await expect(service.getCheckoutStatus("cs_test_123")).resolves.toEqual({
+        checkoutRepository.findPaymentStatusByCheckoutId.mockResolvedValue(
           status,
-        });
+        );
+
+        await expect(service.getCheckoutStatus("cs_test_123")).resolves.toEqual(
+          {
+            status,
+          },
+        );
       },
     );
 
@@ -421,7 +448,9 @@ describe("CheckoutService", () => {
     it("returns 404 CHECKOUT_NOT_FOUND for an unknown session", async () => {
       checkoutRepository.findPaymentStatusByCheckoutId.mockResolvedValue(null);
 
-      await expect(service.getCheckoutStatus("cs_test_unknown")).rejects.toMatchObject({
+      await expect(
+        service.getCheckoutStatus("cs_test_unknown"),
+      ).rejects.toMatchObject({
         status: 404,
         response: {
           code: "CHECKOUT_NOT_FOUND",

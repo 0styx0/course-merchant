@@ -1,10 +1,24 @@
 import { Test, type TestingModule } from "@nestjs/testing";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { Temporal } from "@js-temporal/polyfill";
 
 import { CoursesRepository } from "../../courses.repository/courses.repository.js";
-import { createCourse, createCoursePrice, createCustomer, createPayment, createEnrollment } from "../../../test/course-fixtures.js";
+import {
+  createCourse,
+  createCoursePrice,
+  createCustomer,
+  createPayment,
+  createEnrollment,
+} from "../../../test/course-fixtures.js";
 import { CoursesService } from "../../courses.service.js";
 import { instant } from "../../../test/test-helpers.js";
 import { PrismaModule } from "../../../prisma/prisma.module.js";
@@ -15,19 +29,15 @@ describe("CoursesService integration", () => {
   let service: CoursesService;
   let testingModule: TestingModule;
 
-
   beforeAll(async () => {
     testingModule = await Test.createTestingModule({
       imports: [PrismaModule],
-      providers: [
-        CoursesService,
-        CoursesRepository,
-      ],
+      providers: [CoursesService, CoursesRepository],
     }).compile();
 
     service = testingModule.get(CoursesService);
   });
-  
+
   beforeEach(() => {
     vi.spyOn(Temporal.Now, "instant").mockReturnValue(NOW);
   });

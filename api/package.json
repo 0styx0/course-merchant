@@ -8,7 +8,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format": "prettier --write .",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -23,7 +23,8 @@
     "test:unit": "vitest run --config vitest.unit.config.ts",
     "test:unit:watch": "yarn test:unit --watch",
     "test:integration": "yarn db:test:up && yarn db:test:migrate && vitest run --config vitest.integration.config.ts",
-    "test:e2e": "yarn db:test:up && yarn db:test:migrate && vitest run --config vitest.e2e.config.ts"
+    "test:e2e": "yarn db:test:up && yarn db:test:migrate && vitest run --config vitest.e2e.config.ts",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -53,7 +54,6 @@
     "@vitest/coverage-v8": "^5.0.2",
     "dotenv": "^18.0.3",
     "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-prettier": "^5.2.2",
     "globals": "^16.0.0",
     "openapi-typescript": "^7.13.0",
     "prettier": "^3.4.2",

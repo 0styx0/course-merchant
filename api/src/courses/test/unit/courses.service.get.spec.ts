@@ -1,12 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { instant } from "../../../test/test-helpers.js";
 import type {
@@ -81,9 +74,7 @@ describe("CoursesService", () => {
     it("returns 404 COURSE_NOT_FOUND when the course does not exist", async () => {
       coursesRepository.findById.mockResolvedValue(null);
 
-      await expect(
-        service.findById(COURSE_ID),
-      ).rejects.toMatchObject({
+      await expect(service.findById(COURSE_ID)).rejects.toMatchObject({
         status: 404,
         response: {
           title: "Course not found",

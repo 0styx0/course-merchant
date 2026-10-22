@@ -9,10 +9,19 @@ import type {
 } from "types.js";
 import { ApiException } from "@/common/errors/api.exception.js";
 import { ErrorCodeCheckout } from "@/common/errors/error-codes.js";
-import { PAYMENTS_CONFIG, type PaymentsConfig } from "@/config/payments-config.js";
+import {
+  PAYMENTS_CONFIG,
+  type PaymentsConfig,
+} from "@/config/payments-config.js";
 import { courseNotFound } from "@/courses/course-errors.js";
-import { EmailOutboxRepository, type QueuedEmail } from "@/email/email-outbox.repository.js";
-import { PaymentProviderUnavailableError, StripeService } from "@/payments/stripe.service.js";
+import {
+  EmailOutboxRepository,
+  type QueuedEmail,
+} from "@/email/email-outbox.repository.js";
+import {
+  PaymentProviderUnavailableError,
+  StripeService,
+} from "@/payments/stripe.service.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import {
   CheckoutRepository,
@@ -20,7 +29,10 @@ import {
   type CheckoutCustomer,
   type PendingPayment,
 } from "./checkout.repository.js";
-import { EnrollmentAccess, enrollmentAccess } from "@/enrollments/enrollment-access.js";
+import {
+  EnrollmentAccess,
+  enrollmentAccess,
+} from "@/enrollments/enrollment-access.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 
 // Anyone can start a checkout for any address, so cap how many emails one
@@ -217,9 +229,7 @@ export class CheckoutService {
     return EMAILED;
   }
 
-  private sellCourse(
-    context: CheckoutContext,
-  ): Promise<CheckoutDecision> {
+  private sellCourse(context: CheckoutContext): Promise<CheckoutDecision> {
     const isFree = context.course.currentPrice.amount === 0;
 
     return isFree
@@ -306,17 +316,16 @@ export class CheckoutService {
     now,
   }: PaymentToComplete) {
     try {
-      return await this.stripe
-        .createCheckoutSession({
-          paymentId: payment.id,
-          amount: payment.amount,
-          currency: payment.currency,
-          courseName: course.title,
-          customerEmail: customer.email,
-          successUrl: `${this.config.webBaseUrl}/checkout/success`,
-          cancelUrl: `${this.config.webBaseUrl}/courses/${course.id}`,
-          expiresAt: now.add(CHECKOUT_EXPIRES_AFTER),
-        });
+      return await this.stripe.createCheckoutSession({
+        paymentId: payment.id,
+        amount: payment.amount,
+        currency: payment.currency,
+        courseName: course.title,
+        customerEmail: customer.email,
+        successUrl: `${this.config.webBaseUrl}/checkout/success`,
+        cancelUrl: `${this.config.webBaseUrl}/courses/${course.id}`,
+        expiresAt: now.add(CHECKOUT_EXPIRES_AFTER),
+      });
     } catch (error) {
       if (error instanceof PaymentProviderUnavailableError) {
         throw new ApiException(ErrorCodeCheckout.PAYMENT_PROVIDER_UNAVAILABLE, {

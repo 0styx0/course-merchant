@@ -2,7 +2,10 @@ import { Inject, Injectable } from "@nestjs/common";
 import type { Temporal } from "@js-temporal/polyfill";
 import Stripe from "stripe";
 
-import { PAYMENTS_CONFIG, type PaymentsConfig } from "@/config/payments-config.js";
+import {
+  PAYMENTS_CONFIG,
+  type PaymentsConfig,
+} from "@/config/payments-config.js";
 
 export const STRIPE_CLIENT = Symbol("STRIPE_CLIENT");
 
@@ -43,7 +46,10 @@ export class PaymentProviderUnavailableError extends Error {
 
 export class InvalidWebhookSignatureError extends Error {
   constructor(options?: { cause?: unknown }) {
-    super("The webhook's Stripe-Signature header doesn't match its body.", options);
+    super(
+      "The webhook's Stripe-Signature header doesn't match its body.",
+      options,
+    );
     this.name = "InvalidWebhookSignatureError";
   }
 }
@@ -134,7 +140,9 @@ export class StripeService {
       });
 
     if (!session.url) {
-      throw new Error(`Stripe returned Checkout Session ${session.id} without a URL.`);
+      throw new Error(
+        `Stripe returned Checkout Session ${session.id} without a URL.`,
+      );
     }
 
     return { id: session.id, url: session.url };

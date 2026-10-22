@@ -2,25 +2,29 @@ import { Test, type TestingModule } from "@nestjs/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CoursesService } from "../../courses.service.js";
-import { CourseRepositoryModelPublic, CoursesRepository } from "../../courses.repository/courses.repository.js";
+import {
+  CourseRepositoryModelPublic,
+  CoursesRepository,
+} from "../../courses.repository/courses.repository.js";
 import { instant } from "../../../test/test-helpers.js";
 
-const makeCourseRecord = (overrides = {}) => ({
-  id: "course-1",
-  title: "React Fundamentals",
-  description: "Learn React",
-  startsAt: instant("2026-10-01T18:00:00Z"),
-  endsAt: instant("2026-10-01T20:00:00Z"),
-  timeZone: "America/New_York",
-  prices: [
-    {
-      amount: 9900,
-      currency: "USD",
-    },
-  ],
-  enrollments: 0,
-  ...overrides,
-} satisfies CourseRepositoryModelPublic);
+const makeCourseRecord = (overrides = {}) =>
+  ({
+    id: "course-1",
+    title: "React Fundamentals",
+    description: "Learn React",
+    startsAt: instant("2026-10-01T18:00:00Z"),
+    endsAt: instant("2026-10-01T20:00:00Z"),
+    timeZone: "America/New_York",
+    prices: [
+      {
+        amount: 9900,
+        currency: "USD",
+      },
+    ],
+    enrollments: 0,
+    ...overrides,
+  }) satisfies CourseRepositoryModelPublic;
 
 describe("CoursesService", () => {
   let service: CoursesService;
@@ -277,9 +281,7 @@ describe("CoursesService", () => {
     it("propagates repository errors", async () => {
       findAvailable.mockRejectedValue(new Error("database unavailable"));
 
-      await expect(service.findAll()).rejects.toThrow(
-        "database unavailable",
-      );
+      await expect(service.findAll()).rejects.toThrow("database unavailable");
     });
 
     it("not found response when a returned course has no price", async () => {
@@ -289,9 +291,7 @@ describe("CoursesService", () => {
         }),
       ]);
 
-      await expect(
-        service.findAll()
-      ).rejects.toMatchObject({
+      await expect(service.findAll()).rejects.toMatchObject({
         status: 404,
         response: {
           title: "Course not found",

@@ -131,8 +131,9 @@ describe("ZodValidationPipe", () => {
     });
 
     it("reports a non-integer as INVALID_TYPE", () => {
-      expect(codesFor(z.object({ amount: z.number().int() }), { amount: 1.5 }))
-        .toEqual([{ field: "/amount", code: "INVALID_TYPE" }]);
+      expect(
+        codesFor(z.object({ amount: z.number().int() }), { amount: 1.5 }),
+      ).toEqual([{ field: "/amount", code: "INVALID_TYPE" }]);
     });
 
     it("distinguishes lengths from numeric bounds", () => {
@@ -161,7 +162,11 @@ describe("ZodValidationPipe", () => {
       });
 
       expect(
-        codesFor(schema, { startTime: "soon", status: "gone", timeZone: "Mars" }),
+        codesFor(schema, {
+          startTime: "soon",
+          status: "gone",
+          timeZone: "Mars",
+        }),
       ).toEqual([
         { field: "/startTime", code: "INVALID_FORMAT" },
         { field: "/status", code: "INVALID_VALUE" },

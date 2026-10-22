@@ -10,13 +10,7 @@ import {
 import type { INestApplication } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 import request from "supertest";
-import {
-  afterAll,
-  beforeAll,
-  describe,
-  expect,
-  it,
-} from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createE2eApp } from "../e2e-helpers.js";
 
 describe("Admin Courses API (e2e)", () => {
@@ -178,9 +172,7 @@ describe("Admin Courses API (e2e)", () => {
         .expect(200);
 
       expect(response.body.courses).not.toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ id: course.id }),
-        ]),
+        expect.arrayContaining([expect.objectContaining({ id: course.id })]),
       );
     });
 
@@ -218,7 +210,7 @@ describe("Admin Courses API (e2e)", () => {
 
       const futureCourse = await createCourse({
         title: "Future Price Course",
-        description: 'my future course',
+        description: "my future course",
         startsAt: Temporal.Instant.from("2026-11-01T18:00:00Z"),
         endsAt: Temporal.Instant.from("2026-11-01T20:00:00Z"),
         timeZone: "America/New_York",

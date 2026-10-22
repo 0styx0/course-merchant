@@ -8,7 +8,9 @@ import { configureApp } from "@/configure-app.js";
  * fake StripeService so tests never call Stripe
  */
 export async function createE2eApp(
-  overrides: (builder: TestingModuleBuilder) => TestingModuleBuilder = (builder) => builder,
+  overrides: (builder: TestingModuleBuilder) => TestingModuleBuilder = (
+    builder,
+  ) => builder,
 ): Promise<INestApplication> {
   const moduleRef = await overrides(
     Test.createTestingModule({

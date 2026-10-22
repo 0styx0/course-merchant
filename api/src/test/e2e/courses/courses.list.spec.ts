@@ -7,20 +7,12 @@ import { instant } from "../../test-helpers.js";
 import type { INestApplication } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 import request from "supertest";
-import {
-  afterAll,
-  beforeAll,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createE2eApp } from "../e2e-helpers.js";
 
 const NOW = Temporal.Instant.from("2026-09-29T14:00:00Z");
 
 describe("GET /v1/courses (e2e)", () => {
-
   let app: INestApplication;
 
   beforeAll(async () => {
@@ -119,9 +111,7 @@ describe("GET /v1/courses (e2e)", () => {
       Date.parse(course.schedule.startTime),
     );
 
-    expect(startTimes).toEqual(
-      [...startTimes].sort((a, b) => a - b),
-    );
+    expect(startTimes).toEqual([...startTimes].sort((a, b) => a - b));
   });
 
   it("excludes ended, archived, and unpriced courses", async () => {
@@ -170,7 +160,10 @@ describe("GET /v1/courses (e2e)", () => {
       },
     );
 
-    await archiveCourse(archived.course.id, archived.course.createdAt.add({ seconds: 1 }));
+    await archiveCourse(
+      archived.course.id,
+      archived.course.createdAt.add({ seconds: 1 }),
+    );
 
     const unpriced = await createCourse({
       title: "Unpriced Course",

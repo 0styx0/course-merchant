@@ -20,18 +20,11 @@ type ValidationIssue = {
   input: unknown;
 };
 
-type ValidationContext = Pick<
-  z.core.$RefinementCtx,
-  "addIssue"
->;
+type ValidationContext = Pick<z.core.$RefinementCtx, "addIssue">;
 
-type CourseSchedule = z.output<
-  typeof courseScheduleFieldsSchema
->;
+type CourseSchedule = z.output<typeof courseScheduleFieldsSchema>;
 
-type ScheduledPrice = z.output<
-  typeof scheduledPriceFieldsSchema
->;
+type ScheduledPrice = z.output<typeof scheduledPriceFieldsSchema>;
 
 function addValidationIssue(
   ctx: ValidationContext,
@@ -64,9 +57,7 @@ const priceEffectiveAtInputSchema = z.object({
   effectiveAt: scheduledPriceFieldsSchema.shape.effectiveAt,
 });
 
-const priceEffectiveTimesInputSchema = z.array(
-  priceEffectiveAtInputSchema,
-);
+const priceEffectiveTimesInputSchema = z.array(priceEffectiveAtInputSchema);
 
 function validateScheduleRange(
   schedule: CourseSchedule,
@@ -114,46 +105,31 @@ function validateFutureScheduleTime(
 export const updateCourseScheduleSchema =
   courseScheduleFieldsSchema.superRefine(validateScheduleRange, {
     when(payload) {
-      return scheduleRangeInputSchema.safeParse(
-        payload.value,
-      ).success;
+      return scheduleRangeInputSchema.safeParse(payload.value).success;
     },
   });
 
-export const createCourseScheduleSchema =
-  updateCourseScheduleSchema
-    .superRefine(
-      (schedule, ctx) => {
-        validateFutureScheduleTime(
-          schedule,
-          ctx,
-          "startTime",
-        );
+export const createCourseScheduleSchema = updateCourseScheduleSchema
+  .superRefine(
+    (schedule, ctx) => {
+      validateFutureScheduleTime(schedule, ctx, "startTime");
+    },
+    {
+      when(payload) {
+        return scheduleStartTimeInputSchema.safeParse(payload.value).success;
       },
-      {
-        when(payload) {
-          return scheduleStartTimeInputSchema.safeParse(
-            payload.value,
-          ).success;
-        },
+    },
+  )
+  .superRefine(
+    (schedule, ctx) => {
+      validateFutureScheduleTime(schedule, ctx, "endTime");
+    },
+    {
+      when(payload) {
+        return scheduleEndTimeInputSchema.safeParse(payload.value).success;
       },
-    )
-    .superRefine(
-      (schedule, ctx) => {
-        validateFutureScheduleTime(
-          schedule,
-          ctx,
-          "endTime",
-        );
-      },
-      {
-        when(payload) {
-          return scheduleEndTimeInputSchema.safeParse(
-            payload.value,
-          ).success;
-        },
-      },
-    );
+    },
+  );
 
 function validateFuturePriceEffectiveTime(
   price: ScheduledPrice,
@@ -175,16 +151,11 @@ function validateFuturePriceEffectiveTime(
 }
 
 export const createScheduledPriceSchema =
-  scheduledPriceFieldsSchema.superRefine(
-    validateFuturePriceEffectiveTime,
-    {
-      when(payload) {
-        return priceEffectiveAtInputSchema.safeParse(
-          payload.value,
-        ).success;
-      },
+  scheduledPriceFieldsSchema.superRefine(validateFuturePriceEffectiveTime, {
+    when(payload) {
+      return priceEffectiveAtInputSchema.safeParse(payload.value).success;
     },
-  );
+  });
 
 function validateUniquePriceEffectiveTimes(
   prices: ScheduledPrice[],
@@ -194,9 +165,7 @@ function validateUniquePriceEffectiveTimes(
 
   prices.forEach((price, index) => {
     // Normalize timestamps so equivalent instants compare equally.
-    const instant = Temporal.Instant.from(
-      price.effectiveAt,
-    ).toString();
+    const instant = Temporal.Instant.from(price.effectiveAt).toString();
 
     if (!seenInstants.has(instant)) {
       seenInstants.add(instant);
@@ -217,9 +186,7 @@ export const createScheduledPricesSchema = z
   .min(1)
   .superRefine(validateUniquePriceEffectiveTimes, {
     when(payload) {
-      return priceEffectiveTimesInputSchema.safeParse(
-        payload.value,
-      ).success;
+      return priceEffectiveTimesInputSchema.safeParse(payload.value).success;
     },
   });
 
@@ -231,8 +198,7 @@ const createCourseRequestBaseSchema = z.strictObject({
   prices: createScheduledPricesSchema,
 });
 
-export const createCourseRequestSchema =
-  createCourseRequestBaseSchema;
+export const createCourseRequestSchema = createCourseRequestBaseSchema;
 
 // Prices may be empty and in the past here: whether that is allowed depends
 // on the stored prices, which the service checks.
@@ -240,9 +206,7 @@ export const updateScheduledPricesSchema = z
   .array(scheduledPriceFieldsSchema)
   .superRefine(validateUniquePriceEffectiveTimes, {
     when(payload) {
-      return priceEffectiveTimesInputSchema.safeParse(
-        payload.value,
-      ).success;
+      return priceEffectiveTimesInputSchema.safeParse(payload.value).success;
     },
   });
 

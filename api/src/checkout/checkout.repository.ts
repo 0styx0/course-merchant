@@ -82,13 +82,11 @@ export class CheckoutRepository {
   ): Promise<CheckoutCustomer> {
     // an empty `update` makes this a create-if-missing that returns the
     // existing row, so concurrent checkouts for one email can't collide
-    return scope.orm.public.Customer
-      .select("id", "email", "name")
-      .upsert({
-        create: customer,
-        update: {},
-        conflictOn: { email: customer.email },
-      });
+    return scope.orm.public.Customer.select("id", "email", "name").upsert({
+      create: customer,
+      update: {},
+      conflictOn: { email: customer.email },
+    });
   }
 
   /**
@@ -114,9 +112,9 @@ export class CheckoutRepository {
     paymentId: string,
     providerCheckoutId: string,
   ): Promise<void> {
-    await scope.orm.public.Payment
-      .where((payment) => payment.id.eq(paymentId))
-      .update({ providerCheckoutId });
+    await scope.orm.public.Payment.where((payment) =>
+      payment.id.eq(paymentId),
+    ).update({ providerCheckoutId });
   }
 
   async findPaymentStatusByCheckoutId(
@@ -124,14 +122,12 @@ export class CheckoutRepository {
     provider: PaymentProvider,
     providerCheckoutId: string,
   ): Promise<PaymentStatus | null> {
-    const payment = await scope.orm.public.Payment
-      .where((candidate) =>
-        and(
-          candidate.provider.eq(provider),
-          candidate.providerCheckoutId.eq(providerCheckoutId),
-        ),
-      )
-      .first();
+    const payment = await scope.orm.public.Payment.where((candidate) =>
+      and(
+        candidate.provider.eq(provider),
+        candidate.providerCheckoutId.eq(providerCheckoutId),
+      ),
+    ).first();
 
     return payment?.status ?? null;
   }

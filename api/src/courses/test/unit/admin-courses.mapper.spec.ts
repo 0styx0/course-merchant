@@ -145,9 +145,7 @@ describe("toAdminCourseResponse", () => {
 
     expect(result.id).toBe(COURSE_ID);
     expect(result.name).toBe("React Fundamentals");
-    expect(result.description).toBe(
-      "Learn the fundamentals of React",
-    );
+    expect(result.description).toBe("Learn the fundamentals of React");
   });
 
   it("formats schedule timestamps using the course time zone", () => {

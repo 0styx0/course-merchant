@@ -1,4 +1,4 @@
-import 'dotenv/config.js';
+import "dotenv/config.js";
 
 const DEFAULT_ALLOWED_CURRENCIES = "USD";
 

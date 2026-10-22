@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { instant } from "../../../test/test-helpers.js";
-import type {
-  CoursesRepository,
-} from "../../courses.repository/courses.repository.js";
+import type { CoursesRepository } from "../../courses.repository/courses.repository.js";
 import { AdminCoursesService } from "@/courses/admin-courses.service.js";
 import { toAdminCourseResponse } from "@/courses/courses.mapper.js";
-import { AdminCoursesRepository, CourseRepositoryModelAdmin } from "@/courses/courses.repository/admin-courses.repository.js";
+import {
+  AdminCoursesRepository,
+  CourseRepositoryModelAdmin,
+} from "@/courses/courses.repository/admin-courses.repository.js";
 
 const COURSE_ID = "crs_01HZX3";
 
@@ -60,9 +61,7 @@ describe("AdminCoursesService", () => {
 
       const result = await service.findByIdAdmin(COURSE_ID);
 
-      expect(result).toEqual(
-        toAdminCourseResponse(repositoryCourse),
-      );
+      expect(result).toEqual(toAdminCourseResponse(repositoryCourse));
     });
 
     it("passes the course ID to the repository unchanged", async () => {
@@ -78,13 +77,9 @@ describe("AdminCoursesService", () => {
     });
 
     it("returns 404 COURSE_NOT_FOUND when the course does not exist", async () => {
-      coursesRepository.findCourseDetailsByIdAdmin.mockResolvedValue(
-        null,
-      );
+      coursesRepository.findCourseDetailsByIdAdmin.mockResolvedValue(null);
 
-      await expect(
-        service.findByIdAdmin(COURSE_ID),
-      ).rejects.toMatchObject({
+      await expect(service.findByIdAdmin(COURSE_ID)).rejects.toMatchObject({
         status: 404,
         response: {
           title: "Course not found",
@@ -96,13 +91,9 @@ describe("AdminCoursesService", () => {
     it("propagates repository errors", async () => {
       const error = new Error("Database unavailable");
 
-      coursesRepository.findCourseDetailsByIdAdmin.mockRejectedValue(
-        error,
-      );
+      coursesRepository.findCourseDetailsByIdAdmin.mockRejectedValue(error);
 
-      await expect(
-        service.findByIdAdmin(COURSE_ID),
-      ).rejects.toBe(error);
+      await expect(service.findByIdAdmin(COURSE_ID)).rejects.toBe(error);
     });
   });
 });

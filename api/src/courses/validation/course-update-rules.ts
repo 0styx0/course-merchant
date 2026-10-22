@@ -40,9 +40,7 @@ export function isSameInstant(
   requestValue: string,
   storedValue: Temporal.Instant,
 ): boolean {
-  const instant = toDatabasePrecision(
-    Temporal.Instant.from(requestValue),
-  );
+  const instant = toDatabasePrecision(Temporal.Instant.from(requestValue));
 
   return Temporal.Instant.compare(instant, storedValue) === 0;
 }
@@ -62,10 +60,7 @@ function isInPast(value: string, now: Temporal.Instant): boolean {
   return Temporal.Instant.compare(Temporal.Instant.from(value), now) < 0;
 }
 
-function isInEffect(
-  price: StoredPrice,
-  now: Temporal.Instant,
-): boolean {
+function isInEffect(price: StoredPrice, now: Temporal.Instant): boolean {
   return Temporal.Instant.compare(price.effectiveAt, now) <= 0;
 }
 
@@ -81,10 +76,7 @@ export function findUpdateRuleViolations({
   const errors: ValidationError[] = [];
   const { startTime, endTime } = request.schedule;
 
-  if (
-    !isSameInstant(startTime, stored.startsAt) &&
-    isInPast(startTime, now)
-  ) {
+  if (!isSameInstant(startTime, stored.startsAt) && isInPast(startTime, now)) {
     errors.push({
       field: toJsonPointer(["schedule", "startTime"]),
       code: FieldErrorCode.IN_PAST,
@@ -92,10 +84,7 @@ export function findUpdateRuleViolations({
     });
   }
 
-  if (
-    !isSameInstant(endTime, stored.endsAt) &&
-    isInPast(endTime, now)
-  ) {
+  if (!isSameInstant(endTime, stored.endsAt) && isInPast(endTime, now)) {
     errors.push({
       field: toJsonPointer(["schedule", "endTime"]),
       code: FieldErrorCode.IN_PAST,
@@ -147,9 +136,7 @@ export function findPriceChanges({
 }: UpdateRuleContext): PriceChanges {
   const newPrices = request.prices.filter(
     (price) =>
-      !stored.prices.some((storedPrice) =>
-        isSamePrice(price, storedPrice),
-      ),
+      !stored.prices.some((storedPrice) => isSamePrice(price, storedPrice)),
   );
 
   const deletePriceIds = stored.prices

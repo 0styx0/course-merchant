@@ -17,26 +17,26 @@ export type CourseRepositoryModelPublic = {
   enrollments: number;
 };
 
-
 @Injectable()
 export class CoursesRepository {
   constructor(
     @Inject(PrismaService)
     private readonly prisma: PrismaService,
-  ) { }
+  ) {}
 
   private publicCourseDetails(now: Temporal.Instant) {
-    return visibleCoursesWithCurrentPrice(this.prisma.db.orm.public.Course, now)
-      .include("enrollments", (enrollments) => enrollments.count());
+    return visibleCoursesWithCurrentPrice(
+      this.prisma.db.orm.public.Course,
+      now,
+    ).include("enrollments", (enrollments) => enrollments.count());
   }
 
-  async findAvailable(now: Temporal.Instant): Promise<CourseRepositoryModelPublic[]> {
+  async findAvailable(
+    now: Temporal.Instant,
+  ): Promise<CourseRepositoryModelPublic[]> {
     return await this.publicCourseDetails(now)
       .where((course) => course.endsAt.gt(now))
-      .orderBy([
-        (course) => course.startsAt.asc(),
-        (course) => course.id.asc(),
-      ])
+      .orderBy([(course) => course.startsAt.asc(), (course) => course.id.asc()])
       .all();
   }
 

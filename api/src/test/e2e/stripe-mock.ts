@@ -15,14 +15,18 @@ function stripeClientAt(url: URL): Stripe {
   });
 }
 
-export function useStripeMock(builder: TestingModuleBuilder): TestingModuleBuilder {
+export function useStripeMock(
+  builder: TestingModuleBuilder,
+): TestingModuleBuilder {
   return builder
     .overrideProvider(STRIPE_CLIENT)
     .useValue(stripeClientAt(new URL(process.env["STRIPE_MOCK_URL"]!)));
 }
 
 /** Points the app at a port nothing listens on, so every Stripe call fails to connect. */
-export function useUnreachableStripe(builder: TestingModuleBuilder): TestingModuleBuilder {
+export function useUnreachableStripe(
+  builder: TestingModuleBuilder,
+): TestingModuleBuilder {
   return builder
     .overrideProvider(STRIPE_CLIENT)
     .useValue(stripeClientAt(new URL("http://127.0.0.1:1")));

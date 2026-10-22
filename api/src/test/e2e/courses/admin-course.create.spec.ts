@@ -2,19 +2,12 @@ import { INestApplication } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 import { randomUUID } from "node:crypto";
 import request from "supertest";
-import {
-  afterAll,
-  beforeAll,
-  describe,
-  expect,
-  it,
-} from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { instant, toDatabasePrecision } from "@/test/test-helpers.js";
 import { createE2eApp } from "../e2e-helpers.js";
 
 describe("POST /admin/courses (e2e)", () => {
-
   let app: INestApplication;
 
   beforeAll(async () => {
@@ -76,9 +69,7 @@ describe("POST /admin/courses (e2e)", () => {
           id: expect.any(String),
           amount: 2500,
           currency: "USD",
-          effectiveAt: instant(
-            body.prices[0].effectiveAt,
-          ),
+          effectiveAt: instant(body.prices[0].effectiveAt),
         },
       ],
       schedule: {
@@ -96,17 +87,11 @@ describe("POST /admin/courses (e2e)", () => {
 
   it("persists multiple prices and returns them in effective-time order", async () => {
     const body = makeCreateRequest();
-    const startsAt = Temporal.Instant.from(
-      body.schedule.startTime,
-    );
+    const startsAt = Temporal.Instant.from(body.schedule.startTime);
 
-    const earlierEffectiveAt = startsAt
-      .subtract({ hours: 2 })
-      .toString();
+    const earlierEffectiveAt = startsAt.subtract({ hours: 2 }).toString();
 
-    const laterEffectiveAt = startsAt
-      .subtract({ hours: 1 })
-      .toString();
+    const laterEffectiveAt = startsAt.subtract({ hours: 1 }).toString();
 
     body.prices = [
       {
@@ -132,11 +117,7 @@ describe("POST /admin/courses (e2e)", () => {
 
     expect(
       getResponse.body.prices.map(
-        (price: {
-          amount: number;
-          currency: string;
-          effectiveAt: string;
-        }) => ({
+        (price: { amount: number; currency: string; effectiveAt: string }) => ({
           amount: price.amount,
           currency: price.currency,
           effectiveAt: price.effectiveAt,
@@ -156,11 +137,8 @@ describe("POST /admin/courses (e2e)", () => {
     ]);
 
     expect(
-      new Set(
-        getResponse.body.prices.map(
-          (price: { id: string }) => price.id,
-        ),
-      ).size,
+      new Set(getResponse.body.prices.map((price: { id: string }) => price.id))
+        .size,
     ).toBe(2);
   });
 

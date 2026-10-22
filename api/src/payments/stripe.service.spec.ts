@@ -30,20 +30,24 @@ function jsonResponse(status: number, body: unknown): Response {
 }
 
 // a real Stripe client whose HTTP calls go to `respond` instead of the network
-function serviceWith(respond: (request: StripeRequest) => Response | Promise<Response>) {
+function serviceWith(
+  respond: (request: StripeRequest) => Response | Promise<Response>,
+) {
   const requests: StripeRequest[] = [];
 
-  const fetchFn = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
-    const request = {
-      url: String(url),
-      headers: new Headers(init?.headers),
-      body: new URLSearchParams(String(init?.body ?? "")),
-    };
+  const fetchFn = vi.fn(
+    async (url: string | URL | Request, init?: RequestInit) => {
+      const request = {
+        url: String(url),
+        headers: new Headers(init?.headers),
+        body: new URLSearchParams(String(init?.body ?? "")),
+      };
 
-    requests.push(request);
+      requests.push(request);
 
-    return respond(request);
-  });
+      return respond(request);
+    },
+  );
 
   const stripe = new Stripe("sk_test_unit", {
     httpClient: Stripe.createFetchHttpClient(fetchFn as typeof fetch),
@@ -77,10 +81,12 @@ describe("StripeService", () => {
     it("returns the session id and hosted page URL", async () => {
       const { service } = serviceWith(() => jsonResponse(200, createdSession));
 
-      await expect(service.createCheckoutSession(makeInput())).resolves.toEqual({
-        id: "cs_test_123",
-        url: "https://checkout.stripe.com/c/pay/cs_test_123",
-      });
+      await expect(service.createCheckoutSession(makeInput())).resolves.toEqual(
+        {
+          id: "cs_test_123",
+          url: "https://checkout.stripe.com/c/pay/cs_test_123",
+        },
+      );
     });
 
     it("creates a one-off card payment for the course price", async () => {
@@ -104,7 +110,8 @@ describe("StripeService", () => {
         "metadata[paymentId]": "9f1c2d3e-0000-4000-8000-000000000001",
         cancel_url: "https://courses.example.com/courses/123",
         expires_at: String(
-          Temporal.Instant.from("2026-10-21T17:30:00Z").epochMilliseconds / 1000,
+          Temporal.Instant.from("2026-10-21T17:30:00Z").epochMilliseconds /
+            1000,
         ),
       });
     });
@@ -124,26 +131,29 @@ describe("StripeService", () => {
     it.each([
       ["https://courses.example.com/checkout/success", "?"],
       ["https://courses.example.com/checkout/success?course=123", "&"],
-    ])("adds Stripe's unencoded session placeholder to %s", async (successUrl, separator) => {
-      const { service, requests } = serviceWith(() =>
-        jsonResponse(200, createdSession),
-      );
+    ])(
+      "adds Stripe's unencoded session placeholder to %s",
+      async (successUrl, separator) => {
+        const { service, requests } = serviceWith(() =>
+          jsonResponse(200, createdSession),
+        );
 
-      await service.createCheckoutSession({ ...makeInput(), successUrl });
+        await service.createCheckoutSession({ ...makeInput(), successUrl });
 
-      expect(requests[0].body.get("success_url")).toBe(
-        `${successUrl}${separator}checkoutId={CHECKOUT_SESSION_ID}`,
-      );
-    });
+        expect(requests[0].body.get("success_url")).toBe(
+          `${successUrl}${separator}checkoutId={CHECKOUT_SESSION_ID}`,
+        );
+      },
+    );
 
     it("reports an unreachable Stripe as unavailable", async () => {
       const { service } = serviceWith(() => {
         throw new TypeError("fetch failed");
       });
 
-      await expect(service.createCheckoutSession(makeInput())).rejects.toBeInstanceOf(
-        PaymentProviderUnavailableError,
-      );
+      await expect(
+        service.createCheckoutSession(makeInput()),
+      ).rejects.toBeInstanceOf(PaymentProviderUnavailableError);
     });
 
     it.each([
@@ -154,15 +164,18 @@ describe("StripeService", () => {
         jsonResponse(status, { error: { type, message: "Try again later." } }),
       );
 
-      await expect(service.createCheckoutSession(makeInput())).rejects.toBeInstanceOf(
-        PaymentProviderUnavailableError,
-      );
+      await expect(
+        service.createCheckoutSession(makeInput()),
+      ).rejects.toBeInstanceOf(PaymentProviderUnavailableError);
     });
 
     it("passes a rejected request through unchanged", async () => {
       const { service } = serviceWith(() =>
         jsonResponse(400, {
-          error: { type: "invalid_request_error", message: "Invalid currency: zzz" },
+          error: {
+            type: "invalid_request_error",
+            message: "Invalid currency: zzz",
+          },
         }),
       );
 
@@ -261,9 +274,14 @@ describe("StripeService", () => {
     });
 
     it("never calls Stripe", () => {
-      const { service, stripe, requests } = serviceWith(() => jsonResponse(200, {}));
+      const { service, stripe, requests } = serviceWith(() =>
+        jsonResponse(200, {}),
+      );
 
-      service.verifyWebhookEvent(Buffer.from(eventBody), sign(stripe, eventBody));
+      service.verifyWebhookEvent(
+        Buffer.from(eventBody),
+        sign(stripe, eventBody),
+      );
 
       expect(requests).toEqual([]);
     });

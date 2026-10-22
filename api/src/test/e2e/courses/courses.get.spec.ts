@@ -3,13 +3,7 @@ import type { INestApplication } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { Temporal } from "@js-temporal/polyfill";
 import request from "supertest";
-import {
-  afterAll,
-  beforeAll,
-  describe,
-  expect,
-  it,
-} from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createE2eApp } from "../e2e-helpers.js";
 
 describe("Courses API (e2e)", () => {

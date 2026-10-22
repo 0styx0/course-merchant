@@ -42,7 +42,9 @@ describe("GET /v1/checkout-sessions/:checkoutId (e2e)", () => {
   }
 
   function getStatus(checkoutId: string) {
-    return request(app.getHttpServer()).get(`/v1/checkout-sessions/${checkoutId}`);
+    return request(app.getHttpServer()).get(
+      `/v1/checkout-sessions/${checkoutId}`,
+    );
   }
 
   it("reports pending until Stripe confirms the payment", async () => {
@@ -57,9 +59,9 @@ describe("GET /v1/checkout-sessions/:checkoutId (e2e)", () => {
     const checkoutId = await startPaidCheckout();
 
     // what the step 3 webhook will do once Stripe confirms the payment
-    await db.orm.public.Payment
-      .where((payment) => payment.providerCheckoutId.eq(checkoutId))
-      .update({ status: "succeeded", paidAt: Temporal.Now.instant() });
+    await db.orm.public.Payment.where((payment) =>
+      payment.providerCheckoutId.eq(checkoutId),
+    ).update({ status: "succeeded", paidAt: Temporal.Now.instant() });
 
     const response = await getStatus(checkoutId).expect(200);
 

@@ -8,11 +8,11 @@ dotenv.config({
 
 export default defineConfig({
   resolve: {
-    tsconfigPaths: true
+    tsconfigPaths: true,
   },
   test: {
     include: ["src/test/e2e/**/*.spec.ts"],
     fileParallelism: false,
-    setupFiles: ["./src/test/integration.setup.ts"]
+    setupFiles: ["./src/test/integration.setup.ts"],
   },
 });

@@ -38,7 +38,9 @@ describe("POST /v1/checkout-sessions (e2e)", () => {
   }
 
   function startCheckout(body: object) {
-    return request(app.getHttpServer()).post("/v1/checkout-sessions").send(body);
+    return request(app.getHttpServer())
+      .post("/v1/checkout-sessions")
+      .send(body);
   }
 
   const customer = { name: "Ada Lovelace", email: "ada@example.com" };
@@ -51,14 +53,20 @@ describe("POST /v1/checkout-sessions (e2e)", () => {
     it("enrolls the buyer and queues their access email", async () => {
       const { course } = await createCourseOnSale(0);
 
-      const response = await startCheckout({ courseId: course.id, customer }).expect(200);
+      const response = await startCheckout({
+        courseId: course.id,
+        customer,
+      }).expect(200);
 
       expect(response.body).toEqual({ status: "check_email" });
       expect(await db.orm.public.Enrollment.all()).toEqual([
         expect.objectContaining({ courseId: course.id, paymentId: null }),
       ]);
       expect(await queuedEmails()).toEqual([
-        expect.objectContaining({ kind: "access_granted", recipient: "ada@example.com" }),
+        expect.objectContaining({
+          kind: "access_granted",
+          recipient: "ada@example.com",
+        }),
       ]);
       expect(await db.orm.public.Payment.all()).toEqual([]);
     });
@@ -68,7 +76,10 @@ describe("POST /v1/checkout-sessions (e2e)", () => {
     it("redirects to Stripe and records a pending payment", async () => {
       const { course, price } = await createCourseOnSale(9900);
 
-      const response = await startCheckout({ courseId: course.id, customer }).expect(200);
+      const response = await startCheckout({
+        courseId: course.id,
+        customer,
+      }).expect(200);
 
       expect(response.body).toEqual({
         status: "redirect",
@@ -110,7 +121,10 @@ describe("POST /v1/checkout-sessions (e2e)", () => {
       const { course } = await createCourseOnSale(0);
       await startCheckout({ courseId: course.id, customer }).expect(200);
 
-      const response = await startCheckout({ courseId: course.id, customer }).expect(200);
+      const response = await startCheckout({
+        courseId: course.id,
+        customer,
+      }).expect(200);
 
       expect(response.body).toEqual({ status: "check_email" });
       expect((await queuedEmails()).map((email) => email.kind).sort()).toEqual([
@@ -152,11 +166,17 @@ describe("POST /v1/checkout-sessions (e2e)", () => {
     it("returns 409 for a course that has ended", async () => {
       const now = Temporal.Now.instant();
       const { course } = await createPricedCourse(
-        { startsAt: now.subtract({ hours: 3 }), endsAt: now.subtract({ hours: 1 }) },
+        {
+          startsAt: now.subtract({ hours: 3 }),
+          endsAt: now.subtract({ hours: 1 }),
+        },
         { amount: 9900, effectiveAt: now.subtract({ hours: 48 }) },
       );
 
-      const response = await startCheckout({ courseId: course.id, customer }).expect(409);
+      const response = await startCheckout({
+        courseId: course.id,
+        customer,
+      }).expect(409);
 
       expect(response.body).toEqual({
         title: "Course not purchasable",
@@ -175,9 +195,18 @@ describe("POST /v1/checkout-sessions (e2e)", () => {
       expect(response.body).toMatchObject({
         code: "VALIDATION_FAILED",
         errors: expect.arrayContaining([
-          expect.objectContaining({ field: "/courseId", code: "INVALID_FORMAT" }),
-          expect.objectContaining({ field: "/customer/name", code: "TOO_SHORT" }),
-          expect.objectContaining({ field: "/customer/email", code: "INVALID_FORMAT" }),
+          expect.objectContaining({
+            field: "/courseId",
+            code: "INVALID_FORMAT",
+          }),
+          expect.objectContaining({
+            field: "/customer/name",
+            code: "TOO_SHORT",
+          }),
+          expect.objectContaining({
+            field: "/customer/email",
+            code: "INVALID_FORMAT",
+          }),
           expect.objectContaining({ field: "/price", code: "UNKNOWN_FIELD" }),
         ]),
       });

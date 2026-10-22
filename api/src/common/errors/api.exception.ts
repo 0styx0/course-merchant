@@ -12,7 +12,7 @@ export class ApiException extends HttpException {
 
   constructor(code: ErrorCode, options: ApiExceptionOptions = {}) {
     const { status, title } = ERROR_DEFINITIONS[code];
-    super({ title, detail: options.detail, code }, status)
+    super({ title, detail: options.detail, code }, status);
 
     this.code = code;
     this.title = title;

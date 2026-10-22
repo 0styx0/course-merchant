@@ -21,8 +21,7 @@ export class EnrollmentsRepository {
     courseId: string,
     customerId: string,
   ): Promise<EnrollmentRecord | null> {
-    return scope.orm.public.Enrollment
-      .select("id", "revokedAt", "suspendedAt")
+    return scope.orm.public.Enrollment.select("id", "revokedAt", "suspendedAt")
       .where((enrollment) =>
         and(
           enrollment.courseId.eq(courseId),
@@ -67,16 +66,15 @@ export class EnrollmentsRepository {
     // only a revoked, unsuspended enrollment can be reactivated. Matching on
     // revokedAt means a concurrent request that already reactivated it finds
     // nothing to update
-    const reactivatedEnrollment = await scope.orm.public.Enrollment
-      .where((enrollment) =>
+    const reactivatedEnrollment = await scope.orm.public.Enrollment.where(
+      (enrollment) =>
         and(
           enrollment.courseId.eq(courseId),
           enrollment.customerId.eq(customerId),
           enrollment.revokedAt.isNotNull(),
           enrollment.suspendedAt.isNull(),
         ),
-      )
-      .update({ revokedAt: null, paymentId, purchasedAt: now });
+    ).update({ revokedAt: null, paymentId, purchasedAt: now });
 
     const wasReactivated = reactivatedEnrollment !== null;
 

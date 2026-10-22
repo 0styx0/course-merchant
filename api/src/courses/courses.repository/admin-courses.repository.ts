@@ -74,8 +74,7 @@ export type CourseRepositoryUpdateInput = {
   now: Temporal.Instant;
 };
 
-type CourseDelegate =
-  PrismaService["db"]["orm"]["public"]["Course"];
+type CourseDelegate = PrismaService["db"]["orm"]["public"]["Course"];
 
 @Injectable()
 export class AdminCoursesRepository {
@@ -100,9 +99,7 @@ export class AdminCoursesRepository {
           .limit(1),
       )
       .include("enrollments", (enrollments) =>
-        enrollments
-          .include("customer")
-          .include("payment"),
+        enrollments.include("customer").include("payment"),
       );
   }
 
@@ -112,17 +109,13 @@ export class AdminCoursesRepository {
   findCourseDetailsByIdAdmin(
     courseId: string,
   ): Promise<CourseRepositoryModelAdmin | null> {
-    return this.adminCourseDetailsQuery(
-      this.prisma.db.orm.public.Course,
-    )
+    return this.adminCourseDetailsQuery(this.prisma.db.orm.public.Course)
       .where((course) => course.id.eq(courseId))
       .first();
   }
 
   async findAllCourseDetailsAdmin(): Promise<CourseRepositoryModelAdmin[]> {
-    return await this.adminCourseDetailsQuery(
-      this.prisma.db.orm.public.Course,
-    )
+    return await this.adminCourseDetailsQuery(this.prisma.db.orm.public.Course)
       .where((course) =>
         course.statuses.some((status) =>
           and(
@@ -192,16 +185,16 @@ export class AdminCoursesRepository {
     input: CourseRepositoryUpdateInput,
   ): Promise<CourseRepositoryModelAdmin | null> {
     return this.prisma.db.transaction(async (tx) => {
-      const course = await tx.orm.public.Course
-        .where((candidate) => candidate.id.eq(courseId))
-        .update({
-          title: input.title,
-          description: input.description,
-          contentUrl: input.contentUrl,
-          startsAt: input.startsAt,
-          endsAt: input.endsAt,
-          timeZone: input.timeZone,
-        });
+      const course = await tx.orm.public.Course.where((candidate) =>
+        candidate.id.eq(courseId),
+      ).update({
+        title: input.title,
+        description: input.description,
+        contentUrl: input.contentUrl,
+        startsAt: input.startsAt,
+        endsAt: input.endsAt,
+        timeZone: input.timeZone,
+      });
 
       if (!course) {
         return null;
@@ -209,15 +202,13 @@ export class AdminCoursesRepository {
 
       // delete before inserting, so a replaced price can reuse its effectiveAt
       if (input.deletePriceIds.length > 0) {
-        await tx.orm.public.CoursePrice
-          .where((price) =>
-            and(
-              price.courseId.eq(courseId),
-              price.id.in(input.deletePriceIds),
-              price.effectiveAt.gt(input.now),
-            ),
-          )
-          .deleteAndCount();
+        await tx.orm.public.CoursePrice.where((price) =>
+          and(
+            price.courseId.eq(courseId),
+            price.id.in(input.deletePriceIds),
+            price.effectiveAt.gt(input.now),
+          ),
+        ).deleteAndCount();
       }
 
       if (input.newPrices.length > 0) {
@@ -246,9 +237,7 @@ export class AdminCoursesRepository {
 
       if (!updatedCourse) {
         // throwing prevents transaction commit
-        throw new Error(
-          `Updated course ${courseId} could not be loaded.`,
-        );
+        throw new Error(`Updated course ${courseId} could not be loaded.`);
       }
 
       return updatedCourse;
