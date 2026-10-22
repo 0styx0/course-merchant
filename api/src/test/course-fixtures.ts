@@ -95,6 +95,24 @@ export async function createPayment(input: {
   });
 }
 
+export async function createPendingPayment(input: {
+  customerId: string;
+  coursePriceId: string;
+  amount: number;
+  currency: string;
+  providerCheckoutId?: string;
+}) {
+  return db.orm.public.Payment.create({
+    customerId: input.customerId,
+    coursePriceId: input.coursePriceId,
+    provider: "stripe",
+    status: "pending",
+    amount: input.amount,
+    currency: input.currency,
+    providerCheckoutId: input.providerCheckoutId ?? null,
+  });
+}
+
 export async function createEnrollment(input: {
   courseId: string;
   customerId: string;

@@ -22,16 +22,19 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
   - [x] signing secret and `rawBody`;
   - [x] `StripeService.verifyWebhookEvent`;
   - [x] `EnrollmentsRepository`, shared by checkout and fulfillment.
+  - [x] `PaymentsRepository`: event dedupe, lookup by our payment id, and guarded `pending →` transitions.
 
   Remaining:
-  - [ ] **Next: `PaymentsRepository`**, with these methods:
-    - `recordProcessedEvent`: `createAndCount` that skips a conflict on `(provider, eventId)`;
-    - `findPaymentForFulfillment`, which looks the payment up by our id, taken from `client_reference_id`;
-    - `markPaymentSucceeded`, a conditional update on `status = pending`. It sets `providerPaymentId`, fills `providerCheckoutId` if it's missing, and takes `paidAt` from the event's creation time;
-    - `markPaymentExpired`, also conditional on pending.
+  - [ ] **Next: `FulfillmentService`** for `checkout.session.completed`. It runs the *Webhook* flow's transaction:
+    - `recordProcessedEvent`; on `false`, stop (reply 200);
+    - read our payment id from `client_reference_id`. If it's missing or unknown (`findPaymentForFulfillment` → null), ignore the event (reply 200): it isn't a checkout we started;
+    - `markPaymentSucceeded` with the session id, its payment intent id, and `paidAt` from `event.created`; on `false`, stop;
+    - one small method per enrollment outcome, dispatched from `EnrollmentsRepository.findEnrollment` and `enrollment-access.ts`:
+      - none or revoked: `grantAccess` (`purchasedAt` = `paidAt`) and queue `access_granted`;
+      - active: queue `already_owned` with `refundIssued: true`, and return the payment id to refund after commit;
+      - suspended: queue `access_suspended`.
 
-    A code comment explains the two layers of duplicate protection (see *Flows*).
-  - [ ] `FulfillmentService` for `checkout.session.completed`, with one small method per enrollment outcome.
+    The email recipient is `customer.email` from `findPaymentForFulfillment`. Unit-test the dispatch; integration-test the transaction.
   - [ ] `StripeService.refundPayment`, called after the transaction commits, for double purchases.
   - [ ] `checkout.session.expired`.
   - [ ] `StripeWebhookController`, its module, and an e2e test using signed events (`generateTestHeaderString`).
@@ -52,6 +55,8 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
   - `charge.refunded`;
   - `charge.dispute.created`;
   - the estimated payout on the admin price field.
+
+  Open point: Stripe forgets idempotency keys after about 24 hours, so a sweeper retry of a double-purchase refund can't rely on `refund-<paymentId>` alone. Decide what else stops a second refund (Stripe rejects refunding a fully refunded charge; `charge.refunded` moves the payment out of the sweeper's query).
 - [ ] **Launch:** see the checklist at the end.
 
 ## Principles
@@ -137,6 +142,10 @@ It also covers a payment whose session was never created.
 | The webhook route is documented in the contract (Webhooks tag) | The spec covers every route the API serves | Leaving it out |
 | E2E tests use the `stripe-mock` container | The real SDK makes real HTTP calls, as close to production as tests get | A hand-written fake service, or mocks |
 | Unit tests use a real `Stripe` client with `createFetchHttpClient` | Public SDK API only | Mocking SDK internals |
+| `PaymentsRepository` methods return whether this call made the change | Fulfillment stops on `false`; the row itself isn't needed | Returning the updated row |
+| Payment transitions use `updateAndCount` with the `status = pending` condition, not `update` | `update` reads the row, then updates it by id alone, so two callers can both see `pending` and both "win" (caught by the concurrency test). `updateAndCount` puts the condition in the `UPDATE` itself | `.where(...).update(...)`, or a `forUpdate()` read then a write |
+| `markPaymentSucceeded` always sets `providerCheckoutId` | A payment has one session (idempotency key `checkout-<paymentId>`), so setting it equals filling it when missing, in one statement | A second update for a missing id only |
+| `findPaymentForFulfillment` doesn't return the payment's status | The guarded transition decides; an early status check would be a second answer that can race | Checking status before the update |
 | Card only, no delayed methods | Payment is confirmed instantly, so there's no "processing" state | ACH and bank debits |
 | Currencies limited to the payout currency (`ALLOWED_CURRENCIES`, default USD) | Any other currency adds a conversion fee to every sale | Accepting any currency |
 

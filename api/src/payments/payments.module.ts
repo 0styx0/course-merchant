@@ -4,6 +4,7 @@ import {
   loadPaymentsConfig,
   PAYMENTS_CONFIG,
 } from "@/config/payments-config.js";
+import { PaymentsRepository } from "./payments.repository.js";
 import { StripeService, stripeClientProvider } from "./stripe.service.js";
 
 @Module({
@@ -12,7 +13,8 @@ import { StripeService, stripeClientProvider } from "./stripe.service.js";
     { provide: PAYMENTS_CONFIG, useFactory: () => loadPaymentsConfig() },
     stripeClientProvider,
     StripeService,
+    PaymentsRepository,
   ],
-  exports: [PAYMENTS_CONFIG, StripeService],
+  exports: [PAYMENTS_CONFIG, StripeService, PaymentsRepository],
 })
 export class PaymentsModule {}
