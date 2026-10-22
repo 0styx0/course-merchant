@@ -31,8 +31,8 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
   The manual `stripe listen` check is deferred to the *Launch* checklist, to run through the web checkout once step 5 exists.
 - [ ] **4. Email delivery:**
   - [x] `EmailOutboxRepository.findDue`, `markSent` and `markFailedAttempt`, with the backoff in `retry-policy.ts`.
-  - [ ] **Next: templates for each `EmailKind` and a sender for one provider on a free tier.** Pick the provider and the template approach before coding.
-  - [ ] `EmailWorker` on a `@nestjs/schedule` interval: sends due emails one at a time, skips a tick while the previous one is still running.
+  - [x] Templates for each `EmailKind` and `EmailSender` over SMTP.
+  - [ ] **Next: `EmailWorker`** on a `@nestjs/schedule` interval: sends due emails one at a time, skips a tick while the previous one is still running. It also loads the course and customer by the ids in each payload (`dispute_alert` needs the payment, course and customer, and an `OWNER_EMAIL` setting to be queued), calls `renderEmail`, then `EmailSender.send`, and settles with `markSent` or `markFailedAttempt`.
   - [ ] Admin course view shows each enrollment's email status (pending, sent, failed). This is the only alert for a failed email. It needs a contract change first.
 - [ ] **5. Web:**
   - buy form on the course page;
@@ -151,6 +151,9 @@ It also covers a payment whose session was never created.
 | Manual `stripe listen` check deferred to *Launch*, run through the web checkout | The frontend makes the requests better than hand-made ones, and one pass then covers every layer | Running it now with hand-made requests |
 | Outbox retries: 1 minute doubling to a 1-hour cap, 8 attempts, then `failed` | About 2 hours of retrying covers a provider outage; the policy is a pure function | A fixed delay; retrying forever |
 | No lease on emails being sent: one process, and the worker skips a tick while the last is running | Simplest. Accepted cost: a crash between the provider accepting an email and `markSent` sends it twice, and two API instances would double-send | A lease via `nextAttemptAt`; `FOR UPDATE SKIP LOCKED` |
+| Email goes out over SMTP through nodemailer, with `SMTP_URL`, `EMAIL_FROM` and `EMAIL_SHOP_NAME` settings | Changing provider is a config change; the retry policy treats every failure alike, so a vendor SDK's richer errors buy nothing. Mailpit works locally | A vendor SDK (Resend, Postmark); Gmail (500 a day, no custom domain without Workspace, can suspend automated senders) |
+| Each email is written once as an `EmailContent` (subject, heading, paragraphs, optional button) and rendered to HTML and plain text by two small renderers | A wording change is made once, HTML and text can't drift apart, and one layout keeps every email looking the same | A template per kind per format; react-email or MJML (a build step for four emails) |
+| Templates take already-loaded views (course, customer), not ids | They stay pure functions; the worker owns the database lookups | An `EmailComposer` that reads the database |
 | A `failed` email stays in the table with no owner alert; the admin course view shows email status | One place to look, nothing extra to run | Emailing or paging the owner |
 | Card only, no delayed methods | Payment is confirmed instantly, so there's no "processing" state | ACH and bank debits |
 | Currencies limited to the payout currency (`ALLOWED_CURRENCIES`, default USD) | Any other currency adds a conversion fee to every sale | Accepting any currency |
@@ -165,6 +168,7 @@ It also covers a payment whose session was never created.
   - `charge.refunded`
   - `charge.dispute.created`
 - Turn on Stripe's automatic email receipts.
+- Set `SMTP_URL`, `EMAIL_FROM` and `EMAIL_SHOP_NAME` for the real provider, and add its SPF and DKIM records for the sending domain. Send each email kind to a Gmail and an Outlook inbox and check how it looks.
 - Confirm the payout currency matches `ALLOWED_CURRENCIES`.
 - Ask the accountant about sales tax or VAT. Stripe Tax can be switched on later with `automatic_tax` and Dashboard setup.
 - Set up per-IP limits at the CDN or edge:
