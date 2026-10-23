@@ -8,6 +8,10 @@ async function bootstrap() {
   // signature is checked against
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
+  // on SIGTERM (a deploy), lets modules finish what they're doing, such as the
+  // email worker's current send, before the process exits
+  app.enableShutdownHooks();
+
   const configuredApp = configureApp(app);
   await configuredApp.listen(process.env.PORT ?? 3000);
 }

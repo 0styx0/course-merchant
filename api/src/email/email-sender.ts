@@ -4,6 +4,12 @@ import nodemailer, { type Transporter } from "nodemailer";
 import { EMAIL_CONFIG, type EmailConfig } from "@/config/email-config.js";
 import type { RenderedEmail } from "./templates/email-content.js";
 
+// A send must end well inside the outbox's claim on the email (10 minutes), or
+// another worker could claim and send it too. Worst case: 30 + 30 + 60 s.
+const CONNECTION_TIMEOUT_MS = 30_000;
+const GREETING_TIMEOUT_MS = 30_000;
+const SOCKET_INACTIVITY_TIMEOUT_MS = 60_000;
+
 export const EMAIL_TRANSPORT = Symbol("EMAIL_TRANSPORT");
 
 export const emailTransportProvider = {
@@ -11,7 +17,12 @@ export const emailTransportProvider = {
   inject: [EMAIL_CONFIG],
   // creating the transport doesn't connect; the first send does
   useFactory: (config: EmailConfig) =>
-    nodemailer.createTransport(config.smtpUrl),
+    nodemailer.createTransport({
+      url: config.smtpUrl,
+      connectionTimeout: CONNECTION_TIMEOUT_MS,
+      greetingTimeout: GREETING_TIMEOUT_MS,
+      socketTimeout: SOCKET_INACTIVITY_TIMEOUT_MS,
+    }),
 };
 
 export class EmailDeliveryError extends Error {

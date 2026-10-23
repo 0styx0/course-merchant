@@ -103,4 +103,4 @@ How the owner wants Claude to work on this repo:
 - **Keep the design docs current** in the same commit (see *Design docs*).
 - **Usage reviews.** At a natural pause (a step in a design doc's Status just finished, nothing complex in flight), review how the owner is using Claude and give a few tips, most impactful first. Give each a before/after for efficiency (context tokens per call, calls per commit) and quality (correction rounds per commit). Measure "before" from the session transcript's `usage` fields (`~/.claude/projects/<project>/<session>.jsonl`) and label anything else as an estimate. Never give raw token counts on their own: translate them into terms the owner can picture, such as "each message cost as much as N messages in a fresh session", or how long the weekly allowance would last.
 - **`/next-commit`** (`.claude/skills/next-commit/`) runs the commit routine: find the **Next** item in `docs/`, outline, wait, implement, verify, update the doc.
-- **Security** Review each change for security.
+- **Security** Review each code-change or proposed architecture for security.

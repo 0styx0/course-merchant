@@ -6,6 +6,10 @@ import type { Models } from "@/prisma/contract.js";
 import type { DbScope } from "types.js";
 import { nextAttemptAfterFailure } from "./retry-policy.js";
 
+// how long a worker holds an email it is sending; it must outlast the
+// sender's timeouts, and is how long a crashed sender's email waits for a retry
+const CLAIM_DURATION_MINUTES = 10;
+
 export type EmailKind = Models.public_EmailOutbox["kind"];
 // without the link to its enrollment, which only the admin view reads
 export type OutboxEmail = Omit<Models.public_EmailOutbox, "enrollmentLink">;
@@ -95,6 +99,28 @@ export class EmailOutboxRepository {
       .orderBy((email) => email.createdAt.asc())
       .limit(limit)
       .all();
+  }
+
+  /**
+   * Holds a due email for this worker by moving its next attempt ahead. False
+   * when another worker claimed it first, so this one must not send it.
+   */
+  async claim(
+    scope: DbScope,
+    email: OutboxEmail,
+    now: Temporal.Instant,
+  ): Promise<boolean> {
+    const claimed = await scope.orm.public.EmailOutbox.where((candidate) =>
+      and(
+        candidate.id.eq(email.id),
+        candidate.status.eq("pending"),
+        candidate.nextAttemptAt.eq(email.nextAttemptAt),
+      ),
+    ).updateAndCount({
+      nextAttemptAt: now.add({ minutes: CLAIM_DURATION_MINUTES }),
+    });
+
+    return claimed === 1;
   }
 
   async markSent(

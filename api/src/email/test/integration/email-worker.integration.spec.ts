@@ -98,4 +98,15 @@ describe("EmailWorker (integration)", () => {
     expect(failed).toMatchObject({ status: "pending", attempts: 1 });
     expect(failed!.lastError).toContain("course no longer exists");
   });
+
+  it("sends an email once when two workers run at the same time", async () => {
+    await queueAccessEmail("ada@example.com");
+    const sendMail = vi.fn().mockResolvedValue({});
+    const first = workerWith(sendMail).worker;
+    const second = workerWith(sendMail).worker;
+
+    await Promise.all([first.sendDueEmails(), second.sendDueEmails()]);
+
+    expect(sendMail).toHaveBeenCalledTimes(1);
+  });
 });

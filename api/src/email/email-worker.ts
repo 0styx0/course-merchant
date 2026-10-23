@@ -1,4 +1,9 @@
-import { Inject, Injectable, Logger } from "@nestjs/common";
+import {
+  Inject,
+  Injectable,
+  Logger,
+  type OnApplicationShutdown,
+} from "@nestjs/common";
 import { Interval } from "@nestjs/schedule";
 import { Temporal } from "@js-temporal/polyfill";
 
@@ -17,12 +22,14 @@ const BATCH_SIZE = 20;
 /**
  * Sends the emails queued in the outbox. Every few seconds it takes the due
  * emails, oldest first, and sends them one at a time, settling each as sent or
- * as a failed attempt (which schedules the retry).
+ * as a failed attempt (which schedules the retry). It claims each email before
+ * sending, so several running copies of the API never send the same one.
  */
 @Injectable()
-export class EmailWorker {
+export class EmailWorker implements OnApplicationShutdown {
   private readonly logger = new Logger(EmailWorker.name);
-  private isRunning = false;
+  private currentRun: Promise<void> | null = null;
+  private isStopping = false;
 
   constructor(
     @Inject(PrismaService)
@@ -35,22 +42,35 @@ export class EmailWorker {
     private readonly sender: EmailSender,
   ) {}
 
-  /** Skips the run when the previous one hasn't finished. */
+  /** Skips the run when the previous one hasn't finished or we're stopping. */
   @Interval(POLL_INTERVAL_MS)
   async runIfIdle(): Promise<void> {
-    if (this.isRunning) {
+    if (this.currentRun || this.isStopping) {
       return;
     }
 
-    this.isRunning = true;
+    this.currentRun = this.runSafely();
 
+    try {
+      await this.currentRun;
+    } finally {
+      this.currentRun = null;
+    }
+  }
+
+  /** Starts no new run and waits for the current one to finish. */
+  async onApplicationShutdown(): Promise<void> {
+    this.isStopping = true;
+
+    await this.currentRun;
+  }
+
+  private async runSafely(): Promise<void> {
     try {
       await this.sendDueEmails();
     } catch (error) {
       // e.g. the database is down; the next run tries again
       this.logger.error("Couldn't read the email outbox", error);
-    } finally {
-      this.isRunning = false;
     }
   }
 
@@ -62,11 +82,25 @@ export class EmailWorker {
     );
 
     for (const email of dueEmails) {
+      if (this.isStopping) {
+        return;
+      }
+
       await this.sendOne(email);
     }
   }
 
   private async sendOne(email: OutboxEmail): Promise<void> {
+    const isClaimed = await this.outbox.claim(
+      this.prisma.db,
+      email,
+      Temporal.Now.instant(),
+    );
+
+    if (!isClaimed) {
+      return;
+    }
+
     try {
       const rendered = await this.composer.compose(email);
 

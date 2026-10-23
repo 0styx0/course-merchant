@@ -181,6 +181,37 @@ describe("EmailOutboxRepository (integration)", () => {
     });
   });
 
+  describe("claim", () => {
+    it("lets only the first of two workers claim an email", async () => {
+      const email = await queuedEmail("ada@example.com");
+      const now = Temporal.Now.instant();
+
+      expect(await repository.claim(db, email, now)).toBe(true);
+      expect(await repository.claim(db, email, now)).toBe(false);
+    });
+
+    it("holds the email for 10 minutes, so it is no longer due", async () => {
+      const email = await queuedEmail("ada@example.com");
+      const now = Temporal.Now.instant();
+
+      await repository.claim(db, email, now);
+
+      expect(
+        (await storedEmail(email.id)).nextAttemptAt.epochMilliseconds,
+      ).toBe(now.add({ minutes: 10 }).epochMilliseconds);
+      expect(await repository.findDue(db, now, 10)).toEqual([]);
+    });
+
+    it("doesn't claim an email that was already sent", async () => {
+      const email = await queuedEmail("ada@example.com");
+      await repository.markSent(db, email.id, Temporal.Now.instant());
+
+      expect(await repository.claim(db, email, Temporal.Now.instant())).toBe(
+        false,
+      );
+    });
+  });
+
   describe("markSent", () => {
     it("marks a pending email sent", async () => {
       const email = await queuedEmail("ada@example.com");

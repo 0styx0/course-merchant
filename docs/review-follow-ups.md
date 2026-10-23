@@ -50,15 +50,15 @@ This file is temporary. When an item ships, tick it and move its decision rows i
   - Filter on `revokedAt` and `suspendedAt` both null.
   - Update the field's description in the contract and regenerate both type files.
   - The decision row is in [courses.md](courses.md).
-- [ ] **R7. Stop two running copies of the API from sending the same email.** **Next**
-  - [main.ts](../api/src/main.ts) calls `enableShutdownHooks()`, so Nest runs its shutdown steps (closing the database, stopping the worker) on SIGTERM.
+- [x] **R7. Stop two running copies of the API from sending the same email.**
+  - [main.ts](../api/src/main.ts) calls `enableShutdownHooks()` (added in this commit), so Nest runs its shutdown steps (closing the database, stopping the worker) on SIGTERM.
   - `EmailWorker` implements `OnApplicationShutdown`: it stops starting runs and waits for the current one to finish.
   - Before sending, the worker claims each email: an `updateAndCount` moves `nextAttemptAt` 10 minutes ahead, on condition that `status` is `pending` and `nextAttemptAt` still equals the value it read. A count of 0 means another copy claimed it, so this one skips it. A failed attempt then sets `nextAttemptAt` from the retry policy as before.
   - Set nodemailer's timeouts to 30 s to connect, 30 s for the greeting and 60 s of socket inactivity. The defaults (2 minutes, 30 s, 10 minutes) would let a send outlast its claim, so another copy could claim and send the same email. With these timeouts a send ends within about 2 minutes, so the 10-minute claim leaves margin, and an email whose sender crashed is retried 10 minutes later.
   - Replace the "No lease on emails being sent" decision row.
 
   *Why:* most hosts run the old and new copy side by side for a few seconds to a minute during every zero-downtime deploy, so "one process" doesn't hold.
-- [ ] **R8. Check each email's payload when the worker reads it back.**
+- [ ] **R8. Check each email's payload when the worker reads it back.** **Next**
   - One Zod schema per `EmailKind`, and `EmailPayloads` derived from them with `z.infer`.
   - [email-composer.ts](../api/src/email/email-composer.ts) parses the payload instead of casting it. A payload that doesn't parse is a failed attempt, like a missing row.
 
