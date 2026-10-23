@@ -18,17 +18,16 @@ This file is temporary. When an item ships, tick it and move its decision rows i
   - Add `src/temporal.ts`, which sets `globalThis.Temporal`, and import it first in [main.ts](../api/src/main.ts) and in [integration.setup.ts](../api/src/test/integration.setup.ts).
   - `temporal-polyfill` stays: `@prisma/orm-postgres` lists it as a peer dependency and imports it, so removing it breaks the install. The ORM uses it only when no global `Temporal` exists, which was production only before this change.
 
-  *Verified:* a production-only install resolves `@js-temporal/polyfill`. A full boot of the build is blocked by other problems, which R2a fixes: `dotenv` is a devDependency but [db.ts](../api/src/prisma/db.ts) and the config files import it, and the compiled output keeps the `@/utils` path alias, which Node can't resolve. `start:prod` (`node dist/main`) also points at a path that doesn't exist (the entry is `dist/src/main.js`).
-- [ ] **R2a. Make the production build start.** **Next**
-  - Found while verifying R2: a production-only install of `yarn build` output can't boot, for three separate reasons.
-  - `dotenv` is a devDependency, but [db.ts](../api/src/prisma/db.ts) and the config files import it at runtime.
-  - The compiled output keeps the `@/…` path alias (171 imports use it), which Node can't resolve, so the app fails on its first aliased import. The outline picks the fix: compile the aliases away, or replace them with relative imports.
-  - `start:prod` runs `node dist/main`, but the entry is `dist/src/main.js`.
+  *Verified:* a production-only install resolves `@js-temporal/polyfill`. A full boot was blocked by other problems, which R2a fixed.
+- [x] **R2a. Make the production build start.**
+  - Found while verifying R2: a production-only install of `yarn build` output couldn't boot, for three separate reasons, all fixed in [package.json](../api/package.json) and [tsconfig.build.json](../api/tsconfig.build.json).
+  - `dotenv` moved to `dependencies`: [db.ts](../api/src/prisma/db.ts) and the config files import it at runtime.
+  - `build` runs `tsc-alias` after `nest build`, which rewrites the `@/…` imports in `dist/` to relative paths.
+  - `start:prod` runs `node dist/src/main.js`.
+  - `src/test/` is no longer compiled into `dist/`.
 
-  *Verify:* the R2 check, run to the end: build, production-only install in a scratch directory, boot with a test `DATABASE_URL`, and the app answers a request.
-
-  *Why:* `yarn start:prod` can't start the compiled app today, so the launch has no working way to run it.
-- [ ] **R3. Make reactivating a refunded enrollment safe against races.**
+  *Verified:* build, production-only install in a scratch directory, boot with the `.env.test` settings, and `GET /v1/courses` answered 200.
+- [ ] **R3. Make reactivating a refunded enrollment safe against races.** **Next**
   - In `grantAccess` ([enrollments.repository.ts](../api/src/enrollments/enrollments.repository.ts)), replace `.update` with `updateAndCount` (same filter), and return the enrollment's id only when the count is 1.
   - Fix the comment that claims `.update` already stops a concurrent reactivation.
   - Add a concurrency integration test: two `grantAccess` calls on one revoked enrollment, run together. Exactly one returns an id.
@@ -97,3 +96,4 @@ This file is temporary. When an item ships, tick it and move its decision rows i
 |---|---|---|
 | The review's follow-ups live in this temporary doc, one commit per item | The items span payments, courses, email and infrastructure. Spreading them across the area docs would mean several **Next** markers, which `/next-commit` refuses | Adding them to `payments.md` and `courses.md`; implementing them all in one session |
 | A course's latest status stays computed from the `CourseStatus` log, through one shared helper, with `@@unique([courseId, changedAt])` | No second copy of the status to keep in step. The query is cheap at this shop's size. The constraint closes the one real gap: two statuses with the same `changedAt` (Postgres's `now()` is fixed for a whole transaction) would both count as latest, so a deleted course could show as published. It's the same pattern as `CoursePrice`'s `@@unique([courseId, effectiveAt])` | A `Course.currentStatus` column written beside each log row (duplicated state that can drift, plus a migration and backfill); a tie-breaking sequence column |
+| `tsc-alias` after `nest build` rewrites the `@/` aliases; `start:prod` uses `dist/src/main.js`; `dotenv` is a runtime dependency; `src/test/` isn't compiled | Nest's own alias rewriter can't see `.js` imports of `.ts` files, so the aliases stayed in `dist/`. One script line and one devDependency keep the `@/` convention. `nest start` doesn't run `tsc-alias`, so it isn't covered. The compile root includes [types.ts](../api/types.ts) and the migrations, so the entry stays under `dist/src/` | Relative imports everywhere (about 171 imports in 66 files); an SWC builder; Node subpath imports (`#/…`); dropping the `dotenv` imports (changes how local runs load `.env`) |
