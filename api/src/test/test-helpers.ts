@@ -1,6 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { vi, type Mock } from "vitest";
 
+import type { DbScope } from "types.js";
 import type { PrismaService } from "@/prisma/prisma.service.js";
 
 export const instant = (value: string) => Temporal.Instant.from(value);
@@ -70,5 +71,9 @@ export function fakePrisma(hooks: TransactionHooks = {}) {
     ),
   };
 
-  return { prisma: { db } as unknown as PrismaService, db, tx };
+  return {
+    prisma: { db } as unknown as PrismaService,
+    db,
+    tx: tx as unknown as DbScope,
+  };
 }

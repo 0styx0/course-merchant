@@ -3,21 +3,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { StartCheckoutRequest } from "types.js";
 import {
+  CheckoutDecisionService,
+  CheckoutNextStep,
+  type CheckoutDecision,
+} from "@/checkout/checkout-decision.service.js";
+import { CheckoutEmailQueue } from "@/checkout/checkout-email-queue.js";
+import {
   CheckoutRepository,
   type CheckoutCourse,
 } from "@/checkout/checkout.repository.js";
-import { CheckoutDecisionService } from "@/checkout/checkout-decision.service.js";
-import { CheckoutEmailQueue } from "@/checkout/checkout-email-queue.js";
 import { CheckoutService } from "@/checkout/checkout.service.js";
 import { StripeRedirectService } from "@/checkout/stripe-redirect.service.js";
-import type { PaymentsConfig } from "@/payments/payments-config.js";
 import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
-import {
-  PaymentProviderUnavailableError,
-  StripeService,
-} from "@/payments/stripe.service.js";
+import type { PaymentsConfig } from "@/payments/payments-config.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
+import { StripeService } from "@/payments/stripe.service.js";
 import {
   asDependency,
   fakePrisma,
@@ -56,15 +57,9 @@ function makeCourse(
   };
 }
 
-const revokedAt = Temporal.Instant.from("2026-10-01T00:00:00Z");
 const suspendedAt = Temporal.Instant.from("2026-10-02T00:00:00Z");
 
 describe("CheckoutService", () => {
-  let service: CheckoutService;
-  let enrollmentsRepository: MockMethods<
-    EnrollmentsRepository,
-    "findEnrollment" | "grantAccess"
-  >;
   let checkoutRepository: MockMethods<
     CheckoutRepository,
     "findVisibleCourse" | "findOrCreateCustomer"
@@ -75,26 +70,8 @@ describe("CheckoutService", () => {
     | "saveProviderCheckoutId"
     | "findPaymentStatusByCheckoutId"
   >;
-  let emailOutbox: MockMethods<
-    EmailOutboxRepository,
-    "enqueue" | "countQueuedSince"
-  >;
-  let stripe: MockMethods<StripeService, "createCheckoutSession">;
-  let fake: ReturnType<typeof fakePrisma>;
-  // the scope the service passes to repositories inside its transaction
-  let tx: ReturnType<typeof fakePrisma>["tx"];
-  // the order transactions commit and Stripe is called in
-  let events: string[];
 
   beforeEach(() => {
-    enrollmentsRepository = {
-      findEnrollment: vi
-        .fn<EnrollmentsRepository["findEnrollment"]>()
-        .mockResolvedValue(null),
-      grantAccess: vi
-        .fn<EnrollmentsRepository["grantAccess"]>()
-        .mockResolvedValue(GRANTED_ENROLLMENT_ID),
-    };
     checkoutRepository = {
       findVisibleCourse: vi
         .fn<CheckoutRepository["findVisibleCourse"]>()
@@ -114,354 +91,295 @@ describe("CheckoutService", () => {
         .fn<PaymentsRepository["findPaymentStatusByCheckoutId"]>()
         .mockResolvedValue("pending"),
     };
-    emailOutbox = {
-      enqueue: vi
-        .fn<EmailOutboxRepository["enqueue"]>()
-        .mockResolvedValue(undefined),
-      countQueuedSince: vi
-        .fn<EmailOutboxRepository["countQueuedSince"]>()
-        .mockResolvedValue(0),
+  });
+
+  describe("with its decision and redirect steps mocked", () => {
+    let service: CheckoutService;
+    let decision: MockMethods<CheckoutDecisionService, "decide">;
+    let redirect: MockMethods<StripeRedirectService, "redirect">;
+    let fake: ReturnType<typeof fakePrisma>;
+    // whether a transaction callback is running right now
+    let insideTransaction: boolean;
+    let redirectedInsideTransaction: boolean | undefined;
+
+    const paymentToComplete = {
+      payment: { id: PAYMENT_ID, amount: 9900, currency: "USD" },
+      customer: { id: CUSTOMER_ID, ...request.customer },
+      course: makeCourse({ amount: 9900 }),
+      now: Temporal.Now.instant(),
     };
 
-    events = [];
-    stripe = {
-      createCheckoutSession: vi.fn<StripeService["createCheckoutSession"]>(
-        () => {
-          events.push("stripe called");
+    beforeEach(() => {
+      insideTransaction = false;
+      redirectedInsideTransaction = undefined;
+
+      decision = {
+        decide: vi
+          .fn<CheckoutDecisionService["decide"]>()
+          .mockResolvedValue({ nextStep: CheckoutNextStep.CHECK_EMAIL }),
+      };
+      redirect = {
+        redirect: vi.fn<StripeRedirectService["redirect"]>(() => {
+          redirectedInsideTransaction = insideTransaction;
 
           return Promise.resolve({
-            id: "cs_test_123",
+            status: "redirect",
             url: "https://checkout.stripe.com/c/pay/cs_test_123",
           });
+        }),
+      };
+      fake = fakePrisma({
+        onBegin: () => {
+          insideTransaction = true;
         },
-      ),
-    };
+        onSettle: () => {
+          insideTransaction = false;
+        },
+      });
 
-    fake = fakePrisma({
-      onCommit: () => {
-        events.push("transaction committed");
-      },
-    });
-    tx = fake.tx;
-
-    const checkoutRepo = asDependency<CheckoutRepository>(checkoutRepository);
-    const paymentsRepo = asDependency<PaymentsRepository>(paymentsRepository);
-
-    // the real collaborators, so these tests cover the whole checkout flow
-    service = new CheckoutService(
-      fake.prisma,
-      checkoutRepo,
-      paymentsRepo,
-      new CheckoutDecisionService(
-        checkoutRepo,
-        paymentsRepo,
-        asDependency<EnrollmentsRepository>(enrollmentsRepository),
-        new CheckoutEmailQueue(
-          asDependency<EmailOutboxRepository>(emailOutbox),
-        ),
-      ),
-      new StripeRedirectService(
+      service = new CheckoutService(
         fake.prisma,
-        paymentsRepo,
-        asDependency<StripeService>(stripe),
-        config,
-      ),
-    );
-  });
-
-  const emailIds = { courseId: COURSE_ID, customerId: CUSTOMER_ID };
-
-  describe("course checks", () => {
-    it("returns 404 COURSE_NOT_FOUND when the course isn't publicly viewable", async () => {
-      checkoutRepository.findVisibleCourse.mockResolvedValue(null);
-
-      await expect(service.startCheckout(request)).rejects.toMatchObject({
-        status: 404,
-        response: {
-          code: "COURSE_NOT_FOUND",
-          detail: `No course exists with ID ${COURSE_ID}.`,
-        },
-      });
-      expect(checkoutRepository.findOrCreateCustomer).not.toHaveBeenCalled();
-    });
-
-    it("returns 409 COURSE_NOT_PURCHASABLE once the course has ended", async () => {
-      checkoutRepository.findVisibleCourse.mockResolvedValue(
-        makeCourse({ endsAt: Temporal.Now.instant().subtract({ minutes: 1 }) }),
-      );
-
-      await expect(service.startCheckout(request)).rejects.toMatchObject({
-        status: 409,
-        response: {
-          code: "COURSE_NOT_PURCHASABLE",
-          detail: "This course has ended and can no longer be bought.",
-        },
-      });
-      expect(checkoutRepository.findOrCreateCustomer).not.toHaveBeenCalled();
-    });
-
-    it("looks the course up outside the transaction", async () => {
-      await service.startCheckout(request);
-
-      expect(
-        checkoutRepository.findVisibleCourse,
-      ).toHaveBeenCalledExactlyOnceWith(
-        fake.db,
-        COURSE_ID,
-        expect.any(Temporal.Instant),
+        asDependency<CheckoutRepository>(checkoutRepository),
+        asDependency<PaymentsRepository>(paymentsRepository),
+        asDependency<CheckoutDecisionService>(decision),
+        asDependency<StripeRedirectService>(redirect),
       );
     });
 
-    it("creates the customer with the request's name and email", async () => {
-      await service.startCheckout(request);
+    describe("course checks", () => {
+      it("returns 404 COURSE_NOT_FOUND when the course isn't publicly viewable", async () => {
+        checkoutRepository.findVisibleCourse.mockResolvedValue(null);
 
-      expect(checkoutRepository.findOrCreateCustomer).toHaveBeenCalledWith(tx, {
-        email: "ada@example.com",
-        name: "Ada Lovelace",
+        await expect(service.startCheckout(request)).rejects.toMatchObject({
+          status: 404,
+          response: {
+            code: "COURSE_NOT_FOUND",
+            detail: `No course exists with ID ${COURSE_ID}.`,
+          },
+        });
+        expect(decision.decide).not.toHaveBeenCalled();
+      });
+
+      it("returns 409 COURSE_NOT_PURCHASABLE once the course has ended", async () => {
+        checkoutRepository.findVisibleCourse.mockResolvedValue(
+          makeCourse({
+            endsAt: Temporal.Now.instant().subtract({ minutes: 1 }),
+          }),
+        );
+
+        await expect(service.startCheckout(request)).rejects.toMatchObject({
+          status: 409,
+          response: {
+            code: "COURSE_NOT_PURCHASABLE",
+            detail: "This course has ended and can no longer be bought.",
+          },
+        });
+        expect(decision.decide).not.toHaveBeenCalled();
+      });
+
+      it("looks the course up outside the transaction", async () => {
+        await service.startCheckout(request);
+
+        expect(
+          checkoutRepository.findVisibleCourse,
+        ).toHaveBeenCalledExactlyOnceWith(
+          fake.db,
+          COURSE_ID,
+          expect.any(Temporal.Instant),
+        );
       });
     });
-  });
 
-  describe("a buyer who already has access", () => {
-    beforeEach(() => {
-      enrollmentsRepository.findEnrollment.mockResolvedValue({
-        id: "enrollment",
-        revokedAt: null,
-        suspendedAt: null,
-      });
-    });
+    describe("deciding", () => {
+      it("decides inside the transaction, for the request's buyer and course", async () => {
+        await service.startCheckout(request);
 
-    it("emails them their link and returns check_email", async () => {
-      await expect(service.startCheckout(request)).resolves.toEqual({
-        status: "check_email",
-      });
-      expect(emailOutbox.enqueue).toHaveBeenCalledExactlyOnceWith(tx, {
-        kind: "already_owned",
-        recipient: "ada@example.com",
-        payload: { ...emailIds, refundIssued: false },
-        enrollmentId: "enrollment",
-      });
-      expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();
-    });
-
-    it("answers the same way for a paid course, without charging again", async () => {
-      checkoutRepository.findVisibleCourse.mockResolvedValue(
-        makeCourse({ amount: 9900 }),
-      );
-
-      await expect(service.startCheckout(request)).resolves.toEqual({
-        status: "check_email",
-      });
-      expect(paymentsRepository.createPendingPayment).not.toHaveBeenCalled();
-      expect(stripe.createCheckoutSession).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("a suspended buyer", () => {
-    it.each([
-      ["suspended", { revokedAt: null, suspendedAt }],
-      ["suspended and refunded", { revokedAt, suspendedAt }],
-    ])("is emailed without a link when %s", async (_label, timestamps) => {
-      enrollmentsRepository.findEnrollment.mockResolvedValue({
-        id: "enrollment",
-        ...timestamps,
+        expect(decision.decide).toHaveBeenCalledExactlyOnceWith(fake.tx, {
+          now: expect.any(Temporal.Instant),
+          course: makeCourse({ endsAt: expect.any(Temporal.Instant) }),
+          buyer: request.customer,
+        });
       });
 
-      await expect(service.startCheckout(request)).resolves.toEqual({
-        status: "check_email",
-      });
-      expect(emailOutbox.enqueue).toHaveBeenCalledExactlyOnceWith(tx, {
-        kind: "access_suspended",
-        recipient: "ada@example.com",
-        payload: { ...emailIds, refundIssued: false },
-        enrollmentId: "enrollment",
-      });
-      expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("a free course", () => {
-    it.each([
-      ["a new buyer", null],
-      ["a refunded buyer", { id: "enrollment", revokedAt, suspendedAt: null }],
-    ])(
-      "grants access to %s and emails the link",
-      async (_label, enrollment) => {
-        enrollmentsRepository.findEnrollment.mockResolvedValue(enrollment);
-
+      it("returns check_email without calling Stripe when the outcome was emailed", async () => {
         await expect(service.startCheckout(request)).resolves.toEqual({
           status: "check_email",
         });
-        expect(enrollmentsRepository.grantAccess).toHaveBeenCalledWith(tx, {
-          courseId: COURSE_ID,
-          customerId: CUSTOMER_ID,
-          paymentId: null,
-          now: expect.any(Temporal.Instant),
-        });
-        expect(emailOutbox.enqueue).toHaveBeenCalledExactlyOnceWith(tx, {
-          kind: "access_granted",
-          recipient: "ada@example.com",
-          payload: emailIds,
-          enrollmentId: GRANTED_ENROLLMENT_ID,
-        });
-      },
-    );
-
-    it("sends nothing when a concurrent request granted access first", async () => {
-      enrollmentsRepository.grantAccess.mockResolvedValue(null);
-
-      await expect(service.startCheckout(request)).resolves.toEqual({
-        status: "check_email",
+        expect(redirect.redirect).not.toHaveBeenCalled();
       });
-      expect(emailOutbox.enqueue).not.toHaveBeenCalled();
+
+      it("redirects to Stripe for the payment the decision recorded", async () => {
+        const payStep: CheckoutDecision = {
+          nextStep: CheckoutNextStep.PAY,
+          paymentToComplete,
+        };
+        decision.decide.mockResolvedValue(payStep);
+
+        await expect(service.startCheckout(request)).resolves.toEqual({
+          status: "redirect",
+          url: "https://checkout.stripe.com/c/pay/cs_test_123",
+        });
+        expect(redirect.redirect).toHaveBeenCalledExactlyOnceWith(
+          paymentToComplete,
+        );
+      });
+
+      it("calls Stripe only once the transaction has finished", async () => {
+        decision.decide.mockImplementation(() => {
+          expect(insideTransaction).toBe(true);
+
+          return Promise.resolve({
+            nextStep: CheckoutNextStep.PAY,
+            paymentToComplete,
+          });
+        });
+
+        await service.startCheckout(request);
+
+        expect(redirectedInsideTransaction).toBe(false);
+      });
     });
   });
 
-  describe("the per-address email cap", () => {
-    it("counts the recipient's emails over the last 24 hours", async () => {
-      const before = Temporal.Now.instant();
-      await service.startCheckout(request);
-      const after = Temporal.Now.instant();
+  // the real collaborators, so a wiring mistake between the classes fails here
+  describe("wired to its real collaborators", () => {
+    let service: CheckoutService;
+    let enrollmentsRepository: MockMethods<
+      EnrollmentsRepository,
+      "findEnrollment" | "grantAccess"
+    >;
+    let emailOutbox: MockMethods<
+      EmailOutboxRepository,
+      "enqueue" | "countQueuedSince"
+    >;
+    let stripe: MockMethods<StripeService, "createCheckoutSession">;
 
-      const [scope, recipient, since] =
-        emailOutbox.countQueuedSince.mock.calls[0];
+    beforeEach(() => {
+      enrollmentsRepository = {
+        findEnrollment: vi
+          .fn<EnrollmentsRepository["findEnrollment"]>()
+          .mockResolvedValue(null),
+        grantAccess: vi
+          .fn<EnrollmentsRepository["grantAccess"]>()
+          .mockResolvedValue(GRANTED_ENROLLMENT_ID),
+      };
+      emailOutbox = {
+        enqueue: vi
+          .fn<EmailOutboxRepository["enqueue"]>()
+          .mockResolvedValue(undefined),
+        countQueuedSince: vi
+          .fn<EmailOutboxRepository["countQueuedSince"]>()
+          .mockResolvedValue(0),
+      };
+      stripe = {
+        createCheckoutSession: vi
+          .fn<StripeService["createCheckoutSession"]>()
+          .mockResolvedValue({
+            id: "cs_test_123",
+            url: "https://checkout.stripe.com/c/pay/cs_test_123",
+          }),
+      };
 
-      expect(scope).toBe(tx);
-      expect(recipient).toBe("ada@example.com");
-      expect(
-        Temporal.Instant.compare(since, before.subtract({ hours: 24 })),
-      ).toBeGreaterThanOrEqual(0);
-      expect(
-        Temporal.Instant.compare(since, after.subtract({ hours: 24 })),
-      ).toBeLessThanOrEqual(0);
+      const fake = fakePrisma();
+      const checkoutRepo = asDependency<CheckoutRepository>(checkoutRepository);
+      const paymentsRepo = asDependency<PaymentsRepository>(paymentsRepository);
+
+      service = new CheckoutService(
+        fake.prisma,
+        checkoutRepo,
+        paymentsRepo,
+        new CheckoutDecisionService(
+          checkoutRepo,
+          paymentsRepo,
+          asDependency<EnrollmentsRepository>(enrollmentsRepository),
+          new CheckoutEmailQueue(
+            asDependency<EmailOutboxRepository>(emailOutbox),
+          ),
+        ),
+        new StripeRedirectService(
+          fake.prisma,
+          paymentsRepo,
+          asDependency<StripeService>(stripe),
+          config,
+        ),
+      );
     });
 
-    it("queues below the cap", async () => {
-      emailOutbox.countQueuedSince.mockResolvedValue(4);
-
-      await service.startCheckout(request);
-
-      expect(emailOutbox.enqueue).toHaveBeenCalledOnce();
+    it("grants a free course and emails the link", async () => {
+      await expect(service.startCheckout(request)).resolves.toEqual({
+        status: "check_email",
+      });
+      expect(enrollmentsRepository.grantAccess).toHaveBeenCalledOnce();
+      expect(emailOutbox.enqueue).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ kind: "access_granted" }),
+      );
     });
 
-    it("still grants free access but queues nothing at the cap", async () => {
+    it("still grants a free course but queues nothing at the email cap", async () => {
       emailOutbox.countQueuedSince.mockResolvedValue(5);
 
       await expect(service.startCheckout(request)).resolves.toEqual({
         status: "check_email",
       });
-      expect(enrollmentsRepository.grantAccess).toHaveBeenCalled();
+      expect(enrollmentsRepository.grantAccess).toHaveBeenCalledOnce();
       expect(emailOutbox.enqueue).not.toHaveBeenCalled();
     });
-  });
 
-  describe("a paid course", () => {
-    beforeEach(() => {
+    it("sends a paid course's buyer to Stripe", async () => {
       checkoutRepository.findVisibleCourse.mockResolvedValue(
         makeCourse({ amount: 9900 }),
       );
-    });
 
-    it("redirects the buyer to Stripe's checkout page", async () => {
       await expect(service.startCheckout(request)).resolves.toEqual({
         status: "redirect",
         url: "https://checkout.stripe.com/c/pay/cs_test_123",
       });
-    });
-
-    it.each([
-      ["a new buyer", null],
-      ["a refunded buyer", { id: "enrollment", revokedAt, suspendedAt: null }],
-    ])(
-      "records a pending payment at the current price for %s",
-      async (_label, enrollment) => {
-        enrollmentsRepository.findEnrollment.mockResolvedValue(enrollment);
-
-        await service.startCheckout(request);
-
-        expect(
-          paymentsRepository.createPendingPayment,
-        ).toHaveBeenCalledExactlyOnceWith(tx, {
-          provider: "stripe",
-          customerId: CUSTOMER_ID,
-          coursePriceId: PRICE_ID,
-          amount: 9900,
-          currency: "USD",
-        });
-      },
-    );
-
-    it("creates the Stripe session for that payment", async () => {
-      const before = Temporal.Now.instant();
-      await service.startCheckout(request);
-      const after = Temporal.Now.instant();
-
-      expect(stripe.createCheckoutSession).toHaveBeenCalledExactlyOnceWith({
-        paymentId: PAYMENT_ID,
-        amount: 9900,
-        currency: "USD",
-        courseName: "React Fundamentals",
-        customerEmail: "ada@example.com",
-        successUrl: "https://courses.example.com/checkout/success",
-        cancelUrl: `https://courses.example.com/courses/${COURSE_ID}`,
-        expiresAt: expect.any(Temporal.Instant),
-      });
-
-      const { expiresAt } = stripe.createCheckoutSession.mock.calls[0][0];
-
-      expect(
-        Temporal.Instant.compare(expiresAt, before.add({ minutes: 31 })),
-      ).toBeGreaterThanOrEqual(0);
-      expect(
-        Temporal.Instant.compare(expiresAt, after.add({ minutes: 31 })),
-      ).toBeLessThanOrEqual(0);
-    });
-
-    it("calls Stripe only after the transaction has committed", async () => {
-      await service.startCheckout(request);
-
-      expect(events).toEqual(["transaction committed", "stripe called"]);
-    });
-
-    it("saves the session id on the payment outside the transaction", async () => {
-      await service.startCheckout(request);
-
       expect(
         paymentsRepository.saveProviderCheckoutId,
-      ).toHaveBeenCalledExactlyOnceWith(fake.db, PAYMENT_ID, "cs_test_123");
-    });
-
-    it("queues no email; access is granted once Stripe confirms payment", async () => {
-      await service.startCheckout(request);
-
-      expect(emailOutbox.enqueue).not.toHaveBeenCalled();
-      expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();
-    });
-
-    it("returns 503 PAYMENT_PROVIDER_UNAVAILABLE when Stripe can't be reached", async () => {
-      stripe.createCheckoutSession.mockRejectedValue(
-        new PaymentProviderUnavailableError(),
+      ).toHaveBeenCalledExactlyOnceWith(
+        expect.anything(),
+        PAYMENT_ID,
+        "cs_test_123",
       );
-
-      await expect(service.startCheckout(request)).rejects.toMatchObject({
-        status: 503,
-        response: {
-          code: "PAYMENT_PROVIDER_UNAVAILABLE",
-          detail: "Payments can't be taken right now. Try again later.",
-        },
-      });
-      expect(paymentsRepository.saveProviderCheckoutId).not.toHaveBeenCalled();
     });
 
-    it("lets other Stripe errors through", async () => {
-      const error = new Error("Invalid currency: zzz");
-      stripe.createCheckoutSession.mockRejectedValue(error);
+    it("emails a suspended buyer instead of charging them", async () => {
+      checkoutRepository.findVisibleCourse.mockResolvedValue(
+        makeCourse({ amount: 9900 }),
+      );
+      enrollmentsRepository.findEnrollment.mockResolvedValue({
+        id: "enrollment",
+        revokedAt: null,
+        suspendedAt,
+      });
 
-      await expect(service.startCheckout(request)).rejects.toBe(error);
+      await expect(service.startCheckout(request)).resolves.toEqual({
+        status: "check_email",
+      });
+      expect(emailOutbox.enqueue).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ kind: "access_suspended" }),
+      );
+      expect(stripe.createCheckoutSession).not.toHaveBeenCalled();
     });
   });
 
   describe("getCheckoutStatus", () => {
+    let service: CheckoutService;
+    let fake: ReturnType<typeof fakePrisma>;
+
+    beforeEach(() => {
+      fake = fakePrisma();
+      service = new CheckoutService(
+        fake.prisma,
+        asDependency<CheckoutRepository>(checkoutRepository),
+        asDependency<PaymentsRepository>(paymentsRepository),
+        asDependency<CheckoutDecisionService>({}),
+        asDependency<StripeRedirectService>({}),
+      );
+    });
+
     it.each(["pending", "succeeded", "expired", "refunded"] as const)(
       "reports a %s payment",
       async (status) => {
@@ -470,9 +388,7 @@ describe("CheckoutService", () => {
         );
 
         await expect(service.getCheckoutStatus("cs_test_123")).resolves.toEqual(
-          {
-            status,
-          },
+          { status },
         );
       },
     );
