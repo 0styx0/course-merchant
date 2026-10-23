@@ -1,6 +1,6 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { PrismaService } from "../../prisma/prisma.service.js";
+import { Injectable } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
+import type { DbScope } from "types.js";
 import { and } from "@prisma/orm-postgres/orm-client";
 import { visibleCoursesWithCurrentPrice } from "../course-visibility.js";
 
@@ -20,39 +20,35 @@ export type CourseRepositoryModelPublic = {
 
 @Injectable()
 export class CoursesRepository {
-  constructor(
-    @Inject(PrismaService)
-    private readonly prisma: PrismaService,
-  ) {}
-
-  private publicCourseDetails(now: Temporal.Instant) {
-    return visibleCoursesWithCurrentPrice(
-      this.prisma.db.orm.public.Course,
-      now,
-    ).include("enrollments", (enrollments) =>
-      // active only: not refunded and not suspended
-      enrollments
-        .where((enrollment) =>
-          and(enrollment.revokedAt.isNull(), enrollment.suspendedAt.isNull()),
-        )
-        .count(),
+  private publicCourseDetails(scope: DbScope, now: Temporal.Instant) {
+    return visibleCoursesWithCurrentPrice(scope.orm.public.Course, now).include(
+      "enrollments",
+      (enrollments) =>
+        // active only: not refunded and not suspended
+        enrollments
+          .where((enrollment) =>
+            and(enrollment.revokedAt.isNull(), enrollment.suspendedAt.isNull()),
+          )
+          .count(),
     );
   }
 
   async findAvailable(
+    scope: DbScope,
     now: Temporal.Instant,
   ): Promise<CourseRepositoryModelPublic[]> {
-    return await this.publicCourseDetails(now)
+    return await this.publicCourseDetails(scope, now)
       .where((course) => course.endsAt.gt(now))
       .orderBy([(course) => course.startsAt.asc(), (course) => course.id.asc()])
       .all();
   }
 
   findById(
+    scope: DbScope,
     courseId: string,
     now: Temporal.Instant,
   ): Promise<CourseRepositoryModelPublic | null> {
-    return this.publicCourseDetails(now)
+    return this.publicCourseDetails(scope, now)
       .where((course) => course.id.eq(courseId))
       .first();
   }

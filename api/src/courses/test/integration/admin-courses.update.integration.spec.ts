@@ -63,7 +63,10 @@ describe("AdminCoursesService (integration)", () => {
   async function findCourse(
     courseId: string,
   ): Promise<CourseRepositoryModelAdmin> {
-    const course = await repository.findCourseDetailsByIdAdmin(courseId);
+    const course = await repository.findCourseDetailsByIdAdmin(
+      prisma.db,
+      courseId,
+    );
 
     if (course === null) {
       throw new Error(`Expected course ${courseId} to exist.`);
@@ -205,24 +208,26 @@ describe("AdminCoursesService (integration)", () => {
       // inserting at an in-effect price's effectiveAt violates the
       // unique constraint, since prices in effect are never deleted
       await expect(
-        repository.updateCourse(course.id, {
-          title: "Should not persist",
-          description: before.description,
-          contentUrl: before.contentUrl,
-          startsAt: before.startsAt,
-          endsAt: before.endsAt,
-          timeZone: before.timeZone,
-          nextStatus: "archived",
-          newPrices: [
-            {
-              amount: 1000,
-              currency: "USD",
-              effectiveAt: pastPrice.effectiveAt,
-            },
-          ],
-          deletePriceIds: [],
-          now: Temporal.Now.instant(),
-        }),
+        prisma.db.transaction((tx) =>
+          repository.updateCourse(tx, course.id, {
+            title: "Should not persist",
+            description: before.description,
+            contentUrl: before.contentUrl,
+            startsAt: before.startsAt,
+            endsAt: before.endsAt,
+            timeZone: before.timeZone,
+            nextStatus: "archived",
+            newPrices: [
+              {
+                amount: 1000,
+                currency: "USD",
+                effectiveAt: pastPrice.effectiveAt,
+              },
+            ],
+            deletePriceIds: [],
+            now: Temporal.Now.instant(),
+          }),
+        ),
       ).rejects.toThrow();
 
       expect(await findCourse(course.id)).toEqual(before);

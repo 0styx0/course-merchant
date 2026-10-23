@@ -54,7 +54,10 @@ describe("AdminCoursesService (integration)", () => {
   }
 
   async function findCreatedCourse(courseId: string) {
-    const course = await repository.findCourseDetailsByIdAdmin(courseId);
+    const course = await repository.findCourseDetailsByIdAdmin(
+      prisma.db,
+      courseId,
+    );
 
     expect(course).not.toBeNull();
 
@@ -66,6 +69,22 @@ describe("AdminCoursesService (integration)", () => {
   }
 
   describe("createCourse", () => {
+    it("saves nothing when a later write fails", async () => {
+      const request = makeCreateRequest();
+
+      // two prices with the same effectiveAt violate the unique constraint
+      // after the course row is already inserted
+      request.prices.push({ ...request.prices[0] });
+
+      await expect(service.createCourse(request)).rejects.toThrow();
+
+      const saved = await prisma.db.orm.public.Course.where((course) =>
+        course.title.eq(request.name),
+      ).all();
+
+      expect(saved).toEqual([]);
+    });
+
     it("persists a course, its initial status, and its price", async () => {
       const request = makeCreateRequest();
 

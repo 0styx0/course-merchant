@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { instant } from "../../../test/test-helpers.js";
+import { fakePrisma, instant } from "../../../test/test-helpers.js";
 import { AdminCoursesService } from "@/courses/admin-courses.service.js";
 import { toAdminCourseResponse } from "@/courses/courses.mapper.js";
 import {
@@ -42,12 +42,15 @@ describe("AdminCoursesService", () => {
     findCourseDetailsByIdAdmin: ReturnType<typeof vi.fn>;
   };
 
+  const { prisma, db } = fakePrisma();
+
   beforeEach(() => {
     coursesRepository = {
       findCourseDetailsByIdAdmin: vi.fn(),
     };
 
     service = new AdminCoursesService(
+      prisma,
       coursesRepository as unknown as AdminCoursesRepository,
     );
   });
@@ -72,7 +75,7 @@ describe("AdminCoursesService", () => {
 
       expect(
         coursesRepository.findCourseDetailsByIdAdmin,
-      ).toHaveBeenCalledExactlyOnceWith(COURSE_ID);
+      ).toHaveBeenCalledExactlyOnceWith(db, COURSE_ID);
     });
 
     it("returns 404 COURSE_NOT_FOUND when the course does not exist", async () => {

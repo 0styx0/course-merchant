@@ -7,6 +7,7 @@ import {
   AdminCoursesRepository,
   CourseRepositoryModelAdmin,
 } from "@/courses/courses.repository/admin-courses.repository.js";
+import { fakePrisma } from "@/test/test-helpers.js";
 import type { UpdateCourseRequest } from "types.js";
 
 const COURSE_ID = "crs_01HZX3";
@@ -78,6 +79,8 @@ describe("AdminCoursesService", () => {
     updateCourse: ReturnType<typeof vi.fn>;
   };
 
+  const { prisma, tx } = fakePrisma();
+
   beforeEach(() => {
     repositoryCourse = makeRepositoryCourse();
 
@@ -87,6 +90,7 @@ describe("AdminCoursesService", () => {
     };
 
     service = new AdminCoursesService(
+      prisma,
       coursesRepository as unknown as AdminCoursesRepository,
     );
   });
@@ -112,6 +116,7 @@ describe("AdminCoursesService", () => {
       await service.updateCourse(COURSE_ID, request);
 
       expect(coursesRepository.updateCourse).toHaveBeenCalledWith(
+        tx,
         COURSE_ID,
         expect.objectContaining({
           title: "React Advanced",
@@ -128,6 +133,7 @@ describe("AdminCoursesService", () => {
       await service.updateCourse(COURSE_ID, makeRequest(repositoryCourse));
 
       expect(coursesRepository.updateCourse).toHaveBeenCalledWith(
+        tx,
         COURSE_ID,
         expect.objectContaining({ nextStatus: null }),
       );
@@ -140,6 +146,7 @@ describe("AdminCoursesService", () => {
       });
 
       expect(coursesRepository.updateCourse).toHaveBeenCalledWith(
+        tx,
         COURSE_ID,
         expect.objectContaining({ nextStatus: "archived" }),
       );
@@ -153,6 +160,7 @@ describe("AdminCoursesService", () => {
       await service.updateCourse(COURSE_ID, request);
 
       expect(coursesRepository.updateCourse).toHaveBeenCalledWith(
+        tx,
         COURSE_ID,
         expect.objectContaining({
           newPrices: [

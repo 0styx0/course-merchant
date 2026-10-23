@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { instant } from "../../../test/test-helpers.js";
+import { fakePrisma, instant } from "../../../test/test-helpers.js";
 import type {
   CourseRepositoryModelPublic,
   CoursesRepository,
@@ -35,6 +35,8 @@ describe("CoursesService", () => {
     findById: ReturnType<typeof vi.fn>;
   };
 
+  const { prisma, db } = fakePrisma();
+
   beforeEach(() => {
     vi.spyOn(Temporal.Now, "instant").mockReturnValue(NOW);
 
@@ -43,6 +45,7 @@ describe("CoursesService", () => {
     };
 
     service = new CoursesService(
+      prisma,
       coursesRepository as unknown as CoursesRepository,
     );
   });
@@ -66,6 +69,7 @@ describe("CoursesService", () => {
       await service.findById(COURSE_ID);
 
       expect(coursesRepository.findById).toHaveBeenCalledExactlyOnceWith(
+        db,
         COURSE_ID,
         NOW,
       );

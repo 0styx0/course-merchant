@@ -1,9 +1,9 @@
-import { Injectable, Inject } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 import { and } from "@prisma/orm-postgres/orm-client";
 
 import { Models } from "@/prisma/contract.js";
-import { PrismaService } from "@/prisma/prisma.service.js";
+import type { DbScope } from "types.js";
 
 export type CourseRepositoryModelAdmin = {
   id: string;
@@ -79,15 +79,10 @@ export type CourseRepositoryUpdateInput = {
   now: Temporal.Instant;
 };
 
-type CourseDelegate = PrismaService["db"]["orm"]["public"]["Course"];
+type CourseDelegate = DbScope["orm"]["public"]["Course"];
 
 @Injectable()
 export class AdminCoursesRepository {
-  constructor(
-    @Inject(PrismaService)
-    private readonly prisma: PrismaService,
-  ) {}
-
   /**
    * Builds the shared query for admin course details.
    * Includes all prices, the latest status, and enrollment details.
@@ -120,15 +115,18 @@ export class AdminCoursesRepository {
    * Returns the admin course details, including only the latest status.
    */
   findCourseDetailsByIdAdmin(
+    scope: DbScope,
     courseId: string,
   ): Promise<CourseRepositoryModelAdmin | null> {
-    return this.adminCourseDetailsQuery(this.prisma.db.orm.public.Course)
+    return this.adminCourseDetailsQuery(scope.orm.public.Course)
       .where((course) => course.id.eq(courseId))
       .first();
   }
 
-  async findAllCourseDetailsAdmin(): Promise<CourseRepositoryModelAdmin[]> {
-    return await this.adminCourseDetailsQuery(this.prisma.db.orm.public.Course)
+  async findAllCourseDetailsAdmin(
+    scope: DbScope,
+  ): Promise<CourseRepositoryModelAdmin[]> {
+    return await this.adminCourseDetailsQuery(scope.orm.public.Course)
       .where((course) =>
         course.statuses.some((status) =>
           and(
@@ -146,47 +144,46 @@ export class AdminCoursesRepository {
   }
 
   async createCourse(
+    scope: DbScope,
     input: CourseRepositoryCreateInput,
   ): Promise<CourseRepositoryModelAdmin> {
-    return this.prisma.db.transaction(async (tx) => {
-      const course = await tx.orm.public.Course.create({
-        title: input.title,
-        description: input.description,
-        contentUrl: input.contentUrl,
-        startsAt: input.startsAt,
-        endsAt: input.endsAt,
-        timeZone: input.timeZone,
+    const course = await scope.orm.public.Course.create({
+      title: input.title,
+      description: input.description,
+      contentUrl: input.contentUrl,
+      startsAt: input.startsAt,
+      endsAt: input.endsAt,
+      timeZone: input.timeZone,
 
-        statuses: (statuses) =>
-          statuses.create({
-            name: input.initialStatus,
-          }),
+      statuses: (statuses) =>
+        statuses.create({
+          name: input.initialStatus,
+        }),
 
-        prices: (prices) =>
-          prices.create(
-            input.prices.map((price) => ({
-              amount: price.amount,
-              currency: price.currency,
-              effectiveAt: price.effectiveAt,
-            })),
-          ),
-      });
-
-      const createdCourse = await this.adminCourseDetailsQuery(
-        tx.orm.public.Course,
-      )
-        .where((candidate) => candidate.id.eq(course.id))
-        .first();
-
-      if (!createdCourse) {
-        // throwing prevents transaction commit
-        throw new Error(
-          `Created course ${course.title} (${course.id}) could not be loaded.`,
-        );
-      }
-
-      return createdCourse;
+      prices: (prices) =>
+        prices.create(
+          input.prices.map((price) => ({
+            amount: price.amount,
+            currency: price.currency,
+            effectiveAt: price.effectiveAt,
+          })),
+        ),
     });
+
+    const createdCourse = await this.adminCourseDetailsQuery(
+      scope.orm.public.Course,
+    )
+      .where((candidate) => candidate.id.eq(course.id))
+      .first();
+
+    if (!createdCourse) {
+      // throwing rolls back the caller's transaction
+      throw new Error(
+        `Created course ${course.title} (${course.id}) could not be loaded.`,
+      );
+    }
+
+    return createdCourse;
   }
 
   /**
@@ -194,66 +191,65 @@ export class AdminCoursesRepository {
    * status. Returns null when the course does not exist.
    */
   async updateCourse(
+    scope: DbScope,
     courseId: string,
     input: CourseRepositoryUpdateInput,
   ): Promise<CourseRepositoryModelAdmin | null> {
-    return this.prisma.db.transaction(async (tx) => {
-      const course = await tx.orm.public.Course.where((candidate) =>
-        candidate.id.eq(courseId),
-      ).update({
-        title: input.title,
-        description: input.description,
-        contentUrl: input.contentUrl,
-        startsAt: input.startsAt,
-        endsAt: input.endsAt,
-        timeZone: input.timeZone,
-      });
-
-      if (!course) {
-        return null;
-      }
-
-      // delete before inserting, so a replaced price can reuse its effectiveAt
-      if (input.deletePriceIds.length > 0) {
-        await tx.orm.public.CoursePrice.where((price) =>
-          and(
-            price.courseId.eq(courseId),
-            price.id.in(input.deletePriceIds),
-            price.effectiveAt.gt(input.now),
-          ),
-        ).deleteAndCount();
-      }
-
-      if (input.newPrices.length > 0) {
-        await tx.orm.public.CoursePrice.createAndCount(
-          input.newPrices.map((price) => ({
-            courseId,
-            amount: price.amount,
-            currency: price.currency,
-            effectiveAt: price.effectiveAt,
-          })),
-        );
-      }
-
-      if (input.nextStatus) {
-        await tx.orm.public.CourseStatus.create({
-          courseId,
-          name: input.nextStatus,
-        });
-      }
-
-      const updatedCourse = await this.adminCourseDetailsQuery(
-        tx.orm.public.Course,
-      )
-        .where((candidate) => candidate.id.eq(courseId))
-        .first();
-
-      if (!updatedCourse) {
-        // throwing prevents transaction commit
-        throw new Error(`Updated course ${courseId} could not be loaded.`);
-      }
-
-      return updatedCourse;
+    const course = await scope.orm.public.Course.where((candidate) =>
+      candidate.id.eq(courseId),
+    ).update({
+      title: input.title,
+      description: input.description,
+      contentUrl: input.contentUrl,
+      startsAt: input.startsAt,
+      endsAt: input.endsAt,
+      timeZone: input.timeZone,
     });
+
+    if (!course) {
+      return null;
+    }
+
+    // delete before inserting, so a replaced price can reuse its effectiveAt
+    if (input.deletePriceIds.length > 0) {
+      await scope.orm.public.CoursePrice.where((price) =>
+        and(
+          price.courseId.eq(courseId),
+          price.id.in(input.deletePriceIds),
+          price.effectiveAt.gt(input.now),
+        ),
+      ).deleteAndCount();
+    }
+
+    if (input.newPrices.length > 0) {
+      await scope.orm.public.CoursePrice.createAndCount(
+        input.newPrices.map((price) => ({
+          courseId,
+          amount: price.amount,
+          currency: price.currency,
+          effectiveAt: price.effectiveAt,
+        })),
+      );
+    }
+
+    if (input.nextStatus) {
+      await scope.orm.public.CourseStatus.create({
+        courseId,
+        name: input.nextStatus,
+      });
+    }
+
+    const updatedCourse = await this.adminCourseDetailsQuery(
+      scope.orm.public.Course,
+    )
+      .where((candidate) => candidate.id.eq(courseId))
+      .first();
+
+    if (!updatedCourse) {
+      // throwing rolls back the caller's transaction
+      throw new Error(`Updated course ${courseId} could not be loaded.`);
+    }
+
+    return updatedCourse;
   }
 }

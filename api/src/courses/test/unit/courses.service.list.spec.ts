@@ -1,12 +1,13 @@
 import { Test, type TestingModule } from "@nestjs/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PrismaService } from "@/prisma/prisma.service.js";
 import { CoursesService } from "../../courses.service.js";
 import {
   CourseRepositoryModelPublic,
   CoursesRepository,
 } from "../../courses.repository/courses.repository.js";
-import { instant } from "../../../test/test-helpers.js";
+import { fakePrisma, instant } from "../../../test/test-helpers.js";
 
 const makeCourseRecord = (overrides = {}) =>
   ({
@@ -41,6 +42,7 @@ describe("CoursesService", () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CoursesService,
+        { provide: PrismaService, useValue: fakePrisma().prisma },
         {
           provide: CoursesRepository,
           useValue: coursesRepositoryMock,

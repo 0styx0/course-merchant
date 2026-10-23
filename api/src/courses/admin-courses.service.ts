@@ -5,6 +5,7 @@ import {
   ListCoursesAdminResponse,
   UpdateCourseRequest,
 } from "types.js";
+import { PrismaService } from "@/prisma/prisma.service.js";
 import { courseNotFound } from "./course-errors.js";
 import { ValidationException } from "../common/errors/validation.exception.js";
 import { toAdminCourseResponse } from "./courses.mapper.js";
@@ -21,6 +22,8 @@ import { Temporal } from "@js-temporal/polyfill";
 @Injectable()
 export class AdminCoursesService {
   constructor(
+    @Inject(PrismaService)
+    private readonly prisma: PrismaService,
     @Inject(AdminCoursesRepository)
     private readonly coursesRepository: AdminCoursesRepository,
   ) {}
@@ -43,7 +46,9 @@ export class AdminCoursesService {
       })),
     };
 
-    const course = await this.coursesRepository.createCourse(input);
+    const course = await this.prisma.db.transaction((tx) =>
+      this.coursesRepository.createCourse(tx, input),
+    );
     return toAdminCourseResponse(course);
   }
 
@@ -52,38 +57,45 @@ export class AdminCoursesService {
     request: UpdateCourseRequest,
   ): Promise<GetCourseAdminResponse> {
     const now = Temporal.Now.instant();
-    const stored =
-      await this.coursesRepository.findCourseDetailsByIdAdmin(courseId);
 
-    if (!stored) {
-      throw courseNotFound(courseId);
-    }
+    // read, validate and write in one transaction, so the rules are checked
+    // against the course as it is when the change is applied
+    const course = await this.prisma.db.transaction(async (tx) => {
+      const stored = await this.coursesRepository.findCourseDetailsByIdAdmin(
+        tx,
+        courseId,
+      );
 
-    const context = { request, stored, now };
-    const errors = findUpdateRuleViolations(context);
+      if (!stored) {
+        throw courseNotFound(courseId);
+      }
 
-    if (errors.length > 0) {
-      throw new ValidationException(errors);
-    }
+      const context = { request, stored, now };
+      const errors = findUpdateRuleViolations(context);
 
-    const { newPrices, deletePriceIds } = findPriceChanges(context);
-    const currentStatus = stored.statuses[0].name;
+      if (errors.length > 0) {
+        throw new ValidationException(errors);
+      }
 
-    const course = await this.coursesRepository.updateCourse(courseId, {
-      title: request.name,
-      description: request.description,
-      contentUrl: request.contentUrl,
-      startsAt: Temporal.Instant.from(request.schedule.startTime),
-      endsAt: Temporal.Instant.from(request.schedule.endTime),
-      timeZone: request.schedule.timeZone,
-      nextStatus: request.status === currentStatus ? null : request.status,
-      newPrices: newPrices.map((price) => ({
-        amount: price.amount,
-        currency: price.currency,
-        effectiveAt: Temporal.Instant.from(price.effectiveAt),
-      })),
-      deletePriceIds,
-      now,
+      const { newPrices, deletePriceIds } = findPriceChanges(context);
+      const currentStatus = stored.statuses[0].name;
+
+      return this.coursesRepository.updateCourse(tx, courseId, {
+        title: request.name,
+        description: request.description,
+        contentUrl: request.contentUrl,
+        startsAt: Temporal.Instant.from(request.schedule.startTime),
+        endsAt: Temporal.Instant.from(request.schedule.endTime),
+        timeZone: request.schedule.timeZone,
+        nextStatus: request.status === currentStatus ? null : request.status,
+        newPrices: newPrices.map((price) => ({
+          amount: price.amount,
+          currency: price.currency,
+          effectiveAt: Temporal.Instant.from(price.effectiveAt),
+        })),
+        deletePriceIds,
+        now,
+      });
     });
 
     if (!course) {
@@ -94,8 +106,10 @@ export class AdminCoursesService {
   }
 
   async findByIdAdmin(courseId: string): Promise<GetCourseAdminResponse> {
-    const course =
-      await this.coursesRepository.findCourseDetailsByIdAdmin(courseId);
+    const course = await this.coursesRepository.findCourseDetailsByIdAdmin(
+      this.prisma.db,
+      courseId,
+    );
 
     if (!course) {
       throw courseNotFound(courseId);
@@ -105,7 +119,9 @@ export class AdminCoursesService {
   }
 
   async findAllAdmin(): Promise<ListCoursesAdminResponse> {
-    const courses = await this.coursesRepository.findAllCourseDetailsAdmin();
+    const courses = await this.coursesRepository.findAllCourseDetailsAdmin(
+      this.prisma.db,
+    );
 
     return {
       courses: courses.map(toAdminCourseResponse),

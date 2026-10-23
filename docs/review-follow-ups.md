@@ -91,8 +91,9 @@ This file is temporary. When an item ships, tick it and move its decision rows i
   - Remove the unused `TOO_MANY_REQUESTS` from the contract and the code, regenerate both type files, and update the launch-checklist line that mentions it.
 
   The pipe file is now `common/validation/zod-validation.pipe.ts`, with its spec. Old paths have no re-export shims.
-- [ ] **R13. Course repositories take a `DbScope`.** **Next** `CoursesRepository` and `AdminCoursesRepository` follow the newer repositories: stateless, with the service owning the transaction.
-- [ ] **R14. Give a course's latest status one definition.**
+- [x] **R13. Course repositories take a `DbScope`.** `CoursesRepository` and `AdminCoursesRepository` follow the newer repositories: stateless, with the service owning the transaction.
+  - `AdminCoursesService.createCourse` wraps its write in a transaction. `updateCourse` reads, validates and writes in one transaction, so the update rules are checked against the course as it is when the change applies. It takes no row lock, so two simultaneous edits can still interleave.
+- [ ] **R14. Give a course's latest status one definition.** **Next**
   - Export `latestStatusIs(name)` and `latestStatusIsNot(name)` from [course-visibility.ts](../api/src/courses/course-visibility.ts), and use them in the public and admin queries. Today "latest status" is worked out in 3 places.
   - Add `@@unique([courseId, changedAt])` on `CourseStatus`, with a migration.
   - Move the decision row below into [courses.md](courses.md).
@@ -101,6 +102,7 @@ This file is temporary. When an item ships, tick it and move its decision rows i
 
 | Decision | Why | Rejected |
 |---|---|---|
+| `AdminCoursesService.updateCourse` does its read, validation and write in one transaction | The service owns the transaction, and validating against a read taken before the write left a gap for a concurrent edit. Cost: the transaction stays open during a little in-memory validation, with no network calls | Keeping the read outside and wrapping only the write (the gap stays) |
 | The review's follow-ups live in this temporary doc, one commit per item | The items span payments, courses, email and infrastructure. Spreading them across the area docs would mean several **Next** markers, which `/next-commit` refuses | Adding them to `payments.md` and `courses.md`; implementing them all in one session |
 | A course's latest status stays computed from the `CourseStatus` log, through one shared helper, with `@@unique([courseId, changedAt])` | No second copy of the status to keep in step. The query is cheap at this shop's size. The constraint closes the one real gap: two statuses with the same `changedAt` (Postgres's `now()` is fixed for a whole transaction) would both count as latest, so a deleted course could show as published. It's the same pattern as `CoursePrice`'s `@@unique([courseId, effectiveAt])` | A `Course.currentStatus` column written beside each log row (duplicated state that can drift, plus a migration and backfill); a tie-breaking sequence column |
 | `tsc-alias` after `nest build` rewrites the `@/` aliases; `start:prod` uses `dist/src/main.js`; `dotenv` is a runtime dependency; `src/test/` isn't compiled | Nest's own alias rewriter can't see `.js` imports of `.ts` files, so the aliases stayed in `dist/`. One script line and one devDependency keep the `@/` convention. `nest start` doesn't run `tsc-alias`, so it isn't covered. The compile root includes [types.ts](../api/types.ts) and the migrations, so the entry stays under `dist/src/` | Relative imports everywhere (about 171 imports in 66 files); an SWC builder; Node subpath imports (`#/…`); dropping the `dotenv` imports (changes how local runs load `.env`) |

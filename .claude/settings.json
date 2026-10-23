@@ -1,11 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(yarn -s vitest run --config vitest.unit.config.ts src/courses/test/unit/admin-courses.service.update.spec.ts)",
-      "Bash(yarn -s db:test:migrate)",
-      "Bash(yarn -s vitest run --config vitest.integration.config.ts src/courses/test/integration/admin-courses.update.integration.spec.ts)",
+      "Bash(python3 - src/courses/test/integration/admin-courses.update.integration.spec.ts)",
       "Bash(sed -i 's/{ days: 2 }/{ hours: 48 }/g; s/{ days: 5 }/{ hours: 120 }/g' src/courses/test/integration/admin-courses.update.integration.spec.ts)",
-      "Bash(python3 - src/courses/test/integration/admin-courses.update.integration.spec.ts)"
+      "Bash(yarn -s db:test:migrate)",
+      "Bash(yarn -s lint)",
+      "Bash(yarn -s test:e2e)",
+      "Bash(yarn -s test:integration)",
+      "Bash(yarn -s test:unit)",
+      "Bash(yarn -s tsc --noEmit)",
+      "Bash(yarn -s vitest run --config vitest.integration.config.ts src/courses/test/integration/admin-courses.update.integration.spec.ts)",
+      "Bash(yarn -s vitest run --config vitest.unit.config.ts src/courses/test/unit/admin-courses.service.update.spec.ts)"
     ]
   }
 }
