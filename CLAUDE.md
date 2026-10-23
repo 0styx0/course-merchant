@@ -13,6 +13,7 @@ A small storefront for selling courses. Two independent yarn (v1) projects, each
 
 - [docs/payments.md](docs/payments.md) — checkout, webhooks, enrollments, refunds, emails: status checklist (what's next), flows, decisions with rejected alternatives, launch checklist.
 - [docs/courses.md](docs/courses.md) — creating, editing and browsing courses: who sees what, `PUT` semantics, validation, decisions.
+- [docs/review-follow-ups.md](docs/review-follow-ups.md) — fixes and refactors decided in the 2026-10-23 architecture review, one commit each, with the decisions already made. Temporary: deleted once its last item ships.
 
 Update them in the same commit as the code they describe: tick status, add a decision row when something is decided. Record only what the code can't say (progress, why, what was rejected); never copy schemas or contract shapes into them.
 
@@ -44,14 +45,18 @@ All routes are URI-versioned (`/v1/...`): controllers declare `version: "1"`, an
 - **Migration trap:** the generated `migration.ts` imports `…/contract'` without a suffix; change it to `…/contract.js'` (nodenext). Self-emit (`node migration.ts`) works, so a migration with a hand-written data transform can be written and re-emitted.
 - **Upgrading Prisma:** Follow `skills/prisma-8/references/upgrade-app.md` and run its per-step scripts from a copy outside `node_modules` (Node won't strip types there). Afterwards `contract:emit`, `prisma migration plan`, and `prisma db sign` each database (`--db <url>`; pass `--contract` if the schema also changed).
 - Queries use the fluent ORM on `db.orm.public.<Model>` (`.where(c => c.field.eq(x))`, `.include`, `.select`, `.upsert`, `.first()`, `.all()`; combinators like `and` from `@prisma/orm-postgres/orm-client`).
-- Idioms in use: `createAndCount(rows, { onConflict: "skip", conflictOn: [...] })` for insert-if-absent (Postgres `ON CONFLICT DO NOTHING`; 0 means it already existed); `.where(...).updateAndCount(...)` returns the row or `null`, which makes forward-only state changes safe against races. Don't catch driver errors by code.
+- Idioms in use:
+  - `createAndCount(rows, { onConflict: "skip", conflictOn: [...] })` for insert-if-absent (Postgres `ON CONFLICT DO NOTHING`). It returns how many rows were inserted, so 0 means the row already existed.
+  - `.where(...).updateAndCount(...)` for guarded state changes. It returns how many rows changed: 1 means this call made the change, 0 means another caller already did or the condition didn't match. The condition is part of the `UPDATE` itself, so it's safe against races.
+  - Don't use `.where(...).update(...)` for a guarded change. It returns the row or `null`, but it reads the row first and then updates it by id alone, so two callers can both pass the condition. Use it only for unconditional writes.
+  - Don't catch driver errors by code.
 - Timestamps are `Temporal.Instant` (`@js-temporal/polyfill`), not `Date`. The API only emits UTC instants ending in `Z`. The generated contract types name the global `Temporal` namespace, which TypeScript 5.9 lacks; [temporal-global.d.ts](api/src/temporal-global.d.ts) aliases it to the polyfill, otherwise every timestamp column is `any`.
-- Newer repositories (checkout, email, enrollments) take a `scope: DbScope` (from `types.ts`) as their first argument — either `prisma.db` or the `tx` from `prisma.db.transaction(async (tx) => …)` — so the service owns the transaction and several repositories can write atomically. Never make network calls (e.g. Stripe) inside a transaction.
+- Newer repositories (checkout, payments, email, enrollments) take a `scope: DbScope` (from `types.ts`) as their first argument — either `prisma.db` or the `tx` from `prisma.db.transaction(async (tx) => …)` — so the service owns the transaction and several repositories can write atomically. Never make network calls (e.g. Stripe) inside a transaction.
 
 **Domain rules that span files.**
 - Course status and price are append-only histories (`CourseStatus`, `CoursePrice`). A course is publicly visible when its *latest* status is `published` and some price has `effectiveAt <= now`; the current price is the latest effective one. This rule lives in `courses/course-visibility.ts` and is shared by browsing and checkout — reuse it, don't re-derive it.
-- `Payment` copies amount/currency from the price at checkout start. `Enrollment` grants access only while `revokedAt` (refund) and `suspendedAt` (dispute) are both null. Granting and reactivating access lives in `enrollments/enrollments.repository.ts`, shared by checkout and webhook fulfillment; `enrollments/enrollment-access.ts` classifies an enrollment.
-- Stripe webhooks: `rawBody: true` is on app-wide (`main.ts`, `createE2eApp`) because signatures cover the exact bytes. `StripeService.verifyWebhookEvent` throws `InvalidWebhookSignatureError`, which the webhook controller (not built yet, see `docs/payments.md`) maps to 400. Only the webhook grants paid access, never the success redirect.
+- `Payment` copies amount/currency from the price at checkout start. An `Enrollment` is active only while `revokedAt` (refund) and `suspendedAt` (dispute) are both null. These are records that checkout, fulfillment and the owner act on: the API doesn't gate the emailed `contentUrl`, and the owner also sends paying customers a password. Granting and reactivating enrollments lives in `enrollments/enrollments.repository.ts`, shared by checkout and webhook fulfillment; `enrollments/enrollment-access.ts` classifies an enrollment.
+- Stripe webhooks: `rawBody: true` is on app-wide (`main.ts`, `createE2eApp`) because signatures cover the exact bytes. `StripeService.verifyWebhookEvent` throws `InvalidWebhookSignatureError`, which `StripeWebhookController` (`src/webhooks/`) maps to 400. Only the webhook grants paid access, never the success redirect.
 - Emails are queued in `EmailOutbox` in the same transaction as the change they describe; payloads hold IDs, not rendered content.
 - Checkout responses deliberately don't reveal whether an email already owns a course (`check_email` for all non-redirect outcomes).
 

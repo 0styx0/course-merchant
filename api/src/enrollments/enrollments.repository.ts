@@ -11,8 +11,9 @@ export type EnrollmentRecord = {
 };
 
 /**
- * The rules for who can access a course, shared by checkout (free courses)
- * and Stripe's webhook (paid ones), so the two can't drift apart.
+ * Grants and reactivates enrollments, shared by checkout (free courses) and
+ * fulfillment (paid ones), so the two can't drift apart. Which access an
+ * enrollment gives is decided in `enrollment-access.ts`.
  */
 @Injectable()
 export class EnrollmentsRepository {

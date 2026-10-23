@@ -28,27 +28,29 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
   - [x] `ExpiryService` for `checkout.session.expired`, with `expiredCheckoutFromEvent` beside the completed mapper.
   - [x] `StripeWebhookController` in `WebhooksModule`: verifies the signature, dispatches `completed` and `expired`, acknowledges other types.
 
-  The manual `stripe listen` check is deferred to the *Launch* checklist, to run through the web checkout once step 5 exists.
+  The manual `stripe listen` check is deferred to the *Launch* checklist, to run through the web checkout once step 6 exists.
 - [x] **4. Email delivery:**
   - [x] `EmailOutboxRepository.findDue`, `markSent` and `markFailedAttempt`, with the backoff in `retry-policy.ts`.
   - [x] Templates for each `EmailKind` and `EmailSender` over SMTP.
   - [x] `EmailWorker` on a `@nestjs/schedule` interval, with `EmailComposer` loading each email's course, customer or payment (via `EmailViewsRepository`) and rendering it.
   - [x] Admin course view shows each enrollment's `emailStatus`, the only alert for a failed email.
-- [ ] **5. Web:** **Next**
+- [ ] **5. Sweeper** (see *Sweeper* under Flows). It comes before web checkout because three paths take a buyer's money and leave the refund to it: two payments fulfilled at once, a refund that failed after commit, and (once [review-follow-ups.md](review-follow-ups.md) R5 ships) a failed refund for a suspended buyer. Starts once every item in [review-follow-ups.md](review-follow-ups.md) is done.
+
+  Open questions for its outline, each with a recommendation:
+  - **A pending payment with no Stripe session after 1 hour.** Stripe can't look a session up by our payment id, and the session may exist and be paid, with its webhook delayed. Expiring the payment then would make the late `completed` webhook find a payment that isn't pending, so the buyer pays and gets nothing. *Recommendation:* expire such a payment only once it's older than Stripe's webhook retry window (about 3 days in live mode).
+  - **A second refund after Stripe forgets the idempotency key** (about 24 hours), so a retry can't rely on `refund-<paymentId>` alone. Stripe refuses to refund a charge that's already fully refunded, with error code `charge_already_refunded`. *Recommendation:* treat that error as success, and after a refund succeeds or was already done, mark the payment `refunded` with a guarded `succeeded → refunded` update, so the sweeper's query stops selecting it and a later `charge.refunded` changes nothing. The same rule covers a double purchase whose two webhooks raced (see Decisions).
+- [ ] **6. Web:**
   - buy form on the course page;
   - `/checkout/success`, polling the status endpoint;
   - `/checkout/cancel`;
   - MSW handlers.
 
   Write the Given/When/Then specs in `web/docs/` first.
-- [ ] **6. Safety net and after-sale handling:**
-  - the sweeper;
+- [ ] **7. Refunds, disputes and the owner alert:**
   - `OWNER_EMAIL` setting (the recipient of `dispute_alert`), scoped to the email module's config;
   - `charge.refunded`;
   - `charge.dispute.created`;
   - the estimated payout on the admin price field.
-
-  Open point: Stripe forgets idempotency keys after about 24 hours, so a sweeper retry of a double-purchase refund can't rely on `refund-<paymentId>` alone. Decide what else stops a second refund (Stripe rejects refunding a fully refunded charge; `charge.refunded` moves the payment out of the sweeper's query). The same refund rule also covers a double purchase whose two webhooks raced (see Decisions).
 - [ ] **Launch:** see the checklist at the end.
 
 ## Principles
@@ -97,7 +99,7 @@ An address that has received 5 or more emails in the last 24 hours (counted from
 - `ProcessedPaymentEvent` catches Stripe sending the same event again.
 - The conditional updates catch the webhook and the sweeper racing each other. The sweeper has no event id, so the event table can't protect against that race.
 
-**Refunds and disputes (step 6):**
+**Refunds and disputes (step 7):**
 - `charge.refunded` acts on **full refunds only**:
   - the payment becomes `refunded` and gets a `refundedAt`;
   - the enrollment found **by the refunded payment's id** gets a `revokedAt`.
@@ -105,7 +107,7 @@ An address that has received 5 or more emails in the last 24 hours (counted from
   A partial refund changes nothing.
 - `charge.dispute.created` sets `suspendedAt` and queues an alert to the owner. The owner settles the dispute in Stripe and restores access by hand. We don't subscribe to `dispute.closed`, and the payment status is left alone.
 
-**Sweeper (step 6).** A cron job does two things:
+**Sweeper (step 5).** A cron job does two things:
 - It re-checks payments still `pending` that were created between 1 hour and 7 days ago, by retrieving the Checkout Session and running the same fulfillment code. The 7-day limit caps the number of Stripe API calls.
 - It retries missed double-purchase refunds: a succeeded payment with no enrollment pointing to it and no refund.
 
@@ -129,6 +131,7 @@ It also covers a payment whose session was never created.
 | The refund handler finds the enrollment by the refunded payment's id | Refunding the extra payment of a double purchase can't revoke the buyer's real access | Looking it up by customer and course |
 | Full refund → `revokedAt`, and the buyer may buy again (the same row is reactivated) | History stays on the refunded `Payment`, and the unique `(courseId, customerId)` key still holds | Deleting the enrollment, or inserting a second row |
 | Dispute → `suspendedAt`, and the buyer can't buy again until the owner clears it | Disputes are rare; handling them by hand keeps the app simple | Automating dispute outcomes |
+| Course access is the emailed `contentUrl` plus a password the owner sends each paying customer. The API doesn't gate the link: `revokedAt` and `suspendedAt` are records that checkout, fulfillment and the owner act on | The link alone isn't enough to get in. An API gate would add an endpoint and a token per enrollment, and the final URL can still be copied after the first redirect | An access endpoint (`/v1/access/{token}`) that checks the enrollment, then redirects to `contentUrl` |
 | `purchasedAt` is passed in by the caller, not left to the DB default | A webhook that arrives late can record the payment time from Stripe's event, not the processing time | DB `now()` |
 | `rawBody: true` app-wide | It's Nest's documented option and is cheap; a per-route raw parser adds setup for no gain | A raw body parser on the webhook route only |
 | `StripeService` throws `InvalidWebhookSignatureError`; the controller maps it to 400 | Keeps `StripeService` free of HTTP concerns | Throwing an HTTP exception from the service |
@@ -159,13 +162,14 @@ It also covers a payment whose session was never created.
 | Templates take already-loaded views (course, customer), not ids | They stay pure functions; the worker owns the database lookups | An `EmailComposer` that reads the database |
 | A `failed` email stays in the table with no owner alert; the admin course view shows email status | One place to look, nothing extra to run | Emailing or paging the owner |
 | `emailStatus` is the status of the latest email to that customer about the course, and `failed` when none exists | An earlier failure doesn't matter once a later email went through; a missing email is something the owner must follow up, so it reads as `failed` rather than a fourth value | The worst status of all the enrollment's emails; `null` for no email |
-| An `EnrollmentEmail` link table ties each customer email to its enrollment, and the admin view takes the newest in SQL. `grantAccess` returns the enrollment id so callers can pass it to `enqueue` | `EmailOutbox` stays a pure delivery queue with no nullable subject columns, and `dispute_alert` (about a payment) simply has no link. A `PaymentEmail` link can follow when step 6 needs one. No backfill: nothing was in production | Filtering `payload` in code, or a JSON filter (not in the ORM's public API); a nullable `enrollmentId` on the email; one joiner with nullable foreign keys; `latestEmailId` on `Enrollment` (a mutable pointer; older emails lose their link); `courseId` + `customerId` columns (undocumented composite relation) |
+| An `EnrollmentEmail` link table ties each customer email to its enrollment, and the admin view takes the newest in SQL. `grantAccess` returns the enrollment id so callers can pass it to `enqueue` | `EmailOutbox` stays a pure delivery queue with no nullable subject columns, and `dispute_alert` (about a payment) simply has no link. A `PaymentEmail` link can follow when step 7 needs one. No backfill: nothing was in production | Filtering `payload` in code, or a JSON filter (not in the ORM's public API); a nullable `enrollmentId` on the email; one joiner with nullable foreign keys; `latestEmailId` on `Enrollment` (a mutable pointer; older emails lose their link); `courseId` + `customerId` columns (undocumented composite relation) |
 | Card only, no delayed methods | Payment is confirmed instantly, so there's no "processing" state | ACH and bank debits |
 | Currencies limited to the payout currency (`ALLOWED_CURRENCIES`, default USD) | Any other currency adds a conversion fee to every sale | Accepting any currency |
 
 ## Launch checklist
 
 - **Admin endpoints have no authentication yet** (see [courses.md](courses.md)). This blocks launch.
+- **The sweeper (step 5) is running.** This blocks launch: without it, a payment that should be refunded can wait indefinitely.
 - Switch to live keys. Use a restricted key limited to Checkout Sessions read and write, and Refunds write.
 - Create the production webhook endpoint subscribed to exactly the handled event types:
   - `checkout.session.completed`

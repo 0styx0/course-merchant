@@ -11,7 +11,7 @@ Keep this file current **in the same commit as the work**.
 - [x] Web: home page with the course list, and the course page.
 - [ ] **Admin authentication.** The contract documents bearer auth (JWT) on the admin routes, but there's no guard yet, so **the admin endpoints are open**. This blocks launch.
 - [ ] Web admin pages (spec in [web/docs/admin.md](../web/docs/admin.md)).
-- [ ] Estimated payout under the admin price field (payments step 6).
+- [ ] Estimated payout under the admin price field (payments step 7).
 - [ ] Maybe later: a contract test that checks e2e responses against the OpenAPI schemas with Ajv. It was deferred ("not now").
 
 ## Who sees what

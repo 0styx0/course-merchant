@@ -160,7 +160,8 @@ model ProcessedPaymentEvent {
 }
 
 // written in the same transaction as the change that triggers the email,
-// so an email is never lost or sent twice
+// so an email is never lost. It can rarely be sent twice; see the outbox
+// decisions in docs/payments.md
 model EmailOutbox {
   id            Uuid        @id @onCreate(uuid())
   kind          EmailKind
