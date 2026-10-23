@@ -1,0 +1,18 @@
+# Payments: email
+
+Read this before working on the email outbox, worker, templates or sender. Part of [payments.md](../payments.md), which holds the status checklist and principles. Emails are queued in `EmailOutbox` by checkout ([checkout.md](checkout.md)) and fulfillment ([fulfillment.md](fulfillment.md)).
+
+## Decisions
+
+| Decision | Why | Rejected |
+|---|---|---|
+| Outbox retries: 1 minute doubling to a 1-hour cap, 8 attempts, then `failed` | About 2 hours of retrying covers a provider outage; the policy is a pure function | A fixed delay; retrying forever |
+| No lease on emails being sent: one process, and the worker skips a tick while the last is running | Simplest. Accepted cost: a crash between the provider accepting an email and `markSent` sends it twice, and two API instances would double-send | A lease via `nextAttemptAt`; `FOR UPDATE SKIP LOCKED` |
+| Email goes out over SMTP through nodemailer, with `SMTP_URL`, `EMAIL_FROM` and `EMAIL_SHOP_NAME` settings | Changing provider is a config change; the retry policy treats every failure alike, so a vendor SDK's richer errors buy nothing. Mailpit works locally | A vendor SDK (Resend, Postmark); Gmail (500 a day, no custom domain without Workspace, can suspend automated senders) |
+| Each email is written once as an `EmailContent` (subject, heading, paragraphs, optional button) and rendered to HTML and plain text by two small renderers | A wording change is made once, HTML and text can't drift apart, and one layout keeps every email looking the same | A template per kind per format; react-email or MJML (a build step for four emails) |
+| Worker polls every 10 s, up to 20 emails per run, one at a time; the constants live in the worker file, not env | Simple, and a shop this size sends few emails. Settings can move to config if the volume ever needs tuning | Env settings; sending a batch in parallel |
+| A missing course, customer or payment is a failed attempt like any other, so it retries and ends `failed` | One rule for every failure; the admin view shows it | Marking such an email `failed` straight away |
+| Templates take already-loaded views (course, customer), not ids | They stay pure functions; the worker owns the database lookups | An `EmailComposer` that reads the database |
+| A `failed` email stays in the table with no owner alert; the admin course view shows email status | One place to look, nothing extra to run | Emailing or paging the owner |
+| `emailStatus` is the status of the latest email to that customer about the course, and `failed` when none exists | An earlier failure doesn't matter once a later email went through; a missing email is something the owner must follow up, so it reads as `failed` rather than a fourth value | The worst status of all the enrollment's emails; `null` for no email |
+| An `EnrollmentEmail` link table ties each customer email to its enrollment, and the admin view takes the newest in SQL. `grantAccess` returns the enrollment id so callers can pass it to `enqueue` | `EmailOutbox` stays a pure delivery queue with no nullable subject columns, and `dispute_alert` (about a payment) simply has no link. A `PaymentEmail` link can follow when step 7 needs one. No backfill: nothing was in production | Filtering `payload` in code, or a JSON filter (not in the ORM's public API); a nullable `enrollmentId` on the email; one joiner with nullable foreign keys; `latestEmailId` on `Enrollment` (a mutable pointer; older emails lose their link); `courseId` + `customerId` columns (undocumented composite relation) |

@@ -11,7 +11,11 @@ A small storefront for selling courses. Two independent yarn (v1) projects, each
 
 ## Design docs — read the matching one before working in an area
 
-- [docs/payments.md](docs/payments.md) — checkout, webhooks, enrollments, refunds, emails: status checklist (what's next), flows, decisions with rejected alternatives, launch checklist.
+- [docs/payments.md](docs/payments.md) — checkout, webhooks, enrollments, refunds, emails: status checklist (what's next), principles, launch checklist. Flows and decisions with rejected alternatives are split by subarea; read only the one you need:
+  - [docs/payments/checkout.md](docs/payments/checkout.md) — starting a checkout.
+  - [docs/payments/fulfillment.md](docs/payments/fulfillment.md) — Stripe webhook, fulfillment, expiry.
+  - [docs/payments/email.md](docs/payments/email.md) — outbox, worker, templates, sender.
+  - [docs/payments/refunds.md](docs/payments/refunds.md) — refunds, disputes, access, sweeper.
 - [docs/courses.md](docs/courses.md) — creating, editing and browsing courses: who sees what, `PUT` semantics, validation, decisions.
 - [docs/review-follow-ups.md](docs/review-follow-ups.md) — fixes and refactors decided in the 2026-10-23 architecture review, one commit each, with the decisions already made. Temporary: deleted once its last item ships.
 

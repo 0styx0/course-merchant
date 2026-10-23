@@ -6,14 +6,14 @@ This file is temporary. When an item ships, tick it and move its decision rows i
 
 ## Status
 
-- [ ] **R1. Split `payments.md` by subarea.** **Next**
+- [x] **R1. Split `payments.md` by subarea.**
   - [payments.md](payments.md) keeps Status, Principles and the launch checklist, so `/next-commit` still finds it.
   - Flows and decisions move to `docs/payments/checkout.md`, `fulfillment.md`, `email.md` and `refunds.md` (refunds, disputes and the sweeper).
   - Text moves unchanged, except for cutting rows the code already states plainly (for example "`rawBody: true` app-wide", which [main.ts](../api/src/main.ts) explains).
   - Update the pointer in CLAUDE.md.
 
   *Why:* the file is about 20 KB, the same as [checkout.service.ts](../api/src/checkout/checkout.service.ts) and [fulfillment.service.ts](../api/src/payments/fulfillment.service.ts) together. An email-only task needs about 10 of its 47 decision rows.
-- [ ] **R2. Use one Temporal implementation in production and in tests.**
+- [ ] **R2. Use one Temporal implementation in production and in tests.** **Next**
   - Move `@js-temporal/polyfill` from `devDependencies` to `dependencies`: 22 runtime files import it, so a production-only install can't start the app.
   - Add `src/temporal.ts`, which sets `globalThis.Temporal`, and import it first in [main.ts](../api/src/main.ts) and in [integration.setup.ts](../api/src/test/integration.setup.ts).
   - Remove `temporal-polyfill` if nothing else needs it. The ORM falls back to it only when no global `Temporal` exists, which today is production only, so production and tests currently run different implementations.
