@@ -7,6 +7,14 @@ import type { DbScope } from "types.js";
 
 export type PaymentProvider = Models.public_Payment["provider"];
 
+export type PaymentStatus = Models.public_Payment["status"];
+
+export type PendingPayment = {
+  id: string;
+  amount: number;
+  currency: string;
+};
+
 /** A provider's webhook event, identified by the provider's own id. */
 export type ProviderEvent = {
   provider: PaymentProvider;
@@ -43,6 +51,49 @@ export type FulfillmentPayment = {
  */
 @Injectable()
 export class PaymentsRepository {
+  /**
+   * Records a checkout attempt before the provider is called, so its id can
+   * key the provider request. Amount and currency are copied from the price,
+   * so a later price change never alters what this attempt charges.
+   */
+  async createPendingPayment(
+    scope: DbScope,
+    payment: {
+      provider: PaymentProvider;
+      customerId: string;
+      coursePriceId: string;
+      amount: number;
+      currency: string;
+    },
+  ): Promise<PendingPayment> {
+    return scope.orm.public.Payment.create({ ...payment, status: "pending" });
+  }
+
+  async saveProviderCheckoutId(
+    scope: DbScope,
+    paymentId: string,
+    providerCheckoutId: string,
+  ): Promise<void> {
+    await scope.orm.public.Payment.where((payment) =>
+      payment.id.eq(paymentId),
+    ).update({ providerCheckoutId });
+  }
+
+  async findPaymentStatusByCheckoutId(
+    scope: DbScope,
+    provider: PaymentProvider,
+    providerCheckoutId: string,
+  ): Promise<PaymentStatus | null> {
+    const payment = await scope.orm.public.Payment.where((candidate) =>
+      and(
+        candidate.provider.eq(provider),
+        candidate.providerCheckoutId.eq(providerCheckoutId),
+      ),
+    ).first();
+
+    return payment?.status ?? null;
+  }
+
   async recordProcessedEvent(
     scope: DbScope,
     event: ProviderEvent,

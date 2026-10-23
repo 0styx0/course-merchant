@@ -112,6 +112,68 @@ describe("PaymentsRepository (integration)", () => {
     });
   });
 
+  describe("pending payments", () => {
+    function pendingPaymentInput() {
+      return { provider: "stripe" as const, ...paymentFields() };
+    }
+
+    it("records a pending payment with no provider ids yet", async () => {
+      const input = pendingPaymentInput();
+
+      const pending = await repository.createPendingPayment(db, input);
+
+      expect(pending).toMatchObject({
+        id: expect.any(String),
+        amount: price.amount,
+        currency: price.currency,
+      });
+      expect(await findPaymentRow(pending.id)).toMatchObject({
+        ...input,
+        status: "pending",
+        providerCheckoutId: null,
+        providerPaymentId: null,
+        paidAt: null,
+      });
+    });
+
+    it("finds a payment's status by the provider's checkout id", async () => {
+      const pending = await repository.createPendingPayment(
+        db,
+        pendingPaymentInput(),
+      );
+      await repository.saveProviderCheckoutId(db, pending.id, "cs_test_123");
+
+      expect(
+        await repository.findPaymentStatusByCheckoutId(
+          db,
+          "stripe",
+          "cs_test_123",
+        ),
+      ).toBe("pending");
+      expect(
+        await repository.findPaymentStatusByCheckoutId(
+          db,
+          "stripe",
+          "cs_test_other",
+        ),
+      ).toBeNull();
+    });
+
+    it("saves the provider's checkout id on the payment", async () => {
+      const pending = await repository.createPendingPayment(
+        db,
+        pendingPaymentInput(),
+      );
+
+      await repository.saveProviderCheckoutId(db, pending.id, "cs_test_123");
+
+      expect(await findPaymentRow(pending.id)).toMatchObject({
+        providerCheckoutId: "cs_test_123",
+        status: "pending",
+      });
+    });
+  });
+
   describe("markPaymentSucceeded", () => {
     it("marks a pending payment as paid", async () => {
       const payment = await createPendingPayment({

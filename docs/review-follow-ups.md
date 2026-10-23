@@ -77,12 +77,14 @@ This file is temporary. When an item ships, tick it and move its decision rows i
   - `payments-config.ts` and `email-config.ts` move from `src/config/` into `payments/` and `email/`.
 
   `PORT` must be an integer from 1 to 65535 and `DATABASE_URL` a `postgres://` or `postgresql://` URL; both now fail at startup otherwise. The principle is in [payments.md](payments.md).
-- [ ] **R11. Keep every `Payment` write in `PaymentsRepository`.** **Next**
+- [x] **R11. Keep every `Payment` write in `PaymentsRepository`.**
   - Move `createPendingPayment`, `saveProviderCheckoutId` and `findPaymentStatusByCheckoutId` from [checkout.repository.ts](../api/src/checkout/checkout.repository.ts) to [payments.repository.ts](../api/src/payments/payments.repository.ts). `CheckoutRepository` keeps the course lookup and customers.
   - Their tests move with them.
 
   *Why:* "what changes a payment's state?" then has a one-file answer.
-- [ ] **R12. Put shared code where a search would find it.**
+
+  `findPaymentStatusByCheckoutId` is a read, but it moved too: it looks payments up by their provider fields, so `CheckoutRepository` no longer queries `Payment` at all. `CheckoutService` now injects both repositories.
+- [ ] **R12. Put shared code where a search would find it.** **Next**
   - `ZodValidationPipe` and `toJsonPointer` move from `courses/pipes/create-course-validation.pipe.ts` to `common/validation/zod-validation.pipe.ts`.
   - `CompletedCheckout` and `ExpiredCheckout` move to `payments/checkout-events.ts`, and the Stripe event mappers to `payments/stripe-events.ts`. This removes the type-import cycle between `stripe.service.ts` and `fulfillment.service.ts`.
   - Error-code enums are named by domain (`ErrorCodeCourse`, …), not by operation (`ErrorCodeCourseGet`).

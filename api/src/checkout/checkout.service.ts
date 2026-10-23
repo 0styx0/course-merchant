@@ -27,8 +27,11 @@ import {
   CheckoutRepository,
   type CheckoutCourse,
   type CheckoutCustomer,
-  type PendingPayment,
 } from "./checkout.repository.js";
+import {
+  PaymentsRepository,
+  type PendingPayment,
+} from "@/payments/payments.repository.js";
 import {
   EnrollmentAccess,
   enrollmentAccess,
@@ -85,6 +88,8 @@ export class CheckoutService {
     private readonly prisma: PrismaService,
     @Inject(CheckoutRepository)
     private readonly checkoutRepository: CheckoutRepository,
+    @Inject(PaymentsRepository)
+    private readonly paymentsRepository: PaymentsRepository,
     @Inject(EnrollmentsRepository)
     private readonly enrollmentsRepository: EnrollmentsRepository,
     @Inject(EmailOutboxRepository)
@@ -148,7 +153,7 @@ export class CheckoutService {
    * our own records, so it only reports what Stripe has confirmed to us.
    */
   async getCheckoutStatus(checkoutId: string): Promise<CheckoutStatusResponse> {
-    const status = await this.checkoutRepository.findPaymentStatusByCheckoutId(
+    const status = await this.paymentsRepository.findPaymentStatusByCheckoutId(
       this.prisma.db,
       "stripe",
       checkoutId,
@@ -284,7 +289,7 @@ export class CheckoutService {
   ): Promise<CheckoutDecision> {
     const { currentPrice } = context.course;
 
-    const payment = await this.checkoutRepository.createPendingPayment(
+    const payment = await this.paymentsRepository.createPendingPayment(
       context.tx,
       {
         provider: "stripe",
@@ -308,7 +313,7 @@ export class CheckoutService {
   ): Promise<StartCheckoutResponse> {
     const session = await this.createStripeSession(paymentToComplete);
 
-    await this.checkoutRepository.saveProviderCheckoutId(
+    await this.paymentsRepository.saveProviderCheckoutId(
       this.prisma.db,
       paymentToComplete.payment.id,
       session.id,

@@ -7,7 +7,6 @@ import {
   archiveCourse,
   createCourse,
   createCoursePrice,
-  createCustomer,
 } from "@/test/course-fixtures.js";
 
 describe("CheckoutRepository (integration)", () => {
@@ -113,87 +112,6 @@ describe("CheckoutRepository (integration)", () => {
 
       expect(new Set(customers.map((customer) => customer.id)).size).toBe(1);
       expect(await db.orm.public.Customer.all()).toHaveLength(1);
-    });
-  });
-
-  describe("pending payments", () => {
-    async function makePaymentInput() {
-      const customer = await createCustomer({});
-      const price = await createCoursePrice({
-        courseId,
-        amount: 9900,
-        currency: "USD",
-        effectiveAt: Temporal.Now.instant(),
-      });
-
-      return {
-        provider: "stripe" as const,
-        customerId: customer.id,
-        coursePriceId: price.id,
-        amount: price.amount,
-        currency: price.currency,
-      };
-    }
-
-    it("records a pending payment with no provider ids yet", async () => {
-      const input = await makePaymentInput();
-
-      const pending = await repository.createPendingPayment(db, input);
-
-      expect(pending).toMatchObject({
-        id: expect.any(String),
-        amount: 9900,
-        currency: "USD",
-      });
-      expect(
-        await db.orm.public.Payment.where((payment) =>
-          payment.id.eq(pending.id),
-        ).first(),
-      ).toMatchObject({
-        ...input,
-        status: "pending",
-        providerCheckoutId: null,
-        providerPaymentId: null,
-        paidAt: null,
-      });
-    });
-
-    it("finds a payment's status by the provider's checkout id", async () => {
-      const pending = await repository.createPendingPayment(
-        db,
-        await makePaymentInput(),
-      );
-      await repository.saveProviderCheckoutId(db, pending.id, "cs_test_123");
-
-      expect(
-        await repository.findPaymentStatusByCheckoutId(
-          db,
-          "stripe",
-          "cs_test_123",
-        ),
-      ).toBe("pending");
-      expect(
-        await repository.findPaymentStatusByCheckoutId(
-          db,
-          "stripe",
-          "cs_test_other",
-        ),
-      ).toBeNull();
-    });
-
-    it("saves the provider's checkout id on the payment", async () => {
-      const pending = await repository.createPendingPayment(
-        db,
-        await makePaymentInput(),
-      );
-
-      await repository.saveProviderCheckoutId(db, pending.id, "cs_test_123");
-
-      expect(
-        await db.orm.public.Payment.where((payment) =>
-          payment.id.eq(pending.id),
-        ).first(),
-      ).toMatchObject({ providerCheckoutId: "cs_test_123", status: "pending" });
     });
   });
 });

@@ -22,7 +22,7 @@ Keep these files current **in the same commit as the work**. Tick off status her
   - [x] signing secret and `rawBody`;
   - [x] `StripeService.verifyWebhookEvent`;
   - [x] `EnrollmentsRepository`, shared by checkout and fulfillment.
-  - [x] `PaymentsRepository`: event dedupe, lookup by our payment id, and guarded `pending →` transitions.
+  - [x] `PaymentsRepository`: owns every `Payment` read and write: creating pending payments, saving the checkout id, event dedupe, lookup by our payment id, and guarded `pending →` transitions.
   - [x] `FulfillmentService` for `checkout.session.completed`, with `completedCheckoutFromEvent` reading Stripe's event in our terms.
   - [x] `StripeService.refundPayment`, called by `FulfillmentService.fulfillCheckout` after the database transaction is saved for a double purchase or a suspended buyer.
   - [x] `ExpiryService` for `checkout.session.expired`, with `expiredCheckoutFromEvent` beside the completed mapper.

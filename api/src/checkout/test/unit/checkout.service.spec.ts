@@ -14,6 +14,7 @@ import {
   PaymentProviderUnavailableError,
   StripeService,
 } from "@/payments/stripe.service.js";
+import { PaymentsRepository } from "@/payments/payments.repository.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 
 const COURSE_ID = "8b0e1f5c-0000-4000-8000-000000000001";
@@ -62,6 +63,8 @@ describe("CheckoutService", () => {
   let checkoutRepository: {
     findVisibleCourse: ReturnType<typeof vi.fn>;
     findOrCreateCustomer: ReturnType<typeof vi.fn>;
+  };
+  let paymentsRepository: {
     createPendingPayment: ReturnType<typeof vi.fn>;
     saveProviderCheckoutId: ReturnType<typeof vi.fn>;
     findPaymentStatusByCheckoutId: ReturnType<typeof vi.fn>;
@@ -88,6 +91,8 @@ describe("CheckoutService", () => {
         id: CUSTOMER_ID,
         ...request.customer,
       }),
+    };
+    paymentsRepository = {
       createPendingPayment: vi.fn().mockResolvedValue({
         id: PAYMENT_ID,
         amount: 9900,
@@ -128,6 +133,7 @@ describe("CheckoutService", () => {
     service = new CheckoutService(
       prisma as unknown as PrismaService,
       checkoutRepository as unknown as CheckoutRepository,
+      paymentsRepository as unknown as PaymentsRepository,
       enrollmentsRepository as unknown as EnrollmentsRepository,
       emailOutbox as unknown as EmailOutboxRepository,
       stripe as unknown as StripeService,
@@ -218,7 +224,7 @@ describe("CheckoutService", () => {
       await expect(service.startCheckout(request)).resolves.toEqual({
         status: "check_email",
       });
-      expect(checkoutRepository.createPendingPayment).not.toHaveBeenCalled();
+      expect(paymentsRepository.createPendingPayment).not.toHaveBeenCalled();
       expect(stripe.createCheckoutSession).not.toHaveBeenCalled();
     });
   });
@@ -346,7 +352,7 @@ describe("CheckoutService", () => {
         await service.startCheckout(request);
 
         expect(
-          checkoutRepository.createPendingPayment,
+          paymentsRepository.createPendingPayment,
         ).toHaveBeenCalledExactlyOnceWith(tx, {
           provider: "stripe",
           customerId: CUSTOMER_ID,
@@ -393,7 +399,7 @@ describe("CheckoutService", () => {
       await service.startCheckout(request);
 
       expect(
-        checkoutRepository.saveProviderCheckoutId,
+        paymentsRepository.saveProviderCheckoutId,
       ).toHaveBeenCalledExactlyOnceWith(prisma.db, PAYMENT_ID, "cs_test_123");
     });
 
@@ -416,7 +422,7 @@ describe("CheckoutService", () => {
           detail: "Payments can't be taken right now. Try again later.",
         },
       });
-      expect(checkoutRepository.saveProviderCheckoutId).not.toHaveBeenCalled();
+      expect(paymentsRepository.saveProviderCheckoutId).not.toHaveBeenCalled();
     });
 
     it("lets other Stripe errors through", async () => {
@@ -431,7 +437,7 @@ describe("CheckoutService", () => {
     it.each(["pending", "succeeded", "expired", "refunded"])(
       "reports a %s payment",
       async (status) => {
-        checkoutRepository.findPaymentStatusByCheckoutId.mockResolvedValue(
+        paymentsRepository.findPaymentStatusByCheckoutId.mockResolvedValue(
           status,
         );
 
@@ -447,12 +453,12 @@ describe("CheckoutService", () => {
       await service.getCheckoutStatus("cs_test_123");
 
       expect(
-        checkoutRepository.findPaymentStatusByCheckoutId,
+        paymentsRepository.findPaymentStatusByCheckoutId,
       ).toHaveBeenCalledExactlyOnceWith(prisma.db, "stripe", "cs_test_123");
     });
 
     it("returns 404 CHECKOUT_NOT_FOUND for an unknown session", async () => {
-      checkoutRepository.findPaymentStatusByCheckoutId.mockResolvedValue(null);
+      paymentsRepository.findPaymentStatusByCheckoutId.mockResolvedValue(null);
 
       await expect(
         service.getCheckoutStatus("cs_test_unknown"),
