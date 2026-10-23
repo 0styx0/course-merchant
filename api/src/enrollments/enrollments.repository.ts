@@ -34,8 +34,8 @@ export class EnrollmentsRepository {
   /**
    * Enrolls the customer, or reactivates an enrollment a refund revoked.
    * `paymentId` records the payment that bought access, or null for a free
-   * course. Returns whether access was granted by this call: false when they
-   * already had access or are suspended.
+   * course. Returns the enrollment's id when this call granted access, or
+   * null when they already had access or are suspended.
    */
   async grantAccess(
     scope: DbScope,
@@ -45,22 +45,31 @@ export class EnrollmentsRepository {
       paymentId: string | null;
       now: Temporal.Instant;
     },
-  ): Promise<boolean> {
+  ): Promise<string | null> {
     const { courseId, customerId, paymentId, now } = access;
+    const newEnrollmentId = crypto.randomUUID();
 
     // skips the insert, instead of failing, when this customer already has
     // an enrollment in this course: the fields name the composite
     // @@unique([courseId, customerId]) constraint
     const insertedEnrollments =
       await scope.orm.public.Enrollment.createAndCount(
-        [{ courseId, customerId, paymentId, purchasedAt: now }],
+        [
+          {
+            id: newEnrollmentId,
+            courseId,
+            customerId,
+            paymentId,
+            purchasedAt: now,
+          },
+        ],
         { onConflict: "skip", conflictOn: ["courseId", "customerId"] },
       );
 
     const isNewEnrollment = insertedEnrollments === 1;
 
     if (isNewEnrollment) {
-      return true;
+      return newEnrollmentId;
     }
 
     // only a revoked, unsuspended enrollment can be reactivated. Matching on
@@ -76,8 +85,6 @@ export class EnrollmentsRepository {
         ),
     ).update({ revokedAt: null, paymentId, purchasedAt: now });
 
-    const wasReactivated = reactivatedEnrollment !== null;
-
-    return wasReactivated;
+    return reactivatedEnrollment?.id ?? null;
   }
 }

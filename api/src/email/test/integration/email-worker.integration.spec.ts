@@ -6,7 +6,11 @@ import { EmailSender } from "@/email/email-sender.js";
 import { EmailViewsRepository } from "@/email/email-views.repository.js";
 import { EmailWorker } from "@/email/email-worker.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
-import { createCustomer, createPricedCourse } from "@/test/course-fixtures.js";
+import {
+  createCustomer,
+  createEnrollment,
+  createPricedCourse,
+} from "@/test/course-fixtures.js";
 
 describe("EmailWorker (integration)", () => {
   const prisma = new PrismaService();
@@ -37,10 +41,16 @@ describe("EmailWorker (integration)", () => {
     const { course } = await createPricedCourse();
     const customer = await createCustomer({ name: "Ada", email: recipient });
 
+    const enrollment = await createEnrollment({
+      courseId: course.id,
+      customerId: customer.id,
+    });
+
     await outbox.enqueue(prisma.db, {
       kind: "access_granted",
       recipient,
       payload: { courseId: courseId ?? course.id, customerId: customer.id },
+      enrollmentId: enrollment.id,
     });
   }
 

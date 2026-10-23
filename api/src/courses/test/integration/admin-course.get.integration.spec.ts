@@ -16,6 +16,7 @@ import {
   createCustomer,
   createPayment,
   createEnrollment,
+  createEnrollmentEmail,
   archiveCourse,
   createPricedCourse,
 } from "../../../test/course-fixtures.js";
@@ -245,7 +246,7 @@ describe("AdminCoursesService integration", () => {
         paidAt: adaPaidAt,
       });
 
-      await createEnrollment({
+      const adaEnrollment = await createEnrollment({
         courseId: course.id,
         customerId: ada.id,
         paymentId: adaPayment.id,
@@ -271,6 +272,12 @@ describe("AdminCoursesService integration", () => {
         paymentId: gracePayment.id,
       });
 
+      await createEnrollmentEmail({
+        enrollment: adaEnrollment,
+        recipient: ada.email,
+        status: "sent",
+      });
+
       const result = await service.findByIdAdmin(course.id);
 
       expect(result.enrollments).toHaveLength(2);
@@ -282,6 +289,7 @@ describe("AdminCoursesService integration", () => {
           {
             revokedAt: null,
             suspendedAt: null,
+            emailStatus: "sent",
             customer: {
               id: ada.id,
               name: "Ada Lovelace",
@@ -296,6 +304,8 @@ describe("AdminCoursesService integration", () => {
           {
             revokedAt: null,
             suspendedAt: null,
+            // no email was ever queued for Grace
+            emailStatus: "failed",
             customer: {
               id: grace.id,
               name: "Grace Hopper",
@@ -309,6 +319,32 @@ describe("AdminCoursesService integration", () => {
           },
         ]),
       );
+    });
+
+    it("reports the status of the enrollment's newest email", async () => {
+      const { course } = await createPricedCourse();
+      const ada = await createCustomer({ name: "Ada Lovelace" });
+      const enrollment = await createEnrollment({
+        courseId: course.id,
+        customerId: ada.id,
+      });
+
+      await createEnrollmentEmail({
+        enrollment,
+        recipient: ada.email,
+        status: "failed",
+        createdAt: instant("2026-09-29T10:00:00Z"),
+      });
+      await createEnrollmentEmail({
+        enrollment,
+        recipient: ada.email,
+        status: "sent",
+        createdAt: instant("2026-09-29T11:00:00Z"),
+      });
+
+      const result = await service.findByIdAdmin(course.id);
+
+      expect(result.enrollments[0].emailStatus).toBe("sent");
     });
 
     it("returns 404 COURSE_NOT_FOUND when the course does not exist", async () => {

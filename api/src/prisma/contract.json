@@ -28,6 +28,10 @@
       "model": "Enrollment",
       "namespace": "public"
     },
+    "EnrollmentEmail": {
+      "model": "EnrollmentEmail",
+      "namespace": "public"
+    },
     "Payment": {
       "model": "Payment",
       "namespace": "public"
@@ -633,7 +637,24 @@
                 }
               }
             },
-            "relations": {},
+            "relations": {
+              "enrollmentLink": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "emailId"
+                  ]
+                },
+                "to": {
+                  "model": "EnrollmentEmail",
+                  "namespace": "public"
+                }
+              }
+            },
             "storage": {
               "fields": {
                 "attempts": {
@@ -756,6 +777,21 @@
                   "namespace": "public"
                 }
               },
+              "emails": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "enrollmentId"
+                  ]
+                },
+                "to": {
+                  "model": "EnrollmentEmail",
+                  "namespace": "public"
+                }
+              },
               "payment": {
                 "cardinality": "N:1",
                 "nullable": true,
@@ -799,6 +835,70 @@
               },
               "namespaceId": "public",
               "table": "Enrollment"
+            }
+          },
+          "EnrollmentEmail": {
+            "fields": {
+              "emailId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "enrollmentId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "email": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "emailId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "EmailOutbox",
+                  "namespace": "public"
+                }
+              },
+              "enrollment": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "enrollmentId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Enrollment",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "emailId": {
+                  "column": "emailId"
+                },
+                "enrollmentId": {
+                  "column": "enrollmentId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "EnrollmentEmail"
             }
           },
           "Payment": {
@@ -1602,6 +1702,76 @@
                 }
               ]
             },
+            "EnrollmentEmail": {
+              "columns": {
+                "emailId": {
+                  "codecId": "pg/uuid@1",
+                  "dataType": "pg/uuid",
+                  "nullable": false
+                },
+                "enrollmentId": {
+                  "codecId": "pg/uuid@1",
+                  "dataType": "pg/uuid",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "primaryKey": true
+                  },
+                  "source": {
+                    "columns": [
+                      "emailId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "EnrollmentEmail"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "EmailOutbox"
+                  }
+                },
+                {
+                  "index": {
+                    "name": "EnrollmentEmail_enrollmentId_idx_ee5e79c5"
+                  },
+                  "source": {
+                    "columns": [
+                      "enrollmentId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "EnrollmentEmail"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Enrollment"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "enrollmentId"
+                  ],
+                  "name": "EnrollmentEmail_enrollmentId_idx_ee5e79c5",
+                  "prefix": "EnrollmentEmail_enrollmentId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "emailId"
+                ]
+              },
+              "uniques": []
+            },
             "Payment": {
               "checks": [
                 {
@@ -1879,7 +2049,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "8ac5cb742d35bd605f4c07a8ca98d8eb0d0da8675bcddb76618b75bfb016eeb8"
+    "storageHash": "b257486452aea46213a7be6219f99074db5b70ed40a6356f4a777b16e6027ce1"
   },
   "execution": {
     "executionHash": "0076ed08f73a615779f1117ee8305346e79c2d63ffda1b8bc87585bba78596c8",

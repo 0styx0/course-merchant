@@ -16,6 +16,7 @@ import {
   createCoursePrice,
   createCustomer,
   createEnrollment,
+  createEnrollmentEmail,
   createPayment,
   createPricedCourse,
   updateCourseStatus,
@@ -309,7 +310,7 @@ describe("AdminCoursesService integration", () => {
         paidAt: adaPaidAt,
       });
 
-      await createEnrollment({
+      const adaEnrollment = await createEnrollment({
         courseId: course.id,
         customerId: ada.id,
         paymentId: adaPayment.id,
@@ -329,10 +330,21 @@ describe("AdminCoursesService integration", () => {
         paidAt: gracePaidAt,
       });
 
-      await createEnrollment({
+      const graceEnrollment = await createEnrollment({
         courseId: course.id,
         customerId: grace.id,
         paymentId: gracePayment.id,
+      });
+
+      await createEnrollmentEmail({
+        enrollment: adaEnrollment,
+        recipient: ada.email,
+        status: "sent",
+      });
+      await createEnrollmentEmail({
+        enrollment: graceEnrollment,
+        recipient: grace.email,
+        status: "pending",
       });
 
       const result = await service.findAllAdmin();
@@ -347,6 +359,7 @@ describe("AdminCoursesService integration", () => {
           {
             revokedAt: null,
             suspendedAt: null,
+            emailStatus: "sent",
             customer: {
               id: ada.id,
               name: "Ada Lovelace",
@@ -361,6 +374,7 @@ describe("AdminCoursesService integration", () => {
           {
             revokedAt: null,
             suspendedAt: null,
+            emailStatus: "pending",
             customer: {
               id: grace.id,
               name: "Grace Hopper",

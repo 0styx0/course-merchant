@@ -33,7 +33,10 @@ import {
   EnrollmentAccess,
   enrollmentAccess,
 } from "@/enrollments/enrollment-access.js";
-import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
+import {
+  EnrollmentsRepository,
+  type EnrollmentRecord,
+} from "@/enrollments/enrollments.repository.js";
 
 // Anyone can start a checkout for any address, so cap how many emails one
 // inbox receives. Over the cap the response is unchanged; nothing is queued.
@@ -136,7 +139,7 @@ export class CheckoutService {
 
       const context = { tx, now, course, customer };
 
-      return this.respondToAccess(enrollmentAccess(enrollment), context);
+      return this.respondToAccess(enrollment, context);
     });
   }
 
@@ -190,14 +193,18 @@ export class CheckoutService {
   }
 
   private respondToAccess(
-    access: EnrollmentAccess,
+    enrollment: EnrollmentRecord | null,
     context: CheckoutContext,
   ): Promise<CheckoutDecision> {
-    switch (access) {
+    if (!enrollment) {
+      return this.sellCourse(context);
+    }
+
+    switch (enrollmentAccess(enrollment)) {
       case EnrollmentAccess.ACTIVE:
-        return this.resendCourseLink(context);
+        return this.resendCourseLink(context, enrollment.id);
       case EnrollmentAccess.SUSPENDED:
-        return this.explainSuspension(context);
+        return this.explainSuspension(context, enrollment.id);
       // no access yet, or a refund removed it: the buyer can buy (again)
       case EnrollmentAccess.NONE:
       case EnrollmentAccess.REVOKED:
@@ -207,11 +214,13 @@ export class CheckoutService {
 
   private async resendCourseLink(
     context: CheckoutContext,
+    enrollmentId: string,
   ): Promise<CheckoutDecision> {
     await this.queueCheckoutEmail(context, {
       kind: "already_owned",
       recipient: context.customer.email,
       payload: { ...emailIds(context), refundIssued: false },
+      enrollmentId,
     });
 
     return EMAILED;
@@ -219,11 +228,13 @@ export class CheckoutService {
 
   private async explainSuspension(
     context: CheckoutContext,
+    enrollmentId: string,
   ): Promise<CheckoutDecision> {
     await this.queueCheckoutEmail(context, {
       kind: "access_suspended",
       recipient: context.customer.email,
       payload: emailIds(context),
+      enrollmentId,
     });
 
     return EMAILED;
@@ -240,7 +251,7 @@ export class CheckoutService {
   private async enrollInFreeCourse(
     context: CheckoutContext,
   ): Promise<CheckoutDecision> {
-    const accessGranted = await this.enrollmentsRepository.grantAccess(
+    const enrollmentId = await this.enrollmentsRepository.grantAccess(
       context.tx,
       {
         courseId: context.course.id,
@@ -252,11 +263,12 @@ export class CheckoutService {
 
     // false only if a concurrent request granted access first, and that
     // request sends the email
-    if (accessGranted) {
+    if (enrollmentId) {
       await this.queueCheckoutEmail(context, {
         kind: "access_granted",
         recipient: context.customer.email,
         payload: emailIds(context),
+        enrollmentId,
       });
     }
 

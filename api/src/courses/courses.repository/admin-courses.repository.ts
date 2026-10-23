@@ -31,6 +31,11 @@ export type CourseRepositoryModelAdmin = {
       name: string;
       email: string;
     };
+    // only the newest email, so empty when none was queued. The ORM types a
+    // nested to-one include as nullable, although the link always has its email
+    emails: {
+      email: { status: Models.public_EmailOutbox["status"] } | null;
+    }[];
     // null for free courses
     payment: {
       status: Models.public_Payment["status"];
@@ -99,7 +104,15 @@ export class AdminCoursesRepository {
           .limit(1),
       )
       .include("enrollments", (enrollments) =>
-        enrollments.include("customer").include("payment"),
+        enrollments
+          .include("customer")
+          .include("payment")
+          .include("emails", (links) =>
+            links
+              .include("email", (email) => email.select("status"))
+              .orderBy((link) => link.email.createdAt.desc())
+              .limit(1),
+          ),
       );
   }
 

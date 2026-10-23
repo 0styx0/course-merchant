@@ -4,6 +4,11 @@ import { describe, expect, it } from "vitest";
 import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
 import { MAX_SEND_ATTEMPTS } from "@/email/retry-policy.js";
 import { db } from "@/prisma/db.js";
+import {
+  createCustomer,
+  createEnrollment,
+  createPricedCourse,
+} from "@/test/course-fixtures.js";
 
 describe("EmailOutboxRepository (integration)", () => {
   const repository = new EmailOutboxRepository();
@@ -17,10 +22,26 @@ describe("EmailOutboxRepository (integration)", () => {
     },
   });
 
+  const enrolledAccessEmail = async (recipient: string) => {
+    const { course } = await createPricedCourse();
+    const customer = await createCustomer({ name: "Ada", email: recipient });
+    const enrollment = await createEnrollment({
+      courseId: course.id,
+      customerId: customer.id,
+    });
+
+    return {
+      kind: "access_granted" as const,
+      recipient,
+      payload: { courseId: course.id, customerId: customer.id },
+      enrollmentId: enrollment.id,
+    };
+  };
+
   describe("enqueue", () => {
     it("stores a pending email ready to send now", async () => {
       const before = Temporal.Now.instant();
-      const email = accessEmail("ada@example.com");
+      const email = await enrolledAccessEmail("ada@example.com");
 
       await repository.enqueue(db, email);
 
@@ -40,16 +61,44 @@ describe("EmailOutboxRepository (integration)", () => {
       ).toBeGreaterThanOrEqual(0);
     });
 
-    it("discards the email when the caller's transaction rolls back", async () => {
+    it("links an enrollment's email to its enrollment", async () => {
+      const email = await enrolledAccessEmail("ada@example.com");
+
+      await repository.enqueue(db, email);
+
+      const [link] = await db.orm.public.EnrollmentEmail.all();
+      const [stored] = await db.orm.public.EmailOutbox.all();
+
+      expect(link).toEqual({
+        emailId: stored.id,
+        enrollmentId: email.enrollmentId,
+      });
+    });
+
+    it("links the owner's dispute alert to no enrollment", async () => {
+      await repository.enqueue(db, {
+        kind: "dispute_alert",
+        recipient: "owner@example.com",
+        payload: { paymentId: crypto.randomUUID() },
+      });
+
+      expect(await db.orm.public.EmailOutbox.all()).toHaveLength(1);
+      expect(await db.orm.public.EnrollmentEmail.all()).toEqual([]);
+    });
+
+    it("discards the email and its link when the caller's transaction rolls back", async () => {
+      const email = await enrolledAccessEmail("ada@example.com");
+
       await expect(
         db.transaction(async (tx) => {
-          await repository.enqueue(tx, accessEmail("ada@example.com"));
+          await repository.enqueue(tx, email);
 
           throw new Error("enrollment failed");
         }),
       ).rejects.toThrow("enrollment failed");
 
       expect(await db.orm.public.EmailOutbox.all()).toEqual([]);
+      expect(await db.orm.public.EnrollmentEmail.all()).toEqual([]);
     });
   });
 

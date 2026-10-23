@@ -10,7 +10,10 @@ import {
   EnrollmentAccess,
   enrollmentAccess,
 } from "@/enrollments/enrollment-access.js";
-import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
+import {
+  EnrollmentsRepository,
+  type EnrollmentRecord,
+} from "@/enrollments/enrollments.repository.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import { isOurPaymentId } from "./payment-id.js";
 import {
@@ -186,18 +189,22 @@ export class FulfillmentService {
       context.payment.customer.id,
     );
 
-    return this.respondToAccess(enrollmentAccess(enrollment), context);
+    return this.respondToAccess(enrollment, context);
   }
 
   private respondToAccess(
-    access: EnrollmentAccess,
+    enrollment: EnrollmentRecord | null,
     context: FulfillmentContext,
   ): Promise<FulfillmentDecision> {
-    switch (access) {
+    if (!enrollment) {
+      return this.grantPaidAccess(context);
+    }
+
+    switch (enrollmentAccess(enrollment)) {
       case EnrollmentAccess.ACTIVE:
-        return this.handleDoublePurchase(context);
+        return this.handleDoublePurchase(context, enrollment.id);
       case EnrollmentAccess.SUSPENDED:
-        return this.explainSuspension(context);
+        return this.explainSuspension(context, enrollment.id);
       // no access yet, or a refund removed it: this payment buys it
       case EnrollmentAccess.NONE:
       case EnrollmentAccess.REVOKED:
@@ -210,7 +217,7 @@ export class FulfillmentService {
   ): Promise<FulfillmentDecision> {
     const { payment } = context;
 
-    const accessGranted = await this.enrollmentsRepository.grantAccess(
+    const enrollmentId = await this.enrollmentsRepository.grantAccess(
       context.tx,
       {
         courseId: payment.courseId,
@@ -222,11 +229,12 @@ export class FulfillmentService {
 
     // false only if another payment for this course was fulfilled
     // concurrently; the sweeper refunds this one
-    if (accessGranted) {
+    if (enrollmentId) {
       await this.queueEmail(context, {
         kind: "access_granted",
         recipient: payment.customer.email,
         payload: emailIds(context),
+        enrollmentId,
       });
     }
 
@@ -236,11 +244,13 @@ export class FulfillmentService {
   /** Two checkouts started, then both paid: the later one is refunded. */
   private async handleDoublePurchase(
     context: FulfillmentContext,
+    enrollmentId: string,
   ): Promise<FulfillmentDecision> {
     await this.queueEmail(context, {
       kind: "already_owned",
       recipient: context.payment.customer.email,
       payload: { ...emailIds(context), refundIssued: true },
+      enrollmentId,
     });
 
     return {
@@ -252,11 +262,13 @@ export class FulfillmentService {
 
   private async explainSuspension(
     context: FulfillmentContext,
+    enrollmentId: string,
   ): Promise<FulfillmentDecision> {
     await this.queueEmail(context, {
       kind: "access_suspended",
       recipient: context.payment.customer.email,
       payload: emailIds(context),
+      enrollmentId,
     });
 
     return DONE;

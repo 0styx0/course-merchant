@@ -390,6 +390,11 @@ export interface components {
              * @description When a payment dispute suspended access, in UTC. Cleared by hand by the owner.
              */
             suspendedAt: string | null;
+            /**
+             * @description Delivery status of the latest email sent to the customer about this course. `failed` means every send attempt failed, and is also returned when no email was ever queued, so the owner can follow up.
+             * @enum {string}
+             */
+            emailStatus: "pending" | "sent" | "failed";
             customer: {
                 /** Format: uuid */
                 id: string;

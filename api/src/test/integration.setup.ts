@@ -5,6 +5,7 @@ import { Temporal } from "@js-temporal/polyfill";
 globalThis.Temporal = Temporal;
 
 beforeEach(async () => {
+  await db.orm.public.EnrollmentEmail.where({}).deleteAll();
   await db.orm.public.Enrollment.where({}).deleteAll();
   await db.orm.public.Payment.where({}).deleteAll();
 

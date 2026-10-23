@@ -1,0 +1,183 @@
+[
+  {
+    "id": "table.EnrollmentEmail",
+    "label": "Create table \"EnrollmentEmail\"",
+    "summary": "Creates table \"EnrollmentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "EnrollmentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"EnrollmentEmail\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EnrollmentEmail\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"EnrollmentEmail\"",
+        "sql": "CREATE TABLE \"public\".\"EnrollmentEmail\" (\n  \"emailId\" uuid NOT NULL,\n  \"enrollmentId\" uuid NOT NULL,\n  PRIMARY KEY (\"emailId\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"EnrollmentEmail\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"EnrollmentEmail\"",
+          "r",
+          "p"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.EnrollmentEmail.EnrollmentEmail_enrollmentId_idx_ee5e79c5",
+    "label": "Create index \"EnrollmentEmail_enrollmentId_idx_ee5e79c5\" on \"EnrollmentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "EnrollmentEmail_enrollmentId_idx_ee5e79c5",
+        "table": "EnrollmentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"EnrollmentEmail_enrollmentId_idx_ee5e79c5\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"EnrollmentEmail_enrollmentId_idx_ee5e79c5\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"EnrollmentEmail_enrollmentId_idx_ee5e79c5\"",
+        "sql": "CREATE INDEX \"EnrollmentEmail_enrollmentId_idx_ee5e79c5\" ON \"public\".\"EnrollmentEmail\" (\"enrollmentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"EnrollmentEmail_enrollmentId_idx_ee5e79c5\" exists on \"EnrollmentEmail\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"EnrollmentEmail_enrollmentId_idx_ee5e79c5\"",
+          "i",
+          "I",
+          "\"public\".\"EnrollmentEmail\"",
+          "btree",
+          "[\"enrollmentId\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.EnrollmentEmail.EnrollmentEmail_emailId_fkey",
+    "label": "Add foreign key \"EnrollmentEmail_emailId_fkey\" on \"EnrollmentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "EnrollmentEmail_emailId_fkey",
+        "table": "EnrollmentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"EnrollmentEmail_emailId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "EnrollmentEmail_emailId_fkey",
+          "public",
+          "\"public\".\"EnrollmentEmail\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"EnrollmentEmail_emailId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"EnrollmentEmail\"\nADD CONSTRAINT \"EnrollmentEmail_emailId_fkey\"\nFOREIGN KEY (\"emailId\")\nREFERENCES \"public\".\"EmailOutbox\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"EnrollmentEmail_emailId_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "EnrollmentEmail_emailId_fkey",
+          "public",
+          "\"public\".\"EnrollmentEmail\"",
+          "f",
+          "[\"emailId\"]",
+          "\"public\".\"EmailOutbox\"",
+          "[\"id\"]",
+          "a",
+          "a"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.EnrollmentEmail.EnrollmentEmail_enrollmentId_fkey",
+    "label": "Add foreign key \"EnrollmentEmail_enrollmentId_fkey\" on \"EnrollmentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "EnrollmentEmail_enrollmentId_fkey",
+        "table": "EnrollmentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"EnrollmentEmail_enrollmentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "EnrollmentEmail_enrollmentId_fkey",
+          "public",
+          "\"public\".\"EnrollmentEmail\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"EnrollmentEmail_enrollmentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"EnrollmentEmail\"\nADD CONSTRAINT \"EnrollmentEmail_enrollmentId_fkey\"\nFOREIGN KEY (\"enrollmentId\")\nREFERENCES \"public\".\"Enrollment\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"EnrollmentEmail_enrollmentId_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "EnrollmentEmail_enrollmentId_fkey",
+          "public",
+          "\"public\".\"EnrollmentEmail\"",
+          "f",
+          "[\"enrollmentId\"]",
+          "\"public\".\"Enrollment\"",
+          "[\"id\"]",
+          "a",
+          "a"
+        ]
+      }
+    ]
+  }
+]

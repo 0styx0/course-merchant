@@ -3,6 +3,7 @@ import {
   createCoursePrice,
   createCustomer,
   createEnrollment,
+  createEnrollmentEmail,
   createPayment,
   createPricedCourse,
   updateCourseStatus,
@@ -60,10 +61,16 @@ describe("Admin Courses API (e2e)", () => {
         paidAt,
       });
 
-      await createEnrollment({
+      const enrollment = await createEnrollment({
         courseId: course.id,
         customerId: customer.id,
         paymentId: payment.id,
+      });
+
+      await createEnrollmentEmail({
+        enrollment,
+        recipient: customer.email,
+        status: "sent",
       });
 
       // Ensure the course has a known, latest status.
@@ -105,6 +112,7 @@ describe("Admin Courses API (e2e)", () => {
               {
                 revokedAt: null,
                 suspendedAt: null,
+                emailStatus: "sent",
                 customer: {
                   id: customer.id,
                   name: "Ada Lovelace",

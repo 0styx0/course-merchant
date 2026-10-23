@@ -9,8 +9,6 @@ A small storefront for selling courses. Two independent yarn (v1) projects, each
 - `api/` — NestJS 11 + Postgres via **Prisma 8 (RC)**, Stripe Checkout, Zod validation
 - `web/` — **Next.js 16** (App Router, React 19), Tailwind 4, shadcn/base-ui. Read [web/AGENTS.md](web/AGENTS.md) first: this Next version differs from training data, and its docs live in `web/node_modules/next/dist/docs/`.
 
-Product requirements are in `README.md`; UI behavior specs (Given/When/Then style) are in `web/docs/`.
-
 ## Design docs — read the matching one before working in an area
 
 - [docs/payments.md](docs/payments.md) — checkout, webhooks, enrollments, refunds, emails: status checklist (what's next), flows, decisions with rejected alternatives, launch checklist.
@@ -22,23 +20,7 @@ Update them in the same commit as the code they describe: tick status, add a dec
 
 Run from the repo root with `yarn --cwd api …` / `yarn --cwd web …`, or from inside each package.
 
-API (`api/`):
-- `yarn start:dev` — dev server (needs `api/.env`, see `.env.example`; Postgres from root `docker-compose.yaml` on :5432)
-- `yarn lint`, `yarn tsc --noEmit`
-- `yarn test:unit` — `*.spec.ts`, excluding integration and e2e
-- `yarn test:integration` — `*.integration.spec.ts` against the test DB (starts `docker-compose.test.yaml`: Postgres on :5433 + `stripe-mock` on :12111, then migrates)
-- `yarn test:e2e` — `src/test/e2e/**` (same containers)
-- Single test: `yarn vitest run --config vitest.unit.config.ts src/path/to/file.spec.ts` (swap in `vitest.integration.config.ts` / `vitest.e2e.config.ts`; run `yarn db:test:up && yarn db:test:migrate` first for those). The integration/e2e configs load `.env.test` themselves.
-
-Web (`web/`):
-- `yarn dev` (needs `API_BASE_URL`), or `yarn dev:mock` to run against MSW handlers instead of the API
-- `yarn lint`, `yarn tsc --noEmit`
-- `yarn test:unit` — Vitest + jsdom + Testing Library; single file: `yarn vitest run src/path/to/file.test.tsx`
-- `yarn test:integration` — Playwright (boots `next dev` with `PLAYWRIGHT=1`); single file: `yarn playwright test tests/integration/courses/course.get.spec.ts`
-
-Linting and formatting: ESLint (`yarn lint`, errors fail) then Prettier with a per-package `.prettierrc` (2 spaces; otherwise Prettier defaults). `yarn format` / `yarn format:check` in each package; markdown and generated files are ignored (`.prettierignore`).
-
-Git hooks (`.husky/`): **pre-commit** lints (`eslint --fix`) and formats staged files via lint-staged, then regenerates API types in both packages, type-checks both, and runs unit tests for whichever package has staged changes. **pre-push** runs API integration + e2e and web Playwright tests (needs Docker).
+See package.json (in web/ and api/) and .husky for common project commands.
 
 ## Contract-first API
 
@@ -53,16 +35,14 @@ All routes are URI-versioned (`/v1/...`): controllers declare `version: "1"`, an
 
 ## API architecture
 
-**Module/ESM conventions.** `"type": "module"` with `nodenext` resolution: relative imports need a `.js` suffix. `@/…` maps to `api/src/…`. Every Nest constructor parameter uses an explicit `@Inject(Token)` — keep doing this; tests run through Vite/Vitest, which doesn't emit decorator metadata.
-
+**Module/ESM conventions.** `"type": "module"` with `nodenext` resolution: relative imports need a `.js` suffix.
 **Layers.** controller → service → repository. Repositories are the only code touching the ORM; `StripeService` (`src/payments/`) is the only code touching the Stripe SDK (the SDK client is provided under the `STRIPE_CLIENT` token so tests can swap it).
 
 **Database (Prisma 8 RC — not the classic Prisma Client API).**
 - Its docs ship in the package: `api/node_modules/@prisma/orm-postgres/skills/prisma-8/` (`SKILL.md`, `references/queries-postgres.md`, `migrations.md`, …). Read those instead of guessing from classic Prisma.
 - Schema: `src/prisma/contract.prisma`. After editing it, `yarn contract:emit` regenerates `contract.json`/`contract.d.ts`; plan a migration with `yarn prisma migration plan` (packages land in `api/migrations/app/`), then apply with `yarn db:dev:migrate` / `yarn db:test:migrate`. `prisma-delete.sh` drops and re-inits both databases.
 - **Migration trap:** the generated `migration.ts` imports `…/contract'` without a suffix; change it to `…/contract.js'` (nodenext). Self-emit (`node migration.ts`) works, so a migration with a hand-written data transform can be written and re-emitted.
-- **Upgrading Prisma:** `prisma`, `@prisma/orm-postgres`, `@prisma/cli-engine` and `temporal-polyfill` (a peer Yarn won't install itself) are pinned exactly in `api/package.json` and move together; mismatched RCs caused the old self-emit failure. Follow `skills/prisma-8/references/upgrade-app.md` and run its per-step scripts from a copy outside `node_modules` (Node won't strip types there). Afterwards `contract:emit`, `prisma migration plan`, and `prisma db sign` each database (`--db <url>`; pass `--contract` if the schema also changed).
-- **Editor diagnostics** on `contract.prisma` need the VS Code Prisma extension ≥ 31.12 (needs VS Code ≥ 1.104), which runs this project's `prisma lsp`. Older versions validate it as classic Prisma and flag valid Prisma 8 syntax (`Uuid`, `X = "x"` enum members, `@onCreate`); trust `contract:emit`, not those.
+- **Upgrading Prisma:** Follow `skills/prisma-8/references/upgrade-app.md` and run its per-step scripts from a copy outside `node_modules` (Node won't strip types there). Afterwards `contract:emit`, `prisma migration plan`, and `prisma db sign` each database (`--db <url>`; pass `--contract` if the schema also changed).
 - Queries use the fluent ORM on `db.orm.public.<Model>` (`.where(c => c.field.eq(x))`, `.include`, `.select`, `.upsert`, `.first()`, `.all()`; combinators like `and` from `@prisma/orm-postgres/orm-client`).
 - Idioms in use: `createAndCount(rows, { onConflict: "skip", conflictOn: [...] })` for insert-if-absent (Postgres `ON CONFLICT DO NOTHING`; 0 means it already existed); `.where(...).updateAndCount(...)` returns the row or `null`, which makes forward-only state changes safe against races. Don't catch driver errors by code.
 - Timestamps are `Temporal.Instant` (`@js-temporal/polyfill`), not `Date`. The API only emits UTC instants ending in `Z`. The generated contract types name the global `Temporal` namespace, which TypeScript 5.9 lacks; [temporal-global.d.ts](api/src/temporal-global.d.ts) aliases it to the polyfill, otherwise every timestamp column is `any`.

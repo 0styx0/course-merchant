@@ -29,12 +29,12 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
   - [x] `StripeWebhookController` in `WebhooksModule`: verifies the signature, dispatches `completed` and `expired`, acknowledges other types.
 
   The manual `stripe listen` check is deferred to the *Launch* checklist, to run through the web checkout once step 5 exists.
-- [ ] **4. Email delivery:**
+- [x] **4. Email delivery:**
   - [x] `EmailOutboxRepository.findDue`, `markSent` and `markFailedAttempt`, with the backoff in `retry-policy.ts`.
   - [x] Templates for each `EmailKind` and `EmailSender` over SMTP.
   - [x] `EmailWorker` on a `@nestjs/schedule` interval, with `EmailComposer` loading each email's course, customer or payment (via `EmailViewsRepository`) and rendering it.
-  - [ ] **Next:** admin course view shows each enrollment's email status (pending, sent, failed). This is the only alert for a failed email. It needs a contract change first: add the status to the admin course response in [openapi-v1.yaml](../api/openapi/openapi-v1.yaml), then regenerate types in both packages.
-- [ ] **5. Web:**
+  - [x] Admin course view shows each enrollment's `emailStatus`, the only alert for a failed email.
+- [ ] **5. Web:** **Next**
   - buy form on the course page;
   - `/checkout/success`, polling the status endpoint;
   - `/checkout/cancel`;
@@ -158,6 +158,8 @@ It also covers a payment whose session was never created.
 | A missing course, customer or payment is a failed attempt like any other, so it retries and ends `failed` | One rule for every failure; the admin view shows it | Marking such an email `failed` straight away |
 | Templates take already-loaded views (course, customer), not ids | They stay pure functions; the worker owns the database lookups | An `EmailComposer` that reads the database |
 | A `failed` email stays in the table with no owner alert; the admin course view shows email status | One place to look, nothing extra to run | Emailing or paging the owner |
+| `emailStatus` is the status of the latest email to that customer about the course, and `failed` when none exists | An earlier failure doesn't matter once a later email went through; a missing email is something the owner must follow up, so it reads as `failed` rather than a fourth value | The worst status of all the enrollment's emails; `null` for no email |
+| An `EnrollmentEmail` link table ties each customer email to its enrollment, and the admin view takes the newest in SQL. `grantAccess` returns the enrollment id so callers can pass it to `enqueue` | `EmailOutbox` stays a pure delivery queue with no nullable subject columns, and `dispute_alert` (about a payment) simply has no link. A `PaymentEmail` link can follow when step 6 needs one. No backfill: nothing was in production | Filtering `payload` in code, or a JSON filter (not in the ORM's public API); a nullable `enrollmentId` on the email; one joiner with nullable foreign keys; `latestEmailId` on `Enrollment` (a mutable pointer; older emails lose their link); `courseId` + `customerId` columns (undocumented composite relation) |
 | Card only, no delayed methods | Payment is confirmed instantly, so there's no "processing" state | ACH and bank debits |
 | Currencies limited to the payout currency (`ALLOWED_CURRENCIES`, default USD) | Any other currency adds a conversion fee to every sale | Accepting any currency |
 

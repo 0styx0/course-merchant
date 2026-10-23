@@ -50,6 +50,7 @@ const repositoryCourse = {
         name: "Ada Lovelace",
         email: "ada@example.com",
       },
+      emails: [{ email: { status: "sent" } }],
       payment: {
         status: "succeeded",
         amount: 7900,
@@ -64,6 +65,7 @@ const repositoryCourse = {
         name: "Grace Hopper",
         email: "grace@example.com",
       },
+      emails: [],
       payment: {
         status: "refunded",
         amount: 9900,
@@ -111,6 +113,7 @@ describe("toAdminCourseResponse", () => {
         {
           revokedAt: null,
           suspendedAt: null,
+          emailStatus: "sent",
           customer: {
             id: "customer_1",
             name: "Ada Lovelace",
@@ -125,6 +128,7 @@ describe("toAdminCourseResponse", () => {
         {
           revokedAt: "2026-09-28T09:00:00Z",
           suspendedAt: null,
+          emailStatus: "failed",
           customer: {
             id: "customer_2",
             name: "Grace Hopper",
@@ -193,6 +197,7 @@ describe("toAdminCourseResponse", () => {
       {
         revokedAt: null,
         suspendedAt: null,
+        emailStatus: "sent",
         customer: {
           id: "customer_1",
           name: "Ada Lovelace",
@@ -207,6 +212,7 @@ describe("toAdminCourseResponse", () => {
       {
         revokedAt: "2026-09-28T09:00:00Z",
         suspendedAt: null,
+        emailStatus: "failed",
         customer: {
           id: "customer_2",
           name: "Grace Hopper",
@@ -244,6 +250,7 @@ describe("toAdminCourseResponse", () => {
             name: "Katherine Johnson",
             email: "katherine@example.com",
           },
+          emails: [],
           payment: null,
         },
       ],
@@ -253,6 +260,7 @@ describe("toAdminCourseResponse", () => {
       {
         revokedAt: null,
         suspendedAt: "2026-09-30T08:00:00Z",
+        emailStatus: "failed",
         customer: {
           id: "customer_3",
           name: "Katherine Johnson",

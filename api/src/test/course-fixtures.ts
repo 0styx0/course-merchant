@@ -116,13 +116,43 @@ export async function createPendingPayment(input: {
 export async function createEnrollment(input: {
   courseId: string;
   customerId: string;
-  paymentId: string;
+  // omitted for a free course
+  paymentId?: string;
 }) {
   return db.orm.public.Enrollment.create({
     courseId: input.courseId,
     customerId: input.customerId,
     paymentId: input.paymentId,
   });
+}
+
+/** An email about the enrollment, stored as the outbox would after queueing. */
+export async function createEnrollmentEmail(input: {
+  enrollment: { id: string; courseId: string; customerId: string };
+  recipient: string;
+  status: Models.public_EmailOutbox["status"];
+  createdAt?: Temporal.Instant;
+}) {
+  const { enrollment } = input;
+
+  const email = await db.orm.public.EmailOutbox.create({
+    kind: "access_granted",
+    recipient: input.recipient,
+    payload: {
+      courseId: enrollment.courseId,
+      customerId: enrollment.customerId,
+    },
+    status: input.status,
+    attempts: 0,
+    ...(input.createdAt && { createdAt: input.createdAt }),
+  });
+
+  await db.orm.public.EnrollmentEmail.create({
+    emailId: email.id,
+    enrollmentId: enrollment.id,
+  });
+
+  return email;
 }
 
 export function archiveCourse(courseId: string, archiveAt: Temporal.Instant) {

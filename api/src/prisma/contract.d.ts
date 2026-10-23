@@ -23,7 +23,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'8ac5cb742d35bd605f4c07a8ca98d8eb0d0da8675bcddb76618b75bfb016eeb8'>;
+  StorageHashBase<'b257486452aea46213a7be6219f99074db5b70ed40a6356f4a777b16e6027ce1'>;
 export type ExecutionHash =
   ExecutionHashBase<'0076ed08f73a615779f1117ee8305346e79c2d63ffda1b8bc87585bba78596c8'>;
 export type ProfileHash =
@@ -386,7 +386,8 @@ export namespace Models {
     recipient: FieldOutputTypes['public']['EmailOutbox']['recipient'];
     sentAt: FieldOutputTypes['public']['EmailOutbox']['sentAt'];
     status: FieldOutputTypes['public']['EmailOutbox']['status'];
-    readonly [RelationKeys]?: never;
+    enrollmentLink: public_EnrollmentEmail | null;
+    readonly [RelationKeys]?: 'enrollmentLink';
   };
   export type public_Enrollment = {
     courseId: FieldOutputTypes['public']['Enrollment']['courseId'];
@@ -398,8 +399,16 @@ export namespace Models {
     suspendedAt: FieldOutputTypes['public']['Enrollment']['suspendedAt'];
     course: public_Course;
     customer: public_Customer;
+    emails: public_EnrollmentEmail[];
     payment: public_Payment | null;
-    readonly [RelationKeys]?: 'course' | 'customer' | 'payment';
+    readonly [RelationKeys]?: 'course' | 'customer' | 'emails' | 'payment';
+  };
+  export type public_EnrollmentEmail = {
+    emailId: FieldOutputTypes['public']['EnrollmentEmail']['emailId'];
+    enrollmentId: FieldOutputTypes['public']['EnrollmentEmail']['enrollmentId'];
+    email: public_EmailOutbox;
+    enrollment: public_Enrollment;
+    readonly [RelationKeys]?: 'email' | 'enrollment';
   };
   export type public_Payment = {
     amount: FieldOutputTypes['public']['Payment']['amount'];
@@ -436,6 +445,7 @@ export declare const models: {
     Customer: Models.public_Customer;
     EmailOutbox: Models.public_EmailOutbox;
     Enrollment: Models.public_Enrollment;
+    EnrollmentEmail: Models.public_EnrollmentEmail;
     Payment: Models.public_Payment;
     ProcessedPaymentEvent: Models.public_ProcessedPaymentEvent;
   };
@@ -883,6 +893,58 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly EnrollmentEmail: {
+              columns: {
+                readonly emailId: {
+                  readonly dataType: 'pg/uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly enrollmentId: {
+                  readonly dataType: 'pg/uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['emailId'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'EnrollmentEmail_enrollmentId_idx_ee5e79c5';
+                  readonly prefix: 'EnrollmentEmail_enrollmentId_idx';
+                  readonly columns: readonly ['enrollmentId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'EnrollmentEmail';
+                    readonly columns: readonly ['emailId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'EmailOutbox';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'EnrollmentEmail';
+                    readonly columns: readonly ['enrollmentId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Enrollment';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly Payment: {
               columns: {
                 readonly amount: {
@@ -1099,6 +1161,10 @@ type ContractBase = Omit<
     readonly Enrollment: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'Enrollment';
+    };
+    readonly EnrollmentEmail: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'EnrollmentEmail';
     };
     readonly Payment: { readonly namespace: 'public' & NamespaceId; readonly model: 'Payment' };
     readonly ProcessedPaymentEvent: {
@@ -1447,7 +1513,20 @@ type ContractBase = Omit<
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
             };
-            readonly relations: Record<string, never>;
+            readonly relations: {
+              readonly enrollmentLink: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'EnrollmentEmail';
+                };
+                readonly cardinality: '1:1';
+                readonly nullable: true;
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['emailId'];
+                };
+              };
+            };
             readonly storage: {
               readonly table: 'EmailOutbox';
               readonly namespaceId: 'public';
@@ -1530,6 +1609,17 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['id'];
                 };
               };
+              readonly emails: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'EnrollmentEmail';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['enrollmentId'];
+                };
+              };
               readonly payment: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -1554,6 +1644,52 @@ type ContractBase = Omit<
                 readonly purchasedAt: { readonly column: 'purchasedAt' };
                 readonly revokedAt: { readonly column: 'revokedAt' };
                 readonly suspendedAt: { readonly column: 'suspendedAt' };
+              };
+            };
+          };
+          readonly EnrollmentEmail: {
+            readonly fields: {
+              readonly emailId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly enrollmentId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+            };
+            readonly relations: {
+              readonly email: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'EmailOutbox';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['emailId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly enrollment: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Enrollment';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['enrollmentId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'EnrollmentEmail';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly emailId: { readonly column: 'emailId' };
+                readonly enrollmentId: { readonly column: 'enrollmentId' };
               };
             };
           };

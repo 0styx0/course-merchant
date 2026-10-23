@@ -20,6 +20,7 @@ const COURSE_ID = "8b0e1f5c-0000-4000-8000-000000000001";
 const CUSTOMER_ID = "8b0e1f5c-0000-4000-8000-000000000002";
 const PRICE_ID = "8b0e1f5c-0000-4000-8000-000000000003";
 const PAYMENT_ID = "8b0e1f5c-0000-4000-8000-000000000004";
+const GRANTED_ENROLLMENT_ID = "8b0e1f5c-0000-4000-8000-000000000005";
 
 const config: PaymentsConfig = {
   stripeSecretKey: "sk_test_unit",
@@ -79,7 +80,7 @@ describe("CheckoutService", () => {
   beforeEach(() => {
     enrollmentsRepository = {
       findEnrollment: vi.fn().mockResolvedValue(null),
-      grantAccess: vi.fn().mockResolvedValue(true),
+      grantAccess: vi.fn().mockResolvedValue(GRANTED_ENROLLMENT_ID),
     };
     checkoutRepository = {
       findVisibleCourse: vi.fn().mockResolvedValue(makeCourse()),
@@ -204,6 +205,7 @@ describe("CheckoutService", () => {
         kind: "already_owned",
         recipient: "ada@example.com",
         payload: { ...emailIds, refundIssued: false },
+        enrollmentId: "enrollment",
       });
       expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();
     });
@@ -238,6 +240,7 @@ describe("CheckoutService", () => {
         kind: "access_suspended",
         recipient: "ada@example.com",
         payload: emailIds,
+        enrollmentId: "enrollment",
       });
       expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();
     });
@@ -265,12 +268,13 @@ describe("CheckoutService", () => {
           kind: "access_granted",
           recipient: "ada@example.com",
           payload: emailIds,
+          enrollmentId: GRANTED_ENROLLMENT_ID,
         });
       },
     );
 
     it("sends nothing when a concurrent request granted access first", async () => {
-      enrollmentsRepository.grantAccess.mockResolvedValue(false);
+      enrollmentsRepository.grantAccess.mockResolvedValue(null);
 
       await expect(service.startCheckout(request)).resolves.toEqual({
         status: "check_email",

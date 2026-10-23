@@ -56,6 +56,8 @@ export function toAdminCourseResponse(
     enrollments: course.enrollments.map((enrollment) => ({
       revokedAt: formatOptionalDate(enrollment.revokedAt),
       suspendedAt: formatOptionalDate(enrollment.suspendedAt),
+      // no email at all reads as failed, so the owner follows up
+      emailStatus: enrollment.emails[0]?.email?.status ?? "failed",
       customer: {
         id: enrollment.customer.id,
         name: enrollment.customer.name,

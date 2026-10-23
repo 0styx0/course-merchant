@@ -1175,6 +1175,7 @@ components:
         - payment
         - revokedAt
         - suspendedAt
+        - emailStatus
       properties:
         revokedAt:
           type:
@@ -1192,6 +1193,16 @@ components:
           description: >
             When a payment dispute suspended access, in UTC. Cleared by hand
             by the owner.
+        emailStatus:
+          type: string
+          enum:
+            - pending
+            - sent
+            - failed
+          description: >
+            Delivery status of the latest email sent to the customer about this
+            course. `failed` means every send attempt failed, and is also
+            returned when no email was ever queued, so the owner can follow up.
         customer:
           type: object
           required:

@@ -144,6 +144,7 @@ model Enrollment {
   course      Course    @relation(fields:[courseId], references:[id])
   customer    Customer  @relation(fields:[customerId], references:[id])
   payment     Payment?  @relation(fields:[paymentId], references:[id])
+  emails      EnrollmentEmail[]
 
   @@unique([courseId, customerId])
   @@index([customerId])
@@ -174,6 +175,20 @@ model EmailOutbox {
   createdAt     DateTime    @default(now())
   sentAt        DateTime?
 
+  enrollmentLink EnrollmentEmail?
+
   @@index([status, nextAttemptAt])
   @@index([recipient, createdAt])
+}
+
+// links an email to the enrollment it's about, so the admin view can find an
+// enrollment's emails. Owner alerts (dispute_alert) have no enrollment
+model EnrollmentEmail {
+  emailId      Uuid        @id
+  enrollmentId Uuid
+
+  email        EmailOutbox @relation(fields:[emailId], references:[id])
+  enrollment   Enrollment  @relation(fields:[enrollmentId], references:[id])
+
+  @@index([enrollmentId])
 }

@@ -7,7 +7,8 @@ import type { DbScope } from "types.js";
 import { nextAttemptAfterFailure } from "./retry-policy.js";
 
 export type EmailKind = Models.public_EmailOutbox["kind"];
-export type OutboxEmail = Models.public_EmailOutbox;
+// without the link to its enrollment, which only the admin view reads
+export type OutboxEmail = Omit<Models.public_EmailOutbox, "enrollmentLink">;
 
 // Payloads hold ids, not rendered content, so an email always shows the
 // course's current details (such as an updated content link) when it's sent.
@@ -23,13 +24,23 @@ export type EmailPayloads = {
   dispute_alert: { paymentId: string };
 };
 
-export type QueuedEmail = {
-  [Kind in EmailKind]: {
-    kind: Kind;
-    recipient: string;
-    payload: EmailPayloads[Kind];
-  };
-}[EmailKind];
+// the owner's alert is about a payment, so it has no enrollment
+type EnrollmentEmailKind = Exclude<EmailKind, "dispute_alert">;
+
+export type QueuedEmail =
+  | {
+      [Kind in EnrollmentEmailKind]: {
+        kind: Kind;
+        recipient: string;
+        payload: EmailPayloads[Kind];
+        enrollmentId: string;
+      };
+    }[EnrollmentEmailKind]
+  | {
+      kind: "dispute_alert";
+      recipient: string;
+      payload: EmailPayloads["dispute_alert"];
+    };
 
 @Injectable()
 export class EmailOutboxRepository {
@@ -39,12 +50,19 @@ export class EmailOutboxRepository {
    * commits.
    */
   async enqueue(scope: DbScope, email: QueuedEmail): Promise<void> {
-    await scope.orm.public.EmailOutbox.create({
+    const queued = await scope.orm.public.EmailOutbox.create({
       kind: email.kind,
       recipient: email.recipient,
       payload: email.payload,
       attempts: 0,
     });
+
+    if (email.kind !== "dispute_alert") {
+      await scope.orm.public.EnrollmentEmail.create({
+        emailId: queued.id,
+        enrollmentId: email.enrollmentId,
+      });
+    }
   }
 
   /** How many emails have been queued for `recipient` since `since`. */

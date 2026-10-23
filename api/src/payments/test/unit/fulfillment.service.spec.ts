@@ -23,6 +23,7 @@ import { PrismaService } from "@/prisma/prisma.service.js";
 const COURSE_ID = "8b0e1f5c-0000-4000-8000-000000000001";
 const CUSTOMER_ID = "8b0e1f5c-0000-4000-8000-000000000002";
 const PAYMENT_ID = "8b0e1f5c-0000-4000-8000-000000000004";
+const GRANTED_ENROLLMENT_ID = "8b0e1f5c-0000-4000-8000-000000000005";
 
 const paidAt = Temporal.Instant.from("2026-10-21T12:00:00Z");
 const revokedAt = Temporal.Instant.from("2026-10-01T00:00:00Z");
@@ -108,7 +109,7 @@ describe("FulfillmentService", () => {
       ),
       grantAccess: tracked<EnrollmentsRepository["grantAccess"]>(
         "grantAccess",
-        true,
+        GRANTED_ENROLLMENT_ID,
       ),
     };
     emailOutbox = {
@@ -260,11 +261,12 @@ describe("FulfillmentService", () => {
         kind: "access_granted",
         recipient: "ada@example.com",
         payload: emailIds,
+        enrollmentId: GRANTED_ENROLLMENT_ID,
       });
     });
 
     it("emails nothing when a concurrent payment granted access first", async () => {
-      enrollmentsRepository.grantAccess.mockResolvedValue(false);
+      enrollmentsRepository.grantAccess.mockResolvedValue(null);
 
       await service.fulfillCheckout(makeCheckout());
       expect(emailOutbox.enqueue).not.toHaveBeenCalled();
@@ -288,6 +290,7 @@ describe("FulfillmentService", () => {
         kind: "already_owned",
         recipient: "ada@example.com",
         payload: { ...emailIds, refundIssued: true },
+        enrollmentId: "enrollment-1",
       });
     });
 
@@ -347,6 +350,7 @@ describe("FulfillmentService", () => {
         kind: "access_suspended",
         recipient: "ada@example.com",
         payload: emailIds,
+        enrollmentId: "enrollment-1",
       });
     });
   });
