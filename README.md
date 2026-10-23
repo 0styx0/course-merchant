@@ -1,41 +1,137 @@
-# About
+# Course Merchant
 
-Sell courses via an intuitive interface with minimal fees.
+A storefront for selling online courses, with payment through Stripe Checkout. The owner lists courses; buyers browse them, pay on Stripe's hosted page, and get the course link (a Google Drive folder or a Zoom meeting) by email.
 
+It's freelance work for a small business that sells courses, built as two TypeScript projects: a NestJS API and a Next.js web app.
 
-## Pages
+> **Status: in progress.** The API for courses, checkout, Stripe webhooks and email is built and tested. Still to come: the web checkout pages, admin login, and a background job (the "sweeper") that retries refunds that didn't go through. **The admin endpoints have no authentication yet, so don't deploy this.** Progress is tracked in [docs/payments.md](docs/payments.md) and [docs/courses.md](docs/courses.md).
 
-### Homepage
+## Highlights
 
-- About: Describes the type of courses offered and introduces the person
-- Course list: Each course leads to a course page
+- **Payments stay correct when Stripe retries or races.** Stripe can deliver the same webhook twice, or two webhooks at once. Each Stripe event is recorded once, and every payment status change is a single conditional `UPDATE` (for example "set `succeeded` where the status is still `pending`"), so only one caller can make it. See [payments.repository.ts](api/src/payments/payments.repository.ts).
+- **Only a verified webhook grants paid access.** The success redirect a buyer lands on never does: anyone can visit that URL. The webhook's signature is checked against the exact request bytes. If a buyer pays twice for the same course, the second payment is refunded automatically. See [stripe-webhook.controller.ts](api/src/webhooks/stripe-webhook.controller.ts) and [fulfillment.service.ts](api/src/payments/fulfillment.service.ts).
+- **Emails are never lost, and never sent for something that didn't happen.** Emails are written to an outbox table in the same database transaction as the change they describe (the *transactional outbox* pattern). A background worker sends them and retries failures with growing delays, from 1 minute up to 1 hour. It claims each email before sending, so several copies of the API never send the same one twice. See [email-worker.ts](api/src/email/email-worker.ts) and [retry-policy.ts](api/src/email/retry-policy.ts).
+- **One contract for both sides.** [openapi-v1.yaml](api/openapi/openapi-v1.yaml) defines every endpoint, request, response and error code. TypeScript types for both the API and the web app are generated from it, so a mismatch fails the type check. Errors use the standard [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem format.
+- **No network calls inside a database transaction.** Stripe is called before a transaction starts or after it commits, so a slow Stripe response never holds database locks.
+- **Tested at three levels, enforced by git hooks.**
+  - Unit tests.
+  - Integration tests against a real PostgreSQL in Docker.
+  - End-to-end tests that drive the whole app over HTTP, with the real Stripe SDK talking to [stripe-mock](https://github.com/stripe/stripe-mock), Stripe's official mock server.
 
-#### Course page
+  The web app is tested with Vitest, Playwright and [MSW](https://mswjs.io/), which serves fake API responses.
+- **Decisions are written down.** The [design docs](docs/) record each decision and the alternatives that were rejected.
 
-- Course description
-- Checkout: Via credit card
+## How it fits together
 
-When the course is bought, the user should get access to a google drive folder, or access to a zoom meeting via an email.
+```
+   Buyer's browser
+     │         │
+     │ pages   │ pays on Stripe's hosted page
+     ▼         ▼
+┌──────────┐  ┌──────────────────┐
+│ web/     │  │ Stripe Checkout  │
+│ Next.js  │  └──┬───────────▲───┘
+└────┬─────┘     │ signed    │ create checkout sessions,
+     │ REST      │ webhooks  │ refunds
+     │ /v1/...   ▼           │
+     │      ┌────────────────┴───┐      ┌────────────┐
+     └─────▶│ api/  NestJS       │─────▶│ PostgreSQL │
+            │ courses, checkout, │      └────────────┘
+            │ webhooks, email    │      ┌────────────┐
+            │                    │─────▶│ SMTP email │
+            └────────────────────┘      └────────────┘
+```
 
+The web app calls the API only from the server, never from the browser. [ARCHITECTURE.md](ARCHITECTURE.md) walks through the modules, a full purchase, and the rules the code relies on.
 
-## Technical Details
+## Tech stack
 
-### Communication
+| Area | Tools |
+|---|---|
+| API | NestJS 11, TypeScript, Zod validation, OpenAPI 3 |
+| Database | PostgreSQL 17, Prisma 8 (release candidate) |
+| Payments | Stripe Checkout and webhooks |
+| Email | SMTP through Nodemailer, sent from an outbox table |
+| Web | Next.js 16 (App Router), React 19, Tailwind CSS 4, shadcn/ui |
+| Testing | Vitest, Supertest, stripe-mock, Playwright, MSW |
+| Tooling | Docker Compose, ESLint, Prettier, husky git hooks |
 
-- A shared OpenAPI contract ensures reliable cross-stack communication.
-   - The client and API form their logic using types generated directly from the contract.
-- Git hooks ensure type correctness and perpetual test integrity.
-- MSW and docker allow for speedy integration tests across the stack.
+## Quick start
 
-### Technologies
+**You need:** Node.js 22.18+, 24.11+ or 26+ (Prisma 8 requires one of these), [Yarn 1](https://classic.yarnpkg.com/), and Docker.
+**Optional:** the [Stripe CLI](https://docs.stripe.com/stripe-cli) to receive webhooks locally, and [Mailpit](https://mailpit.axllent.org/) to see emails.
 
-#### Frontend:
-- Core: Next.JS, TypeScript
-- Unit tests: MSW + Vitest
-- Integration tests: PlayWright + MSW
+```sh
+# 1. Install dependencies. The root install also sets up the git hooks.
+yarn install
+yarn --cwd api install
+yarn --cwd web install
 
-#### Backend:
-- Core: Nest.JS, TypeScript, Postgres, Prisma, Docker
-- Unit tests: Vitest
-- Integration tests: Vitest + separate Postgres docker container
-- End-to-end tests: Vitest + SuperTest + Postgres docker
+# 2. Start PostgreSQL for development (port 5432)
+docker compose up -d
+
+# 3. Configure the API, then edit api/.env:
+#    DATABASE_URL="postgresql://course_app:course_app@localhost:5432/course_app"
+#    plus your Stripe test-mode keys and an SMTP URL
+cp api/.env.example api/.env
+
+# 4. Create the database tables
+yarn --cwd api db:dev:migrate
+
+# 5. Run the API on http://localhost:3001
+yarn --cwd api start:dev
+
+# 6. In a second terminal, run the web app on http://localhost:3000
+echo 'API_BASE_URL=http://localhost:3001' > web/.env.local
+yarn --cwd web dev
+```
+
+The API checks its settings when it starts. A missing or invalid one stops it with an error naming the variable.
+
+**Web app only, with fake data:** `yarn --cwd web dev:mock` serves the pages with MSW's canned API responses, so no API or database is needed. It still reads `API_BASE_URL` from step 6.
+
+**Emails locally:** run `docker run -d -p 1025:1025 -p 8025:8025 axllent/mailpit`, set `SMTP_URL="smtp://localhost:1025"`, and read the mail at http://localhost:8025.
+
+**Webhooks locally:** run `stripe listen --forward-to localhost:3001/v1/webhooks/stripe`, and copy the `whsec_…` secret it prints into `STRIPE_WEBHOOK_SECRET`.
+
+## Running tests
+
+| Command | What it checks | Needs |
+|---|---|---|
+| `yarn --cwd api test:unit` | API logic, with dependencies mocked | Nothing |
+| `yarn --cwd api test:integration` | Repositories and services against a real database | Docker. Starts a test PostgreSQL on port 5433 and stripe-mock on 12111 |
+| `yarn --cwd api test:e2e` | The whole API over HTTP, with the real Stripe SDK against stripe-mock | Docker |
+| `yarn --cwd web test:unit` | Components, with the API mocked by MSW | Nothing |
+| `yarn --cwd web test:integration` | Pages in Chromium through Playwright, with the API mocked | `yarn --cwd web playwright install chromium` once |
+
+The git hooks run these for you: unit tests and type checks before each commit, and integration and end-to-end tests before each push. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Project layout
+
+```
+.
+├── api/                  NestJS API (its own package.json)
+│   ├── openapi/          the API contract: source of truth for every endpoint
+│   ├── migrations/       database migrations
+│   └── src/              one folder per module: courses, checkout, payments,
+│                         webhooks, enrollments, email, prisma, common
+├── web/                  Next.js web app (its own package.json)
+│   ├── src/app/          pages (App Router)
+│   ├── src/components/   server containers and pure views
+│   ├── src/lib/api/      typed API client, one wrapper per endpoint
+│   └── src/mocks/        MSW handlers for tests and dev:mock
+├── docs/                 design docs: status, decisions, rejected options
+└── .husky/               git hooks shared by both projects
+```
+
+## Documentation
+
+- [ARCHITECTURE.md](ARCHITECTURE.md): how the system is put together.
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to make a change, write tests and commit.
+- Design docs:
+  - [docs/payments.md](docs/payments.md): checkout, webhooks, email, refunds, and the launch checklist.
+  - [docs/courses.md](docs/courses.md): creating, editing and browsing courses.
+
+## License
+
+All rights reserved. This code is published so it can be reviewed. No license is granted to use, copy, modify or distribute it.

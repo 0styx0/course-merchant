@@ -100,7 +100,7 @@ Flows and decisions, one file per subarea. Read the one that matches the task:
 
   The API doesn't produce 429s itself: `TOO_MANY_REQUESTS` was removed from the contract and the code, so the edge's 429s are the only ones.
 - Manual test in Stripe test mode:
-  1. Run `stripe listen --forward-to localhost:3000/v1/webhooks/stripe`.
+  1. Run `stripe listen --forward-to localhost:3001/v1/webhooks/stripe`.
   2. Pay with test card `4242…`.
   3. Run `stripe trigger checkout.session.expired` and `stripe trigger charge.refunded`.
   4. Pay with a declining test card and confirm nothing is granted.
