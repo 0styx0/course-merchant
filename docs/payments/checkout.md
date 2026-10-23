@@ -25,3 +25,4 @@ An address that has received 5 or more emails in the last 24 hours (counted from
 | Email cap per address, counted from `EmailOutbox` | The API can enforce it accurately; per-IP limits can't be, because the API only sees the Next server's address | — |
 | Card only, no delayed methods | Payment is confirmed instantly, so there's no "processing" state | ACH and bank debits |
 | Currencies limited to the payout currency (`ALLOWED_CURRENCIES`, default USD) | Any other currency adds a conversion fee to every sale | Accepting any currency |
+| Checkout split into the service (entry and transaction), a decision service, a Stripe redirect service and a capped email queue | Each has its own rules and constants, and "commit, then call Stripe" now sits in the one method `startCheckout` | One class; splitting the spec in the same commit |

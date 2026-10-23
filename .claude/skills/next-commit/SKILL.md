@@ -48,7 +48,7 @@ From `api/` (or `web/`), run `yarn lint`, `yarn tsc --noEmit`, and the unit test
 ## 5. Hand off
 
 Keep it short:
-- the files changed, as links;
+- the files changed, as a table links | high level changes;
 - the verification results;
 - a suggested conventional commit message.
 

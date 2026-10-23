@@ -6,7 +6,10 @@ import {
   CheckoutRepository,
   type CheckoutCourse,
 } from "@/checkout/checkout.repository.js";
+import { CheckoutDecisionService } from "@/checkout/checkout-decision.service.js";
+import { CheckoutEmailQueue } from "@/checkout/checkout-email-queue.js";
 import { CheckoutService } from "@/checkout/checkout.service.js";
+import { StripeRedirectService } from "@/checkout/stripe-redirect.service.js";
 import type { PaymentsConfig } from "@/payments/payments-config.js";
 import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
@@ -141,14 +144,28 @@ describe("CheckoutService", () => {
     });
     tx = fake.tx;
 
+    const checkoutRepo = asDependency<CheckoutRepository>(checkoutRepository);
+    const paymentsRepo = asDependency<PaymentsRepository>(paymentsRepository);
+
+    // the real collaborators, so these tests cover the whole checkout flow
     service = new CheckoutService(
       fake.prisma,
-      asDependency<CheckoutRepository>(checkoutRepository),
-      asDependency<PaymentsRepository>(paymentsRepository),
-      asDependency<EnrollmentsRepository>(enrollmentsRepository),
-      asDependency<EmailOutboxRepository>(emailOutbox),
-      asDependency<StripeService>(stripe),
-      config,
+      checkoutRepo,
+      paymentsRepo,
+      new CheckoutDecisionService(
+        checkoutRepo,
+        paymentsRepo,
+        asDependency<EnrollmentsRepository>(enrollmentsRepository),
+        new CheckoutEmailQueue(
+          asDependency<EmailOutboxRepository>(emailOutbox),
+        ),
+      ),
+      new StripeRedirectService(
+        fake.prisma,
+        paymentsRepo,
+        asDependency<StripeService>(stripe),
+        config,
+      ),
     );
   });
 
