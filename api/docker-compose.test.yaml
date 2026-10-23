@@ -7,6 +7,24 @@ services:
       POSTGRES_DB: course_app_test
     ports:
       - "5433:5432"
+    # `up --wait` blocks on this. `-h 127.0.0.1` forces a TCP connection: the
+    # temporary server Postgres runs while initialising a fresh volume only
+    # listens on the Unix socket, so a socket check would pass too early.
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-h",
+          "127.0.0.1",
+          "-U",
+          "course_app_test",
+          "-d",
+          "course_app_test",
+        ]
+      interval: 1s
+      timeout: 3s
+      retries: 30
 
   # Stripe's official mock API server. It checks requests against Stripe's API
   # spec and returns canned responses, so e2e tests run the real SDK over real
