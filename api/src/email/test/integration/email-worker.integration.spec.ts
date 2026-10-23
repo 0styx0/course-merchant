@@ -5,6 +5,7 @@ import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
 import { EmailSender } from "@/email/email-sender.js";
 import { EmailViewsRepository } from "@/email/email-views.repository.js";
 import { EmailWorker } from "@/email/email-worker.js";
+import { DatabaseClock } from "@/prisma/database-clock.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import {
   createCustomer,
@@ -32,7 +33,13 @@ describe("EmailWorker (integration)", () => {
     );
 
     return {
-      worker: new EmailWorker(prisma, outbox, composer, sender),
+      worker: new EmailWorker(
+        prisma,
+        outbox,
+        composer,
+        sender,
+        new DatabaseClock(),
+      ),
       sendMail,
     };
   }

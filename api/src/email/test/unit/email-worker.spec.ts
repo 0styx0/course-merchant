@@ -1,8 +1,15 @@
+import { Temporal } from "@js-temporal/polyfill";
 import { describe, expect, it, vi } from "vitest";
 
 import { EmailWorker } from "@/email/email-worker.js";
 
 describe("EmailWorker", () => {
+  const clock = {
+    now: vi
+      .fn()
+      .mockResolvedValue(Temporal.Instant.from("2026-10-23T12:00:00Z")),
+  } as never;
+
   it("skips a run while the previous one is still going", async () => {
     let finishLookup!: (emails: never[]) => void;
     const findDue = vi.fn().mockReturnValue(
@@ -15,6 +22,7 @@ describe("EmailWorker", () => {
       { findDue } as never,
       {} as never,
       {} as never,
+      clock,
     );
 
     const firstRun = worker.runIfIdle();
@@ -39,6 +47,7 @@ describe("EmailWorker", () => {
       { findDue } as never,
       {} as never,
       {} as never,
+      clock,
     );
     vi.spyOn(worker["logger"], "error").mockImplementation(() => undefined);
 
@@ -57,6 +66,7 @@ describe("EmailWorker", () => {
       { findDue: vi.fn().mockResolvedValue([email]), claim } as never,
       { compose } as never,
       {} as never,
+      clock,
     );
 
     await worker.sendDueEmails();
@@ -72,6 +82,7 @@ describe("EmailWorker", () => {
       { findDue } as never,
       {} as never,
       {} as never,
+      clock,
     );
 
     await worker.onApplicationShutdown();
@@ -92,6 +103,7 @@ describe("EmailWorker", () => {
       { findDue } as never,
       {} as never,
       {} as never,
+      clock,
     );
     let hasShutDown = false;
 

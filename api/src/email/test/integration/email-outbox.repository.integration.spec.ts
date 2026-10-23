@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
 import { MAX_SEND_ATTEMPTS } from "@/email/retry-policy.js";
+import { DatabaseClock } from "@/prisma/database-clock.js";
 import { db } from "@/prisma/db.js";
 import {
   createCustomer,
@@ -12,6 +13,8 @@ import {
 
 describe("EmailOutboxRepository (integration)", () => {
   const repository = new EmailOutboxRepository();
+  // Postgres stamps nextAttemptAt, so "is it due yet?" must ask its clock.
+  const clock = new DatabaseClock();
 
   const accessEmail = (recipient: string) => ({
     kind: "access_granted" as const,
@@ -40,7 +43,7 @@ describe("EmailOutboxRepository (integration)", () => {
 
   describe("enqueue", () => {
     it("stores a pending email ready to send now", async () => {
-      const before = Temporal.Now.instant();
+      const before = await clock.now(db);
       const email = await enrolledAccessEmail("ada@example.com");
 
       await repository.enqueue(db, email);
@@ -161,7 +164,7 @@ describe("EmailOutboxRepository (integration)", () => {
         { ...accessEmail("failed@example.com"), attempts: 0, status: "failed" },
       ]);
 
-      const due = await repository.findDue(db, Temporal.Now.instant(), 10);
+      const due = await repository.findDue(db, await clock.now(db), 10);
 
       expect(due.map((email) => email.recipient)).toEqual([
         "older@example.com",
@@ -175,9 +178,9 @@ describe("EmailOutboxRepository (integration)", () => {
         { ...accessEmail("grace@example.com"), attempts: 0 },
       ]);
 
-      expect(
-        await repository.findDue(db, Temporal.Now.instant(), 1),
-      ).toHaveLength(1);
+      expect(await repository.findDue(db, await clock.now(db), 1)).toHaveLength(
+        1,
+      );
     });
   });
 

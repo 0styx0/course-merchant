@@ -5,8 +5,8 @@ import {
   type OnApplicationShutdown,
 } from "@nestjs/common";
 import { Interval } from "@nestjs/schedule";
-import { Temporal } from "@js-temporal/polyfill";
 
+import { DatabaseClock } from "@/prisma/database-clock.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import { EmailComposer } from "./email-composer.js";
 import {
@@ -24,6 +24,8 @@ const BATCH_SIZE = 20;
  * emails, oldest first, and sends them one at a time, settling each as sent or
  * as a failed attempt (which schedules the retry). It claims each email before
  * sending, so several running copies of the API never send the same one.
+ * Every time it reads or writes comes from the database clock, the same one
+ * that stamps a queued email, so the copies agree on when an email is due.
  */
 @Injectable()
 export class EmailWorker implements OnApplicationShutdown {
@@ -40,6 +42,8 @@ export class EmailWorker implements OnApplicationShutdown {
     private readonly composer: EmailComposer,
     @Inject(EmailSender)
     private readonly sender: EmailSender,
+    @Inject(DatabaseClock)
+    private readonly clock: DatabaseClock,
   ) {}
 
   /** Skips the run when the previous one hasn't finished or we're stopping. */
@@ -77,7 +81,7 @@ export class EmailWorker implements OnApplicationShutdown {
   async sendDueEmails(): Promise<void> {
     const dueEmails = await this.outbox.findDue(
       this.prisma.db,
-      Temporal.Now.instant(),
+      await this.clock.now(this.prisma.db),
       BATCH_SIZE,
     );
 
@@ -94,7 +98,7 @@ export class EmailWorker implements OnApplicationShutdown {
     const isClaimed = await this.outbox.claim(
       this.prisma.db,
       email,
-      Temporal.Now.instant(),
+      await this.clock.now(this.prisma.db),
     );
 
     if (!isClaimed) {
@@ -110,7 +114,7 @@ export class EmailWorker implements OnApplicationShutdown {
         this.prisma.db,
         email,
         error instanceof Error ? error.message : String(error),
-        Temporal.Now.instant(),
+        await this.clock.now(this.prisma.db),
       );
 
       return;
@@ -119,7 +123,7 @@ export class EmailWorker implements OnApplicationShutdown {
     await this.outbox.markSent(
       this.prisma.db,
       email.id,
-      Temporal.Now.instant(),
+      await this.clock.now(this.prisma.db),
     );
   }
 }
