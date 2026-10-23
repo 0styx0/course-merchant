@@ -65,3 +65,4 @@ Keep this file current **in the same commit as the work**.
 | Free courses (price 0) allowed | They skip Stripe entirely | Rejecting 0 |
 | `Idempotency-Key` removed from create; bearer auth kept in the spec | Auth is next; idempotency wasn't needed | Keeping both, or removing both |
 | Public get still returns ended courses | Existing links keep working; checkout gives a clear 409 | Hiding them everywhere |
+| Public `enrollmentCount` counts only active enrollments; the admin list still returns every enrollment of every course | The public number means people who have access. Admins need the full history, and there are few enrollments per course | Counting all rows publicly; filtering the admin list |

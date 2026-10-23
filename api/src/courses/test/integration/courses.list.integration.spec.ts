@@ -388,6 +388,40 @@ describe("CoursesService integration", () => {
       expect(result.courses[0].enrollmentCount).toBe(3);
     });
 
+    it("counts only enrollments that still give access", async () => {
+      const course = await createCourse({
+        title: "Refunded Course",
+        description: "Some students left",
+        startsAt: instant("2026-10-01T18:00:00Z"),
+        endsAt: instant("2026-10-01T20:00:00Z"),
+        timeZone: "America/New_York",
+      });
+
+      await createCoursePrice({
+        courseId: course.id,
+        amount: 0,
+        currency: "USD",
+        effectiveAt: instant("2026-09-01T00:00:00Z"),
+      });
+
+      const now = instant("2026-10-01T00:00:00Z");
+      const states = [{}, { revokedAt: now }, { suspendedAt: now }];
+
+      for (const state of states) {
+        const customer = await createCustomer({});
+
+        await createEnrollment({
+          courseId: course.id,
+          customerId: customer.id,
+          ...state,
+        });
+      }
+
+      const result = await service.findAll();
+
+      expect(result.courses[0].enrollmentCount).toBe(1);
+    });
+
     it("does not count enrollments belonging to another course", async () => {
       const courseA = await createCourse({
         title: "Course A",

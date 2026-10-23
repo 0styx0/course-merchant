@@ -1123,7 +1123,7 @@ components:
               type: integer
               format: int32
               minimum: 0
-              description: Number of users currently enrolled in the course.
+              description: Number of users who currently have access to the course. Refunded and suspended enrollments are not counted.
               examples:
                 - 12
             price:

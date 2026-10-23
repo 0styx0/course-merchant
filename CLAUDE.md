@@ -98,7 +98,9 @@ How the owner wants Claude to work on this repo:
 - **Modular, not speculative.** Give real responsibilities and shared logic their own focused module, but add no interfaces or abstractions for hypothetical needs (e.g. no payment gateway interface). Put flexibility where change is expensive: the DB schema. A thin concrete wrapper around an SDK is fine.
 - **Small composed functions.** A top-level method reads as a short orchestration of well-named steps, one method per outcome; a switch is only a thin dispatch with one line per case.
 - **Unambiguous labels.** Nest or qualify fields by owner (`customer.name`, not `name` beside `courseId`), in contracts, types and variables.
+- **Clarify jargon** Use clear, easy-to-understand language.
 - **Link files.** Any list of files is markdown links relative to the repo root, e.g. `[types.ts](api/types.ts)`.
 - **Keep the design docs current** in the same commit (see *Design docs*).
 - **Usage reviews.** At a natural pause (a step in a design doc's Status just finished, nothing complex in flight), review how the owner is using Claude and give a few tips, most impactful first. Give each a before/after for efficiency (context tokens per call, calls per commit) and quality (correction rounds per commit). Measure "before" from the session transcript's `usage` fields (`~/.claude/projects/<project>/<session>.jsonl`) and label anything else as an estimate. Never give raw token counts on their own: translate them into terms the owner can picture, such as "each message cost as much as N messages in a fresh session", or how long the weekly allowance would last.
 - **`/next-commit`** (`.claude/skills/next-commit/`) runs the commit routine: find the **Next** item in `docs/`, outline, wait, implement, verify, update the doc.
+- **Security** Review each change for security.

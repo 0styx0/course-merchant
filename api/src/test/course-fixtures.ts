@@ -118,11 +118,15 @@ export async function createEnrollment(input: {
   customerId: string;
   // omitted for a free course
   paymentId?: string;
+  revokedAt?: Temporal.Instant;
+  suspendedAt?: Temporal.Instant;
 }) {
   return db.orm.public.Enrollment.create({
     courseId: input.courseId,
     customerId: input.customerId,
     paymentId: input.paymentId,
+    revokedAt: input.revokedAt,
+    suspendedAt: input.suspendedAt,
   });
 }
 

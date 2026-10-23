@@ -361,7 +361,7 @@ export interface components {
             id: components["schemas"]["CourseId"];
             /**
              * Format: int32
-             * @description Number of users currently enrolled in the course.
+             * @description Number of users who currently have access to the course. Refunded and suspended enrollments are not counted.
              * @example 12
              */
             enrollmentCount: number;

@@ -46,11 +46,11 @@ This file is temporary. When an item ships, tick it and move its decision rows i
   - The refund sends no Stripe `reason` for a suspended buyer, and carries `metadata.paymentId` and `metadata.refundCause`.
 
   The decision rows are in [fulfillment.md](payments/fulfillment.md).
-- [ ] **R6. Count only active enrollments in the public `enrollmentCount`.** **Next**
+- [x] **R6. Count only active enrollments in the public `enrollmentCount`.**
   - Filter on `revokedAt` and `suspendedAt` both null.
   - Update the field's description in the contract and regenerate both type files.
-  - Decision row: the admin list keeps returning every enrollment of every course, because there are few enrollments per course.
-- [ ] **R7. Stop two running copies of the API from sending the same email.**
+  - The decision row is in [courses.md](courses.md).
+- [ ] **R7. Stop two running copies of the API from sending the same email.** **Next**
   - [main.ts](../api/src/main.ts) calls `enableShutdownHooks()`, so Nest runs its shutdown steps (closing the database, stopping the worker) on SIGTERM.
   - `EmailWorker` implements `OnApplicationShutdown`: it stops starting runs and waits for the current one to finish.
   - Before sending, the worker claims each email: an `updateAndCount` moves `nextAttemptAt` 10 minutes ahead, on condition that `status` is `pending` and `nextAttemptAt` still equals the value it read. A count of 0 means another copy claimed it, so this one skips it. A failed attempt then sets `nextAttemptAt` from the retry policy as before.

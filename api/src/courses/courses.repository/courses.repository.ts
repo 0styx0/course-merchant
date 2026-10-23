@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service.js";
 import { Temporal } from "@js-temporal/polyfill";
+import { and } from "@prisma/orm-postgres/orm-client";
 import { visibleCoursesWithCurrentPrice } from "../course-visibility.js";
 
 export type CourseRepositoryModelPublic = {
@@ -28,7 +29,14 @@ export class CoursesRepository {
     return visibleCoursesWithCurrentPrice(
       this.prisma.db.orm.public.Course,
       now,
-    ).include("enrollments", (enrollments) => enrollments.count());
+    ).include("enrollments", (enrollments) =>
+      // active only: not refunded and not suspended
+      enrollments
+        .where((enrollment) =>
+          and(enrollment.revokedAt.isNull(), enrollment.suspendedAt.isNull()),
+        )
+        .count(),
+    );
   }
 
   async findAvailable(
