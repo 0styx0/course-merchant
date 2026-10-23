@@ -7,7 +7,11 @@ import {
   AdminCoursesRepository,
   CourseRepositoryModelAdmin,
 } from "@/courses/courses.repository/admin-courses.repository.js";
-import { fakePrisma } from "@/test/test-helpers.js";
+import {
+  asDependency,
+  fakePrisma,
+  type MockMethods,
+} from "@/test/test-helpers.js";
 import type { UpdateCourseRequest } from "types.js";
 
 const COURSE_ID = "crs_01HZX3";
@@ -74,10 +78,10 @@ describe("AdminCoursesService", () => {
   let service: AdminCoursesService;
   let repositoryCourse: ReturnType<typeof makeRepositoryCourse>;
 
-  let coursesRepository: {
-    findCourseDetailsByIdAdmin: ReturnType<typeof vi.fn>;
-    updateCourse: ReturnType<typeof vi.fn>;
-  };
+  let coursesRepository: MockMethods<
+    AdminCoursesRepository,
+    "findCourseDetailsByIdAdmin" | "updateCourse"
+  >;
 
   const { prisma, tx } = fakePrisma();
 
@@ -85,13 +89,17 @@ describe("AdminCoursesService", () => {
     repositoryCourse = makeRepositoryCourse();
 
     coursesRepository = {
-      findCourseDetailsByIdAdmin: vi.fn().mockResolvedValue(repositoryCourse),
-      updateCourse: vi.fn().mockResolvedValue(repositoryCourse),
+      findCourseDetailsByIdAdmin: vi
+        .fn<AdminCoursesRepository["findCourseDetailsByIdAdmin"]>()
+        .mockResolvedValue(repositoryCourse),
+      updateCourse: vi
+        .fn<AdminCoursesRepository["updateCourse"]>()
+        .mockResolvedValue(repositoryCourse),
     };
 
     service = new AdminCoursesService(
       prisma,
-      coursesRepository as unknown as AdminCoursesRepository,
+      asDependency<AdminCoursesRepository>(coursesRepository),
     );
   });
 

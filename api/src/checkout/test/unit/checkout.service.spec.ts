@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { StartCheckoutRequest } from "types.js";
 import {
@@ -15,7 +15,11 @@ import {
   StripeService,
 } from "@/payments/stripe.service.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
-import { PrismaService } from "@/prisma/prisma.service.js";
+import {
+  asDependency,
+  fakePrisma,
+  type MockMethods,
+} from "@/test/test-helpers.js";
 
 const COURSE_ID = "8b0e1f5c-0000-4000-8000-000000000001";
 const CUSTOMER_ID = "8b0e1f5c-0000-4000-8000-000000000002";
@@ -53,90 +57,97 @@ const revokedAt = Temporal.Instant.from("2026-10-01T00:00:00Z");
 const suspendedAt = Temporal.Instant.from("2026-10-02T00:00:00Z");
 
 describe("CheckoutService", () => {
-  const tx = { orm: {} };
-
   let service: CheckoutService;
-  let enrollmentsRepository: {
-    findEnrollment: ReturnType<typeof vi.fn>;
-    grantAccess: ReturnType<typeof vi.fn>;
-  };
-  let checkoutRepository: {
-    findVisibleCourse: ReturnType<typeof vi.fn>;
-    findOrCreateCustomer: ReturnType<typeof vi.fn>;
-  };
-  let paymentsRepository: {
-    createPendingPayment: ReturnType<typeof vi.fn>;
-    saveProviderCheckoutId: ReturnType<typeof vi.fn>;
-    findPaymentStatusByCheckoutId: ReturnType<typeof vi.fn>;
-  };
-  let emailOutbox: {
-    enqueue: ReturnType<typeof vi.fn>;
-    countQueuedSince: Mock<EmailOutboxRepository["countQueuedSince"]>;
-  };
-  let stripe: {
-    createCheckoutSession: Mock<StripeService["createCheckoutSession"]>;
-  };
-  let prisma: { db: { transaction: ReturnType<typeof vi.fn> } };
+  let enrollmentsRepository: MockMethods<
+    EnrollmentsRepository,
+    "findEnrollment" | "grantAccess"
+  >;
+  let checkoutRepository: MockMethods<
+    CheckoutRepository,
+    "findVisibleCourse" | "findOrCreateCustomer"
+  >;
+  let paymentsRepository: MockMethods<
+    PaymentsRepository,
+    | "createPendingPayment"
+    | "saveProviderCheckoutId"
+    | "findPaymentStatusByCheckoutId"
+  >;
+  let emailOutbox: MockMethods<
+    EmailOutboxRepository,
+    "enqueue" | "countQueuedSince"
+  >;
+  let stripe: MockMethods<StripeService, "createCheckoutSession">;
+  let fake: ReturnType<typeof fakePrisma>;
+  // the scope the service passes to repositories inside its transaction
+  let tx: ReturnType<typeof fakePrisma>["tx"];
   // the order transactions commit and Stripe is called in
   let events: string[];
 
   beforeEach(() => {
     enrollmentsRepository = {
-      findEnrollment: vi.fn().mockResolvedValue(null),
-      grantAccess: vi.fn().mockResolvedValue(GRANTED_ENROLLMENT_ID),
+      findEnrollment: vi
+        .fn<EnrollmentsRepository["findEnrollment"]>()
+        .mockResolvedValue(null),
+      grantAccess: vi
+        .fn<EnrollmentsRepository["grantAccess"]>()
+        .mockResolvedValue(GRANTED_ENROLLMENT_ID),
     };
     checkoutRepository = {
-      findVisibleCourse: vi.fn().mockResolvedValue(makeCourse()),
-      findOrCreateCustomer: vi.fn().mockResolvedValue({
-        id: CUSTOMER_ID,
-        ...request.customer,
-      }),
+      findVisibleCourse: vi
+        .fn<CheckoutRepository["findVisibleCourse"]>()
+        .mockResolvedValue(makeCourse()),
+      findOrCreateCustomer: vi
+        .fn<CheckoutRepository["findOrCreateCustomer"]>()
+        .mockResolvedValue({ id: CUSTOMER_ID, ...request.customer }),
     };
     paymentsRepository = {
-      createPendingPayment: vi.fn().mockResolvedValue({
-        id: PAYMENT_ID,
-        amount: 9900,
-        currency: "USD",
-      }),
-      saveProviderCheckoutId: vi.fn().mockResolvedValue(undefined),
-      findPaymentStatusByCheckoutId: vi.fn().mockResolvedValue("pending"),
+      createPendingPayment: vi
+        .fn<PaymentsRepository["createPendingPayment"]>()
+        .mockResolvedValue({ id: PAYMENT_ID, amount: 9900, currency: "USD" }),
+      saveProviderCheckoutId: vi
+        .fn<PaymentsRepository["saveProviderCheckoutId"]>()
+        .mockResolvedValue(undefined),
+      findPaymentStatusByCheckoutId: vi
+        .fn<PaymentsRepository["findPaymentStatusByCheckoutId"]>()
+        .mockResolvedValue("pending"),
     };
     emailOutbox = {
-      enqueue: vi.fn().mockResolvedValue(undefined),
-      countQueuedSince: vi.fn().mockResolvedValue(0),
+      enqueue: vi
+        .fn<EmailOutboxRepository["enqueue"]>()
+        .mockResolvedValue(undefined),
+      countQueuedSince: vi
+        .fn<EmailOutboxRepository["countQueuedSince"]>()
+        .mockResolvedValue(0),
     };
 
     events = [];
     stripe = {
-      createCheckoutSession: vi.fn(() => {
-        events.push("stripe called");
+      createCheckoutSession: vi.fn<StripeService["createCheckoutSession"]>(
+        () => {
+          events.push("stripe called");
 
-        return Promise.resolve({
-          id: "cs_test_123",
-          url: "https://checkout.stripe.com/c/pay/cs_test_123",
-        });
-      }),
+          return Promise.resolve({
+            id: "cs_test_123",
+            url: "https://checkout.stripe.com/c/pay/cs_test_123",
+          });
+        },
+      ),
     };
 
-    // runs the callback with a stand-in transaction, as the real one would
-    prisma = {
-      db: {
-        transaction: vi.fn(async (work: (scope: typeof tx) => unknown) => {
-          const result = await work(tx);
-          events.push("transaction committed");
-
-          return result;
-        }),
+    fake = fakePrisma({
+      onCommit: () => {
+        events.push("transaction committed");
       },
-    };
+    });
+    tx = fake.tx;
 
     service = new CheckoutService(
-      prisma as unknown as PrismaService,
-      checkoutRepository as unknown as CheckoutRepository,
-      paymentsRepository as unknown as PaymentsRepository,
-      enrollmentsRepository as unknown as EnrollmentsRepository,
-      emailOutbox as unknown as EmailOutboxRepository,
-      stripe as unknown as StripeService,
+      fake.prisma,
+      asDependency<CheckoutRepository>(checkoutRepository),
+      asDependency<PaymentsRepository>(paymentsRepository),
+      asDependency<EnrollmentsRepository>(enrollmentsRepository),
+      asDependency<EmailOutboxRepository>(emailOutbox),
+      asDependency<StripeService>(stripe),
       config,
     );
   });
@@ -178,7 +189,7 @@ describe("CheckoutService", () => {
       expect(
         checkoutRepository.findVisibleCourse,
       ).toHaveBeenCalledExactlyOnceWith(
-        prisma.db,
+        fake.db,
         COURSE_ID,
         expect.any(Temporal.Instant),
       );
@@ -400,7 +411,7 @@ describe("CheckoutService", () => {
 
       expect(
         paymentsRepository.saveProviderCheckoutId,
-      ).toHaveBeenCalledExactlyOnceWith(prisma.db, PAYMENT_ID, "cs_test_123");
+      ).toHaveBeenCalledExactlyOnceWith(fake.db, PAYMENT_ID, "cs_test_123");
     });
 
     it("queues no email; access is granted once Stripe confirms payment", async () => {
@@ -434,7 +445,7 @@ describe("CheckoutService", () => {
   });
 
   describe("getCheckoutStatus", () => {
-    it.each(["pending", "succeeded", "expired", "refunded"])(
+    it.each(["pending", "succeeded", "expired", "refunded"] as const)(
       "reports a %s payment",
       async (status) => {
         paymentsRepository.findPaymentStatusByCheckoutId.mockResolvedValue(
@@ -454,7 +465,7 @@ describe("CheckoutService", () => {
 
       expect(
         paymentsRepository.findPaymentStatusByCheckoutId,
-      ).toHaveBeenCalledExactlyOnceWith(prisma.db, "stripe", "cs_test_123");
+      ).toHaveBeenCalledExactlyOnceWith(fake.db, "stripe", "cs_test_123");
     });
 
     it("returns 404 CHECKOUT_NOT_FOUND for an unknown session", async () => {

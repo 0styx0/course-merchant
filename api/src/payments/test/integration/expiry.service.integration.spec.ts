@@ -15,6 +15,7 @@ import {
   createPendingPayment,
   createPricedCourse,
 } from "@/test/course-fixtures.js";
+import { asDependency } from "@/test/test-helpers.js";
 
 describe("ExpiryService (integration)", () => {
   const service = new ExpiryService(
@@ -107,7 +108,7 @@ describe("ExpiryService (integration)", () => {
       new PaymentsRepository(),
       new EnrollmentsRepository(),
       new EmailOutboxRepository(),
-      undefined as unknown as StripeService,
+      asDependency<StripeService>({}),
     );
     await fulfillment.fulfillCheckout({
       event: {

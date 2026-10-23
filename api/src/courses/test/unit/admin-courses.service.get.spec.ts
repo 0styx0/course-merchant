@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { fakePrisma, instant } from "../../../test/test-helpers.js";
+import {
+  asDependency,
+  fakePrisma,
+  instant,
+  type MockMethods,
+} from "../../../test/test-helpers.js";
 import { AdminCoursesService } from "@/courses/admin-courses.service.js";
 import { toAdminCourseResponse } from "@/courses/courses.mapper.js";
 import {
@@ -38,20 +43,22 @@ const repositoryCourse = {
 describe("AdminCoursesService", () => {
   let service: AdminCoursesService;
 
-  let coursesRepository: {
-    findCourseDetailsByIdAdmin: ReturnType<typeof vi.fn>;
-  };
+  let coursesRepository: MockMethods<
+    AdminCoursesRepository,
+    "findCourseDetailsByIdAdmin"
+  >;
 
   const { prisma, db } = fakePrisma();
 
   beforeEach(() => {
     coursesRepository = {
-      findCourseDetailsByIdAdmin: vi.fn(),
+      findCourseDetailsByIdAdmin:
+        vi.fn<AdminCoursesRepository["findCourseDetailsByIdAdmin"]>(),
     };
 
     service = new AdminCoursesService(
       prisma,
-      coursesRepository as unknown as AdminCoursesRepository,
+      asDependency<AdminCoursesRepository>(coursesRepository),
     );
   });
 

@@ -1,7 +1,7 @@
 import type { RawBodyRequest } from "@nestjs/common";
 import type { Request } from "express";
 import type Stripe from "stripe";
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiException } from "@/common/errors/api.exception.js";
 import { ExpiryService } from "@/payments/expiry.service.js";
@@ -10,6 +10,7 @@ import {
   InvalidWebhookSignatureError,
   StripeService,
 } from "@/payments/stripe.service.js";
+import { asDependency, type MockMethods } from "@/test/test-helpers.js";
 import { StripeWebhookController } from "@/webhooks/stripe-webhook.controller.js";
 
 const PAYMENT_ID = "8b0e1f5c-0000-4000-8000-000000000004";
@@ -37,23 +38,29 @@ function sessionEvent(
 
 describe("StripeWebhookController", () => {
   let controller: StripeWebhookController;
-  let stripeService: {
-    verifyWebhookEvent: Mock<StripeService["verifyWebhookEvent"]>;
-  };
-  let fulfillmentService: { fulfillCheckout: Mock };
-  let expiryService: { expireCheckout: Mock };
+  let stripeService: MockMethods<StripeService, "verifyWebhookEvent">;
+  let fulfillmentService: MockMethods<FulfillmentService, "fulfillCheckout">;
+  let expiryService: MockMethods<ExpiryService, "expireCheckout">;
 
   beforeEach(() => {
-    stripeService = { verifyWebhookEvent: vi.fn() };
-    fulfillmentService = {
-      fulfillCheckout: vi.fn().mockResolvedValue(undefined),
+    stripeService = {
+      verifyWebhookEvent: vi.fn<StripeService["verifyWebhookEvent"]>(),
     };
-    expiryService = { expireCheckout: vi.fn().mockResolvedValue(undefined) };
+    fulfillmentService = {
+      fulfillCheckout: vi
+        .fn<FulfillmentService["fulfillCheckout"]>()
+        .mockResolvedValue(undefined),
+    };
+    expiryService = {
+      expireCheckout: vi
+        .fn<ExpiryService["expireCheckout"]>()
+        .mockResolvedValue(undefined),
+    };
 
     controller = new StripeWebhookController(
-      stripeService as unknown as StripeService,
-      fulfillmentService as unknown as FulfillmentService,
-      expiryService as unknown as ExpiryService,
+      asDependency<StripeService>(stripeService),
+      asDependency<FulfillmentService>(fulfillmentService),
+      asDependency<ExpiryService>(expiryService),
     );
   });
 

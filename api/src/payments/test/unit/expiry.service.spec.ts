@@ -1,9 +1,13 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ExpiredCheckout } from "@/payments/checkout-events.js";
 import { ExpiryService } from "@/payments/expiry.service.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
-import { PrismaService } from "@/prisma/prisma.service.js";
+import {
+  asDependency,
+  fakePrisma,
+  type MockMethods,
+} from "@/test/test-helpers.js";
 
 const PAYMENT_ID = "8b0e1f5c-0000-4000-8000-000000000004";
 
@@ -22,28 +26,27 @@ function makeCheckout(
 }
 
 describe("ExpiryService", () => {
-  const tx = { orm: {} };
+  const { prisma, tx } = fakePrisma();
 
   let service: ExpiryService;
-  let paymentsRepository: {
-    recordProcessedEvent: Mock<PaymentsRepository["recordProcessedEvent"]>;
-    markPaymentExpired: Mock<PaymentsRepository["markPaymentExpired"]>;
-  };
+  let paymentsRepository: MockMethods<
+    PaymentsRepository,
+    "recordProcessedEvent" | "markPaymentExpired"
+  >;
 
   beforeEach(() => {
     paymentsRepository = {
-      recordProcessedEvent: vi.fn().mockResolvedValue(true),
-      markPaymentExpired: vi.fn().mockResolvedValue(true),
-    };
-    const prisma = {
-      db: {
-        transaction: vi.fn((work: (scope: typeof tx) => unknown) => work(tx)),
-      },
+      recordProcessedEvent: vi
+        .fn<PaymentsRepository["recordProcessedEvent"]>()
+        .mockResolvedValue(true),
+      markPaymentExpired: vi
+        .fn<PaymentsRepository["markPaymentExpired"]>()
+        .mockResolvedValue(true),
     };
 
     service = new ExpiryService(
-      prisma as unknown as PrismaService,
-      paymentsRepository as unknown as PaymentsRepository,
+      prisma,
+      asDependency<PaymentsRepository>(paymentsRepository),
     );
   });
 

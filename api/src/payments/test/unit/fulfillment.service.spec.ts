@@ -1,14 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { Logger } from "@nestjs/common";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-  type Mock,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
@@ -16,7 +8,11 @@ import type { CompletedCheckout } from "@/payments/checkout-events.js";
 import { FulfillmentService } from "@/payments/fulfillment.service.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
 import { StripeService } from "@/payments/stripe.service.js";
-import { PrismaService } from "@/prisma/prisma.service.js";
+import {
+  asDependency,
+  fakePrisma,
+  type MockMethods,
+} from "@/test/test-helpers.js";
 
 const COURSE_ID = "8b0e1f5c-0000-4000-8000-000000000001";
 const CUSTOMER_ID = "8b0e1f5c-0000-4000-8000-000000000002";
@@ -44,23 +40,22 @@ function makeCheckout(
 }
 
 describe("FulfillmentService", () => {
-  const tx = { orm: {} };
-
   let service: FulfillmentService;
-  let paymentsRepository: {
-    recordProcessedEvent: Mock<PaymentsRepository["recordProcessedEvent"]>;
-    findPaymentForFulfillment: Mock<
-      PaymentsRepository["findPaymentForFulfillment"]
-    >;
-    markPaymentSucceeded: Mock<PaymentsRepository["markPaymentSucceeded"]>;
-  };
-  let enrollmentsRepository: {
-    findEnrollment: Mock<EnrollmentsRepository["findEnrollment"]>;
-    grantAccess: Mock<EnrollmentsRepository["grantAccess"]>;
-  };
-  let emailOutbox: { enqueue: Mock<EmailOutboxRepository["enqueue"]> };
-  let stripeService: { refundPayment: Mock<StripeService["refundPayment"]> };
-  let prisma: { db: { transaction: ReturnType<typeof vi.fn> } };
+  let paymentsRepository: MockMethods<
+    PaymentsRepository,
+    | "recordProcessedEvent"
+    | "findPaymentForFulfillment"
+    | "markPaymentSucceeded"
+  >;
+  let enrollmentsRepository: MockMethods<
+    EnrollmentsRepository,
+    "findEnrollment" | "grantAccess"
+  >;
+  let emailOutbox: MockMethods<EmailOutboxRepository, "enqueue">;
+  let stripeService: MockMethods<StripeService, "refundPayment">;
+  let fake: ReturnType<typeof fakePrisma>;
+  // the scope the service passes to repositories inside its transaction
+  let tx: ReturnType<typeof fakePrisma>["tx"];
   // whether each repository call ran inside the transaction
   let inTransaction: boolean;
   let callsOutsideTransaction: string[];
@@ -120,27 +115,22 @@ describe("FulfillmentService", () => {
       ),
     };
 
-    // runs the callback with a stand-in transaction, as the real one would
-    prisma = {
-      db: {
-        transaction: vi.fn(async (work: (scope: typeof tx) => unknown) => {
-          inTransaction = true;
-
-          try {
-            return await work(tx);
-          } finally {
-            inTransaction = false;
-          }
-        }),
+    fake = fakePrisma({
+      onBegin: () => {
+        inTransaction = true;
       },
-    };
+      onSettle: () => {
+        inTransaction = false;
+      },
+    });
+    tx = fake.tx;
 
     service = new FulfillmentService(
-      prisma as unknown as PrismaService,
-      paymentsRepository as unknown as PaymentsRepository,
-      enrollmentsRepository,
-      emailOutbox as unknown as EmailOutboxRepository,
-      stripeService as unknown as StripeService,
+      fake.prisma,
+      asDependency<PaymentsRepository>(paymentsRepository),
+      asDependency<EnrollmentsRepository>(enrollmentsRepository),
+      asDependency<EmailOutboxRepository>(emailOutbox),
+      asDependency<StripeService>(stripeService),
     );
   });
 
@@ -306,7 +296,7 @@ describe("FulfillmentService", () => {
     it("refunds only after the transaction has committed", async () => {
       await service.fulfillCheckout(makeCheckout());
 
-      expect(prisma.db.transaction).toHaveBeenCalledTimes(1);
+      expect(fake.db.transaction).toHaveBeenCalledTimes(1);
       expect(callsOutsideTransaction).toEqual(["refundPayment"]);
     });
 
@@ -385,7 +375,7 @@ describe("FulfillmentService", () => {
   it("makes every change in one transaction", async () => {
     await service.fulfillCheckout(makeCheckout());
 
-    expect(prisma.db.transaction).toHaveBeenCalledTimes(1);
+    expect(fake.db.transaction).toHaveBeenCalledTimes(1);
     expect(emailOutbox.enqueue).toHaveBeenCalled();
     expect(callsOutsideTransaction).toEqual([]);
   });

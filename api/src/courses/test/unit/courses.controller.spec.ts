@@ -1,23 +1,40 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { GetCourseResponse } from "types.js";
+import { asDependency, type MockMethods } from "@/test/test-helpers.js";
 import { CoursesController } from "../../courses.controller.js";
 import { CoursesService } from "../../courses.service.js";
 
+function makeCourseResponse(courseId: string): GetCourseResponse {
+  return {
+    id: courseId,
+    name: "React Fundamentals",
+    description: "Learn React",
+    enrollmentCount: 12,
+    price: {
+      amount: 9900,
+      currency: "USD",
+    },
+    schedule: {
+      startTime: "2026-10-01T18:00:00Z",
+      endTime: "2026-10-01T20:00:00Z",
+      timeZone: "America/New_York",
+    },
+  };
+}
+
 describe("CoursesController", () => {
   let controller: CoursesController;
-  let coursesService: {
-    findAll: ReturnType<typeof vi.fn>;
-    findById: ReturnType<typeof vi.fn>;
-  };
+  let coursesService: MockMethods<CoursesService, "findAll" | "findById">;
 
   beforeEach(() => {
     coursesService = {
-      findAll: vi.fn(),
-      findById: vi.fn(),
+      findAll: vi.fn<CoursesService["findAll"]>(),
+      findById: vi.fn<CoursesService["findById"]>(),
     };
 
     controller = new CoursesController(
-      coursesService as unknown as CoursesService,
+      asDependency<CoursesService>(coursesService),
     );
   });
 
@@ -73,7 +90,7 @@ describe("CoursesController", () => {
     it("delegates to CoursesService.findById with the course ID", async () => {
       const courseId = "550e8400-e29b-41d4-a716-446655440000";
 
-      coursesService.findById.mockResolvedValue({});
+      coursesService.findById.mockResolvedValue(makeCourseResponse(courseId));
 
       await controller.findById(courseId);
 
@@ -83,21 +100,7 @@ describe("CoursesController", () => {
 
     it("returns the result from CoursesService.findById", async () => {
       const courseId = "550e8400-e29b-41d4-a716-446655440000";
-      const response = {
-        id: courseId,
-        name: "React Fundamentals",
-        description: "Learn React",
-        enrollmentCount: 12,
-        price: {
-          amount: 9900,
-          currency: "USD",
-        },
-        schedule: {
-          startTime: "2026-10-01T18:00:00Z",
-          endTime: "2026-10-01T20:00:00Z",
-          timeZone: "America/New_York",
-        },
-      };
+      const response = makeCourseResponse(courseId);
 
       coursesService.findById.mockResolvedValue(response);
 

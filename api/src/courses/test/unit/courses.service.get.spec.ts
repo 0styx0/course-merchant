@@ -1,7 +1,12 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { fakePrisma, instant } from "../../../test/test-helpers.js";
+import {
+  asDependency,
+  fakePrisma,
+  instant,
+  type MockMethods,
+} from "../../../test/test-helpers.js";
 import type {
   CourseRepositoryModelPublic,
   CoursesRepository,
@@ -31,9 +36,7 @@ const repositoryCourse = {
 describe("CoursesService", () => {
   let service: CoursesService;
 
-  let coursesRepository: {
-    findById: ReturnType<typeof vi.fn>;
-  };
+  let coursesRepository: MockMethods<CoursesRepository, "findById">;
 
   const { prisma, db } = fakePrisma();
 
@@ -41,12 +44,12 @@ describe("CoursesService", () => {
     vi.spyOn(Temporal.Now, "instant").mockReturnValue(NOW);
 
     coursesRepository = {
-      findById: vi.fn(),
+      findById: vi.fn<CoursesRepository["findById"]>(),
     };
 
     service = new CoursesService(
       prisma,
-      coursesRepository as unknown as CoursesRepository,
+      asDependency<CoursesRepository>(coursesRepository),
     );
   });
 
