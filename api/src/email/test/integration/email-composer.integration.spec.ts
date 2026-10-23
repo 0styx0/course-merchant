@@ -39,7 +39,7 @@ describe("EmailComposer (integration)", () => {
       [
         queued("access_granted", ids),
         queued("already_owned", { ...ids, refundIssued: true }),
-        queued("access_suspended", ids),
+        queued("access_suspended", { ...ids, refundIssued: true }),
         queued("dispute_alert", { paymentId: payment.id }),
       ].map(async (email) => (await composer.compose(email)).subject),
     );

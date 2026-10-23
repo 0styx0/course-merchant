@@ -15,7 +15,10 @@ type CourseView = {
 export type EmailViews = {
   access_granted: { course: CourseView };
   already_owned: { course: CourseView; refundIssued: boolean };
-  access_suspended: { course: Pick<CourseView, "title"> };
+  access_suspended: {
+    course: Pick<CourseView, "title">;
+    refundIssued: boolean;
+  };
   dispute_alert: {
     payment: { id: string; amount: number; currency: string };
     course: Pick<CourseView, "title">;
@@ -69,6 +72,11 @@ export function accessSuspended(
     heading: "Your access is suspended",
     paragraphs: [
       `Hello, thanks for your patience. Your access to ${view.course.title} is currently suspended, so we can't send you the course link.`,
+      ...(view.refundIssued
+        ? [
+            "You were charged for this purchase, so we've refunded that payment. It can take a few days to appear on your statement.",
+          ]
+        : []),
       "If you think this is a mistake, reply to this email and we'll look into it.",
     ],
   };

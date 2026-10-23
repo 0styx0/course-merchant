@@ -233,7 +233,7 @@ export class CheckoutService {
     await this.queueCheckoutEmail(context, {
       kind: "access_suspended",
       recipient: context.customer.email,
-      payload: emailIds(context),
+      payload: { ...emailIds(context), refundIssued: false },
       enrollmentId,
     });
 

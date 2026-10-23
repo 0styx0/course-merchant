@@ -301,6 +301,7 @@ describe("FulfillmentService", () => {
       expect(stripeService.refundPayment).toHaveBeenCalledWith({
         paymentId: PAYMENT_ID,
         providerPaymentId: "pi_test_1",
+        cause: "double_purchase",
       });
     });
 
@@ -337,21 +338,49 @@ describe("FulfillmentService", () => {
   });
 
   describe("with suspended access", () => {
-    it("emails about the suspension without granting access", async () => {
+    beforeEach(() => {
       enrollmentsRepository.findEnrollment.mockResolvedValue({
         id: "enrollment-1",
         revokedAt: null,
         suspendedAt,
       });
+    });
 
+    it("emails about the suspension and the refund without granting access", async () => {
       await service.fulfillCheckout(makeCheckout());
       expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();
       expect(emailOutbox.enqueue).toHaveBeenCalledWith(tx, {
         kind: "access_suspended",
         recipient: "ada@example.com",
-        payload: emailIds,
+        payload: { ...emailIds, refundIssued: true },
         enrollmentId: "enrollment-1",
       });
+    });
+
+    it("refunds this payment after the transaction has committed", async () => {
+      await service.fulfillCheckout(makeCheckout());
+
+      expect(stripeService.refundPayment).toHaveBeenCalledExactlyOnceWith({
+        paymentId: PAYMENT_ID,
+        providerPaymentId: "pi_test_1",
+        cause: "suspended_access",
+      });
+      expect(callsOutsideTransaction).toEqual(["refundPayment"]);
+    });
+
+    it("still resolves, and logs, when the refund fails", async () => {
+      const errorSpy = vi
+        .spyOn(Logger.prototype, "error")
+        .mockImplementation(() => {});
+      stripeService.refundPayment.mockRejectedValue(new Error("stripe down"));
+
+      await expect(
+        service.fulfillCheckout(makeCheckout()),
+      ).resolves.toBeUndefined();
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining("suspended_access"),
+        expect.stringContaining("stripe down"),
+      );
     });
   });
 

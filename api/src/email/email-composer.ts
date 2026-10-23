@@ -77,7 +77,7 @@ export class EmailComposer {
 
     return this.render({
       kind: "access_suspended",
-      view: { course },
+      view: { course, refundIssued: payload.refundIssued },
     });
   }
 

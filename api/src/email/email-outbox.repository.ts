@@ -14,13 +14,18 @@ export type OutboxEmail = Omit<Models.public_EmailOutbox, "enrollmentLink">;
 // course's current details (such as an updated content link) when it's sent.
 export type EmailPayloads = {
   access_granted: { courseId: string; customerId: string };
-  // refundIssued: the buyer paid twice and the second payment was refunded
+  // refundIssued: the payment that triggered the email was refunded (a second
+  // payment for the same course, or a payment while access is suspended)
   already_owned: {
     courseId: string;
     customerId: string;
     refundIssued: boolean;
   };
-  access_suspended: { courseId: string; customerId: string };
+  access_suspended: {
+    courseId: string;
+    customerId: string;
+    refundIssued: boolean;
+  };
   dispute_alert: { paymentId: string };
 };
 

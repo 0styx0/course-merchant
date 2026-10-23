@@ -20,7 +20,7 @@ const emails: EmailToRender[] = [
     kind: "already_owned",
     view: { course, refundIssued: false },
   },
-  { kind: "access_suspended", view: { course } },
+  { kind: "access_suspended", view: { course, refundIssued: false } },
   {
     kind: "dispute_alert",
     view: {
@@ -92,6 +92,17 @@ describe("renderEmail", () => {
       "Course Shop",
     );
     const withoutRefund = renderEmail(emails[1], "Course Shop");
+
+    expect(withRefund.text).toContain("refunded");
+    expect(withoutRefund.text).not.toContain("refunded");
+  });
+
+  it("mentions the refund in the suspension email only when one was issued", () => {
+    const withRefund = renderEmail(
+      { kind: "access_suspended", view: { course, refundIssued: true } },
+      "Course Shop",
+    );
+    const withoutRefund = renderEmail(emails[2], "Course Shop");
 
     expect(withRefund.text).toContain("refunded");
     expect(withoutRefund.text).not.toContain("refunded");

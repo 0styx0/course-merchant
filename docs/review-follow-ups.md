@@ -40,14 +40,13 @@ This file is temporary. When an item ships, tick it and move its decision rows i
   - The name is still stored and shown in the admin view.
 
   *Why:* anyone can start a checkout for any address with any name, and the first name given is kept. The name is therefore text chosen by a stranger, in mail sent from the shop's domain, and it can be planted before the real owner of the address ever buys.
-- [ ] **R5. Refund a suspended buyer's payment straight away.** **Next**
-  - When fulfillment finds a suspended enrollment, it refunds the payment after commit, as it does for a double purchase. Generalise `refundDoublePurchase` and its next step to "refund after commit", carrying the cause.
-  - The `access_suspended` payload gains `refundIssued` (checkout passes `false`), and the email tells the buyer a refund is on its way.
-  - The refund sends no Stripe `reason`, because none of `duplicate`, `fraudulent` and `requested_by_customer` fits. It carries `metadata.paymentId` and a `refundCause`.
-  - Add a decision row.
+- [x] **R5. Refund a suspended buyer's payment straight away.**
+  - Fulfillment refunds a suspended buyer's payment once the database changes are saved, as it does for a double purchase; the refund step carries a cause (`double_purchase` or `suspended_access`).
+  - `access_suspended` gains `refundIssued` (checkout passes `false`), and the email tells the buyer a refund is on its way.
+  - The refund sends no Stripe `reason` for a suspended buyer, and carries `metadata.paymentId` and `metadata.refundCause`.
 
-  *Why:* today the payment is marked succeeded and nothing refunds it until the sweeper exists, and nothing records that as intended.
-- [ ] **R6. Count only active enrollments in the public `enrollmentCount`.**
+  The decision rows are in [fulfillment.md](payments/fulfillment.md).
+- [ ] **R6. Count only active enrollments in the public `enrollmentCount`.** **Next**
   - Filter on `revokedAt` and `suspendedAt` both null.
   - Update the field's description in the contract and regenerate both type files.
   - Decision row: the admin list keeps returning every enrollment of every course, because there are few enrollments per course.

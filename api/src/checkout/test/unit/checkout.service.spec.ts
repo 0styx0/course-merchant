@@ -239,7 +239,7 @@ describe("CheckoutService", () => {
       expect(emailOutbox.enqueue).toHaveBeenCalledExactlyOnceWith(tx, {
         kind: "access_suspended",
         recipient: "ada@example.com",
-        payload: emailIds,
+        payload: { ...emailIds, refundIssued: false },
         enrollmentId: "enrollment",
       });
       expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();

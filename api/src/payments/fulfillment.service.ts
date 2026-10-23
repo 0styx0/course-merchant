@@ -21,7 +21,7 @@ import {
   type FulfillmentPayment,
   type ProviderEvent,
 } from "./payments.repository.js";
-import { StripeService } from "./stripe.service.js";
+import { StripeService, type RefundCause } from "./stripe.service.js";
 
 /**
  * A checkout the provider reports as completed, in our terms, so the webhook
@@ -42,16 +42,17 @@ type ProviderPayment = NonNullable<CompletedCheckout["providerPayment"]>;
 enum FulfillmentNextStep {
   // everything was recorded; nothing left to do
   DONE = "DONE",
-  // the buyer already had access, so this payment is refunded after commit
-  REFUND_DOUBLE_PURCHASE = "REFUND_DOUBLE_PURCHASE",
+  // the buyer can't use this payment, so it is refunded once the database changes are saved
+  REFUND_PAYMENT = "REFUND_PAYMENT",
 }
 
 type FulfillmentDecision =
   | { nextStep: FulfillmentNextStep.DONE }
   | {
-      nextStep: FulfillmentNextStep.REFUND_DOUBLE_PURCHASE;
+      nextStep: FulfillmentNextStep.REFUND_PAYMENT;
       paymentId: string;
       providerPaymentId: string;
+      cause: RefundCause;
     };
 
 const DONE: FulfillmentDecision = { nextStep: FulfillmentNextStep.DONE };
@@ -109,8 +110,8 @@ export class FulfillmentService {
     switch (decision.nextStep) {
       case FulfillmentNextStep.DONE:
         return;
-      case FulfillmentNextStep.REFUND_DOUBLE_PURCHASE:
-        return this.refundDoublePurchase(decision);
+      case FulfillmentNextStep.REFUND_PAYMENT:
+        return this.refundAfterCommit(decision);
     }
   }
 
@@ -118,18 +119,20 @@ export class FulfillmentService {
    * A failed refund must not fail the webhook: the event is already recorded,
    * so a redelivery would do nothing, and the sweeper retries the refund.
    */
-  private async refundDoublePurchase(decision: {
+  private async refundAfterCommit(decision: {
     paymentId: string;
     providerPaymentId: string;
+    cause: RefundCause;
   }): Promise<void> {
     try {
       await this.stripeService.refundPayment({
         paymentId: decision.paymentId,
         providerPaymentId: decision.providerPaymentId,
+        cause: decision.cause,
       });
     } catch (error) {
       this.logger.error(
-        `Refund of double purchase ${decision.paymentId} failed; the sweeper will retry it.`,
+        `Refund of payment ${decision.paymentId} (${decision.cause}) failed; the sweeper will retry it.`,
         error instanceof Error ? error.stack : String(error),
       );
     }
@@ -253,13 +256,10 @@ export class FulfillmentService {
       enrollmentId,
     });
 
-    return {
-      nextStep: FulfillmentNextStep.REFUND_DOUBLE_PURCHASE,
-      paymentId: context.payment.id,
-      providerPaymentId: context.providerPayment.id,
-    };
+    return refundDecision(context, "double_purchase");
   }
 
+  /** The buyer can't use what they paid for, so the payment is refunded. */
   private async explainSuspension(
     context: FulfillmentContext,
     enrollmentId: string,
@@ -267,11 +267,11 @@ export class FulfillmentService {
     await this.queueEmail(context, {
       kind: "access_suspended",
       recipient: context.payment.customer.email,
-      payload: emailIds(context),
+      payload: { ...emailIds(context), refundIssued: true },
       enrollmentId,
     });
 
-    return DONE;
+    return refundDecision(context, "suspended_access");
   }
 
   // no per-address cap, unlike checkout: only a real payment queues these
@@ -281,6 +281,18 @@ export class FulfillmentService {
   ): Promise<void> {
     return this.emailOutbox.enqueue(context.tx, email);
   }
+}
+
+function refundDecision(
+  context: FulfillmentContext,
+  cause: RefundCause,
+): FulfillmentDecision {
+  return {
+    nextStep: FulfillmentNextStep.REFUND_PAYMENT,
+    paymentId: context.payment.id,
+    providerPaymentId: context.providerPayment.id,
+    cause,
+  };
 }
 
 function emailIds(context: FulfillmentContext) {

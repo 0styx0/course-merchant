@@ -204,6 +204,7 @@ describe("StripeService", () => {
     const refundInput: RefundPaymentInput = {
       paymentId: "9f1c2d3e-0000-4000-8000-000000000001",
       providerPaymentId: "pi_test_1",
+      cause: "double_purchase",
     };
 
     const refund = { id: "re_test_1", object: "refund", status: "succeeded" };
@@ -221,6 +222,24 @@ describe("StripeService", () => {
         payment_intent: "pi_test_1",
         reason: "duplicate",
         "metadata[paymentId]": "9f1c2d3e-0000-4000-8000-000000000001",
+        "metadata[refundCause]": "double_purchase",
+      });
+    });
+
+    it("sends no reason when the buyer's access is suspended", async () => {
+      const { service, requests } = serviceWith(() =>
+        jsonResponse(200, refund),
+      );
+
+      await service.refundPayment({
+        ...refundInput,
+        cause: "suspended_access",
+      });
+
+      expect(Object.fromEntries(requests[0].body)).toEqual({
+        payment_intent: "pi_test_1",
+        "metadata[paymentId]": "9f1c2d3e-0000-4000-8000-000000000001",
+        "metadata[refundCause]": "suspended_access",
       });
     });
 

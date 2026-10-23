@@ -24,7 +24,7 @@ Keep these files current **in the same commit as the work**. Tick off status her
   - [x] `EnrollmentsRepository`, shared by checkout and fulfillment.
   - [x] `PaymentsRepository`: event dedupe, lookup by our payment id, and guarded `pending →` transitions.
   - [x] `FulfillmentService` for `checkout.session.completed`, with `completedCheckoutFromEvent` reading Stripe's event in our terms.
-  - [x] `StripeService.refundPayment`, called by `FulfillmentService.fulfillCheckout` after the transaction commits for a double purchase.
+  - [x] `StripeService.refundPayment`, called by `FulfillmentService.fulfillCheckout` after the database transaction is saved for a double purchase or a suspended buyer.
   - [x] `ExpiryService` for `checkout.session.expired`, with `expiredCheckoutFromEvent` beside the completed mapper.
   - [x] `StripeWebhookController` in `WebhooksModule`: verifies the signature, dispatches `completed` and `expired`, acknowledges other types.
 
@@ -34,7 +34,7 @@ Keep these files current **in the same commit as the work**. Tick off status her
   - [x] Templates for each `EmailKind` and `EmailSender` over SMTP.
   - [x] `EmailWorker` on a `@nestjs/schedule` interval, with `EmailComposer` loading each email's course, customer or payment (via `EmailViewsRepository`) and rendering it.
   - [x] Admin course view shows each enrollment's `emailStatus`, the only alert for a failed email.
-- [ ] **5. Sweeper** (see *Sweeper* in [refunds.md](payments/refunds.md)). It comes before web checkout because three paths take a buyer's money and leave the refund to it: two payments fulfilled at once, a refund that failed after commit, and (once [review-follow-ups.md](review-follow-ups.md) R5 ships) a failed refund for a suspended buyer. Starts once every item in [review-follow-ups.md](review-follow-ups.md) is done.
+- [ ] **5. Sweeper** (see *Sweeper* in [refunds.md](payments/refunds.md)). It comes before web checkout because three paths take a buyer's money and leave the refund to it: two payments fulfilled at once, a refund that failed after commit, and a failed refund for a suspended buyer. Starts once every item in [review-follow-ups.md](review-follow-ups.md) is done.
 
   Open questions for its outline, each with a recommendation:
   - **A pending payment with no Stripe session after 1 hour.** Stripe can't look a session up by our payment id, and the session may exist and be paid, with its webhook delayed. Expiring the payment then would make the late `completed` webhook find a payment that isn't pending, so the buyer pays and gets nothing. *Recommendation:* expire such a payment only once it's older than Stripe's webhook retry window (about 3 days in live mode).
@@ -63,7 +63,7 @@ Keep these files current **in the same commit as the work**. Tick off status her
 
   Free courses (price 0) never touch Stripe.
 - **Provider portability lives in the schema, not the code.** Every payment records its `provider`, and the `provider*` columns are generic. `StripeService` is a thin concrete wrapper with no gateway interface. Add one only when a second provider actually exists.
-- **No network calls inside a DB transaction.** The service owns the transaction, and repositories take a `DbScope`. Stripe calls happen before the transaction starts or after it commits.
+- **No network calls inside a DB transaction.** The service owns the transaction, and repositories take a `DbScope`. Stripe calls happen before the transaction starts or after its changes are saved.
 - **State only moves forward:**
   - payments go `pending` to `succeeded` or `expired`, and `succeeded` to `refunded`;
   - every transition is a conditional update, so a duplicate or out-of-order delivery changes nothing.

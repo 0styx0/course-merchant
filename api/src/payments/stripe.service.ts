@@ -39,12 +39,16 @@ export type CreatedCheckoutSession = {
   url: string;
 };
 
+// why we refund; sent to Stripe as `metadata.refundCause`
+export type RefundCause = "double_purchase" | "suspended_access";
+
 export type RefundPaymentInput = {
   // our Payment id. Used as the idempotency key, so a retried call doesn't
   // refund twice
   paymentId: string;
   // Stripe's payment intent for the charge being refunded
   providerPaymentId: string;
+  cause: RefundCause;
 };
 
 export class PaymentProviderUnavailableError extends Error {
@@ -159,7 +163,8 @@ export class StripeService {
   }
 
   /**
-   * Refunds a payment in full, as a duplicate of one the buyer already holds.
+   * Refunds a payment in full. Only a double purchase is labelled `duplicate`:
+   * none of Stripe's reasons fits a refund for a suspended buyer.
    *
    * @throws PaymentProviderUnavailableError when Stripe can't be reached or
    * fails on its side, so the caller can retry later
@@ -169,8 +174,8 @@ export class StripeService {
       .create(
         {
           payment_intent: input.providerPaymentId,
-          reason: "duplicate",
-          metadata: { paymentId: input.paymentId },
+          ...(input.cause === "double_purchase" && { reason: "duplicate" }),
+          metadata: { paymentId: input.paymentId, refundCause: input.cause },
         },
         { idempotencyKey: `refund-${input.paymentId}` },
       )

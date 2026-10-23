@@ -189,6 +189,40 @@ describe("FulfillmentService (integration)", () => {
     ]);
   });
 
+  it("refunds a payment from a suspended buyer and keeps the suspension", async () => {
+    const disputedPayment = await createOurPayment();
+    await createEnrollment({
+      courseId,
+      customerId: customer.id,
+      paymentId: disputedPayment.id,
+    });
+    const suspendedAt = Temporal.Instant.from("2026-10-01T00:00:00Z");
+    await db.orm.public.Enrollment.where((enrollment) =>
+      enrollment.customerId.eq(customer.id),
+    ).update({ suspendedAt });
+
+    const payment = await createOurPayment();
+    const checkout = completedCheckout(payment.id);
+    await service.fulfillCheckout(checkout);
+
+    expect(stripeService.refunds).toEqual([
+      {
+        paymentId: payment.id,
+        providerPaymentId: checkout.providerPayment!.id,
+        cause: "suspended_access",
+      },
+    ]);
+    expect(await findEnrollments()).toEqual([
+      expect.objectContaining({ paymentId: disputedPayment.id, suspendedAt }),
+    ]);
+    expect(await findEmails()).toEqual([
+      expect.objectContaining({
+        kind: "access_suspended",
+        payload: { courseId, customerId: customer.id, refundIssued: true },
+      }),
+    ]);
+  });
+
   it("keeps the first payment's access on a double purchase and asks for a refund", async () => {
     const firstPayment = await createOurPayment();
     const secondPayment = await createOurPayment();
@@ -201,6 +235,7 @@ describe("FulfillmentService (integration)", () => {
       {
         paymentId: secondPayment.id,
         providerPaymentId: secondCheckout.providerPayment!.id,
+        cause: "double_purchase",
       },
     ]);
     expect(await findPaymentRow(secondPayment.id)).toMatchObject({
