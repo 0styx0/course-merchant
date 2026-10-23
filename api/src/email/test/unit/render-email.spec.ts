@@ -13,15 +13,14 @@ const course = {
   endsAt: Temporal.Instant.from("2026-01-05T01:00:00Z").add({ hours: 48 }),
   timeZone: "America/New_York",
 };
-const customer = { name: 'Ann "the Potter" <script>' };
 
 const emails: EmailToRender[] = [
-  { kind: "access_granted", view: { customer, course } },
+  { kind: "access_granted", view: { course } },
   {
     kind: "already_owned",
-    view: { customer, course, refundIssued: false },
+    view: { course, refundIssued: false },
   },
-  { kind: "access_suspended", view: { customer, course } },
+  { kind: "access_suspended", view: { course } },
   {
     kind: "dispute_alert",
     view: {
@@ -69,6 +68,15 @@ describe("renderEmail", () => {
     expect(html).not.toContain("drive.example.com");
   });
 
+  it.each(["access_granted", "already_owned", "access_suspended"] as const)(
+    "opens the %s email with a greeting",
+    (kind) => {
+      const email = emails.find((candidate) => candidate.kind === kind)!;
+
+      expect(renderEmail(email, "Course Shop").text).toMatch(/Hello/);
+    },
+  );
+
   it("writes the schedule in the course's time zone", () => {
     const { text } = renderEmail(emails[0], "Course Shop");
 
@@ -79,7 +87,7 @@ describe("renderEmail", () => {
     const withRefund = renderEmail(
       {
         kind: "already_owned",
-        view: { customer, course, refundIssued: true },
+        view: { course, refundIssued: true },
       },
       "Course Shop",
     );

@@ -35,12 +35,12 @@ This file is temporary. When an item ships, tick it and move its decision rows i
   *Why:* `.update` reads the row, then updates it by id alone, so both calls can reactivate it. The buyer then gets two access emails, and `paymentId` silently points at whichever payment wrote last.
 
   *Verified:* the new test failed against the old `.update` in 8 of 8 runs (both calls returned the id) and passes with `updateAndCount`. After a count of 1, the id is read back with `findEnrollment`, since `updateAndCount` returns only the count.
-- [ ] **R4. Remove the customer's name from buyer emails.** **Next**
-  - `access_granted`, `already_owned` and `access_suspended` no longer greet by name. For example, "You now have access to {course}." replaces "Hi {name}, you now have access…". The exact wording goes in the outline.
+- [x] **R4. Remove the customer's name from buyer emails.**
+  - `access_granted`, `already_owned` and `access_suspended` no longer greet by name. Each opens with a fixed warm greeting instead ("Hello and welcome! You now have access to {course}.").
   - The name is still stored and shown in the admin view.
 
   *Why:* anyone can start a checkout for any address with any name, and the first name given is kept. The name is therefore text chosen by a stranger, in mail sent from the shop's domain, and it can be planted before the real owner of the address ever buys.
-- [ ] **R5. Refund a suspended buyer's payment straight away.**
+- [ ] **R5. Refund a suspended buyer's payment straight away.** **Next**
   - When fulfillment finds a suspended enrollment, it refunds the payment after commit, as it does for a double purchase. Generalise `refundDoublePurchase` and its next step to "refund after commit", carrying the cause.
   - The `access_suspended` payload gains `refundIssued` (checkout passes `false`), and the email tells the buyer a refund is on its way.
   - The refund sends no Stripe `reason`, because none of `duplicate`, `fraudulent` and `requested_by_customer` fits. It carries `metadata.paymentId` and a `refundCause`.

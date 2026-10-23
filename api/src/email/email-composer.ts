@@ -52,11 +52,10 @@ export class EmailComposer {
     payload: EmailPayloads["access_granted"],
   ): Promise<RenderedEmail> {
     const course = await this.course(payload.courseId);
-    const customer = await this.customer(payload.customerId);
 
     return this.render({
       kind: "access_granted",
-      view: { course, customer },
+      view: { course },
     });
   }
 
@@ -64,11 +63,10 @@ export class EmailComposer {
     payload: EmailPayloads["already_owned"],
   ): Promise<RenderedEmail> {
     const course = await this.course(payload.courseId);
-    const customer = await this.customer(payload.customerId);
 
     return this.render({
       kind: "already_owned",
-      view: { course, customer, refundIssued: payload.refundIssued },
+      view: { course, refundIssued: payload.refundIssued },
     });
   }
 
@@ -76,11 +74,10 @@ export class EmailComposer {
     payload: EmailPayloads["access_suspended"],
   ): Promise<RenderedEmail> {
     const course = await this.course(payload.courseId);
-    const customer = await this.customer(payload.customerId);
 
     return this.render({
       kind: "access_suspended",
-      view: { course, customer },
+      view: { course },
     });
   }
 
@@ -120,15 +117,5 @@ export class EmailComposer {
     }
 
     return course;
-  }
-
-  private async customer(customerId: string) {
-    const customer = await this.views.findCustomer(this.prisma.db, customerId);
-
-    if (!customer) {
-      throw new EmailSourceMissingError("customer");
-    }
-
-    return customer;
   }
 }

@@ -52,17 +52,29 @@ describe("EmailComposer (integration)", () => {
     ]);
   });
 
-  it("throws when a customer or payment no longer exists", async () => {
+  it("greets buyers without the customer's name", async () => {
     const { course } = await createPricedCourse();
+    const customer = await createCustomer({ name: "Mallory <b>" });
 
+    const { text } = await composer.compose(
+      queued("access_granted", {
+        courseId: course.id,
+        customerId: customer.id,
+      }),
+    );
+
+    expect(text).not.toContain("Mallory");
+  });
+
+  it("throws when a course or payment no longer exists", async () => {
     await expect(
       composer.compose(
         queued("access_granted", {
-          courseId: course.id,
+          courseId: crypto.randomUUID(),
           customerId: crypto.randomUUID(),
         }),
       ),
-    ).rejects.toThrow("customer no longer exists");
+    ).rejects.toThrow("course no longer exists");
     await expect(
       composer.compose(
         queued("dispute_alert", { paymentId: crypto.randomUUID() }),

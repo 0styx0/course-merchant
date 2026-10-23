@@ -13,16 +13,9 @@ type CourseView = {
 
 // What each kind needs, already loaded from the ids in the outbox payload.
 export type EmailViews = {
-  access_granted: { customer: { name: string }; course: CourseView };
-  already_owned: {
-    customer: { name: string };
-    course: CourseView;
-    refundIssued: boolean;
-  };
-  access_suspended: {
-    customer: { name: string };
-    course: Pick<CourseView, "title">;
-  };
+  access_granted: { course: CourseView };
+  already_owned: { course: CourseView; refundIssued: boolean };
+  access_suspended: { course: Pick<CourseView, "title"> };
   dispute_alert: {
     payment: { id: string; amount: number; currency: string };
     course: Pick<CourseView, "title">;
@@ -44,7 +37,7 @@ export function accessGranted(
     subject: `You're in: ${view.course.title}`,
     heading: `Welcome to ${view.course.title}`,
     paragraphs: [
-      `Hi ${view.customer.name}, you now have access to ${view.course.title}.`,
+      `Hello and welcome! You now have access to ${view.course.title}.`,
       schedule(view.course),
     ],
     button: { label: "Open the course", url: view.course.contentUrl },
@@ -56,7 +49,7 @@ export function alreadyOwned(view: EmailViews["already_owned"]): EmailContent {
     subject: `You already have ${view.course.title}`,
     heading: "You already have access",
     paragraphs: [
-      `Hi ${view.customer.name}, you already own ${view.course.title}, so there was nothing new to buy.`,
+      `Hello again! You already own ${view.course.title}, so there was nothing new to buy.`,
       ...(view.refundIssued
         ? [
             "You were charged a second time, so we've refunded that payment. It can take a few days to appear on your statement.",
@@ -75,7 +68,7 @@ export function accessSuspended(
     subject: `Your access to ${view.course.title} is suspended`,
     heading: "Your access is suspended",
     paragraphs: [
-      `Hi ${view.customer.name}, your access to ${view.course.title} is currently suspended, so we can't send you the course link.`,
+      `Hello, thanks for your patience. Your access to ${view.course.title} is currently suspended, so we can't send you the course link.`,
       "If you think this is a mistake, reply to this email and we'll look into it.",
     ],
   };

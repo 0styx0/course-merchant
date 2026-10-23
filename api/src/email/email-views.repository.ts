@@ -4,7 +4,6 @@ import type { DbScope } from "types.js";
 import type { EmailViews } from "./templates/email-templates.js";
 
 type CourseView = EmailViews["access_granted"]["course"];
-type CustomerView = EmailViews["already_owned"]["customer"];
 type DisputedPaymentView = {
   payment: EmailViews["dispute_alert"]["payment"];
   courseId: string;
@@ -29,15 +28,6 @@ export class EmailViewsRepository {
       "timeZone",
     )
       .where((course) => course.id.eq(courseId))
-      .first();
-  }
-
-  async findCustomer(
-    scope: DbScope,
-    customerId: string,
-  ): Promise<CustomerView | null> {
-    return scope.orm.public.Customer.select("name")
-      .where((customer) => customer.id.eq(customerId))
       .first();
   }
 

@@ -23,14 +23,6 @@ describe("EmailViewsRepository (integration)", () => {
     });
   });
 
-  it("finds the customer's name", async () => {
-    const customer = await createCustomer({ name: "Ada" });
-
-    expect(await repository.findCustomer(db, customer.id)).toMatchObject({
-      name: "Ada",
-    });
-  });
-
   it("finds a payment with its customer and course", async () => {
     const { course, price } = await createPricedCourse();
     const customer = await createCustomer({ email: "ada@example.com" });
@@ -52,7 +44,6 @@ describe("EmailViewsRepository (integration)", () => {
     const missing = crypto.randomUUID();
 
     expect(await repository.findCourse(db, missing)).toBeNull();
-    expect(await repository.findCustomer(db, missing)).toBeNull();
     expect(await repository.findDisputedPayment(db, missing)).toBeNull();
   });
 });
