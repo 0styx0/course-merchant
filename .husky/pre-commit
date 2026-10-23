@@ -7,6 +7,8 @@ yarn lint-staged
 yarn --cwd api generate:api-types
 yarn --cwd web generate:api-types
 yarn --cwd api tsc --noEmit
+# Next's global PageProps/LayoutProps types live in .next/, which a fresh clone lacks
+yarn --cwd web next typegen
 yarn --cwd web tsc --noEmit
 
 # Runs unit tests for whichever module changed since the last commit

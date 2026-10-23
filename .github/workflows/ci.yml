@@ -66,6 +66,9 @@ jobs:
         run: |
           yarn generate:api-types
           git diff --exit-code -- src/lib/api/generated.ts
+      # Next generates the global PageProps/LayoutProps types into .next/
+      # (gitignored), so a clean checkout needs this before the type check.
+      - run: yarn next typegen
       - run: yarn tsc --noEmit
       - run: yarn lint
       - run: yarn format:check

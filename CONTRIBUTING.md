@@ -49,7 +49,7 @@ The OpenAPI spec is the source of truth, so a change starts there:
 
 | Hook | Runs |
 |---|---|
-| `pre-commit` | ESLint and Prettier on staged files. Regenerates the API types and type-checks both projects. Runs unit tests for whichever project changed. |
+| `pre-commit` | ESLint and Prettier on staged files. Regenerates the API types (and Next's route types) and type-checks both projects. Runs unit tests for whichever project changed. |
 | `pre-push` | Integration tests for both projects, then the API's end-to-end tests. Needs Docker running. |
 
 ## What CI runs
