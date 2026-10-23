@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import nodemailer, { type Transporter } from "nodemailer";
 
-import { EMAIL_CONFIG, type EmailConfig } from "@/config/email-config.js";
+import { EMAIL_CONFIG, type EmailConfig } from "@/email/email-config.js";
 import type { RenderedEmail } from "./templates/email-content.js";
 
 // A send must end well inside the outbox's claim on the email (10 minutes), or

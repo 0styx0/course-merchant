@@ -5,7 +5,7 @@ import Stripe from "stripe";
 import {
   PAYMENTS_CONFIG,
   type PaymentsConfig,
-} from "@/config/payments-config.js";
+} from "@/payments/payments-config.js";
 import type { ExpiredCheckout } from "./expiry.service.js";
 import type { CompletedCheckout } from "./fulfillment.service.js";
 

@@ -7,7 +7,7 @@ import {
   type CheckoutCourse,
 } from "@/checkout/checkout.repository.js";
 import { CheckoutService } from "@/checkout/checkout.service.js";
-import type { PaymentsConfig } from "@/config/payments-config.js";
+import type { PaymentsConfig } from "@/payments/payments-config.js";
 import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import {

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 
-import { EMAIL_CONFIG, type EmailConfig } from "@/config/email-config.js";
+import { EMAIL_CONFIG, type EmailConfig } from "@/email/email-config.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import type { OutboxEmail } from "./email-outbox.repository.js";
 import { type EmailPayloads, parsePayload } from "./email-payloads.js";

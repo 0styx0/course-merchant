@@ -2,7 +2,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import Stripe from "stripe";
 import { describe, expect, it, vi } from "vitest";
 
-import type { PaymentsConfig } from "@/config/payments-config.js";
+import type { PaymentsConfig } from "@/payments/payments-config.js";
 import {
   completedCheckoutFromEvent,
   createStripeClient,

@@ -70,14 +70,14 @@ This file is temporary. When an item ships, tick it and move its decision rows i
   *Why:* webhook payloads follow the endpoint's API version. If it differs from the SDK's, events no longer match the SDK's types, and nothing at compile time notices.
 
   The decision row is in [fulfillment.md](payments/fulfillment.md). `createStripeClient` builds the client, so unit tests carry the pin too.
-- [ ] **R10. Validate every setting at startup, inside the module that uses it.** **Next**
+- [x] **R10. Validate every setting at startup, inside the module that uses it.**
   - `DATABASE_URL` gets a Zod loader beside [db.ts](../api/src/prisma/db.ts). Today a missing value fails at the first query, not at startup.
   - `PORT` gets one beside [main.ts](../api/src/main.ts).
   - The `ALLOWED_CURRENCIES` parser moves into the courses module, its only user.
   - `payments-config.ts` and `email-config.ts` move from `src/config/` into `payments/` and `email/`.
 
-  The outline flags anything that turns out to be more than a file move.
-- [ ] **R11. Keep every `Payment` write in `PaymentsRepository`.**
+  `PORT` must be an integer from 1 to 65535 and `DATABASE_URL` a `postgres://` or `postgresql://` URL; both now fail at startup otherwise. The principle is in [payments.md](payments.md).
+- [ ] **R11. Keep every `Payment` write in `PaymentsRepository`.** **Next**
   - Move `createPendingPayment`, `saveProviderCheckoutId` and `findPaymentStatusByCheckoutId` from [checkout.repository.ts](../api/src/checkout/checkout.repository.ts) to [payments.repository.ts](../api/src/payments/payments.repository.ts). `CheckoutRepository` keeps the course lookup and customers.
   - Their tests move with them.
 

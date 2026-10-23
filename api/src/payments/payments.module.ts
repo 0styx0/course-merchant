@@ -3,7 +3,7 @@ import { Module } from "@nestjs/common";
 import {
   loadPaymentsConfig,
   PAYMENTS_CONFIG,
-} from "@/config/payments-config.js";
+} from "@/payments/payments-config.js";
 import { EmailModule } from "@/email/email.module.js";
 import { EnrollmentsModule } from "@/enrollments/enrollments.module.js";
 import { PrismaModule } from "@/prisma/prisma.module.js";

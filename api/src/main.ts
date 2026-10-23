@@ -2,6 +2,7 @@ import "./temporal.js";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module.js";
 import { configureApp } from "./configure-app.js";
+import { loadPort } from "./port-config.js";
 
 async function bootstrap() {
   // keeps the exact request bytes on `req.rawBody`, which Stripe's webhook
@@ -13,7 +14,7 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   const configuredApp = configureApp(app);
-  await configuredApp.listen(process.env.PORT ?? 3000);
+  await configuredApp.listen(loadPort());
 }
 
 void bootstrap();

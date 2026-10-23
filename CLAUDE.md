@@ -67,7 +67,7 @@ All routes are URI-versioned (`/v1/...`): controllers declare `version: "1"`, an
 **Errors.** Responses are RFC 9457 `application/problem+json`, rendered by `common/errors/problem-details.filter.ts`.
 - Throw `new ApiException(ErrorCode.X, { detail })`. Adding a code means adding it to an enum and to `ERROR_DEFINITIONS` in `error-codes.ts` (status + title), plus to the OpenAPI spec.
 - Request bodies are validated by `ZodValidationPipe` with schemas under each module's `validation/`. Failures become `ValidationException` with one entry per field: `field` is a JSON Pointer, `code` is a `FieldErrorCode`. Custom refinements set the code via `params: { validationCode }`.
-- Env config is Zod-validated once at startup (`src/config/`), so a bad setting fails immediately.
+- Each module validates its own env settings with Zod at startup (`*-config.ts` beside the code that uses them), so a bad setting fails immediately.
 
 **Tests.** Unit tests sit in `test/unit/` or beside the file; integration tests in `<module>/test/integration/`; e2e in `src/test/e2e/`.
 - Integration/e2e run serially and share `src/test/integration.setup.ts`, which wipes every table before each test in FK order — **add new tables there**.

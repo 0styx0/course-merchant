@@ -37,8 +37,8 @@ Keep these files current **in the same commit as the work**. Tick off status her
 - [ ] **5. Sweeper** (see *Sweeper* in [refunds.md](payments/refunds.md)). It comes before web checkout because three paths take a buyer's money and leave the refund to it: two payments fulfilled at once, a refund that failed after commit, and a failed refund for a suspended buyer. Starts once every item in [review-follow-ups.md](review-follow-ups.md) is done.
 
   Open questions for its outline, each with a recommendation:
-  - **A pending payment with no Stripe session after 1 hour.** Stripe can't look a session up by our payment id, and the session may exist and be paid, with its webhook delayed. Expiring the payment then would make the late `completed` webhook find a payment that isn't pending, so the buyer pays and gets nothing. *Recommendation:* expire such a payment only once it's older than Stripe's webhook retry window (about 3 days in live mode).
-  - **A second refund after Stripe forgets the idempotency key** (about 24 hours), so a retry can't rely on `refund-<paymentId>` alone. Stripe refuses to refund a charge that's already fully refunded, with error code `charge_already_refunded`. *Recommendation:* treat that error as success, and after a refund succeeds or was already done, mark the payment `refunded` with a guarded `succeeded → refunded` update, so the sweeper's query stops selecting it and a later `charge.refunded` changes nothing. The same rule covers a double purchase whose two webhooks raced (see Decisions).
+  - **A pending payment with no Stripe session after 1 hour.** Stripe can't look a session up by our payment id, and the session may exist and be paid, with its webhook delayed. Expiring the payment then would make the late `completed` webhook find a payment that isn't pending, so the buyer pays and gets nothing. *Decision:* expire such a payment only once it's older than Stripe's webhook retry window (about 3 days in live mode). 
+  - **A second refund after Stripe forgets the idempotency key** (about 24 hours), so a retry can't rely on `refund-<paymentId>` alone. Stripe refuses to refund a charge that's already fully refunded, with error code `charge_already_refunded`. *Decision:* treat that error as success, and after a refund succeeds or was already done, mark the payment `refunded` with a guarded `succeeded → refunded` update, so the sweeper's query stops selecting it and a later `charge.refunded` changes nothing. The same rule covers a double purchase whose two webhooks raced (see Decisions).
 - [ ] **6. Web:**
   - buy form on the course page;
   - `/checkout/success`, polling the status endpoint;
@@ -67,6 +67,7 @@ Keep these files current **in the same commit as the work**. Tick off status her
 - **State only moves forward:**
   - payments go `pending` to `succeeded` or `expired`, and `succeeded` to `refunded`;
   - every transition is a conditional update, so a duplicate or out-of-order delivery changes nothing.
+- **Each module validates its own settings at startup.** A `*-config.ts` beside the code that uses a setting checks it with Zod and throws, naming the variable but never echoing its value. There is no shared config folder or schema.
 
 ## Subarea docs
 

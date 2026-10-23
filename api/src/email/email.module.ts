@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 
 import { PrismaModule } from "@/prisma/prisma.module.js";
-import { EMAIL_CONFIG, loadEmailConfig } from "@/config/email-config.js";
+import { EMAIL_CONFIG, loadEmailConfig } from "@/email/email-config.js";
 import { emailTransportProvider, EmailSender } from "./email-sender.js";
 import { EmailComposer } from "./email-composer.js";
 import { EmailOutboxRepository } from "./email-outbox.repository.js";

@@ -12,7 +12,7 @@ import { ErrorCodeCheckout } from "@/common/errors/error-codes.js";
 import {
   PAYMENTS_CONFIG,
   type PaymentsConfig,
-} from "@/config/payments-config.js";
+} from "@/payments/payments-config.js";
 import { courseNotFound } from "@/courses/course-errors.js";
 import {
   EmailOutboxRepository,
