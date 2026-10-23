@@ -11,7 +11,7 @@ export type OutboxEmail = Models.public_EmailOutbox;
 
 // Payloads hold ids, not rendered content, so an email always shows the
 // course's current details (such as an updated content link) when it's sent.
-type EmailPayloads = {
+export type EmailPayloads = {
   access_granted: { courseId: string; customerId: string };
   // refundIssued: the buyer paid twice and the second payment was refunded
   already_owned: {

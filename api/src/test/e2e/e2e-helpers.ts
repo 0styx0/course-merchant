@@ -1,6 +1,7 @@
 import { Test, type TestingModuleBuilder } from "@nestjs/testing";
 import type { INestApplication } from "@nestjs/common";
 import { AppModule } from "@/app.module.js";
+import { EmailWorker } from "@/email/email-worker.js";
 import { configureApp } from "@/configure-app.js";
 import type { Response } from "supertest";
 import type { Server } from "node:http";
@@ -17,7 +18,10 @@ export async function createE2eApp(
   const moduleRef = await overrides(
     Test.createTestingModule({
       imports: [AppModule],
-    }),
+    })
+      // a stub has no @Interval, so tests never send mail in the background
+      .overrideProvider(EmailWorker)
+      .useValue({}),
   ).compile();
 
   // same as main.ts, so webhook signatures can be checked in tests

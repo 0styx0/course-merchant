@@ -22,9 +22,12 @@ Arguments (optional): a design doc area (`payments`, `courses`) or a free-text t
 
 Give the outline and wait for the go-ahead. In plan mode, present it with ExitPlanMode; otherwise end your reply with it. Write no code before approval.
 
+- **Heading:** a plain-language sentence saying what the commit does (for example "Send queued emails automatically"), not a class or file name. Clear communication comes first.
+- **Terms:** define every specialized term or unit of work the outline uses (for example "tick", "sweeper", "outbox"): what it means here, why use it, and the alternatives. Don't assume a term means its usual meaning elsewhere.
 - **What:** each file to add or change, as links, with what changes in it.
 - **Why:** the reason this is the next step, and how it fits the design doc.
 - **Trade-offs:** the alternatives you considered and why you didn't pick them.
+- **Config:** keep module-specific settings (constants or env vars) inside that module, not in global config. If that would add real complexity, tell the owner before doing it.
 - **Questions:** any design or behaviour change not already decided in the doc, asked as a question with your recommendation.
 - **Tests:** which unit, integration or e2e tests you'll add.
 - **Doc update:** what changes in `docs/<area>.md`.

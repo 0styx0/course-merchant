@@ -32,8 +32,8 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
 - [ ] **4. Email delivery:**
   - [x] `EmailOutboxRepository.findDue`, `markSent` and `markFailedAttempt`, with the backoff in `retry-policy.ts`.
   - [x] Templates for each `EmailKind` and `EmailSender` over SMTP.
-  - [ ] **Next: `EmailWorker`** on a `@nestjs/schedule` interval: sends due emails one at a time, skips a tick while the previous one is still running. It also loads the course and customer by the ids in each payload (`dispute_alert` needs the payment, course and customer, and an `OWNER_EMAIL` setting to be queued), calls `renderEmail`, then `EmailSender.send`, and settles with `markSent` or `markFailedAttempt`.
-  - [ ] Admin course view shows each enrollment's email status (pending, sent, failed). This is the only alert for a failed email. It needs a contract change first.
+  - [x] `EmailWorker` on a `@nestjs/schedule` interval, with `EmailComposer` loading each email's course, customer or payment (via `EmailViewsRepository`) and rendering it.
+  - [ ] **Next:** admin course view shows each enrollment's email status (pending, sent, failed). This is the only alert for a failed email. It needs a contract change first: add the status to the admin course response in [openapi-v1.yaml](../api/openapi/openapi-v1.yaml), then regenerate types in both packages.
 - [ ] **5. Web:**
   - buy form on the course page;
   - `/checkout/success`, polling the status endpoint;
@@ -43,6 +43,7 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
   Write the Given/When/Then specs in `web/docs/` first.
 - [ ] **6. Safety net and after-sale handling:**
   - the sweeper;
+  - `OWNER_EMAIL` setting (the recipient of `dispute_alert`), scoped to the email module's config;
   - `charge.refunded`;
   - `charge.dispute.created`;
   - the estimated payout on the admin price field.
@@ -153,6 +154,8 @@ It also covers a payment whose session was never created.
 | No lease on emails being sent: one process, and the worker skips a tick while the last is running | Simplest. Accepted cost: a crash between the provider accepting an email and `markSent` sends it twice, and two API instances would double-send | A lease via `nextAttemptAt`; `FOR UPDATE SKIP LOCKED` |
 | Email goes out over SMTP through nodemailer, with `SMTP_URL`, `EMAIL_FROM` and `EMAIL_SHOP_NAME` settings | Changing provider is a config change; the retry policy treats every failure alike, so a vendor SDK's richer errors buy nothing. Mailpit works locally | A vendor SDK (Resend, Postmark); Gmail (500 a day, no custom domain without Workspace, can suspend automated senders) |
 | Each email is written once as an `EmailContent` (subject, heading, paragraphs, optional button) and rendered to HTML and plain text by two small renderers | A wording change is made once, HTML and text can't drift apart, and one layout keeps every email looking the same | A template per kind per format; react-email or MJML (a build step for four emails) |
+| Worker polls every 10 s, up to 20 emails per run, one at a time; the constants live in the worker file, not env | Simple, and a shop this size sends few emails. Settings can move to config if the volume ever needs tuning | Env settings; sending a batch in parallel |
+| A missing course, customer or payment is a failed attempt like any other, so it retries and ends `failed` | One rule for every failure; the admin view shows it | Marking such an email `failed` straight away |
 | Templates take already-loaded views (course, customer), not ids | They stay pure functions; the worker owns the database lookups | An `EmailComposer` that reads the database |
 | A `failed` email stays in the table with no owner alert; the admin course view shows email status | One place to look, nothing extra to run | Emailing or paging the owner |
 | Card only, no delayed methods | Payment is confirmed instantly, so there's no "processing" state | ACH and bank debits |
