@@ -74,5 +74,7 @@ jobs:
       - run: yarn format:check
 
       - run: yarn test:unit
-      - run: yarn playwright install --with-deps chromium
+      # The tests run headless, so the smaller headless shell is enough; full
+      # Chrome isn't needed.
+      - run: yarn playwright install --with-deps --only-shell chromium
       - run: yarn test:integration
