@@ -4,6 +4,7 @@ import { and } from "@prisma/orm-postgres/orm-client";
 
 import { Models } from "@/prisma/contract.js";
 import type { DbScope } from "types.js";
+import { latestStatusIsNot } from "../course-visibility.js";
 
 export type CourseRepositoryModelAdmin = {
   id: string;
@@ -127,18 +128,7 @@ export class AdminCoursesRepository {
     scope: DbScope,
   ): Promise<CourseRepositoryModelAdmin[]> {
     return await this.adminCourseDetailsQuery(scope.orm.public.Course)
-      .where((course) =>
-        course.statuses.some((status) =>
-          and(
-            status.name.neq("deleted"),
-            status.course.some((sameCourse) =>
-              sameCourse.statuses.none((laterStatus) =>
-                laterStatus.changedAt.gt(status.changedAt),
-              ),
-            ),
-          ),
-        ),
-      )
+      .where(latestStatusIsNot("deleted"))
       .orderBy((course) => course.startsAt.desc())
       .all();
   }

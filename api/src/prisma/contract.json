@@ -1375,15 +1375,6 @@
               "indexes": [
                 {
                   "columns": [
-                    "courseId",
-                    "changedAt"
-                  ],
-                  "name": "CourseStatus_courseId_changedAt_idx_fa8d8656",
-                  "prefix": "CourseStatus_courseId_changedAt_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
                     "courseId"
                   ],
                   "name": "CourseStatus_courseId_idx_12f72d2a",
@@ -1396,7 +1387,14 @@
                   "id"
                 ]
               },
-              "uniques": []
+              "uniques": [
+                {
+                  "columns": [
+                    "courseId",
+                    "changedAt"
+                  ]
+                }
+              ]
             },
             "Customer": {
               "columns": {
@@ -2049,7 +2047,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "b257486452aea46213a7be6219f99074db5b70ed40a6356f4a777b16e6027ce1"
+    "storageHash": "63f6902dc5008589d2b1b15ff70ec05d9a838950eaf36a4238387c8747a70f58"
   },
   "execution": {
     "executionHash": "0076ed08f73a615779f1117ee8305346e79c2d63ffda1b8bc87585bba78596c8",

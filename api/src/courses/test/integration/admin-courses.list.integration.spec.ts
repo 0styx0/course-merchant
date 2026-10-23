@@ -98,6 +98,17 @@ describe("AdminCoursesService integration", () => {
       expect(result.courses.some((item) => item.id === course.id)).toBe(false);
     });
 
+    it("rejects a second status with the same changedAt, so two statuses can't both be latest", async () => {
+      const { course } = await createPricedCourse();
+      const changedAt = course.createdAt.add({ seconds: 1 });
+
+      await updateCourseStatus(course.id, "deleted", changedAt);
+
+      await expect(
+        updateCourseStatus(course.id, "published", changedAt),
+      ).rejects.toThrow();
+    });
+
     it("includes a course whose latest status is published, even if an older status was deleted", async () => {
       const { course } = await createPricedCourse();
 

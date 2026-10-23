@@ -17,7 +17,6 @@ A small storefront for selling courses. Two independent yarn (v1) projects, each
   - [docs/payments/email.md](docs/payments/email.md) — outbox, worker, templates, sender.
   - [docs/payments/refunds.md](docs/payments/refunds.md) — refunds, disputes, access, sweeper.
 - [docs/courses.md](docs/courses.md) — creating, editing and browsing courses: who sees what, `PUT` semantics, validation, decisions.
-- [docs/review-follow-ups.md](docs/review-follow-ups.md) — fixes and refactors decided in the 2026-10-23 architecture review, one commit each, with the decisions already made. Temporary: deleted once its last item ships.
 
 Update them in the same commit as the code they describe: tick status, add a decision row when something is decided. Record only what the code can't say (progress, why, what was rejected); never copy schemas or contract shapes into them.
 
@@ -41,6 +40,7 @@ All routes are URI-versioned (`/v1/...`): controllers declare `version: "1"`, an
 ## API architecture
 
 **Module/ESM conventions.** `"type": "module"` with `nodenext` resolution: relative imports need a `.js` suffix.
+**Build.** `yarn build` runs `tsc-alias` after `nest build` to rewrite the `@/` imports in `dist/` (Nest's own rewriter can't see `.js` imports of `.ts` files); `nest start` skips it. `start:prod` runs `dist/src/main.js`, `dotenv` is a runtime dependency, and `src/test/` isn't compiled. Rejected: relative imports everywhere, an SWC builder, Node subpath imports.
 **Layers.** controller → service → repository. Repositories are the only code touching the ORM; `StripeService` (`src/payments/`) is the only code touching the Stripe SDK (the SDK client is provided under the `STRIPE_CLIENT` token so tests can swap it).
 
 **Database (Prisma 8 RC — not the classic Prisma Client API).**

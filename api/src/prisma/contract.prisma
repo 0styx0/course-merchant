@@ -61,7 +61,7 @@ model CourseStatus {
 
   course    Course           @relation(fields:[courseId], references:[id])
 
-  @@index([courseId, changedAt])
+  @@unique([courseId, changedAt])
 }
 
 model CoursePrice {

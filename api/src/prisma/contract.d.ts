@@ -23,7 +23,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'b257486452aea46213a7be6219f99074db5b70ed40a6356f4a777b16e6027ce1'>;
+  StorageHashBase<'63f6902dc5008589d2b1b15ff70ec05d9a838950eaf36a4238387c8747a70f58'>;
 export type ExecutionHash =
   ExecutionHashBase<'0076ed08f73a615779f1117ee8305346e79c2d63ffda1b8bc87585bba78596c8'>;
 export type ProfileHash =
@@ -633,14 +633,8 @@ type ContractBase = Omit<
                 };
               };
               primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
+              uniques: readonly [{ readonly columns: readonly ['courseId', 'changedAt'] }];
               indexes: readonly [
-                {
-                  readonly name: 'CourseStatus_courseId_changedAt_idx_fa8d8656';
-                  readonly prefix: 'CourseStatus_courseId_changedAt_idx';
-                  readonly columns: readonly ['courseId', 'changedAt'];
-                  readonly unique: false;
-                },
                 {
                   readonly name: 'CourseStatus_courseId_idx_12f72d2a';
                   readonly prefix: 'CourseStatus_courseId_idx';

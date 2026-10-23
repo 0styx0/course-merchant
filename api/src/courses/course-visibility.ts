@@ -1,9 +1,49 @@
 import type { Temporal } from "@js-temporal/polyfill";
-import { and } from "@prisma/orm-postgres/orm-client";
+import {
+  and,
+  type Condition,
+  type ModelAccessor,
+  type WhereCallbackResult,
+} from "@prisma/orm-postgres/orm-client";
 
+import type { Contract } from "@/prisma/contract.js";
 import type { DbScope } from "types.js";
 
 type CourseCollection = DbScope["orm"]["public"]["Course"];
+type CourseStatusName = "drafted" | "published" | "archived" | "deleted";
+type CourseFilter = (
+  course: ModelAccessor<Contract, "Course">,
+) => WhereCallbackResult;
+type StatusFilter = (
+  status: ModelAccessor<Contract, "CourseStatus">,
+) => WhereCallbackResult;
+
+/**
+ * A course's latest status is the status row that no later row of the same
+ * course follows. `CourseStatus` is unique on `(courseId, changedAt)`, so
+ * exactly one row qualifies. Every "latest status" check goes through here.
+ */
+function latestStatusMatches(matchName: StatusFilter): CourseFilter {
+  return (course) =>
+    course.statuses.some((status) =>
+      and(
+        matchName(status) as Condition,
+        status.course.some((sameCourse) =>
+          sameCourse.statuses.none((laterStatus) =>
+            laterStatus.changedAt.gt(status.changedAt),
+          ),
+        ),
+      ),
+    );
+}
+
+export function latestStatusIs(name: CourseStatusName): CourseFilter {
+  return latestStatusMatches((status) => status.name.eq(name));
+}
+
+export function latestStatusIsNot(name: CourseStatusName): CourseFilter {
+  return latestStatusMatches((status) => status.name.neq(name));
+}
 
 /**
  * Courses the public can see and buy, each with only its current price.
@@ -18,18 +58,7 @@ export function visibleCoursesWithCurrentPrice(
   now: Temporal.Instant,
 ) {
   return courses
-    .where((course) =>
-      course.statuses.some((status) =>
-        and(
-          status.name.eq("published"),
-          status.course.some((sameCourse) =>
-            sameCourse.statuses.none((laterStatus) =>
-              laterStatus.changedAt.gt(status.changedAt),
-            ),
-          ),
-        ),
-      ),
-    )
+    .where(latestStatusIs("published"))
     .where((course) =>
       course.prices.some((price) => price.effectiveAt.lte(now)),
     )

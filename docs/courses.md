@@ -23,7 +23,7 @@ Keep this file current **in the same commit as the work**.
 | Admin list | Every course whose latest status isn't `deleted` | [admin-courses.repository.ts](../api/src/courses/courses.repository/admin-courses.repository.ts) |
 | Admin get by id | Any course | same |
 
-"Visible" means the latest status is `published` and some price has taken effect. The current price is the latest one in effect. This rule is shared with checkout through [course-visibility.ts](../api/src/courses/course-visibility.ts). Reuse it rather than deriving it again.
+"Visible" means the latest status is `published` and some price has taken effect. The current price is the latest one in effect. This rule is shared with checkout through [course-visibility.ts](../api/src/courses/course-visibility.ts), which also exports `latestStatusIs` and `latestStatusIsNot` for any query on a course's latest status (the admin list uses the latter). Reuse them rather than deriving it again.
 
 `contentUrl` (the Drive or Zoom link) is private. Only admin responses and the access email ever include it.
 
@@ -66,3 +66,5 @@ Keep this file current **in the same commit as the work**.
 | `Idempotency-Key` removed from create; bearer auth kept in the spec | Auth is next; idempotency wasn't needed | Keeping both, or removing both |
 | Public get still returns ended courses | Existing links keep working; checkout gives a clear 409 | Hiding them everywhere |
 | Public `enrollmentCount` counts only active enrollments; the admin list still returns every enrollment of every course | The public number means people who have access. Admins need the full history, and there are few enrollments per course | Counting all rows publicly; filtering the admin list |
+| A course's latest status stays computed from the `CourseStatus` log, through one shared helper, with `@@unique([courseId, changedAt])` | No second copy of the status to keep in step. The query is cheap at this shop's size. The constraint closes the one real gap: two statuses with the same `changedAt` (Postgres's `now()` is fixed for a whole transaction) would both count as latest, so a deleted course could show as published. A second status write for a course in the same transaction now fails instead of tying. Same pattern as `CoursePrice`'s `@@unique([courseId, effectiveAt])` | A `Course.currentStatus` column written beside each log row (duplicated state that can drift, plus a migration and backfill); a tie-breaking sequence column |
+| `AdminCoursesService.updateCourse` does its read, validation and write in one transaction | The service owns the transaction, and validating against a read taken before the write left a gap for a concurrent edit. Cost: the transaction stays open during a little in-memory validation, with no network calls. No row lock is taken, so two simultaneous edits can still interleave | Keeping the read outside and wrapping only the write (the gap stays) |

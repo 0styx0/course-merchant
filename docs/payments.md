@@ -34,7 +34,7 @@ Keep these files current **in the same commit as the work**. Tick off status her
   - [x] Templates for each `EmailKind` and `EmailSender` over SMTP.
   - [x] `EmailWorker` on a `@nestjs/schedule` interval, with `EmailComposer` loading each email's course, customer or payment (via `EmailViewsRepository`) and rendering it.
   - [x] Admin course view shows each enrollment's `emailStatus`, the only alert for a failed email.
-- [ ] **5. Sweeper** (see *Sweeper* in [refunds.md](payments/refunds.md)). It comes before web checkout because three paths take a buyer's money and leave the refund to it: two payments fulfilled at once, a refund that failed after commit, and a failed refund for a suspended buyer. Starts once every item in [review-follow-ups.md](review-follow-ups.md) is done.
+- [ ] **5. Sweeper** (see *Sweeper* in [refunds.md](payments/refunds.md)). It comes before web checkout because three paths take a buyer's money and leave the refund to it: two payments fulfilled at once, a refund that failed after commit, and a failed refund for a suspended buyer. **Next**
 
   Open questions for its outline, each with a recommendation:
   - **A pending payment with no Stripe session after 1 hour.** Stripe can't look a session up by our payment id, and the session may exist and be paid, with its webhook delayed. Expiring the payment then would make the late `completed` webhook find a payment that isn't pending, so the buyer pays and gets nothing. *Decision:* expire such a payment only once it's older than Stripe's webhook retry window (about 3 days in live mode). 
