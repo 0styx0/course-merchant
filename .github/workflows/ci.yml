@@ -1,0 +1,75 @@
+name: CI
+
+# Runs what the git hooks run (see .husky/), so a passing badge means the
+# type checks and all three test suites pass on a clean machine.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# The default token can only read the repo. No secrets are used: the tests run
+# against the fake values in api/.env.test.
+permissions:
+  contents: read
+
+# A newer push to the same branch makes the older run pointless.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+          cache: yarn
+          cache-dependency-path: api/yarn.lock
+      - run: yarn install --frozen-lockfile
+
+      - name: Generated API types are up to date
+        run: |
+          yarn generate:api-types
+          git diff --exit-code -- src/generated
+      - run: yarn tsc --noEmit
+      - run: yarn lint
+      - run: yarn format:check
+      - run: yarn build
+
+      - run: yarn test:unit
+      # These two start Postgres and stripe-mock themselves (docker compose).
+      - run: yarn test:integration
+      - run: yarn test:e2e
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+          cache: yarn
+          cache-dependency-path: web/yarn.lock
+      - run: yarn install --frozen-lockfile
+
+      - name: Generated API types are up to date
+        run: |
+          yarn generate:api-types
+          git diff --exit-code -- src/lib/api/generated.ts
+      - run: yarn tsc --noEmit
+      - run: yarn lint
+      - run: yarn format:check
+
+      - run: yarn test:unit
+      - run: yarn playwright install --with-deps chromium
+      - run: yarn test:integration

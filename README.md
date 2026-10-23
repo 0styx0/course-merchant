@@ -1,5 +1,7 @@
 # Course Merchant
 
+[![CI](https://github.com/0styx0/course-merchant/actions/workflows/ci.yml/badge.svg)](https://github.com/0styx0/course-merchant/actions/workflows/ci.yml)
+
 A storefront for selling online courses, with payment through Stripe Checkout. The owner lists courses; buyers browse them, pay on Stripe's hosted page, and get the course link (a Google Drive folder or a Zoom meeting) by email.
 
 It's freelance work for a small business that sells courses, built as two TypeScript projects: a NestJS API and a Next.js web app.

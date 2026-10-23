@@ -52,6 +52,10 @@ The OpenAPI spec is the source of truth, so a change starts there:
 | `pre-commit` | ESLint and Prettier on staged files. Regenerates the API types and type-checks both projects. Runs unit tests for whichever project changed. |
 | `pre-push` | Integration tests for both projects, then the API's end-to-end tests. Needs Docker running. |
 
+## What CI runs
+
+[ci.yml](.github/workflows/ci.yml) runs on every pull request and every push to `main`. It repeats everything the hooks run, on a clean machine, plus ESLint, Prettier's check, the API build, and a check that the generated API types are committed and up to date. The `api` and `web` jobs run in parallel. If CI fails but your hooks passed, run the failing command from the workflow locally. The usual causes are a forgotten `yarn generate:api-types` or a file that was never committed. CI uses no secrets: tests run against the fake values in `api/.env.test`.
+
 ## Writing tests
 
 ### API
