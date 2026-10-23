@@ -58,12 +58,12 @@ This file is temporary. When an item ships, tick it and move its decision rows i
   - Replace the "No lease on emails being sent" decision row.
 
   *Why:* most hosts run the old and new copy side by side for a few seconds to a minute during every zero-downtime deploy, so "one process" doesn't hold.
-- [ ] **R8. Check each email's payload when the worker reads it back.** **Next**
+- [x] **R8. Check each email's payload when the worker reads it back.**
   - One Zod schema per `EmailKind`, and `EmailPayloads` derived from them with `z.infer`.
   - [email-composer.ts](../api/src/email/email-composer.ts) parses the payload instead of casting it. A payload that doesn't parse is a failed attempt, like a missing row.
 
   *Why:* queued rows outlive deploys, so a row written under an older payload shape would otherwise render `undefined` or throw inside a template.
-- [ ] **R9. Pin the Stripe API version.**
+- [ ] **R9. Pin the Stripe API version.** **Next**
   - Set `apiVersion` in `stripeClientProvider` ([stripe.service.ts](../api/src/payments/stripe.service.ts)) to the version the SDK is typed for (`2026-09-30.endive` in stripe 23.0.0).
   - Launch checklist: create the production webhook endpoint with the same API version.
 

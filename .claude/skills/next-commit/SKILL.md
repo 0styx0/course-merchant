@@ -43,7 +43,7 @@ Give the outline and wait for the go-ahead. In plan mode, present it with ExitPl
 
 ## 4. Verify
 
-From `api/` (or `web/`), run `yarn lint`, `yarn tsc --noEmit`, and the unit tests. Also run the single-file integration or e2e specs for the code you touched (commands are in CLAUDE.md). Report failures with their output; don't hide them.
+From `api/` (or `web/`), run `yarn lint`, `yarn tsc --noEmit`, and the unit tests. Also run the single-file integration or e2e specs for the code you touched, using the `vitest` configs and `test:*` scripts in `package.json`. Report failures with their output; don't hide them.
 
 ## 5. Hand off
 

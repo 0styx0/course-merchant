@@ -4,6 +4,7 @@ import { and } from "@prisma/orm-postgres/orm-client";
 
 import type { Models } from "@/prisma/contract.js";
 import type { DbScope } from "types.js";
+import type { EmailPayloads } from "./email-payloads.js";
 import { nextAttemptAfterFailure } from "./retry-policy.js";
 
 // how long a worker holds an email it is sending; it must outlast the
@@ -13,25 +14,6 @@ const CLAIM_DURATION_MINUTES = 10;
 export type EmailKind = Models.public_EmailOutbox["kind"];
 // without the link to its enrollment, which only the admin view reads
 export type OutboxEmail = Omit<Models.public_EmailOutbox, "enrollmentLink">;
-
-// Payloads hold ids, not rendered content, so an email always shows the
-// course's current details (such as an updated content link) when it's sent.
-export type EmailPayloads = {
-  access_granted: { courseId: string; customerId: string };
-  // refundIssued: the payment that triggered the email was refunded (a second
-  // payment for the same course, or a payment while access is suspended)
-  already_owned: {
-    courseId: string;
-    customerId: string;
-    refundIssued: boolean;
-  };
-  access_suspended: {
-    courseId: string;
-    customerId: string;
-    refundIssued: boolean;
-  };
-  dispute_alert: { paymentId: string };
-};
 
 // the owner's alert is about a payment, so it has no enrollment
 type EnrollmentEmailKind = Exclude<EmailKind, "dispute_alert">;

@@ -99,6 +99,25 @@ describe("EmailWorker (integration)", () => {
     expect(failed!.lastError).toContain("course no longer exists");
   });
 
+  it("counts a malformed payload as a failed attempt and sends nothing", async () => {
+    await prisma.db.orm.public.EmailOutbox.create({
+      kind: "access_granted",
+      recipient: "old@example.com",
+      payload: { courseId: 42 },
+      attempts: 0,
+    });
+    const { worker, sendMail } = workerWith();
+
+    await worker.sendDueEmails();
+
+    expect(sendMail).not.toHaveBeenCalled();
+    const failed = await prisma.db.orm.public.EmailOutbox.where((email) =>
+      email.recipient.eq("old@example.com"),
+    ).first();
+    expect(failed).toMatchObject({ status: "pending", attempts: 1 });
+    expect(failed!.lastError).toContain("payload is invalid");
+  });
+
   it("sends an email once when two workers run at the same time", async () => {
     await queueAccessEmail("ada@example.com");
     const sendMail = vi.fn().mockResolvedValue({});

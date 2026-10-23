@@ -2,7 +2,8 @@ import { Inject, Injectable } from "@nestjs/common";
 
 import { EMAIL_CONFIG, type EmailConfig } from "@/config/email-config.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
-import type { EmailPayloads, OutboxEmail } from "./email-outbox.repository.js";
+import type { OutboxEmail } from "./email-outbox.repository.js";
+import { type EmailPayloads, parsePayload } from "./email-payloads.js";
 import { EmailViewsRepository } from "./email-views.repository.js";
 import type { RenderedEmail } from "./templates/email-content.js";
 import { renderEmail } from "./templates/render-email.js";
@@ -29,22 +30,20 @@ export class EmailComposer {
     private readonly config: EmailConfig,
   ) {}
 
-  /** Throws `EmailSourceMissingError` when a row the payload names is gone. */
+  /**
+   * Throws `EmailPayloadInvalidError` when the payload doesn't match its kind,
+   * and `EmailSourceMissingError` when a row it names is gone.
+   */
   async compose(email: OutboxEmail): Promise<RenderedEmail> {
-    // the payload was written by `enqueue`, so it matches the email's kind
-    const payload = email.payload as EmailPayloads[typeof email.kind];
-
     switch (email.kind) {
       case "access_granted":
-        return this.accessGranted(payload as EmailPayloads["access_granted"]);
+        return this.accessGranted(parsePayload(email.kind, email.payload));
       case "already_owned":
-        return this.alreadyOwned(payload as EmailPayloads["already_owned"]);
+        return this.alreadyOwned(parsePayload(email.kind, email.payload));
       case "access_suspended":
-        return this.accessSuspended(
-          payload as EmailPayloads["access_suspended"],
-        );
+        return this.accessSuspended(parsePayload(email.kind, email.payload));
       case "dispute_alert":
-        return this.disputeAlert(payload as EmailPayloads["dispute_alert"]);
+        return this.disputeAlert(parsePayload(email.kind, email.payload));
     }
   }
 

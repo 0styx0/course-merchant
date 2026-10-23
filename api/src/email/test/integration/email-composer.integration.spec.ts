@@ -81,4 +81,12 @@ describe("EmailComposer (integration)", () => {
       ),
     ).rejects.toThrow("disputed payment no longer exists");
   });
+
+  it("throws when the payload doesn't match its kind", async () => {
+    await expect(
+      composer.compose(queued("already_owned", { courseId: "c1" })),
+    ).rejects.toThrow(
+      "already_owned payload is invalid (customerId, refundIssued)",
+    );
+  });
 });
