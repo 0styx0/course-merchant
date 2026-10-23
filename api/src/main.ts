@@ -1,3 +1,4 @@
+import "./temporal.js";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module.js";
 import { configureApp } from "./configure-app.js";

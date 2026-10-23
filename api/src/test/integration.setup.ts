@@ -1,8 +1,6 @@
+import "../temporal.js";
 import { afterAll, beforeEach } from "vitest";
 import { db } from "../prisma/db.js";
-import { Temporal } from "@js-temporal/polyfill";
-
-globalThis.Temporal = Temporal;
 
 beforeEach(async () => {
   await db.orm.public.EnrollmentEmail.where({}).deleteAll();

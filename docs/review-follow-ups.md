@@ -13,12 +13,21 @@ This file is temporary. When an item ships, tick it and move its decision rows i
   - Update the pointer in CLAUDE.md.
 
   *Why:* the file is about 20 KB, the same as [checkout.service.ts](../api/src/checkout/checkout.service.ts) and [fulfillment.service.ts](../api/src/payments/fulfillment.service.ts) together. An email-only task needs about 10 of its 47 decision rows.
-- [ ] **R2. Use one Temporal implementation in production and in tests.** **Next**
+- [x] **R2. Use one Temporal implementation in production and in tests.**
   - Move `@js-temporal/polyfill` from `devDependencies` to `dependencies`: 22 runtime files import it, so a production-only install can't start the app.
   - Add `src/temporal.ts`, which sets `globalThis.Temporal`, and import it first in [main.ts](../api/src/main.ts) and in [integration.setup.ts](../api/src/test/integration.setup.ts).
-  - Remove `temporal-polyfill` if nothing else needs it. The ORM falls back to it only when no global `Temporal` exists, which today is production only, so production and tests currently run different implementations.
+  - `temporal-polyfill` stays: `@prisma/orm-postgres` lists it as a peer dependency and imports it, so removing it breaks the install. The ORM uses it only when no global `Temporal` exists, which was production only before this change.
 
-  *Verify:* a production-only install of a build boots.
+  *Verified:* a production-only install resolves `@js-temporal/polyfill`. A full boot of the build is blocked by other problems, which R2a fixes: `dotenv` is a devDependency but [db.ts](../api/src/prisma/db.ts) and the config files import it, and the compiled output keeps the `@/utils` path alias, which Node can't resolve. `start:prod` (`node dist/main`) also points at a path that doesn't exist (the entry is `dist/src/main.js`).
+- [ ] **R2a. Make the production build start.** **Next**
+  - Found while verifying R2: a production-only install of `yarn build` output can't boot, for three separate reasons.
+  - `dotenv` is a devDependency, but [db.ts](../api/src/prisma/db.ts) and the config files import it at runtime.
+  - The compiled output keeps the `@/…` path alias (171 imports use it), which Node can't resolve, so the app fails on its first aliased import. The outline picks the fix: compile the aliases away, or replace them with relative imports.
+  - `start:prod` runs `node dist/main`, but the entry is `dist/src/main.js`.
+
+  *Verify:* the R2 check, run to the end: build, production-only install in a scratch directory, boot with a test `DATABASE_URL`, and the app answers a request.
+
+  *Why:* `yarn start:prod` can't start the compiled app today, so the launch has no working way to run it.
 - [ ] **R3. Make reactivating a refunded enrollment safe against races.**
   - In `grantAccess` ([enrollments.repository.ts](../api/src/enrollments/enrollments.repository.ts)), replace `.update` with `updateAndCount` (same filter), and return the enrollment's id only when the count is 1.
   - Fix the comment that claims `.update` already stops a concurrent reactivation.
