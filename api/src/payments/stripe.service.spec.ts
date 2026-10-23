@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { PaymentsConfig } from "@/config/payments-config.js";
 import {
   completedCheckoutFromEvent,
+  createStripeClient,
   expiredCheckoutFromEvent,
   InvalidWebhookSignatureError,
   PaymentProviderUnavailableError,
@@ -52,7 +53,7 @@ function serviceWith(
     },
   );
 
-  const stripe = new Stripe("sk_test_unit", {
+  const stripe = createStripeClient("sk_test_unit", {
     httpClient: Stripe.createFetchHttpClient(fetchFn),
     maxNetworkRetries: 0,
   });
@@ -80,6 +81,18 @@ const createdSession = {
 };
 
 describe("StripeService", () => {
+  it("pins the Stripe API version on every request", async () => {
+    const { service, requests } = serviceWith(() =>
+      jsonResponse(200, createdSession),
+    );
+
+    await service.createCheckoutSession(makeInput());
+
+    expect(requests[0]?.headers.get("Stripe-Version")).toBe(
+      "2026-09-30.endive",
+    );
+  });
+
   describe("createCheckoutSession", () => {
     it("returns the session id and hosted page URL", async () => {
       const { service } = serviceWith(() => jsonResponse(200, createdSession));

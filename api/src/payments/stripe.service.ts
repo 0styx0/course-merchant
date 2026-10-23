@@ -11,10 +11,23 @@ import type { CompletedCheckout } from "./fulfillment.service.js";
 
 export const STRIPE_CLIENT = Symbol("STRIPE_CLIENT");
 
+// Webhook payloads follow the endpoint's API version, so the production
+// endpoint must be created with this same version. The SDK types `apiVersion`
+// as its own version, so an SDK upgrade fails to compile until this is bumped.
+const STRIPE_API_VERSION = "2026-09-30.endive";
+
+export function createStripeClient(
+  secretKey: string,
+  options: Stripe.StripeConfig = {},
+): Stripe {
+  return new Stripe(secretKey, { ...options, apiVersion: STRIPE_API_VERSION });
+}
+
 export const stripeClientProvider = {
   provide: STRIPE_CLIENT,
   inject: [PAYMENTS_CONFIG],
-  useFactory: (config: PaymentsConfig) => new Stripe(config.stripeSecretKey),
+  useFactory: (config: PaymentsConfig) =>
+    createStripeClient(config.stripeSecretKey),
 };
 
 export type CreateCheckoutSessionInput = {

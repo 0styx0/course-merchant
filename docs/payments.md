@@ -82,7 +82,7 @@ Flows and decisions, one file per subarea. Read the one that matches the task:
 - **Admin endpoints have no authentication yet** (see [courses.md](courses.md)). This blocks launch.
 - **The sweeper (step 5) is running.** This blocks launch: without it, a payment that should be refunded can wait indefinitely.
 - Switch to live keys. Use a restricted key limited to Checkout Sessions read and write, and Refunds write.
-- Create the production webhook endpoint subscribed to exactly the handled event types:
+- Create the production webhook endpoint with API version `2026-09-30.endive` (the one pinned in `stripeClientProvider`; set it in the Dashboard, or with `api_version` when creating the endpoint through the API), subscribed to exactly the handled event types:
   - `checkout.session.completed`
   - `checkout.session.expired`
   - `charge.refunded`

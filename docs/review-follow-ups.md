@@ -63,12 +63,14 @@ This file is temporary. When an item ships, tick it and move its decision rows i
   - [email-composer.ts](../api/src/email/email-composer.ts) parses the payload instead of casting it. A payload that doesn't parse is a failed attempt, like a missing row.
 
   *Why:* queued rows outlive deploys, so a row written under an older payload shape would otherwise render `undefined` or throw inside a template.
-- [ ] **R9. Pin the Stripe API version.** **Next**
+- [x] **R9. Pin the Stripe API version.**
   - Set `apiVersion` in `stripeClientProvider` ([stripe.service.ts](../api/src/payments/stripe.service.ts)) to the version the SDK is typed for (`2026-09-30.endive` in stripe 23.0.0).
   - Launch checklist: create the production webhook endpoint with the same API version.
 
   *Why:* webhook payloads follow the endpoint's API version. If it differs from the SDK's, events no longer match the SDK's types, and nothing at compile time notices.
-- [ ] **R10. Validate every setting at startup, inside the module that uses it.**
+
+  The decision row is in [fulfillment.md](payments/fulfillment.md). `createStripeClient` builds the client, so unit tests carry the pin too.
+- [ ] **R10. Validate every setting at startup, inside the module that uses it.** **Next**
   - `DATABASE_URL` gets a Zod loader beside [db.ts](../api/src/prisma/db.ts). Today a missing value fails at the first query, not at startup.
   - `PORT` gets one beside [main.ts](../api/src/main.ts).
   - The `ALLOWED_CURRENCIES` parser moves into the courses module, its only user.
