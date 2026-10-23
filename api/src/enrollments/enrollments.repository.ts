@@ -73,10 +73,11 @@ export class EnrollmentsRepository {
       return newEnrollmentId;
     }
 
-    // only a revoked, unsuspended enrollment can be reactivated. Matching on
-    // revokedAt means a concurrent request that already reactivated it finds
-    // nothing to update
-    const reactivatedEnrollment = await scope.orm.public.Enrollment.where(
+    // only a revoked, unsuspended enrollment can be reactivated. The
+    // condition is part of the UPDATE itself, so of two concurrent requests
+    // only one changes the row. A plain .update reads the row first and then
+    // updates it by id alone, so both would reactivate it
+    const reactivatedEnrollments = await scope.orm.public.Enrollment.where(
       (enrollment) =>
         and(
           enrollment.courseId.eq(courseId),
@@ -84,7 +85,19 @@ export class EnrollmentsRepository {
           enrollment.revokedAt.isNotNull(),
           enrollment.suspendedAt.isNull(),
         ),
-    ).update({ revokedAt: null, paymentId, purchasedAt: now });
+    ).updateAndCount({ revokedAt: null, paymentId, purchasedAt: now });
+
+    if (reactivatedEnrollments !== 1) {
+      return null;
+    }
+
+    // updateAndCount returns only the count, and an enrollment's id never
+    // changes, so reading it after the update is safe
+    const reactivatedEnrollment = await this.findEnrollment(
+      scope,
+      courseId,
+      customerId,
+    );
 
     return reactivatedEnrollment?.id ?? null;
   }

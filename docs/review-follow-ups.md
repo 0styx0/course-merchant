@@ -27,13 +27,15 @@ This file is temporary. When an item ships, tick it and move its decision rows i
   - `src/test/` is no longer compiled into `dist/`.
 
   *Verified:* build, production-only install in a scratch directory, boot with the `.env.test` settings, and `GET /v1/courses` answered 200.
-- [ ] **R3. Make reactivating a refunded enrollment safe against races.** **Next**
+- [x] **R3. Make reactivating a refunded enrollment safe against races.**
   - In `grantAccess` ([enrollments.repository.ts](../api/src/enrollments/enrollments.repository.ts)), replace `.update` with `updateAndCount` (same filter), and return the enrollment's id only when the count is 1.
   - Fix the comment that claims `.update` already stops a concurrent reactivation.
   - Add a concurrency integration test: two `grantAccess` calls on one revoked enrollment, run together. Exactly one returns an id.
 
   *Why:* `.update` reads the row, then updates it by id alone, so both calls can reactivate it. The buyer then gets two access emails, and `paymentId` silently points at whichever payment wrote last.
-- [ ] **R4. Remove the customer's name from buyer emails.**
+
+  *Verified:* the new test failed against the old `.update` in 8 of 8 runs (both calls returned the id) and passes with `updateAndCount`. After a count of 1, the id is read back with `findEnrollment`, since `updateAndCount` returns only the count.
+- [ ] **R4. Remove the customer's name from buyer emails.** **Next**
   - `access_granted`, `already_owned` and `access_suspended` no longer greet by name. For example, "You now have access to {course}." replaces "Hi {name}, you now have access…". The exact wording goes in the outline.
   - The name is still stored and shown in the admin view.
 

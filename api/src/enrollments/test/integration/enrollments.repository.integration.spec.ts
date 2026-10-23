@@ -191,6 +191,37 @@ describe("EnrollmentsRepository (integration)", () => {
       });
     });
 
+    it("reactivates a revoked enrollment once when two payments arrive at once", async () => {
+      const customer = await createCustomer({});
+      const enrollment = await enroll(customer.id, {
+        revokedAt: Temporal.Instant.from("2026-10-01T00:00:00Z"),
+      });
+      const firstPayment = await createPaymentFor(customer.id);
+      const secondPayment = await createPayment({
+        customerId: customer.id,
+        coursePriceId: firstPayment.coursePriceId,
+        amount: firstPayment.amount,
+        currency: firstPayment.currency,
+      });
+
+      const results = await Promise.all([
+        repository.grantAccess(db, {
+          ...freeAccess(customer.id),
+          paymentId: firstPayment.id,
+        }),
+        repository.grantAccess(db, {
+          ...freeAccess(customer.id),
+          paymentId: secondPayment.id,
+        }),
+      ]);
+
+      expect(results.filter(Boolean)).toEqual([enrollment.id]);
+      expect(await findEnrollmentRow(customer.id)).toMatchObject({
+        revokedAt: null,
+        paymentId: results[0] === null ? secondPayment.id : firstPayment.id,
+      });
+    });
+
     it("points a reactivated enrollment at the new payment", async () => {
       const customer = await createCustomer({});
       const enrollment = await enroll(customer.id, {
