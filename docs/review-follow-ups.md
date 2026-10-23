@@ -84,12 +84,14 @@ This file is temporary. When an item ships, tick it and move its decision rows i
   *Why:* "what changes a payment's state?" then has a one-file answer.
 
   `findPaymentStatusByCheckoutId` is a read, but it moved too: it looks payments up by their provider fields, so `CheckoutRepository` no longer queries `Payment` at all. `CheckoutService` now injects both repositories.
-- [ ] **R12. Put shared code where a search would find it.** **Next**
+- [x] **R12. Put shared code where a search would find it.**
   - `ZodValidationPipe` and `toJsonPointer` move from `courses/pipes/create-course-validation.pipe.ts` to `common/validation/zod-validation.pipe.ts`.
   - `CompletedCheckout` and `ExpiredCheckout` move to `payments/checkout-events.ts`, and the Stripe event mappers to `payments/stripe-events.ts`. This removes the type-import cycle between `stripe.service.ts` and `fulfillment.service.ts`.
   - Error-code enums are named by domain (`ErrorCodeCourse`, …), not by operation (`ErrorCodeCourseGet`).
   - Remove the unused `TOO_MANY_REQUESTS` from the contract and the code, regenerate both type files, and update the launch-checklist line that mentions it.
-- [ ] **R13. Course repositories take a `DbScope`.** `CoursesRepository` and `AdminCoursesRepository` follow the newer repositories: stateless, with the service owning the transaction.
+
+  The pipe file is now `common/validation/zod-validation.pipe.ts`, with its spec. Old paths have no re-export shims.
+- [ ] **R13. Course repositories take a `DbScope`.** **Next** `CoursesRepository` and `AdminCoursesRepository` follow the newer repositories: stateless, with the service owning the transaction.
 - [ ] **R14. Give a course's latest status one definition.**
   - Export `latestStatusIs(name)` and `latestStatusIsNot(name)` from [course-visibility.ts](../api/src/courses/course-visibility.ts), and use them in the public and admin queries. Today "latest status" is worked out in 3 places.
   - Add `@@unique([courseId, changedAt])` on `CourseStatus`, with a migration.

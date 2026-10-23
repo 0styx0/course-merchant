@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-import {
-  ExpiryService,
-  type ExpiredCheckout,
-} from "@/payments/expiry.service.js";
+import type { ExpiredCheckout } from "@/payments/checkout-events.js";
+import { ExpiryService } from "@/payments/expiry.service.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 

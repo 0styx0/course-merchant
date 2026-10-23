@@ -4,7 +4,7 @@ export enum ErrorCodeGeneric {
   INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR",
 }
 
-export enum ErrorCodeCourseGet {
+export enum ErrorCodeCourse {
   COURSE_NOT_FOUND = "COURSE_NOT_FOUND",
   INVALID_COURSE_ID = "INVALID_COURSE_ID",
 }
@@ -16,7 +16,6 @@ export enum ErrorCodeValidation {
 export enum ErrorCodeCheckout {
   COURSE_NOT_PURCHASABLE = "COURSE_NOT_PURCHASABLE",
   CHECKOUT_NOT_FOUND = "CHECKOUT_NOT_FOUND",
-  TOO_MANY_REQUESTS = "TOO_MANY_REQUESTS",
   PAYMENT_PROVIDER_UNAVAILABLE = "PAYMENT_PROVIDER_UNAVAILABLE",
 }
 
@@ -42,7 +41,7 @@ export enum FieldErrorCode {
 }
 
 export const ErrorCode = {
-  ...ErrorCodeCourseGet,
+  ...ErrorCodeCourse,
   ...ErrorCodeGeneric,
   ...ErrorCodeValidation,
   ...ErrorCodeCheckout,
@@ -50,7 +49,7 @@ export const ErrorCode = {
 };
 
 export type ErrorCode =
-  | ErrorCodeCourseGet
+  | ErrorCodeCourse
   | ErrorCodeGeneric
   | ErrorCodeValidation
   | ErrorCodeCheckout
@@ -85,10 +84,6 @@ export const ERROR_DEFINITIONS = {
   [ErrorCode.CHECKOUT_NOT_FOUND]: {
     status: HttpStatus.NOT_FOUND,
     title: "Checkout not found",
-  },
-  [ErrorCode.TOO_MANY_REQUESTS]: {
-    status: HttpStatus.TOO_MANY_REQUESTS,
-    title: "Too many requests",
   },
   [ErrorCode.PAYMENT_PROVIDER_UNAVAILABLE]: {
     status: HttpStatus.SERVICE_UNAVAILABLE,

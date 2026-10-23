@@ -581,15 +581,6 @@ export interface components {
                 "application/problem+json": components["schemas"]["ProblemDetails"];
             };
         };
-        /** @description Too many requests from this client. Retry after a short delay. */
-        TooManyRequests: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["ProblemDetails"];
-            };
-        };
         /** @description The payment provider couldn't be reached. Retry later. */
         PaymentProviderUnavailable: {
             headers: {
@@ -821,7 +812,6 @@ export interface operations {
             400: components["responses"]["ValidationFailed"];
             404: components["responses"]["CourseNotFound"];
             409: components["responses"]["CourseNotPurchasable"];
-            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalServerError"];
             503: components["responses"]["PaymentProviderUnavailable"];
         };

@@ -495,8 +495,6 @@ paths:
           $ref: "#/components/responses/CourseNotFound"
         "409":
           $ref: "#/components/responses/CourseNotPurchasable"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
         "500":
           $ref: "#/components/responses/InternalServerError"
         "503":
@@ -747,19 +745,6 @@ components:
                 title: Checkout not found
                 detail: No checkout exists with ID cs_test_a1b2c3.
                 code: CHECKOUT_NOT_FOUND
-
-    TooManyRequests:
-      description: Too many requests from this client. Retry after a short delay.
-      content:
-        application/problem+json:
-          schema:
-            $ref: "#/components/schemas/ProblemDetails"
-          examples:
-            tooMany:
-              value:
-                title: Too many requests
-                detail: Too many checkout attempts. Try again in a minute.
-                code: TOO_MANY_REQUESTS
 
     PaymentProviderUnavailable:
       description: The payment provider couldn't be reached. Retry later.

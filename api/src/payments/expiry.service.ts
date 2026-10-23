@@ -2,21 +2,8 @@ import { Inject, Injectable } from "@nestjs/common";
 
 import { PrismaService } from "@/prisma/prisma.service.js";
 import { isOurPaymentId } from "./payment-id.js";
-import {
-  PaymentsRepository,
-  type ProviderEvent,
-} from "./payments.repository.js";
-
-/**
- * A checkout the provider reports as expired, in our terms: the buyer left
- * without paying.
- */
-export type ExpiredCheckout = {
-  event: ProviderEvent;
-  // our Payment id, echoed back by the provider. Null when the checkout
-  // wasn't started by us
-  paymentId: string | null;
-};
+import type { ExpiredCheckout } from "./checkout-events.js";
+import { PaymentsRepository } from "./payments.repository.js";
 
 /**
  * Marks the payment of an abandoned checkout as expired. There's nothing to

@@ -7,10 +7,8 @@ import {
   type QueuedEmail,
 } from "@/email/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
-import {
-  FulfillmentService,
-  type CompletedCheckout,
-} from "@/payments/fulfillment.service.js";
+import type { CompletedCheckout } from "@/payments/checkout-events.js";
+import { FulfillmentService } from "@/payments/fulfillment.service.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
 import {
   StripeService,

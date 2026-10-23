@@ -14,7 +14,7 @@ import type {
   StartCheckoutRequest,
   StartCheckoutResponse,
 } from "types.js";
-import { ZodValidationPipe } from "@/courses/pipes/create-course-validation.pipe.js";
+import { ZodValidationPipe } from "@/common/validation/zod-validation.pipe.js";
 import { CheckoutService } from "./checkout.service.js";
 import { startCheckoutRequestSchema } from "./validation/start-checkout-request.schema.js";
 

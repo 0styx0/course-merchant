@@ -17,7 +17,7 @@ import type {
 } from "types.js";
 import { ParseCourseIdPipe } from "./pipes/parse-course-id.pipe.js";
 import { AdminCoursesService } from "./admin-courses.service.js";
-import { ZodValidationPipe } from "./pipes/create-course-validation.pipe.js";
+import { ZodValidationPipe } from "@/common/validation/zod-validation.pipe.js";
 import {
   createCourseRequestSchema,
   updateCourseRequestSchema,

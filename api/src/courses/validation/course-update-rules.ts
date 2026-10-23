@@ -2,7 +2,7 @@ import { Temporal } from "@js-temporal/polyfill";
 
 import { FieldErrorCode } from "@/common/errors/error-codes.js";
 import type { ValidationError } from "@/common/errors/validation.exception.js";
-import { toJsonPointer } from "../pipes/create-course-validation.pipe.js";
+import { toJsonPointer } from "@/common/validation/zod-validation.pipe.js";
 import type { CourseRepositoryModelAdmin } from "../courses.repository/admin-courses.repository.js";
 import type { UpdateCourseRequest } from "types.js";
 

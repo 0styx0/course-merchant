@@ -98,7 +98,7 @@ Flows and decisions, one file per subarea. Read the one that matches the task:
   - the webhook exempt;
   - log 429s and tune afterwards.
 
-  Then remove the unused `TOO_MANY_REQUESTS` from the contract and the code, or start using it.
+  The API doesn't produce 429s itself: `TOO_MANY_REQUESTS` was removed from the contract and the code, so the edge's 429s are the only ones.
 - Manual test in Stripe test mode:
   1. Run `stripe listen --forward-to localhost:3000/v1/webhooks/stripe`.
   2. Pay with test card `4242…`.

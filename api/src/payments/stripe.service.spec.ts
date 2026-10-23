@@ -4,15 +4,17 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { PaymentsConfig } from "@/payments/payments-config.js";
 import {
-  completedCheckoutFromEvent,
   createStripeClient,
-  expiredCheckoutFromEvent,
   InvalidWebhookSignatureError,
   PaymentProviderUnavailableError,
   StripeService,
   type CreateCheckoutSessionInput,
   type RefundPaymentInput,
 } from "./stripe.service.js";
+import {
+  completedCheckoutFromEvent,
+  expiredCheckoutFromEvent,
+} from "./stripe-events.js";
 
 const config: PaymentsConfig = {
   stripeSecretKey: "sk_test_unit",
