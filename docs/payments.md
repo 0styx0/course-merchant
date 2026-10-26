@@ -80,6 +80,7 @@ Flows and decisions, one file per subarea. Read the one that matches the task:
 ## Launch checklist
 
 - **The sweeper runs in production.** It's built (step 5), and every API server runs it. Check the logs after deploying: a repeating `Couldn't refund payment …` line is the only alert for a refund Stripe keeps refusing. Without it, a payment that should be refunded can wait indefinitely, so this blocks launch.
+- Use `?sslmode=verify-full` in `DATABASE_URL` when the database is on another machine. The API refuses to start with anything weaker than `require` (the Prisma command line, used for migrations, doesn't check, so give it the same URL).
 - Switch to live keys. Use a restricted key limited to Checkout Sessions read and write, and Refunds write.
 - Create the production webhook endpoint with API version `2026-09-30.endive` (the one pinned in `stripeClientProvider`; set it in the Dashboard, or with `api_version` when creating the endpoint through the API), subscribed to exactly the handled event types:
   - `checkout.session.completed`
