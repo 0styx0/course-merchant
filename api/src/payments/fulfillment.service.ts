@@ -19,10 +19,14 @@ import {
   PaymentsRepository,
   type FulfillmentPayment,
 } from "./payments.repository.js";
-import type { CompletedCheckout } from "./checkout-events.js";
-import { StripeService, type RefundCause } from "./stripe.service.js";
+import type {
+  CheckoutCompletion,
+  CompletedCheckout,
+} from "./checkout-events.js";
+import { PaymentRefunds } from "./payment-refunds.js";
+import type { RefundCause } from "./stripe.service.js";
 
-type ProviderPayment = NonNullable<CompletedCheckout["providerPayment"]>;
+type ProviderPayment = NonNullable<CheckoutCompletion["providerPayment"]>;
 
 enum FulfillmentNextStep {
   // everything was recorded; nothing left to do
@@ -68,12 +72,27 @@ export class FulfillmentService {
     private readonly enrollmentsRepository: EnrollmentsRepository,
     @Inject(EmailOutboxRepository)
     private readonly emailOutbox: EmailOutboxRepository,
-    @Inject(StripeService)
-    private readonly stripeService: StripeService,
+    @Inject(PaymentRefunds)
+    private readonly paymentRefunds: PaymentRefunds,
   ) {}
 
   async fulfillCheckout(checkout: CompletedCheckout): Promise<void> {
     const decision = await this.recordFulfillment(checkout);
+
+    await this.carryOut(decision);
+  }
+
+  /**
+   * Fulfills a checkout the sweeper retrieved. There is no event to record:
+   * the guarded payment update alone stops this and the webhook from both
+   * fulfilling it.
+   */
+  async fulfillRetrievedCheckout(
+    completion: CheckoutCompletion,
+  ): Promise<void> {
+    const decision = await this.prisma.db.transaction((tx) =>
+      this.fulfillCompletion(tx, completion),
+    );
 
     await this.carryOut(decision);
   }
@@ -87,7 +106,7 @@ export class FulfillmentService {
         checkout.event,
       );
 
-      return isNewEvent ? this.fulfillNewEvent(tx, checkout) : DONE;
+      return isNewEvent ? this.fulfillCompletion(tx, checkout) : DONE;
     });
   }
 
@@ -110,7 +129,7 @@ export class FulfillmentService {
     cause: RefundCause;
   }): Promise<void> {
     try {
-      await this.stripeService.refundPayment({
+      await this.paymentRefunds.refund({
         paymentId: decision.paymentId,
         providerPaymentId: decision.providerPaymentId,
         cause: decision.cause,
@@ -123,9 +142,9 @@ export class FulfillmentService {
     }
   }
 
-  private async fulfillNewEvent(
+  private async fulfillCompletion(
     tx: DbScope,
-    checkout: CompletedCheckout,
+    checkout: CheckoutCompletion,
   ): Promise<FulfillmentDecision> {
     const { providerPayment } = checkout;
 

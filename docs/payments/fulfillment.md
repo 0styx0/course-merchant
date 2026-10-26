@@ -15,12 +15,12 @@ Read this before working on the Stripe webhook, `FulfillmentService`, `ExpirySer
       - **revoked:** reactivate it, pointing `paymentId` and `purchasedAt` at the new payment;
       - **active** (a double purchase from two tabs): queue "already owned" with `refundIssued: true`;
       - **suspended:** queue "access suspended" with `refundIssued: true`.
-3. Once the database changes are saved, refund a double purchase or a suspended buyer's payment, keyed by our payment id. If the refund fails, still reply 200; the sweeper retries it.
+3. Once the database changes are saved, refund a double purchase or a suspended buyer's payment, keyed by our payment id. A successful refund marks the payment `refunded` (`PaymentRefunds`). If the refund fails, still reply 200; the sweeper retries it.
 4. Reply 2xx quickly. Emails are sent by the outbox worker, never during the request.
 
 **Two layers of duplicate protection:**
 - `ProcessedPaymentEvent` catches Stripe sending the same event again.
-- The conditional updates catch the webhook and the sweeper racing each other. The sweeper has no event id, so the event table can't protect against that race.
+- The conditional updates catch the webhook and the sweeper racing each other. The sweeper has no event id (`fulfillRetrievedCheckout` records none), so the event table can't protect against that race.
 
 ## Decisions
 
@@ -45,3 +45,4 @@ Read this before working on the Stripe webhook, `FulfillmentService`, `ExpirySer
 | Fulfillment emails aren't capped per address | Only a real payment queues them, and a buyer who paid must get the link | Reusing checkout's cap |
 | The controller maps `InvalidWebhookSignatureError` to `INVALID_WEBHOOK_SIGNATURE` itself, and a missing `rawBody` is verified as an empty body | Only this controller needs the mapping; an empty body fails the signature check, so there is no separate case | An exception filter; a special case for a missing body |
 | Unhandled event types are acknowledged with 200 | Stripe retries non-2xx for days; an event we don't act on needs no retry | 400 or 501 |
+| `FulfillmentService` and the sweeper refund through `PaymentRefunds`, which marks the payment `refunded` after Stripe accepts | One place decides what "refunded" means in our records, and the sweeper stops retrying it. A refund that fails leaves the payment `succeeded` | Marking it from the `charge.refunded` event only |

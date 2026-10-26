@@ -6,8 +6,8 @@ import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import type { CompletedCheckout } from "@/payments/checkout-events.js";
 import { FulfillmentService } from "@/payments/fulfillment.service.js";
+import { PaymentRefunds } from "@/payments/payment-refunds.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
-import { StripeService } from "@/payments/stripe.service.js";
 import {
   asDependency,
   fakePrisma,
@@ -52,7 +52,7 @@ describe("FulfillmentService", () => {
     "findEnrollment" | "grantAccess"
   >;
   let emailOutbox: MockMethods<EmailOutboxRepository, "enqueue">;
-  let stripeService: MockMethods<StripeService, "refundPayment">;
+  let paymentRefunds: MockMethods<PaymentRefunds, "refund">;
   let fake: ReturnType<typeof fakePrisma>;
   // the scope the service passes to repositories inside its transaction
   let tx: ReturnType<typeof fakePrisma>["tx"];
@@ -108,11 +108,8 @@ describe("FulfillmentService", () => {
     emailOutbox = {
       enqueue: tracked<EmailOutboxRepository["enqueue"]>("enqueue", undefined),
     };
-    stripeService = {
-      refundPayment: tracked<StripeService["refundPayment"]>(
-        "refundPayment",
-        undefined,
-      ),
+    paymentRefunds = {
+      refund: tracked<PaymentRefunds["refund"]>("refund", undefined),
     };
 
     fake = fakePrisma({
@@ -130,7 +127,7 @@ describe("FulfillmentService", () => {
       asDependency<PaymentsRepository>(paymentsRepository),
       asDependency<EnrollmentsRepository>(enrollmentsRepository),
       asDependency<EmailOutboxRepository>(emailOutbox),
-      asDependency<StripeService>(stripeService),
+      asDependency<PaymentRefunds>(paymentRefunds),
     );
   });
 
@@ -144,7 +141,7 @@ describe("FulfillmentService", () => {
     expect(paymentsRepository.markPaymentSucceeded).not.toHaveBeenCalled();
     expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();
     expect(emailOutbox.enqueue).not.toHaveBeenCalled();
-    expect(stripeService.refundPayment).not.toHaveBeenCalled();
+    expect(paymentRefunds.refund).not.toHaveBeenCalled();
   }
 
   describe("events it doesn't fulfill", () => {
@@ -285,8 +282,8 @@ describe("FulfillmentService", () => {
     it("refunds this payment", async () => {
       await service.fulfillCheckout(makeCheckout());
 
-      expect(stripeService.refundPayment).toHaveBeenCalledTimes(1);
-      expect(stripeService.refundPayment).toHaveBeenCalledWith({
+      expect(paymentRefunds.refund).toHaveBeenCalledTimes(1);
+      expect(paymentRefunds.refund).toHaveBeenCalledWith({
         paymentId: PAYMENT_ID,
         providerPaymentId: "pi_test_1",
         cause: "double_purchase",
@@ -297,14 +294,14 @@ describe("FulfillmentService", () => {
       await service.fulfillCheckout(makeCheckout());
 
       expect(fake.db.transaction).toHaveBeenCalledTimes(1);
-      expect(callsOutsideTransaction).toEqual(["refundPayment"]);
+      expect(callsOutsideTransaction).toEqual(["refund"]);
     });
 
     it("still resolves, and logs, when the refund fails", async () => {
       const errorSpy = vi
         .spyOn(Logger.prototype, "error")
         .mockImplementation(() => {});
-      stripeService.refundPayment.mockRejectedValue(new Error("stripe down"));
+      paymentRefunds.refund.mockRejectedValue(new Error("stripe down"));
 
       await expect(
         service.fulfillCheckout(makeCheckout()),
@@ -321,7 +318,7 @@ describe("FulfillmentService", () => {
       await expect(service.fulfillCheckout(makeCheckout())).rejects.toThrow(
         "outbox unavailable",
       );
-      expect(stripeService.refundPayment).not.toHaveBeenCalled();
+      expect(paymentRefunds.refund).not.toHaveBeenCalled();
     });
   });
 
@@ -348,19 +345,19 @@ describe("FulfillmentService", () => {
     it("refunds this payment after the transaction has committed", async () => {
       await service.fulfillCheckout(makeCheckout());
 
-      expect(stripeService.refundPayment).toHaveBeenCalledExactlyOnceWith({
+      expect(paymentRefunds.refund).toHaveBeenCalledExactlyOnceWith({
         paymentId: PAYMENT_ID,
         providerPaymentId: "pi_test_1",
         cause: "suspended_access",
       });
-      expect(callsOutsideTransaction).toEqual(["refundPayment"]);
+      expect(callsOutsideTransaction).toEqual(["refund"]);
     });
 
     it("still resolves, and logs, when the refund fails", async () => {
       const errorSpy = vi
         .spyOn(Logger.prototype, "error")
         .mockImplementation(() => {});
-      stripeService.refundPayment.mockRejectedValue(new Error("stripe down"));
+      paymentRefunds.refund.mockRejectedValue(new Error("stripe down"));
 
       await expect(
         service.fulfillCheckout(makeCheckout()),
@@ -380,9 +377,60 @@ describe("FulfillmentService", () => {
     expect(callsOutsideTransaction).toEqual([]);
   });
 
-  it("never calls the provider for an ordinary purchase", async () => {
+  describe("fulfillRetrievedCheckout", () => {
+    function makeCompletion() {
+      const { paymentId, providerCheckoutId, providerPayment } = makeCheckout();
+
+      return { paymentId, providerCheckoutId, providerPayment };
+    }
+
+    it("fulfills the checkout without recording an event", async () => {
+      await service.fulfillRetrievedCheckout(makeCompletion());
+
+      expect(paymentsRepository.recordProcessedEvent).not.toHaveBeenCalled();
+      expect(paymentsRepository.markPaymentSucceeded).toHaveBeenCalledWith(tx, {
+        id: PAYMENT_ID,
+        providerCheckoutId: "cs_test_1",
+        providerPaymentId: "pi_test_1",
+        paidAt,
+      });
+      expect(emailOutbox.enqueue).toHaveBeenCalledWith(
+        tx,
+        expect.objectContaining({ kind: "access_granted" }),
+      );
+      expect(callsOutsideTransaction).toEqual([]);
+    });
+
+    it("stops when the webhook already fulfilled the payment", async () => {
+      paymentsRepository.markPaymentSucceeded.mockResolvedValue(false);
+
+      await service.fulfillRetrievedCheckout(makeCompletion());
+
+      expect(enrollmentsRepository.grantAccess).not.toHaveBeenCalled();
+      expect(paymentRefunds.refund).not.toHaveBeenCalled();
+    });
+
+    it("refunds a double purchase after the transaction commits", async () => {
+      enrollmentsRepository.findEnrollment.mockResolvedValue({
+        id: "enrollment-1",
+        revokedAt: null,
+        suspendedAt: null,
+      });
+
+      await service.fulfillRetrievedCheckout(makeCompletion());
+
+      expect(paymentRefunds.refund).toHaveBeenCalledExactlyOnceWith({
+        paymentId: PAYMENT_ID,
+        providerPaymentId: "pi_test_1",
+        cause: "double_purchase",
+      });
+      expect(callsOutsideTransaction).toEqual(["refund"]);
+    });
+  });
+
+  it("never refunds an ordinary purchase", async () => {
     await service.fulfillCheckout(makeCheckout());
 
-    expect(stripeService.refundPayment).not.toHaveBeenCalled();
+    expect(paymentRefunds.refund).not.toHaveBeenCalled();
   });
 });

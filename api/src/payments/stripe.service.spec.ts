@@ -14,6 +14,7 @@ import {
 import {
   completedCheckoutFromEvent,
   expiredCheckoutFromEvent,
+  retrievedCheckoutFromSession,
 } from "./stripe-events.js";
 
 const config: PaymentsConfig = {
@@ -293,12 +294,27 @@ describe("StripeService", () => {
       );
     });
 
-    it("passes a rejected request through unchanged", async () => {
+    it("counts a payment that is already fully refunded as refunded", async () => {
       const { service } = serviceWith(() =>
         jsonResponse(400, {
           error: {
             type: "invalid_request_error",
-            message: "Charge already refunded.",
+            code: "charge_already_refunded",
+            message: "Charge ch_test_1 has already been refunded.",
+          },
+        }),
+      );
+
+      await expect(service.refundPayment(refundInput)).resolves.toBeUndefined();
+    });
+
+    it("passes any other rejected request through unchanged", async () => {
+      const { service } = serviceWith(() =>
+        jsonResponse(400, {
+          error: {
+            type: "invalid_request_error",
+            code: "resource_missing",
+            message: "No such payment_intent: pi_test_1",
           },
         }),
       );
@@ -306,6 +322,62 @@ describe("StripeService", () => {
       await expect(service.refundPayment(refundInput)).rejects.toBeInstanceOf(
         Stripe.errors.StripeInvalidRequestError,
       );
+    });
+  });
+
+  describe("retrieveCheckout", () => {
+    const openSession = {
+      id: "cs_test_123",
+      object: "checkout.session",
+      status: "open",
+    };
+
+    it("fetches the session with its charge, so the payment time is known", async () => {
+      const { service, requests } = serviceWith(() =>
+        jsonResponse(200, openSession),
+      );
+
+      await service.retrieveCheckout("cs_test_123");
+
+      expect(requests).toHaveLength(1);
+      expect(requests[0].url).toContain("/v1/checkout/sessions/cs_test_123");
+      expect(new URL(requests[0].url).searchParams.get("expand[0]")).toBe(
+        "payment_intent.latest_charge",
+      );
+    });
+
+    it("returns the checkout in our terms", async () => {
+      const { service } = serviceWith(() => jsonResponse(200, openSession));
+
+      await expect(service.retrieveCheckout("cs_test_123")).resolves.toEqual({
+        state: "open",
+      });
+    });
+
+    it("reports an unreachable Stripe as unavailable", async () => {
+      const { service } = serviceWith(() => {
+        throw new TypeError("fetch failed");
+      });
+
+      await expect(
+        service.retrieveCheckout("cs_test_123"),
+      ).rejects.toBeInstanceOf(PaymentProviderUnavailableError);
+    });
+
+    it("passes a rejected request through unchanged", async () => {
+      const { service } = serviceWith(() =>
+        jsonResponse(404, {
+          error: {
+            type: "invalid_request_error",
+            code: "resource_missing",
+            message: "No such checkout.session: cs_test_123",
+          },
+        }),
+      );
+
+      await expect(
+        service.retrieveCheckout("cs_test_123"),
+      ).rejects.toBeInstanceOf(Stripe.errors.StripeInvalidRequestError);
     });
   });
 
@@ -501,5 +573,74 @@ describe("expiredCheckoutFromEvent", () => {
 
   it("passes a missing client_reference_id through as null", () => {
     expect(expiredCheckoutFromEvent(makeEvent(null)).paymentId).toBeNull();
+  });
+});
+
+describe("retrievedCheckoutFromSession", () => {
+  // 2026-10-21T12:00:00Z, in the seconds Stripe uses
+  const CHARGED = 1792584000;
+
+  // only the fields the mapper reads; the rest of Stripe's session is irrelevant
+  function makeSession(
+    session: Partial<Stripe.Checkout.Session> = {},
+  ): Stripe.Checkout.Session {
+    return {
+      id: "cs_test_1",
+      status: "complete",
+      client_reference_id: "8b0e1f5c-0000-4000-8000-000000000004",
+      payment_status: "paid",
+      payment_intent: {
+        id: "pi_test_1",
+        latest_charge: { id: "ch_test_1", created: CHARGED },
+      },
+      ...session,
+    } as unknown as Stripe.Checkout.Session;
+  }
+
+  it("reads a completed checkout, paid when the buyer was charged", () => {
+    expect(retrievedCheckoutFromSession(makeSession())).toEqual({
+      state: "completed",
+      completion: {
+        paymentId: "8b0e1f5c-0000-4000-8000-000000000004",
+        providerCheckoutId: "cs_test_1",
+        providerPayment: {
+          id: "pi_test_1",
+          paidAt: Temporal.Instant.from("2026-10-21T12:00:00Z"),
+        },
+      },
+    });
+  });
+
+  it("has no payment when the checkout completed unpaid", () => {
+    const retrieved = retrievedCheckoutFromSession(
+      makeSession({ payment_status: "unpaid", payment_intent: null }),
+    );
+
+    expect(retrieved).toMatchObject({
+      state: "completed",
+      completion: { providerPayment: null },
+    });
+  });
+
+  it("reads an expired checkout", () => {
+    expect(
+      retrievedCheckoutFromSession(makeSession({ status: "expired" })),
+    ).toEqual({ state: "expired" });
+  });
+
+  it("reads a checkout the buyer can still pay as open", () => {
+    expect(
+      retrievedCheckoutFromSession(makeSession({ status: "open" })),
+    ).toEqual({ state: "open" });
+  });
+
+  it("throws when a paid checkout has no charge to take the time from", () => {
+    const session = makeSession({
+      payment_intent: { id: "pi_test_1", latest_charge: "ch_test_1" } as never,
+    });
+
+    expect(() => retrievedCheckoutFromSession(session)).toThrow(
+      "Stripe reported Checkout Session cs_test_1 as paid without a charge.",
+    );
   });
 });

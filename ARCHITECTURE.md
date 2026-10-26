@@ -50,7 +50,7 @@ Stripe is the record of money: the app stores only what it needs to decide who h
 |---|---|
 | [courses/](api/src/courses/) | Public browsing and admin create/edit. [course-visibility.ts](api/src/courses/course-visibility.ts) holds the one definition of "publicly visible", shared with checkout. |
 | [checkout/](api/src/checkout/) | Starting a checkout: decide what the buyer gets, record it, then hand off to Stripe. Also the status endpoint. |
-| [payments/](api/src/payments/) | `Payment` records, the Stripe wrapper ([stripe.service.ts](api/src/payments/stripe.service.ts)), fulfillment of completed checkouts, and expiry. |
+| [payments/](api/src/payments/) | `Payment` records, the Stripe wrapper ([stripe.service.ts](api/src/payments/stripe.service.ts)), fulfillment of completed checkouts, expiry, refunds, and the sweeper ([payment-sweeper.ts](api/src/payments/payment-sweeper.ts)) that puts right what a webhook couldn't. |
 | [webhooks/](api/src/webhooks/) | The Stripe webhook endpoint: verify the signature, then hand each event type to its service. |
 | [enrollments/](api/src/enrollments/) | Granting and reactivating access, shared by checkout and fulfillment. |
 | [email/](api/src/email/) | The outbox table, the background worker, templates and the SMTP sender. |
@@ -151,14 +151,24 @@ Flow details and decisions: [checkout.md](docs/payments/checkout.md), [fulfillme
 ```
                 checkout.session.completed
             ┌─────────────────────────────▶ succeeded ──refund──▶ refunded
-  pending ──┤                                                    (planned)
-            └─────────────────────────────▶ expired
+  pending ──┤                                                    (our own refunds;
+            └─────────────────────────────▶ expired               Stripe-side ones planned)
                 checkout.session.expired
 ```
 
 Every arrow is a conditional `UPDATE … WHERE status = <from>`, which returns how many rows changed. If it changed 0 rows, another caller already moved the payment, so this call does nothing more. Two copies of the same webhook, or two webhooks arriving at once, can't both grant access.
 
 An **enrollment** is active while both `revokedAt` (set by a refund) and `suspendedAt` (set by a dispute) are empty. [enrollment-access.ts](api/src/enrollments/enrollment-access.ts) is the one place that classifies it.
+
+## The sweeper
+
+The webhook can't fix everything. A refund can fail after the database changes were saved, and a webhook can be lost. So [PaymentSweeper](api/src/payments/payment-sweeper.ts) runs every 10 minutes and does three checks, each moving a payment forward with the same conditional updates and the same fulfillment code as the webhook:
+
+1. **Refund** paid payments that no enrollment points to (a double purchase, a suspended buyer, or two payments fulfilled at once) and whose refund failed.
+2. **Ask Stripe** about pending payments whose webhook is over an hour late, and fulfill or expire them.
+3. **Expire** pending payments that never got a Stripe checkout, once Stripe's webhook retries (about 3 days) are over.
+
+Every API server runs it. That's safe because every change is conditional and a refund is keyed by the payment id.
 
 ## The email outbox
 

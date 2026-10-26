@@ -9,12 +9,14 @@ import {
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import type { CompletedCheckout } from "@/payments/checkout-events.js";
 import { FulfillmentService } from "@/payments/fulfillment.service.js";
+import { PaymentRefunds } from "@/payments/payment-refunds.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
 import {
   StripeService,
   type RefundPaymentInput,
 } from "@/payments/stripe.service.js";
 import { db } from "@/prisma/db.js";
+import { DatabaseClock } from "@/prisma/database-clock.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import {
   createCustomer,
@@ -51,12 +53,20 @@ describe("FulfillmentService (integration)", () => {
     emailOutbox = new EmailOutboxRepository(),
     stripeService = new FakeStripeService(),
   ) {
+    const prisma = new PrismaService();
+    const paymentsRepository = new PaymentsRepository();
+
     return new FulfillmentService(
-      new PrismaService(),
-      new PaymentsRepository(),
+      prisma,
+      paymentsRepository,
       new EnrollmentsRepository(),
       emailOutbox,
-      stripeService,
+      new PaymentRefunds(
+        prisma,
+        paymentsRepository,
+        stripeService,
+        new DatabaseClock(),
+      ),
     );
   }
 
@@ -237,7 +247,8 @@ describe("FulfillmentService (integration)", () => {
       },
     ]);
     expect(await findPaymentRow(secondPayment.id)).toMatchObject({
-      status: "succeeded",
+      status: "refunded",
+      refundedAt: expect.anything(),
     });
     expect(await findEnrollments()).toEqual([
       expect.objectContaining({ paymentId: firstPayment.id }),

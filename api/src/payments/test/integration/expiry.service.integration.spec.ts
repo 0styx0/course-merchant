@@ -7,7 +7,7 @@ import type { ExpiredCheckout } from "@/payments/checkout-events.js";
 import { ExpiryService } from "@/payments/expiry.service.js";
 import { FulfillmentService } from "@/payments/fulfillment.service.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
-import { StripeService } from "@/payments/stripe.service.js";
+import { PaymentRefunds } from "@/payments/payment-refunds.js";
 import { db } from "@/prisma/db.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import {
@@ -108,7 +108,7 @@ describe("ExpiryService (integration)", () => {
       new PaymentsRepository(),
       new EnrollmentsRepository(),
       new EmailOutboxRepository(),
-      asDependency<StripeService>({}),
+      asDependency<PaymentRefunds>({}),
     );
     await fulfillment.fulfillCheckout({
       event: {

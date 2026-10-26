@@ -6,6 +6,8 @@ import {
   PAYMENTS_CONFIG,
   type PaymentsConfig,
 } from "@/payments/payments-config.js";
+import type { RetrievedCheckout } from "./checkout-events.js";
+import { retrievedCheckoutFromSession } from "./stripe-events.js";
 
 export const STRIPE_CLIENT = Symbol("STRIPE_CLIENT");
 
@@ -174,8 +176,34 @@ export class StripeService {
   }
 
   /**
+   * Asks Stripe where a checkout stands, for one whose webhook never arrived.
+   *
+   * @throws PaymentProviderUnavailableError when Stripe can't be reached or
+   * fails on its side, so the caller can retry later
+   */
+  async retrieveCheckout(
+    providerCheckoutId: string,
+  ): Promise<RetrievedCheckout> {
+    const session = await this.stripe.checkout.sessions
+      .retrieve(providerCheckoutId, {
+        expand: ["payment_intent.latest_charge"],
+      })
+      .catch((error: unknown) => {
+        if (isStripeOutage(error)) {
+          throw new PaymentProviderUnavailableError({ cause: error });
+        }
+
+        throw error;
+      });
+
+    return retrievedCheckoutFromSession(session);
+  }
+
+  /**
    * Refunds a payment in full. Only a double purchase is labelled `duplicate`:
-   * none of Stripe's reasons fits a refund for a suspended buyer.
+   * none of Stripe's reasons fits a refund for a suspended buyer. A payment
+   * that is already fully refunded counts as refunded: Stripe forgets an
+   * idempotency key after about a day, so a retry can reach it again.
    *
    * @throws PaymentProviderUnavailableError when Stripe can't be reached or
    * fails on its side, so the caller can retry later
@@ -191,6 +219,10 @@ export class StripeService {
         { idempotencyKey: `refund-${input.paymentId}` },
       )
       .catch((error: unknown) => {
+        if (isAlreadyRefunded(error)) {
+          return;
+        }
+
         if (isStripeOutage(error)) {
           throw new PaymentProviderUnavailableError({ cause: error });
         }
@@ -206,6 +238,13 @@ function withCheckoutId(successUrl: string): string {
   const separator = successUrl.includes("?") ? "&" : "?";
 
   return `${successUrl}${separator}checkoutId={CHECKOUT_SESSION_ID}`;
+}
+
+function isAlreadyRefunded(error: unknown): boolean {
+  return (
+    error instanceof Stripe.errors.StripeError &&
+    error.code === "charge_already_refunded"
+  );
 }
 
 function isStripeOutage(error: unknown): boolean {

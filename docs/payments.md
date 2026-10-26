@@ -34,12 +34,11 @@ Keep these files current **in the same commit as the work**. Tick off status her
   - [x] Templates for each `EmailKind` and `EmailSender` over SMTP.
   - [x] `EmailWorker` on a `@nestjs/schedule` interval, with `EmailComposer` loading each email's course, customer or payment (via `EmailViewsRepository`) and rendering it.
   - [x] Admin course view shows each enrollment's `emailStatus`, the only alert for a failed email.
-- [ ] **5. Sweeper** (see *Sweeper* in [refunds.md](payments/refunds.md)). It comes before web checkout because three paths take a buyer's money and leave the refund to it: two payments fulfilled at once, a refund that failed after commit, and a failed refund for a suspended buyer. **Next**
-
-  Open questions for its outline, each with a recommendation:
-  - **A pending payment with no Stripe session after 1 hour.** Stripe can't look a session up by our payment id, and the session may exist and be paid, with its webhook delayed. Expiring the payment then would make the late `completed` webhook find a payment that isn't pending, so the buyer pays and gets nothing. *Decision:* expire such a payment only once it's older than Stripe's webhook retry window (about 3 days in live mode). 
-  - **A second refund after Stripe forgets the idempotency key** (about 24 hours), so a retry can't rely on `refund-<paymentId>` alone. Stripe refuses to refund a charge that's already fully refunded, with error code `charge_already_refunded`. *Decision:* treat that error as success, and after a refund succeeds or was already done, mark the payment `refunded` with a guarded `succeeded → refunded` update, so the sweeper's query stops selecting it and a later `charge.refunded` changes nothing. The same rule covers a double purchase whose two webhooks raced (see Decisions).
-- [ ] **6. Web:**
+- [x] **5. Sweeper** (see [refunds.md](payments/refunds.md)):
+  - [x] `PaymentRefunds` refunds through Stripe, then marks the payment `refunded`; fulfillment and the sweeper both use it.
+  - [x] `PaymentSweeper` on a 10-minute interval: refunds orphan payments, rechecks overdue pending payments with Stripe, expires payments with no checkout.
+  - [x] `StripeService.retrieveCheckout`, `refundPayment` treating `charge_already_refunded` as success, and `FulfillmentService.fulfillRetrievedCheckout`.
+- [ ] **6. Web:** **Next**
   - buy form on the course page;
   - `/checkout/success`, polling the status endpoint;
   - `/checkout/cancel`;
@@ -81,7 +80,7 @@ Flows and decisions, one file per subarea. Read the one that matches the task:
 ## Launch checklist
 
 - **Admin endpoints have no authentication yet** (see [courses.md](courses.md)). This blocks launch.
-- **The sweeper (step 5) is running.** This blocks launch: without it, a payment that should be refunded can wait indefinitely.
+- **The sweeper runs in production.** It's built (step 5), and every API server runs it. Check the logs after deploying: a repeating `Couldn't refund payment …` line is the only alert for a refund Stripe keeps refusing. Without it, a payment that should be refunded can wait indefinitely, so this blocks launch.
 - Switch to live keys. Use a restricted key limited to Checkout Sessions read and write, and Refunds write.
 - Create the production webhook endpoint with API version `2026-09-30.endive` (the one pinned in `stripeClientProvider`; set it in the Dashboard, or with `api_version` when creating the endpoint through the API), subscribed to exactly the handled event types:
   - `checkout.session.completed`

@@ -101,6 +101,8 @@ export async function createPendingPayment(input: {
   amount: number;
   currency: string;
   providerCheckoutId?: string;
+  // defaults to now
+  createdAt?: Temporal.Instant;
 }) {
   return db.orm.public.Payment.create({
     customerId: input.customerId,
@@ -110,6 +112,7 @@ export async function createPendingPayment(input: {
     amount: input.amount,
     currency: input.currency,
     providerCheckoutId: input.providerCheckoutId ?? null,
+    createdAt: input.createdAt,
   });
 }
 

@@ -32,6 +32,20 @@ export type FulfillmentPayment = {
   };
 };
 
+/** A paid payment that no enrollment points to, so it is owed a refund. */
+export type OrphanPayment = {
+  id: string;
+  courseId: string;
+  customerId: string;
+  providerPaymentId: string;
+};
+
+/** A pending payment the provider already has a checkout for. */
+export type StalePendingPayment = {
+  id: string;
+  providerCheckoutId: string;
+};
+
 /**
  * Records provider events and moves payments forward. Fulfillment is
  * protected against running twice by two layers, each keyed on a different id:
@@ -175,5 +189,113 @@ export class PaymentsRepository {
     ).updateAndCount({ status: "expired" });
 
     return expiredPayments === 1;
+  }
+
+  /**
+   * Marks a paid payment as refunded. Guarded like every transition, so a
+   * `charge.refunded` event arriving after our own refund changes nothing.
+   */
+  async markPaymentRefunded(
+    scope: DbScope,
+    paymentId: string,
+    refundedAt: Temporal.Instant,
+  ): Promise<boolean> {
+    const refundedPayments = await scope.orm.public.Payment.where((candidate) =>
+      and(candidate.id.eq(paymentId), candidate.status.eq("succeeded")),
+    ).updateAndCount({ status: "refunded", refundedAt });
+
+    return refundedPayments === 1;
+  }
+
+  /**
+   * Paid payments no enrollment points to, oldest first. Fulfillment leaves
+   * such a payment behind when its buyer already owned the course (a double
+   * purchase, including two fulfilled at once) or is suspended, and the
+   * refund for it failed or never happened.
+   */
+  async findOrphanPayments(
+    scope: DbScope,
+    limit: number,
+  ): Promise<OrphanPayment[]> {
+    const payments = await scope.orm.public.Payment.select(
+      "id",
+      "customerId",
+      "providerPaymentId",
+    )
+      .include("coursePrice", (coursePrice) => coursePrice.select("courseId"))
+      .where((candidate) =>
+        and(candidate.status.eq("succeeded"), candidate.enrollment.none()),
+      )
+      .orderBy((candidate) => candidate.paidAt.asc())
+      .limit(limit)
+      .all();
+
+    return payments.flatMap((payment) =>
+      // a succeeded payment always has its payment id, and both foreign keys
+      // are required, but the ORM types them as nullable
+      payment.providerPaymentId
+        ? [
+            {
+              id: payment.id,
+              courseId: payment.coursePrice!.courseId,
+              customerId: payment.customerId,
+              providerPaymentId: payment.providerPaymentId,
+            },
+          ]
+        : [],
+    );
+  }
+
+  /**
+   * Pending payments with a provider checkout that were started in the given
+   * window, oldest first.
+   */
+  async findStalePendingPayments(
+    scope: DbScope,
+    window: {
+      startedAfter: Temporal.Instant;
+      startedBefore: Temporal.Instant;
+    },
+    limit: number,
+  ): Promise<StalePendingPayment[]> {
+    const payments = await scope.orm.public.Payment.select(
+      "id",
+      "providerCheckoutId",
+    )
+      .where((candidate) =>
+        and(
+          candidate.status.eq("pending"),
+          candidate.providerCheckoutId.isNotNull(),
+          candidate.createdAt.gt(window.startedAfter),
+          candidate.createdAt.lt(window.startedBefore),
+        ),
+      )
+      .orderBy((candidate) => candidate.createdAt.asc())
+      .limit(limit)
+      .all();
+
+    return payments.flatMap((payment) =>
+      payment.providerCheckoutId
+        ? [{ id: payment.id, providerCheckoutId: payment.providerCheckoutId }]
+        : [],
+    );
+  }
+
+  /**
+   * Expires pending payments started before the given time that never got a
+   * provider checkout, and returns how many. Nothing can pay such a payment
+   * once the provider's webhook retries have run out.
+   */
+  async expirePaymentsWithoutCheckout(
+    scope: DbScope,
+    startedBefore: Temporal.Instant,
+  ): Promise<number> {
+    return scope.orm.public.Payment.where((candidate) =>
+      and(
+        candidate.status.eq("pending"),
+        candidate.providerCheckoutId.isNull(),
+        candidate.createdAt.lt(startedBefore),
+      ),
+    ).updateAndCount({ status: "expired" });
   }
 }
