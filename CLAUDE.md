@@ -17,6 +17,7 @@ A small storefront for selling courses. Two independent yarn (v1) projects, each
   - [docs/payments/email.md](docs/payments/email.md) — outbox, worker, templates, sender.
   - [docs/payments/refunds.md](docs/payments/refunds.md) — refunds, disputes, access, sweeper.
 - [docs/courses.md](docs/courses.md) — creating, editing and browsing courses: who sees what, `PUT` semantics, validation, decisions.
+- [docs/auth.md](docs/auth.md) — admin login, logout, sessions, the auth guard, and the command that creates admins: status checklist, principles, decisions.
 
 Update them in the same commit as the code they describe: tick status, add a decision row when something is decided. Record only what the code can't say (progress, why, what was rejected); never copy schemas or contract shapes into them.
 

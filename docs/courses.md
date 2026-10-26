@@ -9,7 +9,7 @@ Keep this file current **in the same commit as the work**.
 - [x] API, public: list and get courses.
 - [x] API, admin: list, get, create (`POST`) and update (`PUT`).
 - [x] Web: home page with the course list, and the course page.
-- [ ] **Admin authentication.** The contract documents bearer auth (JWT) on the admin routes, but there's no guard yet, so **the admin endpoints are open**. This blocks launch.
+- [ ] **Admin authentication.** The contract documents bearer auth on the admin routes, but there's no guard yet, so **the admin endpoints are open**. This blocks launch. Plan and status: [auth.md](auth.md).
 - [ ] Web admin pages (spec in [web/docs/admin.md](../web/docs/admin.md)).
 - [ ] Estimated payout under the admin price field (payments step 7).
 - [ ] Maybe later: a contract test that checks e2e responses against the OpenAPI schemas with Ajv. It was deferred ("not now").
@@ -63,7 +63,7 @@ Keep this file current **in the same commit as the work**.
 | Never detect DB errors by driver error code (for example a unique-violation SQLSTATE) | That relies on library internals. Use documented ORM features (`onConflict: "skip"`, conditional updates) instead, or let it become a 500 | Catching `unique_violation` |
 | Generic field error codes | `field` already says which field | Per-field prefixed codes such as `NAME_TOO_SHORT` |
 | Free courses (price 0) allowed | They skip Stripe entirely | Rejecting 0 |
-| `Idempotency-Key` removed from create; bearer auth kept in the spec | Auth is next; idempotency wasn't needed | Keeping both, or removing both |
+| `Idempotency-Key` removed from create; bearer auth kept in the spec (now a session token, not a JWT) | Auth is next; idempotency wasn't needed | Keeping both, or removing both |
 | Public get still returns ended courses | Existing links keep working; checkout gives a clear 409 | Hiding them everywhere |
 | Public `enrollmentCount` counts only active enrollments; the admin list still returns every enrollment of every course | The public number means people who have access. Admins need the full history, and there are few enrollments per course | Counting all rows publicly; filtering the admin list |
 | A course's latest status stays computed from the `CourseStatus` log, through one shared helper, with `@@unique([courseId, changedAt])` | No second copy of the status to keep in step. The query is cheap at this shop's size. The constraint closes the one real gap: two statuses with the same `changedAt` (Postgres's `now()` is fixed for a whole transaction) would both count as latest, so a deleted course could show as published. A second status write for a course in the same transaction now fails instead of tying. Same pattern as `CoursePrice`'s `@@unique([courseId, effectiveAt])` | A `Course.currentStatus` column written beside each log row (duplicated state that can drift, plus a migration and backfill); a tie-breaking sequence column |

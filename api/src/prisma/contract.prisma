@@ -193,3 +193,15 @@ model EnrollmentEmail {
 
   @@index([enrollmentId])
 }
+
+// the owner's login. Created and updated only by the set-password command
+model Admin {
+  id           Uuid                       @id @onCreate(uuid())
+  // trimmed and lowercased before it's stored or looked up
+  email        String                     @unique
+  // an Argon2id hash in the standard `$argon2id$...` string form
+  passwordHash String
+
+  createdAt    DateTime                   @default(now())
+  updatedAt    temporal.updatedAtJsDate()
+}

@@ -23,9 +23,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'63f6902dc5008589d2b1b15ff70ec05d9a838950eaf36a4238387c8747a70f58'>;
+  StorageHashBase<'20a3b20333b18a8ef1841177609e50b1a35d791bbcc3db74772211c720ab0b77'>;
 export type ExecutionHash =
-  ExecutionHashBase<'0076ed08f73a615779f1117ee8305346e79c2d63ffda1b8bc87585bba78596c8'>;
+  ExecutionHashBase<'d8cf50f3529c1ad3acbd90391999fc79bb68f288bd16af322f91669bca6b1c00'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -331,6 +331,14 @@ export type StorageColumnInputTypes = ColumnTypesFromStorage<
 >;
 
 export namespace Models {
+  export type public_Admin = {
+    createdAt: FieldOutputTypes['public']['Admin']['createdAt'];
+    email: FieldOutputTypes['public']['Admin']['email'];
+    id: FieldOutputTypes['public']['Admin']['id'];
+    passwordHash: FieldOutputTypes['public']['Admin']['passwordHash'];
+    updatedAt: FieldOutputTypes['public']['Admin']['updatedAt'];
+    readonly [RelationKeys]?: never;
+  };
   export type public_Course = {
     contentUrl: FieldOutputTypes['public']['Course']['contentUrl'];
     createdAt: FieldOutputTypes['public']['Course']['createdAt'];
@@ -439,6 +447,7 @@ export namespace Models {
 
 export declare const models: {
   public: {
+    Admin: Models.public_Admin;
     Course: Models.public_Course;
     CoursePrice: Models.public_CoursePrice;
     CourseStatus: Models.public_CourseStatus;
@@ -469,6 +478,45 @@ type ContractBase = Omit<
         readonly kind: 'postgres-schema';
         readonly entries: {
           readonly table: {
+            readonly Admin: {
+              columns: {
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly email: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly passwordHash: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly updatedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['email'] }];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
             readonly Course: {
               columns: {
                 readonly contentUrl: {
@@ -1138,6 +1186,7 @@ type ContractBase = Omit<
   readonly target: 'postgres';
   readonly targetFamily: 'sql';
   readonly roots: {
+    readonly Admin: { readonly namespace: 'public' & NamespaceId; readonly model: 'Admin' };
     readonly Course: { readonly namespace: 'public' & NamespaceId; readonly model: 'Course' };
     readonly CoursePrice: {
       readonly namespace: 'public' & NamespaceId;
@@ -1170,6 +1219,48 @@ type ContractBase = Omit<
     readonly namespaces: {
       readonly public: {
         readonly models: {
+          readonly Admin: {
+            readonly fields: {
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
+              readonly email: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly passwordHash: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                };
+              };
+            };
+            readonly relations: Record<string, never>;
+            readonly storage: {
+              readonly table: 'Admin';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly email: { readonly column: 'email' };
+                readonly id: { readonly column: 'id' };
+                readonly passwordHash: { readonly column: 'passwordHash' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
           readonly Course: {
             readonly fields: {
               readonly contentUrl: {
@@ -1943,6 +2034,23 @@ type ContractBase = Omit<
     readonly executionHash: ExecutionHash;
     readonly mutations: {
       readonly defaults: readonly [
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'Admin';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly onUpdate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'Admin';
+            readonly field: 'updatedAt';
+            readonly namespace: 'public';
+          };
+        },
         {
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {

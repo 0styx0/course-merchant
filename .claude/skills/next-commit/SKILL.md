@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Next commit
 
-Arguments (optional): a design doc area (`payments`, `courses`) or a free-text task. Follow CLAUDE.md's working agreements throughout; this skill is the order of work.
+Arguments (optional): a design doc area (`payments`, `courses`, `auth`) or a free-text task. Follow CLAUDE.md's working agreements throughout; this skill is the order of work.
 
 ## 1. Find the work
 

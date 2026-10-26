@@ -53,6 +53,7 @@ Stripe is the record of money: the app stores only what it needs to decide who h
 | [payments/](api/src/payments/) | `Payment` records, the Stripe wrapper ([stripe.service.ts](api/src/payments/stripe.service.ts)), fulfillment of completed checkouts, expiry, refunds, and the sweeper ([payment-sweeper.ts](api/src/payments/payment-sweeper.ts)) that puts right what a webhook couldn't. |
 | [webhooks/](api/src/webhooks/) | The Stripe webhook endpoint: verify the signature, then hand each event type to its service. |
 | [enrollments/](api/src/enrollments/) | Granting and reactivating access, shared by checkout and fulfillment. |
+| [auth/](api/src/auth/) | Admin accounts and password hashing, plus the command that creates an admin ([set-admin-password.ts](api/src/auth/cli/set-admin-password.ts)). Login and the guard aren't built yet. |
 | [email/](api/src/email/) | The outbox table, the background worker, templates and the SMTP sender. |
 | [prisma/](api/src/prisma/) | The database schema and connection. |
 | [common/](api/src/common/) | Error responses and request validation used by every module. |

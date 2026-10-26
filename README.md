@@ -60,7 +60,7 @@ The web app calls the API only from the server, never from the browser. [ARCHITE
 
 ## Quick start
 
-**You need:** Node.js 22.18+, 24.11+ or 26+ (Prisma 8 requires one of these), [Yarn 1](https://classic.yarnpkg.com/), and Docker.
+**You need:** Node.js 26+, [Yarn 1](https://classic.yarnpkg.com/), and Docker.
 **Optional:** the [Stripe CLI](https://docs.stripe.com/stripe-cli) to receive webhooks locally, and [Mailpit](https://mailpit.axllent.org/) to see emails.
 
 ```sh
@@ -80,17 +80,20 @@ cp api/.env.example api/.env
 # 4. Create the database tables
 yarn --cwd api db:dev:migrate
 
-# 5. Run the API on http://localhost:3001
+# 5. Create the admin account (asks for a password, 15 to 128 characters)
+yarn --cwd api build && yarn --cwd api admin:set-password you@example.com
+
+# 6. Run the API on http://localhost:3001
 yarn --cwd api start:dev
 
-# 6. In a second terminal, run the web app on http://localhost:3000
+# 7. In a second terminal, run the web app on http://localhost:3000
 echo 'API_BASE_URL=http://localhost:3001' > web/.env.local
 yarn --cwd web dev
 ```
 
 The API checks its settings when it starts. A missing or invalid one stops it with an error naming the variable.
 
-**Web app only, with fake data:** `yarn --cwd web dev:mock` serves the pages with MSW's canned API responses, so no API or database is needed. It still reads `API_BASE_URL` from step 6.
+**Web app only, with fake data:** `yarn --cwd web dev:mock` serves the pages with MSW's canned API responses, so no API or database is needed. It still reads `API_BASE_URL` from step 7.
 
 **Emails locally:** run `docker run -d -p 1025:1025 -p 8025:8025 axllent/mailpit`, set `SMTP_URL="smtp://localhost:1025"`, and read the mail at http://localhost:8025.
 

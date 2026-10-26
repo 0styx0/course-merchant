@@ -79,7 +79,7 @@ Flows and decisions, one file per subarea. Read the one that matches the task:
 
 ## Launch checklist
 
-- **Admin endpoints have no authentication yet** (see [courses.md](courses.md)). This blocks launch.
+- **Admin endpoints have no authentication yet** (plan and status in [auth.md](auth.md)). This blocks launch.
 - **The sweeper runs in production.** It's built (step 5), and every API server runs it. Check the logs after deploying: a repeating `Couldn't refund payment …` line is the only alert for a refund Stripe keeps refusing. Without it, a payment that should be refunded can wait indefinitely, so this blocks launch.
 - Switch to live keys. Use a restricted key limited to Checkout Sessions read and write, and Refunds write.
 - Create the production webhook endpoint with API version `2026-09-30.endive` (the one pinned in `stripeClientProvider`; set it in the Dashboard, or with `api_version` when creating the endpoint through the API), subscribed to exactly the handled event types:

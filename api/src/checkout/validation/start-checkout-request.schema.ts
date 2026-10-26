@@ -1,10 +1,10 @@
 import { z } from "zod";
 
+import { emailSchema } from "@/common/validation/email.schema.js";
+
 const checkoutCustomerSchema = z.strictObject({
   name: z.string().trim().min(1).max(100),
-  // normalized before the format check, so " Ada@Example.com " is accepted
-  // and the same buyer whatever case they type
-  email: z.string().trim().toLowerCase().pipe(z.email().max(254)),
+  email: emailSchema,
 });
 
 export const startCheckoutRequestSchema = z.strictObject({
