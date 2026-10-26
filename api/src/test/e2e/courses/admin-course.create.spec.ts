@@ -2,9 +2,10 @@ import { INestApplication } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 import { randomUUID } from "node:crypto";
 import request from "supertest";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { instant, toDatabasePrecision } from "@/test/test-helpers.js";
+import { bearer, logInAsAdmin } from "../../admin-fixtures.js";
 import {
   createE2eApp,
   httpServer,
@@ -18,9 +19,14 @@ import type {
 
 describe("POST /admin/courses (e2e)", () => {
   let app: INestApplication;
+  let token: string;
 
   beforeAll(async () => {
     app = await createE2eApp();
+  });
+
+  beforeEach(async () => {
+    token = await logInAsAdmin(app);
   });
 
   afterAll(async () => {
@@ -56,6 +62,7 @@ describe("POST /admin/courses (e2e)", () => {
   ): Promise<TypedResponse<GetCourseAdminResponse>> {
     return request(httpServer(app))
       .get(`/v1/admin/courses/${courseId}`)
+      .set("Authorization", bearer(token))
       .expect(200);
   }
 
@@ -66,6 +73,7 @@ describe("POST /admin/courses (e2e)", () => {
       httpServer(app),
     )
       .post("/v1/admin/courses")
+      .set("Authorization", bearer(token))
       .send(body)
       .expect(201);
 
@@ -123,6 +131,7 @@ describe("POST /admin/courses (e2e)", () => {
       httpServer(app),
     )
       .post("/v1/admin/courses")
+      .set("Authorization", bearer(token))
       .send(body)
       .expect(201);
 
@@ -162,6 +171,7 @@ describe("POST /admin/courses (e2e)", () => {
       httpServer(app),
     )
       .post("/v1/admin/courses")
+      .set("Authorization", bearer(token))
       .send(makeCreateRequest())
       .expect(201);
 
@@ -177,6 +187,7 @@ describe("POST /admin/courses (e2e)", () => {
       httpServer(app),
     )
       .post("/v1/admin/courses")
+      .set("Authorization", bearer(token))
       .send(body)
       .expect(201);
 
@@ -193,6 +204,7 @@ describe("POST /admin/courses (e2e)", () => {
       httpServer(app),
     )
       .post("/v1/admin/courses")
+      .set("Authorization", bearer(token))
       .send({ ...body, prices: [{ ...body.prices[0], currency: "EUR" }] })
       .expect(400);
 
@@ -210,6 +222,7 @@ describe("POST /admin/courses (e2e)", () => {
       httpServer(app),
     )
       .post("/v1/admin/courses")
+      .set("Authorization", bearer(token))
       .send({ ...makeCreateRequest(), status: "deleted" })
       .expect(400);
 
@@ -229,6 +242,7 @@ describe("POST /admin/courses (e2e)", () => {
       httpServer(app),
     )
       .post("/v1/admin/courses")
+      .set("Authorization", bearer(token))
       .send(body)
       .expect(400);
 

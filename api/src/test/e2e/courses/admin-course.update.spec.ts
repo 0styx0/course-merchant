@@ -2,9 +2,10 @@ import { INestApplication } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 import { randomUUID } from "node:crypto";
 import request from "supertest";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createCourse, createCoursePrice } from "@/test/course-fixtures.js";
+import { bearer, logInAsAdmin } from "../../admin-fixtures.js";
 import {
   createE2eApp,
   httpServer,
@@ -14,9 +15,14 @@ import type { GetCourseAdminResponse, ProblemDetails } from "types.js";
 
 describe("PUT /admin/courses/:courseId (e2e)", () => {
   let app: INestApplication;
+  let token: string;
 
   beforeAll(async () => {
     app = await createE2eApp();
+  });
+
+  beforeEach(async () => {
+    token = await logInAsAdmin(app);
   });
 
   afterAll(async () => {
@@ -52,6 +58,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
       httpServer(app),
     )
       .post("/v1/admin/courses")
+      .set("Authorization", bearer(token))
       .send(makeCreateRequest())
       .expect(201);
 
@@ -63,6 +70,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
       httpServer(app),
     )
       .get(`/v1/admin/courses/${courseId}`)
+      .set("Authorization", bearer(token))
       .expect(200);
 
     return response.body;
@@ -103,6 +111,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
       httpServer(app),
     )
       .put(`/v1/admin/courses/${created.id}`)
+      .set("Authorization", bearer(token))
       .send(body)
       .expect(200);
 
@@ -122,6 +131,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
 
     await request(httpServer(app))
       .put(`/v1/admin/courses/${created.id}`)
+      .set("Authorization", bearer(token))
       .send(toUpdateBody(created))
       .expect(200);
 
@@ -151,6 +161,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
       httpServer(app),
     )
       .put(`/v1/admin/courses/${course.id}`)
+      .set("Authorization", bearer(token))
       .send({ ...toUpdateBody(loaded), description: "Now with hooks" })
       .expect(200);
 
@@ -164,6 +175,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
       httpServer(app),
     )
       .put(`/v1/admin/courses/${created.id}`)
+      .set("Authorization", bearer(token))
       .send({
         ...toUpdateBody(created),
         name: " ",
@@ -193,6 +205,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
       httpServer(app),
     )
       .put(`/v1/admin/courses/${created.id}`)
+      .set("Authorization", bearer(token))
       .send({
         ...toUpdateBody(created),
         schedule: { ...created.schedule, startTime: past },
@@ -221,6 +234,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
       httpServer(app),
     )
       .put("/v1/admin/courses/not-a-uuid")
+      .set("Authorization", bearer(token))
       .send(makeCreateRequest())
       .expect(400);
 
@@ -232,6 +246,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
       httpServer(app),
     )
       .put(`/v1/admin/courses/${randomUUID()}`)
+      .set("Authorization", bearer(token))
       .send(makeCreateRequest())
       .expect(404);
 

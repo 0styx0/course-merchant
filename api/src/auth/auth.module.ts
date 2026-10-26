@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
 
 import { PrismaModule } from "@/prisma/prisma.module.js";
 import { AdminAuthGuard } from "./admin-auth.guard.js";
@@ -17,7 +18,8 @@ const MAX_PARALLEL_HASHES = 2;
   controllers: [AdminSessionsController],
   providers: [
     AdminSessionsService,
-    AdminAuthGuard,
+    // deny by default: every route needs a login unless it is marked @Public()
+    { provide: APP_GUARD, useClass: AdminAuthGuard },
     AdminsRepository,
     AdminSessionsRepository,
     AdminLoginAttemptsRepository,

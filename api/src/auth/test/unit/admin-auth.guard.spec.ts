@@ -22,13 +22,17 @@ function contextFor(handler: () => void, headers: Record<string, string> = {}) {
   const request: { headers: Record<string, string>; adminSession?: unknown } = {
     headers,
   };
+  const response = { setHeader: vi.fn() };
   const context = {
     getHandler: () => handler,
     getClass: () => ProtectedController,
-    switchToHttp: () => ({ getRequest: () => request }),
+    switchToHttp: () => ({
+      getRequest: () => request,
+      getResponse: () => response,
+    }),
   } as unknown as ExecutionContext;
 
-  return { context, request };
+  return { context, request, response };
 }
 
 describe("AdminAuthGuard", () => {
@@ -74,6 +78,27 @@ describe("AdminAuthGuard", () => {
     expect(await guard.canActivate(context)).toBe(true);
     expect(sessions.findActiveSession).toHaveBeenCalledWith(token);
     expect(request.adminSession).toEqual(session);
+  });
+
+  it("tells caches not to keep the response of a logged-in caller", async () => {
+    const { context, response } = contextFor(protectedHandler, {
+      authorization: `Bearer ${createSessionToken()}`,
+    });
+
+    await guard.canActivate(context);
+
+    expect(response.setHeader).toHaveBeenCalledWith(
+      "Cache-Control",
+      "no-store",
+    );
+  });
+
+  it("sets no cache header on a refused request", async () => {
+    const { context, response } = contextFor(protectedHandler);
+
+    await guard.canActivate(context).catch(() => undefined);
+
+    expect(response.setHeader).not.toHaveBeenCalled();
   });
 
   it("accepts the scheme in any case", async () => {

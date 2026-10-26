@@ -11,7 +11,8 @@ import {
 import type { INestApplication } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 import request from "supertest";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { bearer, logInAsAdmin } from "../../admin-fixtures.js";
 import {
   createE2eApp,
   httpServer,
@@ -21,9 +22,14 @@ import type { ListCoursesAdminResponse } from "types.js";
 
 describe("Admin Courses API (e2e)", () => {
   let app: INestApplication;
+  let token: string;
 
   beforeAll(async () => {
     app = await createE2eApp();
+  });
+
+  beforeEach(async () => {
+    token = await logInAsAdmin(app);
   });
 
   afterAll(async () => {
@@ -81,6 +87,7 @@ describe("Admin Courses API (e2e)", () => {
         httpServer(app),
       )
         .get("/v1/admin/courses")
+        .set("Authorization", bearer(token))
         .expect("Content-Type", /^application\/json(?:;|$)/)
         .expect(200);
 
@@ -156,6 +163,7 @@ describe("Admin Courses API (e2e)", () => {
         httpServer(app),
       )
         .get("/v1/admin/courses")
+        .set("Authorization", bearer(token))
         .expect(200);
 
       expect(response.body.courses).toEqual(
@@ -188,6 +196,7 @@ describe("Admin Courses API (e2e)", () => {
         httpServer(app),
       )
         .get("/v1/admin/courses")
+        .set("Authorization", bearer(token))
         .expect(200);
 
       expect(response.body.courses).not.toEqual(
@@ -208,6 +217,7 @@ describe("Admin Courses API (e2e)", () => {
         httpServer(app),
       )
         .get("/v1/admin/courses")
+        .set("Authorization", bearer(token))
         .expect(200);
 
       expect(response.body.courses).toEqual(
@@ -248,6 +258,7 @@ describe("Admin Courses API (e2e)", () => {
         httpServer(app),
       )
         .get("/v1/admin/courses")
+        .set("Authorization", bearer(token))
         .expect(200);
 
       expect(response.body.courses).toEqual(
@@ -287,6 +298,7 @@ describe("Admin Courses API (e2e)", () => {
         httpServer(app),
       )
         .get("/v1/admin/courses")
+        .set("Authorization", bearer(token))
         .expect(200);
 
       const ids = response.body.courses.map(
@@ -302,6 +314,7 @@ describe("Admin Courses API (e2e)", () => {
         httpServer(app),
       )
         .get("/v1/admin/courses")
+        .set("Authorization", bearer(token))
         .expect("Content-Type", /^application\/json(?:;|$)/)
         .expect(200);
 

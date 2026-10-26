@@ -1,7 +1,11 @@
+import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
+import request from "supertest";
 
 import { AdminPasswordsService } from "@/auth/admin-passwords.service.js";
 import { AdminCliModule } from "@/auth/cli/admin-cli.module.js";
+import type { AdminSessionResponse } from "types.js";
+import { httpServer, type TypedResponse } from "./e2e/e2e-helpers.js";
 
 export const ADMIN_EMAIL = "owner@example.com";
 export const ADMIN_PASSWORD = "correct horse battery staple";
@@ -28,4 +32,27 @@ function passwordsService() {
     .then((moduleRef) => moduleRef.get(AdminPasswordsService));
 
   return passwords;
+}
+
+/** The `Authorization` header value for a session token. */
+export function bearer(token: string) {
+  return `Bearer ${token}`;
+}
+
+/**
+ * Creates the admin and logs in through the real endpoint, returning the
+ * session token. The tests wipe every table before each test, so call this in
+ * `beforeEach`.
+ */
+export async function logInAsAdmin(app: INestApplication): Promise<string> {
+  await setAdminPassword();
+
+  const response: TypedResponse<AdminSessionResponse> = await request(
+    httpServer(app),
+  )
+    .post("/v1/admin/sessions")
+    .send({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD })
+    .expect(201);
+
+  return response.body.token;
 }

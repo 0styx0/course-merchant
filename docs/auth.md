@@ -10,13 +10,8 @@ Each step is one commit. Every step's tests are part of the step.
 
 - [x] **1. Admin accounts:** the `Admin` table, password hashing, and `yarn admin:set-password <email>`.
 - [x] **2. Login and logout:** `POST /v1/admin/sessions`, `DELETE /v1/admin/sessions/current`, the `AdminSession` and `AdminLoginAttempt` tables, the guard (applied only to logout), and the set-password command signing out sessions and lifting lockouts.
-- [ ] **3. Protect every admin endpoint:** **Next**
-  - [ ] Register `AdminAuthGuard` globally (`APP_GUARD`, in `AuthModule`); mark the courses, checkout, webhook and login handlers `@Public()` (the decorator exists, and login already has it). Drop the guard from logout's `@UseGuards`.
-  - [ ] `Cache-Control: no-store` on every authenticated response.
-  - [ ] Extend [admin-fixtures.ts](../api/src/test/admin-fixtures.ts) (it has `setAdminPassword`) with a login helper that returns a token; the four admin e2e specs use it.
-  - [ ] Route-protection e2e test read from the OpenAPI file: every `bearerAuth` operation gives `401` with `WWW-Authenticate` without a token; every `security: []` operation doesn't give `401`. An unauthenticated request with an invalid body gets `401`, not `400`.
-  - [ ] Docs: tick the admin-auth item in [courses.md](courses.md), remove the launch blocker in [payments.md](payments.md), update the README *Status* and [ARCHITECTURE.md](../ARCHITECTURE.md) (module table, a short login flow).
-- [ ] **4. Cleanup job:**
+- [x] **3. Protect every admin endpoint:** the guard is global, the public controllers are `@Public()`, authenticated responses carry `Cache-Control: no-store`, and a test checks every route against the OpenAPI file.
+- [ ] **4. Cleanup job:** **Next**
   - [ ] `auth/admin-session-cleanup.ts`, hourly `@Interval` on every server: deletes sessions past 7 days or idle over 24 hours, and attempts older than 15 minutes. Deletes are safe to repeat, so servers need no coordination. Stub it in `createE2eApp` like `PaymentSweeper`.
   - [ ] Tests: integration only (what is deleted, what is kept).
 - [ ] **Launch:** HTTPS between the web server and the API; `admin:set-password` run on the production server.
@@ -72,6 +67,9 @@ Each step is one commit. Every step's tests are part of the step.
 | One shared `emailSchema` in `common/validation/`, used by checkout and auth | Login and checkout must clean an email the same way, or the same person could be two customers or miss their own admin account. Done in step 1, before a second copy exists | Repeating the line in auth (can drift); extracting in a later commit |
 | Hashing tests check the settings in any order (`m`, `p`, `t`) | The `argon2` package writes `m=19456,p=1,t=2`, not the reference program's `m,t,p`. Both verify, and the settings are what matter | Asserting the doc's earlier `m,t,p` order (fails) |
 | `engines.node >= 26`, and the README says 26+ | One supported version, matching CI | Keeping the README's older versions (the `argon2` build wasn't checked on them) |
+| The global guard is registered in `AuthModule` with `APP_GUARD`; `@Public()` sits on the whole public controllers (courses, checkout, webhook) and on login | Deny by default, and a new handler in a public controller is public too, which matches the contract's public default for those paths | Marking each handler |
+| The guard sets `Cache-Control: no-store` once it accepts a session, before the handler runs; the contract lists the header on every admin success response | One line covers every logged-in response, errors included. Admin responses hold private `contentUrl`s | A global interceptor (another file for the same effect); documenting nothing |
+| `route-protection.spec.ts` reads the OpenAPI file (`js-yaml`, a dev dependency) and sends each operation an invalid body without a token | The list of protected routes can't drift from the contract, and it proves the login check runs before validation | A hand-written route list (goes stale silently) |
 | Drop `403` from the contract | A logged-in caller is always an admin | Keeping a response that can't happen |
 
 ## Follow-ups (not planned yet)

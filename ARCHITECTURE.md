@@ -53,7 +53,7 @@ Stripe is the record of money: the app stores only what it needs to decide who h
 | [payments/](api/src/payments/) | `Payment` records, the Stripe wrapper ([stripe.service.ts](api/src/payments/stripe.service.ts)), fulfillment of completed checkouts, expiry, refunds, and the sweeper ([payment-sweeper.ts](api/src/payments/payment-sweeper.ts)) that puts right what a webhook couldn't. |
 | [webhooks/](api/src/webhooks/) | The Stripe webhook endpoint: verify the signature, then hand each event type to its service. |
 | [enrollments/](api/src/enrollments/) | Granting and reactivating access, shared by checkout and fulfillment. |
-| [auth/](api/src/auth/) | Admin accounts and password hashing, login and logout (sessions kept in Postgres, a limit on login tries per email), the guard that checks a session token (so far only on logout), and the command that creates an admin ([set-admin-password.ts](api/src/auth/cli/set-admin-password.ts)). |
+| [auth/](api/src/auth/) | Admin accounts and password hashing, login and logout (sessions kept in Postgres, a limit on login tries per email), the guard that checks a session token on every route not marked `@Public()`, and the command that creates an admin ([set-admin-password.ts](api/src/auth/cli/set-admin-password.ts)). |
 | [email/](api/src/email/) | The outbox table, the background worker, templates and the SMTP sender. |
 | [prisma/](api/src/prisma/) | The database schema and connection. |
 | [common/](api/src/common/) | Error responses and request validation used by every module. |
@@ -189,6 +189,13 @@ Every API server runs it. That's safe because every change is conditional and a 
 
 Because the email row is written in the same transaction as the change, an email exists only if the change was saved. The message is rendered at send time from IDs, so it shows current data. On shutdown the worker finishes the email it's sending before the process exits. A failed email shows up on the admin course view. Details: [email.md](docs/payments/email.md).
 
+## Admin login
+
+1. The owner runs `yarn admin:set-password <email>` on a server to create the account.
+2. `POST /v1/admin/sessions` checks the password (Argon2id hash) and returns a random token once. Only its SHA-256 hash is stored in Postgres, so every API server accepts it and logout works everywhere at once. A session lasts 7 days at most, or 24 hours unused.
+3. Every other request sends `Authorization: Bearer <token>`. A global guard looks the session up; routes marked `@Public()` (browsing, checkout, the Stripe webhook, login) skip it. Without a valid session the answer is `401` before the body is even validated.
+4. Admin responses carry `Cache-Control: no-store`.
+
 ## Rules the code relies on
 
 Break one of these and something subtle goes wrong, usually money or access.
@@ -212,7 +219,7 @@ Break one of these and something subtle goes wrong, usually money or access.
   - Prices sent to Stripe come from the database, never from the buyer.
   - The Stripe key should be a restricted key, limited to checkout sessions and refunds.
   - Rate limits belong at the CDN or edge (see the launch checklist in [payments.md](docs/payments.md)).
-  - **Admin authentication isn't built yet and blocks launch.**
+  - Every route needs an admin login unless it is marked `@Public()`; see [Admin login](#admin-login).
 - **Testing.** Each layer has its own kind of test: unit tests with typed mocks, integration tests against a real database, and end-to-end tests through HTTP with stripe-mock. See [CONTRIBUTING.md](CONTRIBUTING.md#writing-tests).
 
 ## Where to read next

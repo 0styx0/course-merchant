@@ -7,12 +7,10 @@ import {
   HttpStatus,
   Inject,
   Post,
-  UseGuards,
 } from "@nestjs/common";
 
 import type { AdminSessionResponse, CreateAdminSessionRequest } from "types.js";
 import { ZodValidationPipe } from "@/common/validation/zod-validation.pipe.js";
-import { AdminAuthGuard } from "./admin-auth.guard.js";
 import {
   AdminSessionsService,
   type CurrentAdminSession,
@@ -43,7 +41,6 @@ export class AdminSessionsController {
   }
 
   @Delete("current")
-  @UseGuards(AdminAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   logOut(@CurrentSession() session: CurrentAdminSession): Promise<void> {
     return this.adminSessions.logOut(session.sessionId);

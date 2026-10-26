@@ -14,10 +14,12 @@ import type {
   StartCheckoutRequest,
   StartCheckoutResponse,
 } from "types.js";
+import { Public } from "@/auth/public.decorator.js";
 import { ZodValidationPipe } from "@/common/validation/zod-validation.pipe.js";
 import { CheckoutService } from "./checkout.service.js";
 import { startCheckoutRequestSchema } from "./validation/start-checkout-request.schema.js";
 
+@Public()
 @Controller({
   path: "checkout-sessions",
   version: "1",

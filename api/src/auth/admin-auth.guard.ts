@@ -5,6 +5,7 @@ import {
   type ExecutionContext,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
+import type { Response } from "express";
 
 import { ApiException } from "@/common/errors/api.exception.js";
 import { ErrorCodeAuth } from "@/common/errors/error-codes.js";
@@ -49,7 +50,8 @@ export class AdminAuthGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<AdminSessionRequest>();
+    const http = context.switchToHttp();
+    const request = http.getRequest<AdminSessionRequest>();
     const token = bearerToken(request.headers.authorization);
     const session = token ? await this.sessions.findActiveSession(token) : null;
 
@@ -58,6 +60,9 @@ export class AdminAuthGuard implements CanActivate {
     }
 
     request.adminSession = session;
+    // set before the handler runs, so error responses to a logged-in caller
+    // are covered too
+    http.getResponse<Response>().setHeader("Cache-Control", "no-store");
 
     return true;
   }

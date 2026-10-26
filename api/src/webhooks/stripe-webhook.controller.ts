@@ -11,6 +11,7 @@ import {
 import type { Request } from "express";
 import type Stripe from "stripe";
 
+import { Public } from "@/auth/public.decorator.js";
 import { ApiException } from "@/common/errors/api.exception.js";
 import { ErrorCode } from "@/common/errors/error-codes.js";
 import { ExpiryService } from "@/payments/expiry.service.js";
@@ -24,6 +25,8 @@ import {
   StripeService,
 } from "@/payments/stripe.service.js";
 
+// the Stripe signature, not a login, proves who is calling
+@Public()
 @Controller({
   path: "webhooks/stripe",
   version: "1",

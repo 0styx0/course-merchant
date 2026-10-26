@@ -1,8 +1,10 @@
 import { Controller, Get, Inject, Param } from "@nestjs/common";
 import { GetCourseResponse, ListCoursesResponse } from "types.js";
+import { Public } from "@/auth/public.decorator.js";
 import { CoursesService } from "./courses.service.js";
 import { ParseCourseIdPipe } from "./pipes/parse-course-id.pipe.js";
 
+@Public()
 @Controller({
   path: "courses",
   version: "1",

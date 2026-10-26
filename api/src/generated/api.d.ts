@@ -692,7 +692,10 @@ export interface components {
         CourseId: components["schemas"]["CourseId"];
     };
     requestBodies: never;
-    headers: never;
+    headers: {
+        /** @description Always `no-store`; every response to a logged-in request may hold private data, so no cache may keep it. */
+        NoStore: "no-store";
+    };
     pathItems: never;
 }
 export type $defs = Record<string, never>;
@@ -786,6 +789,7 @@ export interface operations {
             /** @description Logged out. */
             204: {
                 headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -806,6 +810,7 @@ export interface operations {
             /** @description Successfully retrieved all courses. */
             200: {
                 headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -832,6 +837,7 @@ export interface operations {
             /** @description Course created. The response is the full administrator view of the course, including every entry of the price schedule with its `id`. */
             201: {
                 headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
                     /**
                      * @description URL of the newly created course.
                      * @example /v1/admin/courses/123e4567-e89b-12d3-a456-426614174000
@@ -863,6 +869,7 @@ export interface operations {
             /** @description Successfully retrieved the course. */
             200: {
                 headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -894,6 +901,7 @@ export interface operations {
             /** @description Course updated. */
             200: {
                 headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
                     [name: string]: unknown;
                 };
                 content: {

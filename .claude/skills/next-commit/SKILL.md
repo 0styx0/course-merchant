@@ -32,6 +32,8 @@ Give the outline and wait for the go-ahead. In plan mode, present it with ExitPl
 - **Tests:** which unit, integration or e2e tests you'll add.
 - **Doc update:** what changes in `docs/<area>.md`.
 
+If the owner replies with questions or objections, discuss them first: answer, give your recommendation, and ask follow-ups if needed. Don't edit the outline or write code while the discussion is open. Once the owner agrees on the answers, present the updated outline and wait for the go-ahead again.
+
 ## 3. Implement, after approval
 
 - Build exactly what was approved. If something comes up that would change design or behaviour, stop and ask.

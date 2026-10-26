@@ -7,9 +7,10 @@ import type { INestApplication } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { Temporal } from "@js-temporal/polyfill";
 import request from "supertest";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { instant } from "../../test-helpers.js";
+import { bearer, logInAsAdmin } from "../../admin-fixtures.js";
 import {
   createE2eApp,
   httpServer,
@@ -19,9 +20,14 @@ import type { GetCourseAdminResponse, ProblemDetails } from "types.js";
 
 describe("Admin Courses Create API (e2e)", () => {
   let app: INestApplication;
+  let token: string;
 
   beforeAll(async () => {
     app = await createE2eApp();
+  });
+
+  beforeEach(async () => {
+    token = await logInAsAdmin(app);
   });
 
   afterAll(async () => {
@@ -49,6 +55,7 @@ describe("Admin Courses Create API (e2e)", () => {
         httpServer(app),
       )
         .get(`/v1/admin/courses/${course.id}`)
+        .set("Authorization", bearer(token))
         .expect("Content-Type", /^application\/json(?:;|$)/)
         .expect(200);
 
@@ -98,6 +105,7 @@ describe("Admin Courses Create API (e2e)", () => {
         httpServer(app),
       )
         .get(`/v1/admin/courses/${course.id}`)
+        .set("Authorization", bearer(token))
         .expect(200);
 
       expect(response.body.status.name).toBe("archived");
@@ -128,6 +136,7 @@ describe("Admin Courses Create API (e2e)", () => {
         httpServer(app),
       )
         .get(`/v1/admin/courses/${course.id}`)
+        .set("Authorization", bearer(token))
         .expect(200);
 
       expect(response.body.status.name).toBe("published");
@@ -157,6 +166,7 @@ describe("Admin Courses Create API (e2e)", () => {
         httpServer(app),
       )
         .get(`/v1/admin/courses/${course.id}`)
+        .set("Authorization", bearer(token))
         .expect(200);
 
       expect(response.body.id).toBe(course.id);
@@ -185,6 +195,7 @@ describe("Admin Courses Create API (e2e)", () => {
         httpServer(app),
       )
         .get(`/v1/admin/courses/${course.id}`)
+        .set("Authorization", bearer(token))
         .expect(200);
 
       expect(response.body.prices).toEqual([
@@ -227,6 +238,7 @@ describe("Admin Courses Create API (e2e)", () => {
         httpServer(app),
       )
         .get(`/v1/admin/courses/${course.id}`)
+        .set("Authorization", bearer(token))
         .expect(200);
 
       expect(response.body.prices).toEqual([
@@ -256,6 +268,7 @@ describe("Admin Courses Create API (e2e)", () => {
         httpServer(app),
       )
         .get("/v1/admin/courses/not-a-uuid")
+        .set("Authorization", bearer(token))
         .expect("Content-Type", /^application\/problem\+json(?:;|$)/)
         .expect(400);
 
@@ -273,6 +286,7 @@ describe("Admin Courses Create API (e2e)", () => {
         httpServer(app),
       )
         .get(`/v1/admin/courses/${courseId}`)
+        .set("Authorization", bearer(token))
         .expect("Content-Type", /^application\/problem\+json(?:;|$)/)
         .expect(404);
 

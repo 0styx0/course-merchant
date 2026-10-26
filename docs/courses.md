@@ -9,7 +9,7 @@ Keep this file current **in the same commit as the work**.
 - [x] API, public: list and get courses.
 - [x] API, admin: list, get, create (`POST`) and update (`PUT`).
 - [x] Web: home page with the course list, and the course page.
-- [ ] **Admin authentication.** The contract documents bearer auth on the admin routes, but there's no guard yet, so **the admin endpoints are open**. This blocks launch. Plan and status: [auth.md](auth.md).
+- [x] Admin authentication: every admin route requires a login (see [auth.md](auth.md)).
 - [ ] Web admin pages (spec in [web/docs/admin.md](../web/docs/admin.md)).
 - [ ] Estimated payout under the admin price field (payments step 7).
 - [ ] Maybe later: a contract test that checks e2e responses against the OpenAPI schemas with Ajv. It was deferred ("not now").

@@ -130,6 +130,9 @@ paths:
       responses:
         "204":
           description: Logged out.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "500":
@@ -160,6 +163,9 @@ paths:
       responses:
         "200":
           description: Successfully retrieved all courses.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
           content:
             application/json:
               schema:
@@ -264,6 +270,8 @@ paths:
             the course, including every entry of the price schedule with its
             `id`.
           headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
             Location:
               description: URL of the newly created course.
               schema:
@@ -335,6 +343,9 @@ paths:
       responses:
         "200":
           description: Successfully retrieved the course.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
           content:
             application/json:
               schema:
@@ -463,6 +474,9 @@ paths:
       responses:
         "200":
           description: Course updated.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
           content:
             application/json:
               schema:
@@ -651,6 +665,15 @@ components:
         Session token from `createAdminSession`, sent as
         `Authorization: Bearer <token>`. It is a random string the API looks
         up, not a JWT.
+
+  headers:
+    NoStore:
+      description: >
+        Always `no-store`; every response to a logged-in request may hold
+        private data, so no cache may keep it.
+      schema:
+        type: string
+        const: no-store
 
   parameters:
     CheckoutId:
