@@ -29,4 +29,14 @@ export class AdminLoginAttemptsRepository {
       attempt.email.eq(email),
     ).deleteAndCount();
   }
+
+  /** Deletes attempts too old to count toward the limit. */
+  async deleteOlderThan(
+    scope: DbScope,
+    before: Temporal.Instant,
+  ): Promise<number> {
+    return scope.orm.public.AdminLoginAttempt.where((attempt) =>
+      attempt.createdAt.lte(before),
+    ).deleteAndCount();
+  }
 }

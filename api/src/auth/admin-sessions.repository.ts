@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import type { Temporal } from "@js-temporal/polyfill";
-import { and } from "@prisma/orm-postgres/orm-client";
+import { and, or } from "@prisma/orm-postgres/orm-client";
 
 import type { Models } from "@/prisma/contract.js";
 import type { DbScope } from "types.js";
@@ -59,6 +59,19 @@ export class AdminSessionsRepository {
   async deleteAllForAdmin(scope: DbScope, adminId: string): Promise<void> {
     await scope.orm.public.AdminSession.where((session) =>
       session.adminId.eq(adminId),
+    ).deleteAndCount();
+  }
+
+  /** Deletes the sessions `findActive` would no longer find. */
+  async deleteExpired(
+    scope: DbScope,
+    cutoffs: ActiveSessionCutoffs,
+  ): Promise<number> {
+    return scope.orm.public.AdminSession.where((session) =>
+      or(
+        session.createdAt.lte(cutoffs.createdAfter),
+        session.updatedAt.lte(cutoffs.usedAfter),
+      ),
     ).deleteAndCount();
   }
 }

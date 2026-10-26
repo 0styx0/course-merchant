@@ -8,6 +8,10 @@ import { PrismaService } from "@/prisma/prisma.service.js";
 import { AdminLoginAttemptsRepository } from "./admin-login-attempts.repository.js";
 import { AdminSessionsRepository } from "./admin-sessions.repository.js";
 import { AdminsRepository, type Admin } from "./admins.repository.js";
+import {
+  ATTEMPT_WINDOW_MINUTES,
+  attemptWindowStart,
+} from "./attempt-window.js";
 import { HashingSlots } from "./hashing-slots.js";
 import { getDummyHash, verifyPassword } from "./password-hashing.js";
 import { createSessionToken, hashSessionToken } from "./session-token.js";
@@ -17,9 +21,8 @@ import {
   touchCutoff,
 } from "./session-lifetime.js";
 
-// an email may try this many times in this window, counting the current try
+// an email may try this many times per window, counting the current try
 const MAX_ATTEMPTS = 5;
-const ATTEMPT_WINDOW_MINUTES = 15;
 
 export interface CurrentAdminSession {
   sessionId: string;
@@ -124,7 +127,7 @@ export class AdminSessionsService implements OnModuleInit {
     const attempts = await this.attempts.countSince(
       this.prisma.db,
       email,
-      Temporal.Now.instant().subtract({ minutes: ATTEMPT_WINDOW_MINUTES }),
+      attemptWindowStart(),
     );
 
     if (attempts > MAX_ATTEMPTS) {

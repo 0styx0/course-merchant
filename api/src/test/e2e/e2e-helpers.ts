@@ -1,6 +1,7 @@
 import { Test, type TestingModuleBuilder } from "@nestjs/testing";
 import type { INestApplication } from "@nestjs/common";
 import { AppModule } from "@/app.module.js";
+import { AdminSessionCleanup } from "@/auth/admin-session-cleanup.js";
 import { EmailWorker } from "@/email/email-worker.js";
 import { PaymentSweeper } from "@/payments/payment-sweeper.js";
 import { configureApp } from "@/configure-app.js";
@@ -20,11 +21,13 @@ export async function createE2eApp(
     Test.createTestingModule({
       imports: [AppModule],
     })
-      // a stub has no @Interval, so tests never send mail or sweep payments
-      // in the background
+      // a stub has no @Interval, so tests never send mail, sweep payments
+      // or clean up sessions in the background
       .overrideProvider(EmailWorker)
       .useValue({})
       .overrideProvider(PaymentSweeper)
+      .useValue({})
+      .overrideProvider(AdminSessionCleanup)
       .useValue({}),
   ).compile();
 
