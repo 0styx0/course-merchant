@@ -15,6 +15,7 @@ import { ValidationException } from "./validation.exception.js";
 function run(exception: unknown) {
   const res = {
     headersSent: false,
+    set: vi.fn(),
     status: vi.fn(),
     type: vi.fn(),
     json: vi.fn(),
@@ -32,6 +33,7 @@ function run(exception: unknown) {
   return {
     status: res.status.mock.calls[0][0] as number,
     body: res.json.mock.calls[0][0] as Record<string, unknown>,
+    headers: res.set.mock.calls.map(([headers]: unknown[]) => headers),
   };
 }
 
@@ -77,6 +79,19 @@ describe("ProblemDetailsFilter", () => {
       );
 
       expect(JSON.stringify(body)).not.toContain("secret-db-password");
+    });
+  });
+
+  describe("ApiException headers", () => {
+    it("sets the headers the exception carries", () => {
+      const { status, headers } = run(
+        new ApiException(ErrorCode.TOO_MANY_LOGIN_ATTEMPTS, {
+          headers: { "Retry-After": "900" },
+        }),
+      );
+
+      expect(status).toBe(429);
+      expect(headers).toEqual([{ "Retry-After": "900" }]);
     });
   });
 

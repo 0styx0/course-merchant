@@ -5,9 +5,8 @@ import password from "@inquirer/password";
 import { NestFactory } from "@nestjs/core";
 
 import { emailSchema } from "@/common/validation/email.schema.js";
-import { PrismaService } from "@/prisma/prisma.service.js";
-import { AdminsRepository } from "../admins.repository.js";
-import { hashPassword, newPasswordProblem } from "../password-hashing.js";
+import { AdminPasswordsService } from "../admin-passwords.service.js";
+import { newPasswordProblem } from "../password-hashing.js";
 import { AdminCliModule } from "./admin-cli.module.js";
 
 const USAGE = "Usage: yarn admin:set-password <email>";
@@ -69,19 +68,15 @@ async function readNewPassword(): Promise<string> {
 async function main() {
   const email = readEmail();
   const chosenPassword = await readNewPassword();
-  const passwordHash = await hashPassword(chosenPassword);
 
   const app = await NestFactory.createApplicationContext(AdminCliModule, {
     logger: ["error"],
   });
 
   try {
-    const prisma = app.get(PrismaService);
-    const admins = app.get(AdminsRepository);
-
-    const outcome = await prisma.db.transaction((tx) =>
-      admins.setPassword(tx, email, passwordHash),
-    );
+    const outcome = await app
+      .get(AdminPasswordsService)
+      .setPassword(email, chosenPassword);
 
     console.log(`${outcome}: ${email}`);
   } finally {

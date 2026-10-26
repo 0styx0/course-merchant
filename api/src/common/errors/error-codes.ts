@@ -23,6 +23,12 @@ export enum ErrorCodeWebhook {
   INVALID_WEBHOOK_SIGNATURE = "INVALID_WEBHOOK_SIGNATURE",
 }
 
+export enum ErrorCodeAuth {
+  UNAUTHORIZED = "UNAUTHORIZED",
+  INVALID_CREDENTIALS = "INVALID_CREDENTIALS",
+  TOO_MANY_LOGIN_ATTEMPTS = "TOO_MANY_LOGIN_ATTEMPTS",
+}
+
 // Codes for each entry of a validation response's `errors`. They are generic;
 // the entry's `field` says which field failed.
 export enum FieldErrorCode {
@@ -46,6 +52,7 @@ export const ErrorCode = {
   ...ErrorCodeValidation,
   ...ErrorCodeCheckout,
   ...ErrorCodeWebhook,
+  ...ErrorCodeAuth,
 };
 
 export type ErrorCode =
@@ -53,7 +60,8 @@ export type ErrorCode =
   | ErrorCodeGeneric
   | ErrorCodeValidation
   | ErrorCodeCheckout
-  | ErrorCodeWebhook;
+  | ErrorCodeWebhook
+  | ErrorCodeAuth;
 
 interface ErrorDefinition {
   status: HttpStatus;
@@ -92,5 +100,17 @@ export const ERROR_DEFINITIONS = {
   [ErrorCode.INVALID_WEBHOOK_SIGNATURE]: {
     status: HttpStatus.BAD_REQUEST,
     title: "Invalid webhook signature",
+  },
+  [ErrorCode.UNAUTHORIZED]: {
+    status: HttpStatus.UNAUTHORIZED,
+    title: "Unauthorized",
+  },
+  [ErrorCode.INVALID_CREDENTIALS]: {
+    status: HttpStatus.UNAUTHORIZED,
+    title: "Invalid credentials",
+  },
+  [ErrorCode.TOO_MANY_LOGIN_ATTEMPTS]: {
+    status: HttpStatus.TOO_MANY_REQUESTS,
+    title: "Too many login attempts",
   },
 } satisfies Record<ErrorCode, ErrorDefinition>;

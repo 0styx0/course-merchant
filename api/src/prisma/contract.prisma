@@ -204,4 +204,34 @@ model Admin {
 
   createdAt    DateTime                   @default(now())
   updatedAt    temporal.updatedAtJsDate()
+
+  sessions     AdminSession[]
+}
+
+// one login. Only the SHA-256 hash of the token is stored. updatedAt is the
+// last time the session was used (refreshed at most every 5 minutes); a
+// session ends 7 days after createdAt or 24 hours after updatedAt
+model AdminSession {
+  id        Uuid                       @id @onCreate(uuid())
+  adminId   Uuid
+  tokenHash String                     @unique
+
+  createdAt DateTime                   @default(now())
+  updatedAt temporal.updatedAt()
+
+  admin     Admin                      @relation(fields:[adminId], references:[id])
+
+  @@index([adminId])
+}
+
+// one login try, kept to limit tries per email. Not linked to Admin: tries
+// for unknown emails are counted too
+model AdminLoginAttempt {
+  id        Uuid     @id @onCreate(uuid())
+  // trimmed and lowercased, like Admin.email
+  email     String
+
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
 }

@@ -40,6 +40,7 @@ Give the outline and wait for the go-ahead. In plan mode, present it with ExitPl
   - mark the following item **Next**, with enough detail to start on it;
   - add a decision row for anything decided along the way;
   - when a whole step is done, cut its design notes down to decision rows.
+- As the last step of implementation, run `/simplify` (the Skill tool, skill `simplify`) on the change. If a cleanup would change design or behaviour, ask first instead of applying it. Run it before verifying, so step 4 checks the simplified code.
 
 ## 4. Verify
 

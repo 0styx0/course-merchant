@@ -3,6 +3,7 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { PrismaModule } from "./prisma/prisma.module.js";
 import { CoursesModule } from "./courses/courses.module.js";
 import { CheckoutModule } from "./checkout/checkout.module.js";
+import { AuthModule } from "./auth/auth.module.js";
 import { WebhooksModule } from "./webhooks/webhooks.module.js";
 
 @Module({
@@ -12,6 +13,7 @@ import { WebhooksModule } from "./webhooks/webhooks.module.js";
     CoursesModule,
     CheckoutModule,
     WebhooksModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

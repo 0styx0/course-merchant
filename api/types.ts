@@ -26,6 +26,10 @@ export type StartCheckoutResponse =
   components["schemas"]["StartCheckoutResponse"];
 export type CheckoutStatusResponse = components["schemas"]["CheckoutStatus"];
 
+export type CreateAdminSessionRequest =
+  components["schemas"]["CreateAdminSessionRequest"];
+export type AdminSessionResponse = components["schemas"]["AdminSession"];
+
 export type ProblemDetails = components["schemas"]["ProblemDetails"];
 
 export type ValidationProblemDetails =

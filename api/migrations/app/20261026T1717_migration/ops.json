@@ -1,0 +1,264 @@
+[
+  {
+    "id": "table.AdminLoginAttempt",
+    "label": "Create table \"AdminLoginAttempt\"",
+    "summary": "Creates table \"AdminLoginAttempt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "AdminLoginAttempt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"AdminLoginAttempt\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"AdminLoginAttempt\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"AdminLoginAttempt\"",
+        "sql": "CREATE TABLE \"public\".\"AdminLoginAttempt\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" text NOT NULL,\n  \"id\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"AdminLoginAttempt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"AdminLoginAttempt\"",
+          "r",
+          "p"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.AdminSession",
+    "label": "Create table \"AdminSession\"",
+    "summary": "Creates table \"AdminSession\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "AdminSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"AdminSession\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"AdminSession\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"AdminSession\"",
+        "sql": "CREATE TABLE \"public\".\"AdminSession\" (\n  \"adminId\" uuid NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"tokenHash\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"AdminSession\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"AdminSession\"",
+          "r",
+          "p"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.AdminSession.AdminSession_tokenHash_key",
+    "label": "Add unique constraint on \"AdminSession\" (tokenHash)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "AdminSession_tokenHash_key",
+        "table": "AdminSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"AdminSession_tokenHash_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "AdminSession_tokenHash_key",
+          "public",
+          "\"public\".\"AdminSession\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"AdminSession_tokenHash_key\"",
+        "sql": "ALTER TABLE \"public\".\"AdminSession\" ADD CONSTRAINT \"AdminSession_tokenHash_key\" UNIQUE (\"tokenHash\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify unique constraint \"AdminSession_tokenHash_key\" exists on (tokenHash)",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb)) AS \"result\"",
+        "params": [
+          "AdminSession_tokenHash_key",
+          "public",
+          "\"public\".\"AdminSession\"",
+          "u",
+          "[\"tokenHash\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.AdminLoginAttempt.AdminLoginAttempt_email_createdAt_idx_6e3c0d8a",
+    "label": "Create index \"AdminLoginAttempt_email_createdAt_idx_6e3c0d8a\" on \"AdminLoginAttempt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "AdminLoginAttempt_email_createdAt_idx_6e3c0d8a",
+        "table": "AdminLoginAttempt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"AdminLoginAttempt_email_createdAt_idx_6e3c0d8a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"AdminLoginAttempt_email_createdAt_idx_6e3c0d8a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"AdminLoginAttempt_email_createdAt_idx_6e3c0d8a\"",
+        "sql": "CREATE INDEX \"AdminLoginAttempt_email_createdAt_idx_6e3c0d8a\" ON \"public\".\"AdminLoginAttempt\" (\"email\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"AdminLoginAttempt_email_createdAt_idx_6e3c0d8a\" exists on \"AdminLoginAttempt\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"AdminLoginAttempt_email_createdAt_idx_6e3c0d8a\"",
+          "i",
+          "I",
+          "\"public\".\"AdminLoginAttempt\"",
+          "btree",
+          "[\"email\",\"createdAt\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.AdminSession.AdminSession_adminId_idx_530179db",
+    "label": "Create index \"AdminSession_adminId_idx_530179db\" on \"AdminSession\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "AdminSession_adminId_idx_530179db",
+        "table": "AdminSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"AdminSession_adminId_idx_530179db\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"AdminSession_adminId_idx_530179db\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"AdminSession_adminId_idx_530179db\"",
+        "sql": "CREATE INDEX \"AdminSession_adminId_idx_530179db\" ON \"public\".\"AdminSession\" (\"adminId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"AdminSession_adminId_idx_530179db\" exists on \"AdminSession\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"AdminSession_adminId_idx_530179db\"",
+          "i",
+          "I",
+          "\"public\".\"AdminSession\"",
+          "btree",
+          "[\"adminId\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.AdminSession.AdminSession_adminId_fkey",
+    "label": "Add foreign key \"AdminSession_adminId_fkey\" on \"AdminSession\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "AdminSession_adminId_fkey",
+        "table": "AdminSession"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"AdminSession_adminId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "AdminSession_adminId_fkey",
+          "public",
+          "\"public\".\"AdminSession\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"AdminSession_adminId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"AdminSession\"\nADD CONSTRAINT \"AdminSession_adminId_fkey\"\nFOREIGN KEY (\"adminId\")\nREFERENCES \"public\".\"Admin\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"AdminSession_adminId_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "AdminSession_adminId_fkey",
+          "public",
+          "\"public\".\"AdminSession\"",
+          "f",
+          "[\"adminId\"]",
+          "\"public\".\"Admin\"",
+          "[\"id\"]",
+          "a",
+          "a"
+        ]
+      }
+    ]
+  }
+]

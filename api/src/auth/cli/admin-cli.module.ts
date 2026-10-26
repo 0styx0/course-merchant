@@ -1,6 +1,9 @@
 import { Module } from "@nestjs/common";
 
 import { PrismaModule } from "@/prisma/prisma.module.js";
+import { AdminLoginAttemptsRepository } from "../admin-login-attempts.repository.js";
+import { AdminPasswordsService } from "../admin-passwords.service.js";
+import { AdminSessionsRepository } from "../admin-sessions.repository.js";
 import { AdminsRepository } from "../admins.repository.js";
 
 /**
@@ -9,6 +12,11 @@ import { AdminsRepository } from "../admins.repository.js";
  */
 @Module({
   imports: [PrismaModule],
-  providers: [AdminsRepository],
+  providers: [
+    AdminPasswordsService,
+    AdminsRepository,
+    AdminSessionsRepository,
+    AdminLoginAttemptsRepository,
+  ],
 })
 export class AdminCliModule {}

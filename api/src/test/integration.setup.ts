@@ -19,6 +19,10 @@ beforeEach(async () => {
   ]);
 
   await db.orm.public.ProcessedPaymentEvent.where({}).deleteAll();
+  await Promise.all([
+    db.orm.public.AdminSession.where({}).deleteAll(),
+    db.orm.public.AdminLoginAttempt.where({}).deleteAll(),
+  ]);
   await db.orm.public.Admin.where({}).deleteAll();
 });
 

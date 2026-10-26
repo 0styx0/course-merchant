@@ -8,6 +8,14 @@
       "model": "Admin",
       "namespace": "public"
     },
+    "AdminLoginAttempt": {
+      "model": "AdminLoginAttempt",
+      "namespace": "public"
+    },
+    "AdminSession": {
+      "model": "AdminSession",
+      "namespace": "public"
+    },
     "Course": {
       "model": "Course",
       "namespace": "public"
@@ -178,7 +186,23 @@
                 }
               }
             },
-            "relations": {},
+            "relations": {
+              "sessions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "adminId"
+                  ]
+                },
+                "to": {
+                  "model": "AdminSession",
+                  "namespace": "public"
+                }
+              }
+            },
             "storage": {
               "fields": {
                 "createdAt": {
@@ -199,6 +223,125 @@
               },
               "namespaceId": "public",
               "table": "Admin"
+            }
+          },
+          "AdminLoginAttempt": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "email": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "email": {
+                  "column": "email"
+                },
+                "id": {
+                  "column": "id"
+                }
+              },
+              "namespaceId": "public",
+              "table": "AdminLoginAttempt"
+            }
+          },
+          "AdminSession": {
+            "fields": {
+              "adminId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "tokenHash": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "admin": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "adminId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Admin",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "adminId": {
+                  "column": "adminId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "tokenHash": {
+                  "column": "tokenHash"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "AdminSession"
             }
           },
           "Course": {
@@ -1271,6 +1414,123 @@
                 }
               ]
             },
+            "AdminLoginAttempt": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "email": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "dataType": "pg/uuid",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "email",
+                    "createdAt"
+                  ],
+                  "name": "AdminLoginAttempt_email_createdAt_idx_6e3c0d8a",
+                  "prefix": "AdminLoginAttempt_email_createdAt_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "AdminSession": {
+              "columns": {
+                "adminId": {
+                  "codecId": "pg/uuid@1",
+                  "dataType": "pg/uuid",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "dataType": "pg/uuid",
+                  "nullable": false
+                },
+                "tokenHash": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "AdminSession_adminId_idx_530179db"
+                  },
+                  "source": {
+                    "columns": [
+                      "adminId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "AdminSession"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Admin"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "adminId"
+                  ],
+                  "name": "AdminSession_adminId_idx_530179db",
+                  "prefix": "AdminSession_adminId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "tokenHash"
+                  ]
+                }
+              ]
+            },
             "Course": {
               "columns": {
                 "contentUrl": {
@@ -2159,10 +2419,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "20a3b20333b18a8ef1841177609e50b1a35d791bbcc3db74772211c720ab0b77"
+    "storageHash": "24859d55f665cfb270d8dde4aef8468274a6b46d26edfd63dd582c398a2e4f95"
   },
   "execution": {
-    "executionHash": "d8cf50f3529c1ad3acbd90391999fc79bb68f288bd16af322f91669bca6b1c00",
+    "executionHash": "d1495c3b8e6815988349bf06c895fb0f22c7519bee94768d674ace149b2df27b",
     "mutations": {
       "defaults": [
         {
@@ -2187,6 +2447,43 @@
           },
           "ref": {
             "entry": "Admin",
+            "field": "updatedAt",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "AdminLoginAttempt",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "AdminSession",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "instantNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "instantNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "AdminSession",
             "field": "updatedAt",
             "namespace": "public"
           }

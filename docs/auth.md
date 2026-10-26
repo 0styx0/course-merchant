@@ -9,22 +9,11 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
 Each step is one commit. Every step's tests are part of the step.
 
 - [x] **1. Admin accounts:** the `Admin` table, password hashing, and `yarn admin:set-password <email>`.
-- [ ] **2. Login and logout:** **Next**
-  - [ ] Contract 1.2.0 (see *Contract*), then regenerate types for `api` and `web`.
-  - [ ] `AdminSession` and `AdminLoginAttempt` tables, added to `integration.setup.ts` in FK order.
-  - [ ] `auth/session-token.ts`, `auth/hashing-slots.ts`, `auth/admin-sessions.repository.ts`, `auth/admin-login-attempts.repository.ts`.
-  - [ ] `auth/admin-sessions.service.ts` (`logIn`, `findActiveSession`, `logOut`), `auth/admin-sessions.controller.ts` and its Zod schema. Warm the dummy hash at startup (`onModuleInit`), so the first unknown-email login isn't slower.
-  - [ ] `ErrorCodeAuth` in [error-codes.ts](../api/src/common/errors/error-codes.ts); optional `headers` on `ApiException`, applied by [problem-details.filter.ts](../api/src/common/errors/problem-details.filter.ts).
-  - [ ] `auth/admin-auth.guard.ts`, `@Public()` and the current-session decorator. The guard is applied only to logout in this step.
-  - [ ] Extend the set-password command: in the same transaction, delete that admin's sessions and that email's attempts.
-  - [ ] Tests:
-    - unit: hashing slots (a third caller is refused; a slot frees after a thrown error); guard (missing, malformed, unknown, expired, idle); service orchestration with `fakePrisma`;
-    - integration: repositories; the age and idle rules with times passed in; the attempt limit with parallel logins run through the service, so a wrong transaction order fails the test;
-    - e2e: login `201`; wrong password `401` with `WWW-Authenticate`; the 6th attempt `429` with `Retry-After`, also with mixed-case emails; logout then the same token gets `401`; set-password lifts a lockout.
-- [ ] **3. Protect every admin endpoint:**
-  - [ ] Register the guard globally (`APP_GUARD`); mark the courses, checkout, webhook and login handlers `@Public()`.
+- [x] **2. Login and logout:** `POST /v1/admin/sessions`, `DELETE /v1/admin/sessions/current`, the `AdminSession` and `AdminLoginAttempt` tables, the guard (applied only to logout), and the set-password command signing out sessions and lifting lockouts.
+- [ ] **3. Protect every admin endpoint:** **Next**
+  - [ ] Register `AdminAuthGuard` globally (`APP_GUARD`, in `AuthModule`); mark the courses, checkout, webhook and login handlers `@Public()` (the decorator exists, and login already has it). Drop the guard from logout's `@UseGuards`.
   - [ ] `Cache-Control: no-store` on every authenticated response.
-  - [ ] `src/test/admin-fixtures.ts`: logs in; the four admin e2e specs use it.
+  - [ ] Extend [admin-fixtures.ts](../api/src/test/admin-fixtures.ts) (it has `setAdminPassword`) with a login helper that returns a token; the four admin e2e specs use it.
   - [ ] Route-protection e2e test read from the OpenAPI file: every `bearerAuth` operation gives `401` with `WWW-Authenticate` without a token; every `security: []` operation doesn't give `401`. An unauthenticated request with an invalid body gets `401`, not `400`.
   - [ ] Docs: tick the admin-auth item in [courses.md](courses.md), remove the launch blocker in [payments.md](payments.md), update the README *Status* and [ARCHITECTURE.md](../ARCHITECTURE.md) (module table, a short login flow).
 - [ ] **4. Cleanup job:**
@@ -49,18 +38,11 @@ Each step is one commit. Every step's tests are part of the step.
 3. Verify the password (a dummy hash for unknown emails). Failure gives `401 INVALID_CREDENTIALS`.
 4. In one transaction, create the session and delete that email's attempts. Return `{ token, absoluteExpiresAt }` once, with `Cache-Control: no-store`. The token is 256 random bits; only its SHA-256 hash is stored.
 
-**Each admin request** sends `Authorization: Bearer <token>`. The guard hashes it and finds a session created under 7 days ago and used within 24 hours, otherwise `401` with `WWW-Authenticate: Bearer`. It updates `lastUsedAt` at most every 5 minutes.
+**Each admin request** sends `Authorization: Bearer <token>`. The guard hashes it and finds a session created under 7 days ago and used within 24 hours, otherwise `401` with `WWW-Authenticate: Bearer`. It refreshes the session's `updatedAt` (its last-used time) at most every 5 minutes.
 
 **Logout.** `DELETE /v1/admin/sessions/current` deletes the row, so the token fails on every server at once.
 
 **Creating admins.** `yarn admin:set-password <email>` runs the built file on a server. It creates the admin, or replaces the password of an existing one, and signs out that admin's sessions.
-
-## Contract (1.1.0 to 1.2.0)
-
-- `bearerAuth`: drop `bearerFormat: JWT`; it's a random string the API looks up.
-- Add `createAdminSession` (`security: []`; `201`, `400`, `401 INVALID_CREDENTIALS`, `429 TOO_MANY_LOGIN_ATTEMPTS` with `Retry-After`) and `deleteCurrentAdminSession` (`204`, `401`).
-- `401` carries `WWW-Authenticate: Bearer` (RFC 6750). Remove `403` and `Forbidden`: only admins can log in.
-- `absoluteExpiresAt` is the latest end of the session; 24 hours unused ends it sooner.
 
 ## Decisions
 
@@ -74,8 +56,16 @@ Each step is one commit. Every step's tests are part of the step.
 | At most 2 password hashes at once per server; extra logins get `429` before their attempt is saved | The per-email limit doesn't cap total work: rotating emails could pile 19 MiB hashes onto the 4-thread pool | A global attempt cap in the database (lets one person lock out the owner) |
 | Accepted: someone who knows the admin email can keep it locked | Rare for one owner; it lifts itself, and the set-password command clears the attempts at once | Permanent lockout; CAPTCHA |
 | A login lasts 7 days at most and ends after 24 hours unused, with no stored `expiresAt` | Stricter than NIST's 30 days for password-only logins; no duplicated state | 24 hours with a 1-hour idle limit; an `expiresAt` column |
-| Session, idle and limit times use the server clock (`Temporal.Now`); the app writes `createdAt`, `lastUsedAt` and `attemptedAt`, with no `DEFAULT now()` | Seconds of drift only move a session's end by seconds, and it saves a query per admin request. The app never compares its clock against a Postgres-filled column | `DatabaseClock` |
-| `lastUsedAt` updated at most every 5 minutes with `.where(id, lastUsedAt < now - 5 min).updateAndCount(...)` | Keeps the idle rule without a write per request; the condition is part of the `UPDATE` | A write on every request; read then write |
+| Postgres fills `createdAt` (`DEFAULT now()`); the 7-day, 24-hour, 5-minute and 15-minute cutoffs come from the server clock (`Temporal.Now`), so drift is accepted. An exception to the `DatabaseClock` rule in CLAUDE.md | A few seconds of drift only move a session's end or an attempt's window by seconds, and it saves a query on every admin request | `DatabaseClock` (a query per request); the app writing `createdAt` itself |
+| `AdminSession.updatedAt` (ORM-filled) is the last-used time; there is no `lastUsedAt` column. `AdminLoginAttempt` has only `createdAt` | A touch is the only update a session ever gets, so a second column would always hold the same value. Attempts are never updated | `lastUsedAt` beside `updatedAt` |
+| A touch only when the session was last used over 5 minutes ago: `.where(id, updatedAt < now - 5 min).updateAndCount({ updatedAt: now })`, skipped without a query when the row just read is fresh | Keeps the idle rule without a write per request; the condition is part of the `UPDATE`, so parallel requests write once. The ORM fills `updatedAt` itself, but an explicit value wins | A write on every request; read then write |
+| `Retry-After` is a fixed 900 seconds when an email is over its limit | Never too short. Every refused try is saved too, so waiting less would only extend the lock | Working out the exact second from the attempt times (another query) |
+| Login accepts a password of 1 to 1024 characters | The 15 to 128 rule is for new passwords; at login a wrong length is just a wrong password. The upper bound only caps the input | Reusing the new-password rule |
+| Every `401` carries plain `WWW-Authenticate: Bearer`, including `INVALID_CREDENTIALS` on login | HTTP requires the header on every 401; the problem+json `code` says what went wrong, so `error="invalid_token"` adds nothing | RFC 6750's `error` parameter |
+| A full hashing cap answers `429 TOO_MANY_LOGIN_ATTEMPTS` with `Retry-After: 1` and its own `detail` | The contract has one `429` code for login | A separate code |
+| The token hash is stored as hex text | Easy to look up and read when debugging; unique and indexed either way | Raw bytes |
+| The set-password transaction lives in `AdminPasswordsService`, which the command calls | The command script runs as soon as it's imported, so no test could call it; the e2e tests call the service | Spawning the built file from tests |
+| `bearerAuth` is no longer `bearerFormat: JWT` | The token is a random string the API looks up | Keeping the label |
 | Admins are created by a command on a server; the password comes from a hidden prompt (`@inquirer/password`) or stdin, never an argument | No public sign-up and no default password (like Django's `createsuperuser`). Arguments leak into shell history and `ps` | A starting password in env settings; an invite flow; an outside login provider |
 | The command boots `admin-cli.module.ts`, not `AppModule` | `AppModule` would start the email worker and sweeper and demand the Stripe and email settings | Booting the whole app |
 | The command also deletes that admin's sessions and that email's attempts | A password change signs out every device and lifts a lockout | Leaving sessions alive |

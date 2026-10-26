@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: Course Merchant API
-  version: 1.1.0
+  version: 1.2.0
   description: API for browsing, creating, and purchasing courses.
 
 servers:
@@ -76,6 +76,65 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /admin/sessions:
+    post:
+      tags:
+        - Admin
+      summary: Log in
+      description: >
+        Checks the administrator's email and password and starts a session.
+        The token is returned once and only a hash of it is kept. A session
+        ends at `absoluteExpiresAt`, or sooner after 24 hours unused. An
+        unknown email and a wrong password give the same response.
+      operationId: createAdminSession
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAdminSessionRequest"
+      responses:
+        "201":
+          description: Logged in.
+          headers:
+            Cache-Control:
+              description: Always `no-store`; the body holds a secret.
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSession"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/InvalidCredentials"
+        "429":
+          $ref: "#/components/responses/TooManyLoginAttempts"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /admin/sessions/current:
+    delete:
+      tags:
+        - Admin
+      summary: Log out
+      description: >
+        Ends the session the request was made with. The token stops working
+        at once, on every server.
+      operationId: deleteCurrentAdminSession
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Logged out.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   /admin/courses:
     get:
       tags:
@@ -107,8 +166,6 @@ paths:
                 $ref: "#/components/schemas/ListAdminCoursesResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -246,8 +303,6 @@ paths:
           $ref: "#/components/responses/ValidationFailed"
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -288,8 +343,6 @@ paths:
           $ref: "#/components/responses/InvalidCourseId"
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/AdminCourseNotFound"
         "500":
@@ -418,8 +471,6 @@ paths:
           $ref: "#/components/responses/ValidationFailed"
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/AdminCourseNotFound"
         "500":
@@ -596,8 +647,10 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
-      description: Access token for an authenticated administrator.
+      description: >
+        Session token from `createAdminSession`, sent as
+        `Authorization: Bearer <token>`. It is a random string the API looks
+        up, not a JWT.
 
   parameters:
     CheckoutId:
@@ -654,7 +707,13 @@ components:
                     detail: Start time cannot be in the past.
 
     Unauthorized:
-      description: Missing or invalid credentials.
+      description: Missing, malformed, expired or unknown session token.
+      headers:
+        WWW-Authenticate:
+          description: Always `Bearer` (RFC 6750).
+          schema:
+            type: string
+            const: Bearer
       content:
         application/problem+json:
           schema:
@@ -666,18 +725,46 @@ components:
                 detail: Authentication is required.
                 code: UNAUTHORIZED
 
-    Forbidden:
-      description: The authenticated user is not an administrator.
+    InvalidCredentials:
+      description: The email or password is wrong. The two are not told apart.
+      headers:
+        WWW-Authenticate:
+          description: Always `Bearer`.
+          schema:
+            type: string
+            const: Bearer
       content:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/ProblemDetails"
           examples:
-            forbidden:
+            invalidCredentials:
               value:
-                title: Forbidden
-                detail: Administrator access is required.
-                code: FORBIDDEN
+                title: Invalid credentials
+                detail: The email or password is wrong.
+                code: INVALID_CREDENTIALS
+
+    TooManyLoginAttempts:
+      description: >
+        Five wrong or unfinished tries for this email in the last 15 minutes,
+        or this server is busy checking other passwords (then `Retry-After`
+        is 1).
+      headers:
+        Retry-After:
+          description: Seconds to wait before trying again.
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            tooManyLoginAttempts:
+              value:
+                title: Too many login attempts
+                detail: Try again in 15 minutes.
+                code: TOO_MANY_LOGIN_ATTEMPTS
 
     InvalidCourseId:
       description: The course identifier is malformed.
@@ -786,6 +873,39 @@ components:
                 detail: ""
 
   schemas:
+    CreateAdminSessionRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: Trimmed and lowercased before it is checked.
+        password:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          description: >
+            Any length up to the limit. The 15 to 128 character rule applies
+            only when a password is set.
+
+    AdminSession:
+      type: object
+      additionalProperties: false
+      required: [token, absoluteExpiresAt]
+      properties:
+        token:
+          type: string
+          description: "Sent as `Authorization: Bearer <token>`. Shown only once."
+        absoluteExpiresAt:
+          type: string
+          format: date-time
+          description: >
+            The latest the session can end. Going 24 hours without a request
+            ends it sooner.
+
     StartCheckoutRequest:
       type: object
       additionalProperties: false

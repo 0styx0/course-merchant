@@ -42,6 +42,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
 
     if (exception instanceof ApiException) {
       const { status } = ERROR_DEFINITIONS[exception.code];
+      res.set(exception.headers);
       return send(status, {
         title: exception.title,
         code: exception.code,

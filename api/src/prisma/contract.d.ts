@@ -23,9 +23,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'20a3b20333b18a8ef1841177609e50b1a35d791bbcc3db74772211c720ab0b77'>;
+  StorageHashBase<'24859d55f665cfb270d8dde4aef8468274a6b46d26edfd63dd582c398a2e4f95'>;
 export type ExecutionHash =
-  ExecutionHashBase<'d8cf50f3529c1ad3acbd90391999fc79bb68f288bd16af322f91669bca6b1c00'>;
+  ExecutionHashBase<'d1495c3b8e6815988349bf06c895fb0f22c7519bee94768d674ace149b2df27b'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -337,7 +337,23 @@ export namespace Models {
     id: FieldOutputTypes['public']['Admin']['id'];
     passwordHash: FieldOutputTypes['public']['Admin']['passwordHash'];
     updatedAt: FieldOutputTypes['public']['Admin']['updatedAt'];
+    sessions: public_AdminSession[];
+    readonly [RelationKeys]?: 'sessions';
+  };
+  export type public_AdminLoginAttempt = {
+    createdAt: FieldOutputTypes['public']['AdminLoginAttempt']['createdAt'];
+    email: FieldOutputTypes['public']['AdminLoginAttempt']['email'];
+    id: FieldOutputTypes['public']['AdminLoginAttempt']['id'];
     readonly [RelationKeys]?: never;
+  };
+  export type public_AdminSession = {
+    adminId: FieldOutputTypes['public']['AdminSession']['adminId'];
+    createdAt: FieldOutputTypes['public']['AdminSession']['createdAt'];
+    id: FieldOutputTypes['public']['AdminSession']['id'];
+    tokenHash: FieldOutputTypes['public']['AdminSession']['tokenHash'];
+    updatedAt: FieldOutputTypes['public']['AdminSession']['updatedAt'];
+    admin: public_Admin;
+    readonly [RelationKeys]?: 'admin';
   };
   export type public_Course = {
     contentUrl: FieldOutputTypes['public']['Course']['contentUrl'];
@@ -448,6 +464,8 @@ export namespace Models {
 export declare const models: {
   public: {
     Admin: Models.public_Admin;
+    AdminLoginAttempt: Models.public_AdminLoginAttempt;
+    AdminSession: Models.public_AdminSession;
     Course: Models.public_Course;
     CoursePrice: Models.public_CoursePrice;
     CourseStatus: Models.public_CourseStatus;
@@ -516,6 +534,99 @@ type ContractBase = Omit<
               uniques: readonly [{ readonly columns: readonly ['email'] }];
               indexes: readonly [];
               foreignKeys: readonly [];
+            };
+            readonly AdminLoginAttempt: {
+              columns: {
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly email: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'AdminLoginAttempt_email_createdAt_idx_6e3c0d8a';
+                  readonly prefix: 'AdminLoginAttempt_email_createdAt_idx';
+                  readonly columns: readonly ['email', 'createdAt'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [];
+            };
+            readonly AdminSession: {
+              columns: {
+                readonly adminId: {
+                  readonly dataType: 'pg/uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly tokenHash: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly updatedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['tokenHash'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'AdminSession_adminId_idx_530179db';
+                  readonly prefix: 'AdminSession_adminId_idx';
+                  readonly columns: readonly ['adminId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'AdminSession';
+                    readonly columns: readonly ['adminId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Admin';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
             };
             readonly Course: {
               columns: {
@@ -1187,6 +1298,14 @@ type ContractBase = Omit<
   readonly targetFamily: 'sql';
   readonly roots: {
     readonly Admin: { readonly namespace: 'public' & NamespaceId; readonly model: 'Admin' };
+    readonly AdminLoginAttempt: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'AdminLoginAttempt';
+    };
+    readonly AdminSession: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'AdminSession';
+    };
     readonly Course: { readonly namespace: 'public' & NamespaceId; readonly model: 'Course' };
     readonly CoursePrice: {
       readonly namespace: 'public' & NamespaceId;
@@ -1248,7 +1367,19 @@ type ContractBase = Omit<
                 };
               };
             };
-            readonly relations: Record<string, never>;
+            readonly relations: {
+              readonly sessions: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'AdminSession';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['adminId'];
+                };
+              };
+            };
             readonly storage: {
               readonly table: 'Admin';
               readonly namespaceId: 'public';
@@ -1257,6 +1388,90 @@ type ContractBase = Omit<
                 readonly email: { readonly column: 'email' };
                 readonly id: { readonly column: 'id' };
                 readonly passwordHash: { readonly column: 'passwordHash' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
+          readonly AdminLoginAttempt: {
+            readonly fields: {
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
+              readonly email: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+            };
+            readonly relations: Record<string, never>;
+            readonly storage: {
+              readonly table: 'AdminLoginAttempt';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly email: { readonly column: 'email' };
+                readonly id: { readonly column: 'id' };
+              };
+            };
+          };
+          readonly AdminSession: {
+            readonly fields: {
+              readonly adminId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly tokenHash: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly admin: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Admin';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['adminId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'AdminSession';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly adminId: { readonly column: 'adminId' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly id: { readonly column: 'id' };
+                readonly tokenHash: { readonly column: 'tokenHash' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
             };
@@ -2047,6 +2262,31 @@ type ContractBase = Omit<
           readonly onUpdate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
           readonly ref: {
             readonly entry: 'Admin';
+            readonly field: 'updatedAt';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'AdminLoginAttempt';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'AdminSession';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'instantNow'; readonly kind: 'generator' };
+          readonly onUpdate: { readonly id: 'instantNow'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'AdminSession';
             readonly field: 'updatedAt';
             readonly namespace: 'public';
           };
