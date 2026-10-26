@@ -1,5 +1,6 @@
 import { Test, type TestingModuleBuilder } from "@nestjs/testing";
 import type { INestApplication } from "@nestjs/common";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { AppModule } from "@/app.module.js";
 import { AdminSessionCleanup } from "@/auth/admin-session-cleanup.js";
 import { EmailWorker } from "@/email/email-worker.js";
@@ -32,7 +33,9 @@ export async function createE2eApp(
   ).compile();
 
   // same as main.ts, so webhook signatures can be checked in tests
-  const app = moduleRef.createNestApplication({ rawBody: true });
+  const app = moduleRef.createNestApplication<NestExpressApplication>({
+    rawBody: true,
+  });
 
   configureApp(app);
 

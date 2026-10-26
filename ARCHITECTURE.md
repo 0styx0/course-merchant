@@ -220,6 +220,7 @@ Break one of these and something subtle goes wrong, usually money or access.
   - The Stripe key should be a restricted key, limited to checkout sessions and refunds.
   - Rate limits belong at the CDN or edge (see the launch checklist in [payments.md](docs/payments.md)).
   - Every route needs an admin login unless it is marked `@Public()`; see [Admin login](#admin-login).
+  - Responses don't name the framework (`X-Powered-By` is off) and carry `X-Content-Type-Options: nosniff`, set in [configure-app.ts](api/src/configure-app.ts).
 - **Testing.** Each layer has its own kind of test: unit tests with typed mocks, integration tests against a real database, and end-to-end tests through HTTP with stripe-mock. See [CONTRIBUTING.md](CONTRIBUTING.md#writing-tests).
 
 ## Where to read next
