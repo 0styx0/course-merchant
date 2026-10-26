@@ -4,6 +4,7 @@ import { EmailDeliveryError, EmailSender } from "@/email/email-sender.js";
 
 const config = {
   smtpUrl: "smtp://localhost",
+  requireTls: false,
   from: "Course Shop <hello@example.com>",
   shopName: "Course Shop",
 };

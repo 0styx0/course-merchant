@@ -5,15 +5,25 @@ const emailEnvSchema = z.object({
   // any SMTP provider's connection URL, e.g. smtps://user:pass@smtp.example.com
   SMTP_URL: z
     .string()
-    .regex(/^smtps?:\/\//, "must be an smtp:// or smtps:// URL"),
+    .regex(/^smtps?:\/\//, "must be an smtp:// or smtps:// URL")
+    .refine((value) => URL.canParse(value), "must be a valid URL"),
   // the sender shown to buyers, e.g. `Course Shop <hello@example.com>`
   EMAIL_FROM: z.string().min(1),
   // the name in each email's header and footer
   EMAIL_SHOP_NAME: z.string().min(1),
 });
 
+// the mail server is on this machine, so nobody can sit between us and it
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
 export type EmailConfig = {
   smtpUrl: string;
+  /**
+   * Refuse to send unless the connection is encrypted. Without it, someone
+   * between us and the mail server could remove its offer of encryption and
+   * read the SMTP password and every email.
+   */
+  requireTls: boolean;
   from: string;
   shopName: string;
 };
@@ -40,6 +50,7 @@ export function loadEmailConfig(
 
   return {
     smtpUrl: result.data.SMTP_URL,
+    requireTls: !LOOPBACK_HOSTS.has(new URL(result.data.SMTP_URL).hostname),
     from: result.data.EMAIL_FROM,
     shopName: result.data.EMAIL_SHOP_NAME,
   };

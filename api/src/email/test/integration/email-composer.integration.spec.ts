@@ -16,6 +16,7 @@ describe("EmailComposer (integration)", () => {
     new EmailViewsRepository(),
     {
       smtpUrl: "smtp://localhost",
+      requireTls: false,
       from: "Course Shop <hello@example.com>",
       shopName: "Course Shop",
     },

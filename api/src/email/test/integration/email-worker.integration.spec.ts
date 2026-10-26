@@ -18,6 +18,7 @@ describe("EmailWorker (integration)", () => {
   const outbox = new EmailOutboxRepository();
   const composer = new EmailComposer(prisma, new EmailViewsRepository(), {
     smtpUrl: "smtp://localhost",
+    requireTls: false,
     from: "Course Shop <hello@example.com>",
     shopName: "Course Shop",
   });
@@ -27,6 +28,7 @@ describe("EmailWorker (integration)", () => {
       { sendMail },
       {
         smtpUrl: "smtp://localhost",
+        requireTls: false,
         from: "Course Shop <hello@example.com>",
         shopName: "Course Shop",
       },
