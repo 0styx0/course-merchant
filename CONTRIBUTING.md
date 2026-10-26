@@ -98,6 +98,13 @@ ESLint and Prettier handle formatting. The rest is up to you:
 - **Name things by their owner**: `customer.name`, not a bare `name` beside `courseId`.
 - **Don't add abstractions for hypothetical needs.** A thin wrapper around an SDK is fine. An interface for a second payment provider that doesn't exist isn't.
 
+## Dependency audit
+
+Run `yarn --cwd api audit --groups dependencies` (and the same for `web`). Update to a patched version when the fix fits the existing version ranges. These advisories are known and accepted in `api/`, because nothing in them runs when a request reaches the API:
+
+- **`multer`**, pinned by `@nestjs/platform-express`. It only runs on routes that accept file uploads, and the API has none. Upgrade when Nest does, or before adding an upload route.
+- **`hono`, `@hono/node-server`, `lodash`, `valibot`** under `prisma`. They belong to the Prisma command-line tool's local dev server and deploy tooling, which the running API never loads (it uses `@prisma/orm-postgres`). Pinned inside Prisma's pre-release packages; upgrade with Prisma.
+
 ## Commits
 
 - **Use [Conventional Commits](https://www.conventionalcommits.org/) with a scope.** Examples:
