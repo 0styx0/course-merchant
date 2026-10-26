@@ -12,7 +12,8 @@ Each step is one commit. Every step's tests are part of the step.
 - [x] **2. Login and logout:** `POST /v1/admin/sessions`, `DELETE /v1/admin/sessions/current`, the `AdminSession` and `AdminLoginAttempt` tables, the guard (applied only to logout), and the set-password command signing out sessions and lifting lockouts.
 - [x] **3. Protect every admin endpoint:** the guard is global, the public controllers are `@Public()`, authenticated responses carry `Cache-Control: no-store`, and a test checks every route against the OpenAPI file.
 - [x] **4. Cleanup job:** `auth/admin-session-cleanup.ts`, hourly `@Interval` on every server, deleting sessions past 7 days or idle over 24 hours and attempts older than 15 minutes. Integration tests only.
-- [ ] **Launch:** **Next** HTTPS between the web server and the API; `admin:set-password` run on the production server.
+- [x] **5. HTTPS check:** the web server refuses to start in production unless `API_BASE_URL` is `https://` or on the same machine (`web/src/lib/api/base-url.ts`).
+- [ ] **Launch:** **Next** run `admin:set-password` on the production server, and point `API_BASE_URL` at the API's `https://` address (the web server now refuses anything else). Operations only; no code.
 
 ## Principles
 
@@ -69,6 +70,7 @@ Each step is one commit. Every step's tests are part of the step.
 | The guard sets `Cache-Control: no-store` once it accepts a session, before the handler runs; the contract lists the header on every admin success response | One line covers every logged-in response, errors included. Admin responses hold private `contentUrl`s | A global interceptor (another file for the same effect); documenting nothing |
 | `route-protection.spec.ts` reads the OpenAPI file (`js-yaml`, a dev dependency) and sends each operation an invalid body without a token | The list of protected routes can't drift from the contract, and it proves the login check runs before validation | A hand-written route list (goes stale silently) |
 | The cleanup job deletes exactly the sessions `findActive` would no longer find (same `activeSessionCutoffs`), and attempts older than the 15-minute window (`attempt-window.ts`, shared with login) | A row goes the moment it can't be used, and the window can't differ between login and cleanup. Hourly on every server, unbatched: deleting twice is harmless and there is one owner's worth of rows | A leader or lock (coordination for nothing); batches (payments-sized tables only); a grace period |
+| `API_BASE_URL` must be `https://` in production, except `localhost`, `127.0.0.1` and `[::1]`; the check lives in `validateApiBaseUrl`, called when `client.ts` loads | Admin tokens go in a header from the web server to the API; a plain-HTTP setting would send them readable. A startup error beats a silent leak. Same-machine http stays allowed for single-host setups | Always requiring https (breaks local `next start`); a note in the docs only |
 | Drop `403` from the contract | A logged-in caller is always an admin | Keeping a response that can't happen |
 
 ## Follow-ups (not planned yet)

@@ -95,6 +95,8 @@ The API checks its settings when it starts. A missing or invalid one stops it wi
 
 **Web app only, with fake data:** `yarn --cwd web dev:mock` serves the pages with MSW's canned API responses, so no API or database is needed. It still reads `API_BASE_URL` from step 7.
 
+In production the web app refuses to start unless `API_BASE_URL` starts with `https://` (or points at the same machine), because admin tokens travel in that connection.
+
 **Emails locally:** run `docker run -d -p 1025:1025 -p 8025:8025 axllent/mailpit`, set `SMTP_URL="smtp://localhost:1025"`, and read the mail at http://localhost:8025.
 
 **Webhooks locally:** run `stripe listen --forward-to localhost:3001/v1/webhooks/stripe`, and copy the `whsec_…` secret it prints into `STRIPE_WEBHOOK_SECRET`.
