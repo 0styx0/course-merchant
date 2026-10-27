@@ -17,17 +17,32 @@ describe("CourseCard", () => {
       }),
     ).toBeInTheDocument();
 
-    expect(screen.getByText(course.description)).toBeInTheDocument();
+    expect(screen.getByText(course.summary)).toBeInTheDocument();
+    expect(screen.queryByText(course.description)).not.toBeInTheDocument();
 
     expect(screen.getByText("$99.00")).toBeInTheDocument();
 
-    expect(screen.getByText("2026-10-01T14:00:00-04:00")).toBeInTheDocument();
+    expect(screen.getByText("Oct 1, 2026, 2:00 PM")).toHaveAttribute(
+      "datetime",
+      "2026-10-01T18:00:00Z",
+    );
 
-    expect(screen.getByText("2026-10-01T16:00:00-04:00")).toBeInTheDocument();
+    expect(screen.getByText("Oct 1, 2026, 4:00 PM")).toHaveAttribute(
+      "datetime",
+      "2026-10-01T20:00:00Z",
+    );
 
     expect(screen.getByText("America/New_York")).toBeInTheDocument();
 
     expect(screen.getByText("12 students enrolled")).toBeInTheDocument();
+  });
+
+  it("links the course name to its page", () => {
+    render(<CourseCard course={course} />);
+
+    expect(
+      screen.getByRole("link", { name: "React Fundamentals" }),
+    ).toHaveAttribute("href", `/courses/${course.id}`);
   });
 
   it("uses singular language for one enrollment", () => {

@@ -13,8 +13,8 @@ Each step is one commit. Every step's tests are part of the step. Steps 1–5 co
 - [x] **3. A real 404 for an unknown course.**
 - [x] **4. Shared test data and mock helpers.**
 - [x] **5. Feature folders and plain-data components.**
-- [ ] **6. Course cards link to their page,** show `summary` instead of `description`, show formatted local times instead of raw ISO strings, and use `key={course.id}`. **Next**
-- [ ] **7. Security headers** in `next.config.ts`: `poweredByHeader: false`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `frame-ancestors 'none'` (stops other sites framing the admin pages).
+- [x] **6. Course cards link to their page,** show `summary`, show formatted times, and use `key={course.id}`.
+- [ ] **7. Security headers** in `next.config.ts`: `poweredByHeader: false`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `frame-ancestors 'none'` (stops other sites framing the admin pages). **Next**
 - [ ] **8. Real site metadata and one font** in the root layout (today: "Create Next App", and Geist Sans loaded but unused).
 
 ## Principles
@@ -59,6 +59,10 @@ Each step is one commit. Every step's tests are part of the step. Steps 1–5 co
 | `web/` is an ES module package (`"type": "module"`) | Vite's native config loader needs it, and it matches `api/`. Config files import `.ts` with the extension (`allowImportingTsExtensions`) | Silencing the warning with `VITE_CONFIG_NATIVE_IGNORE_WARNING`; copying the mock URL into the Vitest config |
 | Browser tests are named `tests/browser` and `test:browser` | They drive a browser against a mocked API. In `api/`, `integration` and `e2e` both mean a real database | `tests/integration`; `tests/e2e` |
 | Sample courses are fixtures with fixed IDs in `mocks/fixtures/`, and `dev:mock` falls back to an endpoint's `success` when it lacks the chosen scenario | One copy of the data for MSW, Vitest and Playwright, and failures that repeat. Fixtures sit in `mocks/` because `dev:mock` uses them too. Formatted output is still asserted as literals, so tests don't reuse the formatter they check. Without the fallback, a scenario like `empty` left the course page with no handler | `randomUUID()` per run; a `makeCourse()` factory; throwing when any endpoint lacks the scenario |
+| Card times are shown in the course's time zone | Cards render on the server and the home page is cached, so the visitor's zone is unknown; matches the course page | The visitor's zone (client component, server/browser mismatch) |
+| The card's heading is its one link, stretched over the card with `after:absolute after:inset-0` | A big click target, and screen readers read only the name as the link | Wrapping the whole card in `<a>` (reads every line as the link name) |
+| `CourseSchedule` formats start and end for card and course page | One formatting, and each end keeps its own `datetime` | Two copies; `formatRange` (one string, loses per-end `datetime`) |
+| Fixture times are UTC ending in `Z` | The API only emits such instants | Offsets like `-04:00` |
 
 ## Launch
 

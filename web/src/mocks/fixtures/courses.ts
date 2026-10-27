@@ -13,8 +13,8 @@ export const reactCourse = {
     currency: "USD",
   },
   schedule: {
-    startTime: "2026-10-01T14:00:00-04:00",
-    endTime: "2026-10-01T16:00:00-04:00",
+    startTime: "2026-10-01T18:00:00Z",
+    endTime: "2026-10-01T20:00:00Z",
     timeZone: "America/New_York",
   },
 } as const satisfies Course;
@@ -31,8 +31,8 @@ export const typescriptCourse = {
     currency: "USD",
   },
   schedule: {
-    startTime: "2026-10-02T18:00:00-04:00",
-    endTime: "2026-10-02T20:00:00-04:00",
+    startTime: "2026-10-02T22:00:00Z",
+    endTime: "2026-10-03T00:00:00Z",
     timeZone: "America/New_York",
   },
 } as const satisfies Course;

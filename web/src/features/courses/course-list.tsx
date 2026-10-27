@@ -45,10 +45,7 @@ export function CourseList({ courses }: CourseListProps) {
     <CourseListFrame>
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {courses.map((course) => (
-          <CourseCard
-            key={`${course.name}-${course.schedule.startTime}`}
-            course={course}
-          />
+          <CourseCard key={course.id} course={course} />
         ))}
       </div>
     </CourseListFrame>

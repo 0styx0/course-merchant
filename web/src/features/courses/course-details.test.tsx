@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { describe, expect, it } from "vitest";
 
-import { formatDate, formatPrice } from "@/lib/utils/formatters";
+import { formatPrice } from "@/lib/utils/formatters";
 import { reactCourse } from "@/mocks/fixtures/courses";
 import { CourseDetails } from "./course-details";
 
@@ -23,19 +23,14 @@ describe("CourseDetails", () => {
 
     expect(screen.getByText(formatPrice(9900, "USD"))).toBeVisible();
 
-    const dateFormatter = formatDate("America/New_York");
-    const formattedStart = dateFormatter.format(
-      new Date("2026-10-01T14:00:00-04:00"),
+    expect(screen.getByText("Oct 1, 2026, 2:00 PM")).toHaveAttribute(
+      "datetime",
+      "2026-10-01T18:00:00Z",
     );
-    const formattedEnd = dateFormatter.format(
-      new Date("2026-10-01T16:00:00-04:00"),
+    expect(screen.getByText("Oct 1, 2026, 4:00 PM")).toHaveAttribute(
+      "datetime",
+      "2026-10-01T20:00:00Z",
     );
-
-    const startTime = screen.getByText(formattedStart);
-    const endTime = screen.getByText(formattedEnd);
-
-    expect(startTime).toHaveAttribute("datetime", "2026-10-01T14:00:00-04:00");
-    expect(endTime).toHaveAttribute("datetime", "2026-10-01T16:00:00-04:00");
 
     expect(screen.getByText("America/New_York")).toBeVisible();
     expect(screen.getByText("12 enrolled")).toBeVisible();

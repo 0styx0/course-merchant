@@ -1,5 +1,6 @@
 import type { Course } from "@/lib/types";
-import { formatDate, formatPrice } from "@/lib/utils/formatters";
+import { formatPrice } from "@/lib/utils/formatters";
+import { CourseSchedule } from "./course-schedule";
 
 type CourseDetailsProps = {
   course: Course;
@@ -7,7 +8,6 @@ type CourseDetailsProps = {
 
 export function CourseDetails({ course }: CourseDetailsProps) {
   const { schedule } = course;
-  const dateFormatter = formatDate(schedule.timeZone);
 
   return (
     <article className="mt-6">
@@ -25,14 +25,7 @@ export function CourseDetails({ course }: CourseDetailsProps) {
         <div>
           <dt className="font-semibold">Schedule</dt>
           <dd>
-            <time dateTime={schedule.startTime}>
-              {dateFormatter.format(new Date(schedule.startTime))}
-            </time>
-            {" – "}
-            <time dateTime={schedule.endTime}>
-              {dateFormatter.format(new Date(schedule.endTime))}
-            </time>
-            <p className="text-sm text-gray-600">{schedule.timeZone}</p>
+            <CourseSchedule schedule={schedule} />
           </dd>
         </div>
 

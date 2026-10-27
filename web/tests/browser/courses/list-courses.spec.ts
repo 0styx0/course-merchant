@@ -1,5 +1,6 @@
 import msw from "next/experimental/testmode/playwright/msw.js";
 
+import { courseByIdSuccess } from "@/mocks/handlers/get-course";
 import { reactCourse, typescriptCourse } from "@/mocks/fixtures/courses";
 import {
   coursesError,
@@ -34,6 +35,22 @@ test("displays available courses", async ({ page }) => {
     courses.getByRole("heading", {
       name: typescriptCourse.name,
     }),
+  ).toBeVisible();
+});
+
+test("opens a course from its card", async ({ page, msw }) => {
+  msw.use(courseByIdSuccess);
+
+  await page.goto("/");
+
+  await page
+    .getByRole("region", { name: "Courses" })
+    .getByRole("link", { name: reactCourse.name })
+    .click();
+
+  await expect(page).toHaveURL(`/courses/${reactCourse.id}`);
+  await expect(
+    page.getByRole("heading", { level: 1, name: reactCourse.name }),
   ).toBeVisible();
 });
 
