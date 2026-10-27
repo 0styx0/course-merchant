@@ -62,10 +62,11 @@ Stripe is the record of money: the app stores only what it needs to decide who h
 
 | Folder | Responsibility |
 |---|---|
-| [app/](web/src/app/) | Pages: the home page with the course list (rendered again at most once a minute), and a page for each course. |
-| [components/](web/src/components/) | An async *container* that fetches data, plus a pure *view* that renders it. |
-| [lib/api/](web/src/lib/api/) | The typed API client (server-only; each call times out after 10 s), with one wrapper per endpoint. |
-| [mocks/](web/src/mocks/) | MSW handlers, one file per endpoint, each with named scenarios (`success`, `notFound`, `error`, …). |
+| [app/](web/src/app/) | Routes only. The public pages sit in a `(shop)` group whose layout owns the page's `<main>`: the home page with the course list (rendered again at most once a minute), and a page for each course. |
+| [features/](web/src/features/) | One folder per area (today `courses/`): server-only API wrappers (`<feature>.api.ts`), async *sections* that fetch, and components that take plain data. |
+| [components/](web/src/components/) | Pieces used app-wide, such as `ProblemAlert`; `ui/` holds the shadcn primitives. |
+| [lib/api/](web/src/lib/api/) | The typed API client (server-only; each call times out after 10 s) and the mapper that turns answers into a `Result`. |
+| [mocks/](web/src/mocks/) | MSW handlers, one file per endpoint named after its operationId, each with named scenarios (`success`, `notFound`, `error`, …). |
 
 ## Layers inside the API
 
@@ -92,20 +93,20 @@ PostgreSQL   Stripe
 
 Repositories take a `scope` as their first argument: either the plain database connection or an open transaction. That lets a service run several repositories inside one transaction, so their writes succeed or fail together.
 
-## Web: container and view
+## Web: section and plain-data component
 
 Only the Next server calls the API. That isn't what keeps the API private: Stripe's webhook needs the API to be reachable anyway (closing it to everyone but Next and Stripe would be a hosting firewall rule). It keeps the admin token out of the browser, needs no CORS, and leaves one typed client. The planned restructure of the web app is in [docs/web.md](docs/web.md).
 
 ```
-page.tsx
-   └─▶ courses.tsx         async server component: calls lib/api/courses.list.ts
-          │                gets back Result = success(data) | failure(problem)
+(shop)/page.tsx
+   └─▶ course-list-section.tsx   async server component: calls listCourses()
+          │                      in features/courses/courses.api.ts
           ▼
-       courses-view.tsx    pure render of the Result; unit-tested with a
-                           hand-built Result, no network needed
+       course-list.tsx           renders plain data (`courses`); unit-tested
+                                 with hand-built data, no network needed
 ```
 
-API wrappers return a `Result` instead of throwing, so every page has to handle the failure case explicitly.
+Most wrappers return a `Result` instead of throwing, so a page has to handle the failure case explicitly (the course page shows a `ProblemAlert`). `listCourses` throws instead, so the home page keeps its last good copy when a background refresh fails.
 
 ## A paid purchase, start to finish
 

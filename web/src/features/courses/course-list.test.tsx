@@ -1,12 +1,12 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { CoursesLoading, CoursesView } from "./courses-view";
+import { CourseListLoading, CourseList } from "./course-list";
 import { reactCourse, typescriptCourse } from "@/mocks/fixtures/courses";
 
-describe("CoursesView", () => {
+describe("CourseList", () => {
   it("renders the loading state", () => {
-    render(<CoursesLoading />);
+    render(<CourseListLoading />);
 
     expect(
       screen.getByRole("heading", { name: "Courses" }),
@@ -18,7 +18,7 @@ describe("CoursesView", () => {
   });
 
   it("renders the empty state when there are no courses", () => {
-    render(<CoursesView courses={[]} />);
+    render(<CourseList courses={[]} />);
 
     expect(
       screen.getByRole("heading", { name: "Courses" }),
@@ -32,7 +32,7 @@ describe("CoursesView", () => {
   });
 
   it("renders the available courses", () => {
-    render(<CoursesView courses={[reactCourse, typescriptCourse]} />);
+    render(<CourseList courses={[reactCourse, typescriptCourse]} />);
 
     const courses = screen.getByRole("region", { name: "Courses" });
     const cards = within(courses).getAllByRole("article");

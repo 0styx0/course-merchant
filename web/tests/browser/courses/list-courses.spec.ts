@@ -5,7 +5,7 @@ import {
   coursesError,
   coursesSlow,
   coursesSuccess,
-} from "@/mocks/handlers/courses.list";
+} from "@/mocks/handlers/list-courses";
 
 const { test, expect } = msw;
 

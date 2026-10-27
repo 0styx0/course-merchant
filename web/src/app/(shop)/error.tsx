@@ -11,7 +11,7 @@ type ErrorPageProps = {
 // details are in the server logs.
 export default function ErrorPage({ retry }: ErrorPageProps) {
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12">
+    <>
       <div
         role="alert"
         className="rounded-md border border-red-300 bg-red-100 p-4 text-red-950"
@@ -22,6 +22,6 @@ export default function ErrorPage({ retry }: ErrorPageProps) {
       <Button type="button" onClick={() => retry()} className="mt-4">
         Try again
       </Button>
-    </main>
+    </>
   );
 }

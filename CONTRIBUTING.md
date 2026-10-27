@@ -23,7 +23,7 @@ The OpenAPI spec is the source of truth, so a change starts there:
         │                   yarn --cwd web generate:api-types
         ▼
 3. Implement                api: controller → service → repository
-        │                   web: wrapper in src/lib/api/, container + view
+        │                   web: wrapper in src/features/<feature>/
         ▼
 4. Test                     unit, then integration, then end-to-end
         │

@@ -40,7 +40,7 @@ export const coursesSlow = http.get(coursesUrl, async () => {
   return HttpResponse.json(coursesResponse);
 });
 
-export const courseListHandlers = {
+export const listCoursesHandlers = {
   success: coursesSuccess,
   empty: coursesEmpty,
   error: coursesError,

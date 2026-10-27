@@ -123,9 +123,10 @@ The git hooks run these for you: unit tests and type checks before each commit, 
 │   └── src/              one folder per module: courses, checkout, payments,
 │                         webhooks, enrollments, email, prisma, common
 ├── web/                  Next.js web app (its own package.json)
-│   ├── src/app/          pages (App Router)
-│   ├── src/components/   server containers and pure views
-│   ├── src/lib/api/      typed API client, one wrapper per endpoint
+│   ├── src/app/          routes (App Router)
+│   ├── src/features/     per area: API wrappers, sections, components
+│   ├── src/components/   app-wide components
+│   ├── src/lib/api/      typed API client
 │   └── src/mocks/        MSW handlers for tests and dev:mock
 ├── docs/                 design docs: status, decisions, rejected options
 └── .husky/               git hooks shared by both projects

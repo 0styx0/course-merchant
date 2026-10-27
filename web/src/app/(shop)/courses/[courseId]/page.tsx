@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CourseDetailsView } from "@/components/course-details/course-details-view";
-import { getCourse } from "@/lib/api/course.get";
+import { ProblemAlert } from "@/components/problem-alert";
+import { CourseDetails } from "@/features/courses/course-details";
+import { getCourse } from "@/features/courses/courses.api";
 
 type CoursePageProps = {
   params: Promise<{ courseId: string }>;
@@ -32,5 +33,9 @@ export default async function CoursePage({ params }: CoursePageProps) {
     notFound();
   }
 
-  return <CourseDetailsView result={result} />;
+  if (result.state === "failure") {
+    return <ProblemAlert problem={result.error} />;
+  }
+
+  return <CourseDetails course={result.data} />;
 }

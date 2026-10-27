@@ -59,7 +59,7 @@ export const courseByIdSlow = http.get(courseByIdUrl, async () => {
   return HttpResponse.json(courseResponse);
 });
 
-export const courseByIdHandlers = {
+export const getCourseHandlers = {
   success: courseByIdSuccess,
   notFound: courseByIdNotFound,
   invalidId: courseByIdInvalidId,

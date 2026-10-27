@@ -3,7 +3,7 @@ import {
   courseByIdError,
   courseByIdNotFound,
   courseByIdInvalidId,
-} from "@/mocks/handlers/course.get";
+} from "@/mocks/handlers/get-course";
 import { reactCourse } from "@/mocks/fixtures/courses";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
