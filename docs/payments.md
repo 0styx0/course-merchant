@@ -38,10 +38,10 @@ Keep these files current **in the same commit as the work**. Tick off status her
   - [x] `PaymentRefunds` refunds through Stripe, then marks the payment `refunded`; fulfillment and the sweeper both use it.
   - [x] `PaymentSweeper` on a 10-minute interval: refunds orphan payments, rechecks overdue pending payments with Stripe, expires payments with no checkout.
   - [x] `StripeService.retrieveCheckout`, `refundPayment` treating `charge_already_refunded` as success, and `FulfillmentService.fulfillRetrievedCheckout`.
-- [ ] **6. Web:** **Next**
-  - buy form on the course page;
-  - `/checkout/success`, polling the status endpoint;
-  - `/checkout/cancel`;
+- [ ] **6. Web:** **Next** (structure and decisions in [web.md](web.md); do its steps 1–5 first)
+  - buy form on the course page: a Server Action with `useActionState`; `lib/api/form-errors.ts` (API field errors to form fields) arrives here;
+  - `/checkout/success`, rendered on the server and refreshed with `router.refresh()` while the status is `pending`;
+  - no cancel page: Stripe's cancel URL is the course page ([stripe-redirect.service.ts](../api/src/checkout/stripe-redirect.service.ts));
   - MSW handlers.
 
   Write the Given/When/Then specs in `web/docs/` first.
@@ -93,7 +93,7 @@ Flows and decisions, one file per subarea. Read the one that matches the task:
 - Ask the accountant about sales tax or VAT. Stripe Tax can be switched on later with `automatic_tax` and Dashboard setup.
 - Set up per-IP limits at the CDN or edge:
   - 120 requests a minute by default;
-  - the buy form at 10 a minute **and** 50 an hour;
+  - the buy form at 10 a minute **and** 50 an hour (a Server Action posts to its page, so match POST `/courses/*`; see [web.md](web.md) *Launch*);
   - the webhook exempt;
   - log 429s and tune afterwards.
 

@@ -12,7 +12,7 @@ Each step is one commit. Every step's tests are part of the step.
 - [x] **2. Login and logout:** `POST /v1/admin/sessions`, `DELETE /v1/admin/sessions/current`, the `AdminSession` and `AdminLoginAttempt` tables, the guard (applied only to logout), and the set-password command signing out sessions and lifting lockouts.
 - [x] **3. Protect every admin endpoint:** the guard is global, the public controllers are `@Public()`, authenticated responses carry `Cache-Control: no-store`, and a test checks every route against the OpenAPI file.
 - [x] **4. Cleanup job:** `auth/admin-session-cleanup.ts`, hourly `@Interval` on every server, deleting sessions past 7 days or idle over 24 hours and attempts older than 15 minutes. Integration tests only.
-- [x] **5. HTTPS check:** the web server refuses to start in production unless `API_BASE_URL` is `https://` or on the same machine (`web/src/lib/api/base-url.ts`).
+- [x] **5. HTTPS check:** in production the web app refuses an `API_BASE_URL` that isn't `https://` or on the same machine (`web/src/lib/api/base-url.ts`). Today that means the build fails and every request fails, but the server process stays up; [web.md](web.md) step 1 makes it exit at boot too.
 - [ ] **Launch:** **Next** run `admin:set-password` on the production server, and point `API_BASE_URL` at the API's `https://` address (the web server now refuses anything else). Operations only; no code.
 
 ## Principles
@@ -75,6 +75,11 @@ Each step is one commit. Every step's tests are part of the step.
 
 ## Follow-ups (not planned yet)
 
-- Web login page: a server action stores the token in an `httpOnly; Secure; SameSite=Lax` cookie with `Max-Age` matching `absoluteExpiresAt`. Pass `Authorization` on each call (read from `cookies()`), never through shared module state; keep admin fetches uncached; a `401` clears the cookie and redirects to login. Belongs with the web admin pages.
+- Web login page (design decisions in [web.md](web.md)). Belongs with the web admin pages.
+  - A server action stores the token in a `__Host-admin_session` cookie: `httpOnly; Secure; SameSite=Lax; Path=/`, with `Max-Age` matching `absoluteExpiresAt`. Logout deletes it with the same options it was set with (deleting by name alone drops `Secure`, and browsers then ignore it for a `__Host-` name).
+  - Pass `Authorization` on each call (read from `cookies()`), never through shared module state; keep admin fetches uncached.
+  - A `401` while a page renders only redirects to login, because cookies can't change during rendering; the stale cookie is replaced at the next login. A `401` inside an action may also delete the cookie.
+  - The login page never redirects just because a cookie exists, or a stale cookie would loop between it and the admin pages.
+  - Admin pages that fetch nothing (the new-course form) still call `requireAdminSession()`, because layouts don't re-run on navigation.
 - Re-hash on login (`argon2.needsRehash`) once the Argon2 settings are raised.
 - "Log out everywhere" and password change through the API.

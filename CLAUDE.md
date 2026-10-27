@@ -18,6 +18,7 @@ A small storefront for selling courses. Two independent yarn (v1) projects, each
   - [docs/payments/refunds.md](docs/payments/refunds.md) — refunds, disputes, access, sweeper.
 - [docs/courses.md](docs/courses.md) — creating, editing and browsing courses: who sees what, `PUT` semantics, validation, decisions.
 - [docs/auth.md](docs/auth.md) — admin login, logout, sessions, the auth guard, and the command that creates admins: status checklist, principles, decisions.
+- [docs/web.md](docs/web.md) — the web app: folder layout, how it calls the API, caching, errors, forms, admin login cookie: status checklist (what's next), principles, decisions.
 
 Update them in the same commit as the code they describe: tick status, add a decision row when something is decided. Record only what the code can't say (progress, why, what was rejected); never copy schemas or contract shapes into them.
 
@@ -79,6 +80,7 @@ All routes are URI-versioned (`/v1/...`): controllers declare `version: "1"`, an
 
 ## Web architecture
 
+- Being restructured: the target layout and its steps are in [docs/web.md](docs/web.md). The bullets below describe the code as it is today.
 - Data is typically fetched server-side through `src/lib/api/client.ts` (`openapi-fetch` typed by `generated.ts`, `server-only`). Each endpoint gets a wrapper in `src/lib/api/` that returns `Result<T, ProblemDetails>` (`state: "success" | "failure"`) instead of throwing.
 - MSW handlers in `src/mocks/handlers/` (one file per endpoint, typed from `operations[...]`) export named scenarios (`success`, `notFound`, `error`, `slow`, …). They serve three purposes:
   - Vitest — `src/test/setup.ts`; unhandled requests fail the test.

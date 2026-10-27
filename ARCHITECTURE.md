@@ -94,6 +94,8 @@ Repositories take a `scope` as their first argument: either the plain database c
 
 ## Web: container and view
 
+Only the Next server calls the API. That isn't what keeps the API private: Stripe's webhook needs the API to be reachable anyway (closing it to everyone but Next and Stripe would be a hosting firewall rule). It keeps the admin token out of the browser, needs no CORS, and leaves one typed client. The planned restructure of the web app is in [docs/web.md](docs/web.md).
+
 ```
 page.tsx
    └─▶ courses.tsx         async server component: calls lib/api/courses.list.ts
@@ -228,3 +230,4 @@ Break one of these and something subtle goes wrong, usually money or access.
 
 - [docs/payments.md](docs/payments.md): status, principles, the launch checklist, and links to the checkout, fulfillment, email and refunds docs.
 - [docs/courses.md](docs/courses.md): who sees which courses, how editing works, validation, and decisions.
+- [docs/web.md](docs/web.md): the web app's planned structure, steps and decisions.
