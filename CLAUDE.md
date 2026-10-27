@@ -80,7 +80,6 @@ All routes are URI-versioned (`/v1/...`): controllers declare `version: "1"`, an
 ## Web architecture
 
 - Data is typically fetched server-side through `src/lib/api/client.ts` (`openapi-fetch` typed by `generated.ts`, `server-only`). Each endpoint gets a wrapper in `src/lib/api/` that returns `Result<T, ProblemDetails>` (`state: "success" | "failure"`) instead of throwing.
-- Components are split into an async server container that fetches (e.g. `courses.tsx`) and a pure `*-view.tsx` that renders a `Result`. Unit tests target the view with a hand-built `Result`.
 - MSW handlers in `src/mocks/handlers/` (one file per endpoint, typed from `operations[...]`) export named scenarios (`success`, `notFound`, `error`, `slow`, …). They serve three purposes:
   - Vitest — `src/test/setup.ts`; unhandled requests fail the test.
   - `yarn dev:mock` — via `src/instrumentation.ts`; choose the scenario in `src/mocks/node.ts`.
@@ -98,6 +97,7 @@ How the owner wants Claude to work on this repo:
 - **One commit at a time.** Before coding a commit, give a detailed outline (what, why, trade-offs) and wait for the go-ahead. Then implement, verify (type check and the relevant tests), and stop with a suggested conventional commit message. The owner makes the commits. Finish one commit's changes before starting the next: interactive `git add -p` isn't available, so mixed hunks can't be split.
 - **Ask before any design or behaviour change**, however small, even inside an approved refactor. Mentioning it afterwards isn't enough.
 - **Questions aren't instructions.** Answer them and stop; offer any resulting change as an option.
+- **Plan mode.** A question or comment from the owner gets an answer in chat first. Don't edit the plan file or ask for plan approval until they say to update the plan. A message starting with `Q:` is chat-only; one starting with `plan:` goes into the plan.
 - **Public library APIs only**, in code and tests: no undocumented error fields (e.g. `sqlState`), transitive-only exports or private members. If the public API can't do it, say so and suggest alternatives.
 - **Modular, not speculative.** Give real responsibilities and shared logic their own focused module, but add no interfaces or abstractions for hypothetical needs (e.g. no payment gateway interface). Put flexibility where change is expensive: the DB schema. A thin concrete wrapper around an SDK is fine.
 - **Small composed functions/files.** A top-level method reads as a short orchestration of well-named steps, one method per outcome; a switch is only a thin dispatch with one line per case.
