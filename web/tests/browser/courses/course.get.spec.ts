@@ -1,10 +1,10 @@
 import {
   courseByIdSuccess,
-  courseResponse,
   courseByIdError,
   courseByIdNotFound,
   courseByIdInvalidId,
 } from "@/mocks/handlers/course.get";
+import { reactCourse } from "@/mocks/fixtures/courses";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
 const { test, expect } = msw;
@@ -14,29 +14,29 @@ test.use({
 });
 
 test("displays course details", async ({ page }) => {
-  const response = await page.goto(`/courses/${courseResponse.id}`);
+  const response = await page.goto(`/courses/${reactCourse.id}`);
 
   expect(response?.status()).toBe(200);
-  await expect(page).toHaveTitle(courseResponse.name);
+  await expect(page).toHaveTitle(reactCourse.name);
 
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "React Fundamentals",
+      name: reactCourse.name,
     }),
   ).toBeVisible();
 
-  await expect(page.getByText("Learn React")).toBeVisible();
+  await expect(page.getByText(reactCourse.description)).toBeVisible();
 
   await expect(page.getByText("$99.00")).toBeVisible();
   await expect(page.getByText("12 enrolled")).toBeVisible();
   await expect(page.getByText("America/New_York")).toBeVisible();
 
   const startTime = page.locator(
-    `time[datetime="${courseResponse.schedule.startTime}"]`,
+    `time[datetime="${reactCourse.schedule.startTime}"]`,
   );
   const endTime = page.locator(
-    `time[datetime="${courseResponse.schedule.endTime}"]`,
+    `time[datetime="${reactCourse.schedule.endTime}"]`,
   );
 
   await expect(startTime).toBeVisible();
@@ -52,7 +52,7 @@ test("displays an error when the API returns a server error", async ({
 }) => {
   msw.use(courseByIdError);
 
-  await page.goto(`/courses/${courseResponse.id}`);
+  await page.goto(`/courses/${reactCourse.id}`);
 
   const alert = page
     .getByRole("alert")
@@ -70,7 +70,7 @@ test("shows a 404 page when the course does not exist", async ({
 }) => {
   msw.use(courseByIdNotFound);
 
-  const response = await page.goto(`/courses/${courseResponse.id}`);
+  const response = await page.goto(`/courses/${reactCourse.id}`);
 
   expect(response?.status()).toBe(404);
   await expect(

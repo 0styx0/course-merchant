@@ -1,7 +1,8 @@
 import type { operations } from "@/lib/api/generated";
 import { delay, http, HttpResponse } from "msw";
 import { MOCK_API_BASE_URL } from "../mock-api";
-import { coursesResponse } from "./courses.list";
+import { reactCourse } from "../fixtures/courses";
+import { problemResponse } from "../problem-response";
 
 type GetCourseResponse =
   operations["getCourse"]["responses"][200]["content"]["application/json"];
@@ -17,7 +18,7 @@ type InternalServerErrorResponse =
 
 export const courseByIdUrl = `${MOCK_API_BASE_URL}/v1/courses/:courseId`;
 
-export const courseResponse: GetCourseResponse = coursesResponse.courses[0];
+const courseResponse: GetCourseResponse = reactCourse;
 
 export const courseByIdSuccess = http.get(courseByIdUrl, () => {
   return HttpResponse.json(courseResponse);
@@ -30,12 +31,7 @@ export const courseByIdNotFound = http.get(courseByIdUrl, ({ params }) => {
     code: "COURSE_NOT_FOUND",
   } satisfies CourseNotFoundResponse;
 
-  return HttpResponse.json(body, {
-    status: 404,
-    headers: {
-      "Content-Type": "application/problem+json",
-    },
-  });
+  return problemResponse(404, body);
 });
 
 export const courseByIdInvalidId = http.get(courseByIdUrl, ({ params }) => {
@@ -45,12 +41,7 @@ export const courseByIdInvalidId = http.get(courseByIdUrl, ({ params }) => {
     code: "INVALID_COURSE_ID",
   } satisfies InvalidCourseIdResponse;
 
-  return HttpResponse.json(body, {
-    status: 400,
-    headers: {
-      "Content-Type": "application/problem+json",
-    },
-  });
+  return problemResponse(400, body);
 });
 
 export const courseByIdError = http.get(courseByIdUrl, () => {
@@ -60,12 +51,7 @@ export const courseByIdError = http.get(courseByIdUrl, () => {
     code: "INTERNAL_SERVER_ERROR",
   } satisfies InternalServerErrorResponse;
 
-  return HttpResponse.json(body, {
-    status: 500,
-    headers: {
-      "Content-Type": "application/problem+json",
-    },
-  });
+  return problemResponse(500, body);
 });
 
 export const courseByIdSlow = http.get(courseByIdUrl, async () => {

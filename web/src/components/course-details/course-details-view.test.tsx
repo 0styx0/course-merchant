@@ -4,25 +4,10 @@ import { describe, expect, it } from "vitest";
 
 import type { GetCourseResult } from "@/lib/api/course.get";
 import { formatDate, formatPrice } from "@/lib/utils/formatters";
+import { reactCourse } from "@/mocks/fixtures/courses";
 import { CourseDetailsView } from "./course-details-view";
 
-const course = {
-  id: "550e8400-e29b-41d4-a716-446655440000",
-  name: "React Fundamentals",
-  summary: "Learn the fundamentals of React.",
-  description: "Learn the fundamentals of React.",
-  enrollmentCount: 12,
-  image: { version: "1790856000000" },
-  price: {
-    amount: 9900,
-    currency: "USD",
-  },
-  schedule: {
-    startTime: "2026-10-01T14:00:00-04:00",
-    endTime: "2026-10-01T16:00:00-04:00",
-    timeZone: "America/New_York",
-  },
-} satisfies Extract<GetCourseResult, { state: "success" }>["data"];
+const course = reactCourse;
 
 describe("CourseDetailsView", () => {
   it("displays the course details", () => {
@@ -40,7 +25,7 @@ describe("CourseDetailsView", () => {
       }),
     ).toBeVisible();
 
-    expect(screen.getByText("Learn the fundamentals of React.")).toBeVisible();
+    expect(screen.getByText(course.description)).toBeVisible();
 
     expect(screen.getByText(formatPrice(9900, "USD"))).toBeVisible();
 

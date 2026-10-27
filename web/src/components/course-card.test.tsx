@@ -2,26 +2,9 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { CourseCard } from "./course-card";
-import { randomUUID } from "crypto";
-import { Course } from "@/lib/types";
+import { reactCourse } from "@/mocks/fixtures/courses";
 
-const course: Course = {
-  id: randomUUID(),
-  name: "React Fundamentals",
-  summary: "Learn React",
-  description: "Learn React",
-  enrollmentCount: 12,
-  image: { version: "1790856000000" },
-  price: {
-    amount: 9900,
-    currency: "USD",
-  },
-  schedule: {
-    startTime: "2026-10-01T14:00:00-04:00",
-    endTime: "2026-10-01T16:00:00-04:00",
-    timeZone: "America/New_York",
-  },
-};
+const course = reactCourse;
 
 describe("CourseCard", () => {
   it("renders the course information", () => {
@@ -34,7 +17,7 @@ describe("CourseCard", () => {
       }),
     ).toBeInTheDocument();
 
-    expect(screen.getByText("Learn React")).toBeInTheDocument();
+    expect(screen.getByText(course.description)).toBeInTheDocument();
 
     expect(screen.getByText("$99.00")).toBeInTheDocument();
 

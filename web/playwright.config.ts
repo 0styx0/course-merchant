@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 import { MOCK_API_BASE_URL } from "./src/mocks/mock-api.ts";
 
 export default defineConfig({
-  testDir: "./tests/integration",
+  testDir: "./tests/browser",
   use: {
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",

@@ -13,7 +13,7 @@ export default defineConfig({
     exclude: [
       "node_modules",
       ".next",
-      "tests/integration/**",
+      "tests/browser/**",
       "playwright.config.*",
     ],
   },

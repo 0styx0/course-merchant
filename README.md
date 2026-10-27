@@ -109,9 +109,9 @@ In production the web app refuses to start unless `API_BASE_URL` starts with `ht
 | `yarn --cwd api test:integration` | Repositories and services against a real database | Docker. Starts a test PostgreSQL on port 5433 and stripe-mock on 12111 |
 | `yarn --cwd api test:e2e` | The whole API over HTTP, with the real Stripe SDK against stripe-mock | Docker |
 | `yarn --cwd web test:unit` | Components, with the API mocked by MSW | Nothing |
-| `yarn --cwd web test:integration` | Pages in Chromium through Playwright, with the API mocked | `yarn --cwd web playwright install chromium` once |
+| `yarn --cwd web test:browser` | Pages in Chromium through Playwright, with the API mocked | `yarn --cwd web playwright install chromium` once |
 
-The git hooks run these for you: unit tests and type checks before each commit, and integration and end-to-end tests before each push. See [CONTRIBUTING.md](CONTRIBUTING.md).
+The git hooks run these for you: unit tests and type checks before each commit, and integration, browser and end-to-end tests before each push. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Project layout
 

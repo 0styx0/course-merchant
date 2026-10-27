@@ -1,11 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { server } from "@/mocks/node";
-import {
-  coursesError,
-  coursesResponse,
-  coursesSuccess,
-} from "@/mocks/handlers/courses.list";
+import { coursesError, coursesSuccess } from "@/mocks/handlers/courses.list";
+import { reactCourse, typescriptCourse } from "@/mocks/fixtures/courses";
 import { getCourses } from "./courses.list";
 
 // Its default export throws outside a React Server Component build
@@ -15,7 +12,9 @@ describe("getCourses", () => {
   it("returns the courses", async () => {
     server.use(coursesSuccess);
 
-    await expect(getCourses()).resolves.toEqual(coursesResponse);
+    await expect(getCourses()).resolves.toEqual({
+      courses: [reactCourse, typescriptCourse],
+    });
   });
 
   it("throws when the API answers with an error", async () => {

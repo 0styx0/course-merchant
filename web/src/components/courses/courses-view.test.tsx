@@ -2,26 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { CoursesLoading, CoursesView } from "./courses-view";
-import { randomUUID } from "crypto";
-import { Course } from "@/lib/types";
-
-const course: Course = {
-  id: randomUUID(),
-  name: "React Fundamentals",
-  summary: "Learn React",
-  description: "Learn React",
-  enrollmentCount: 12,
-  image: { version: "1790856000000" },
-  price: {
-    amount: 9900,
-    currency: "USD",
-  },
-  schedule: {
-    startTime: "2026-10-01T14:00:00-04:00",
-    endTime: "2026-10-01T16:00:00-04:00",
-    timeZone: "America/New_York",
-  },
-};
+import { reactCourse, typescriptCourse } from "@/mocks/fixtures/courses";
 
 describe("CoursesView", () => {
   it("renders the loading state", () => {
@@ -51,11 +32,7 @@ describe("CoursesView", () => {
   });
 
   it("renders the available courses", () => {
-    render(
-      <CoursesView
-        courses={[course, { ...course, name: "Advanced TypeScript" }]}
-      />,
-    );
+    render(<CoursesView courses={[reactCourse, typescriptCourse]} />);
 
     const courses = screen.getByRole("region", { name: "Courses" });
     const cards = within(courses).getAllByRole("article");

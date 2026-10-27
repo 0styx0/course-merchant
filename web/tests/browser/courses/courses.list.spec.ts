@@ -1,11 +1,13 @@
 import msw from "next/experimental/testmode/playwright/msw.js";
 
-const { test, expect } = msw;
+import { reactCourse, typescriptCourse } from "@/mocks/fixtures/courses";
 import {
   coursesError,
   coursesSlow,
   coursesSuccess,
 } from "@/mocks/handlers/courses.list";
+
+const { test, expect } = msw;
 
 test.use({
   mswHandlers: [[coursesSuccess], { scope: "test" }],
@@ -19,18 +21,18 @@ test("displays available courses", async ({ page }) => {
 
   await expect(cards).toHaveCount(2);
 
-  await expect(cards.nth(0)).toContainText("React Fundamentals");
-  await expect(cards.nth(1)).toContainText("Advanced TypeScript");
+  await expect(cards.nth(0)).toContainText(reactCourse.name);
+  await expect(cards.nth(1)).toContainText(typescriptCourse.name);
 
   await expect(
     courses.getByRole("heading", {
-      name: "React Fundamentals",
+      name: reactCourse.name,
     }),
   ).toBeVisible();
 
   await expect(
     courses.getByRole("heading", {
-      name: "Advanced TypeScript",
+      name: typescriptCourse.name,
     }),
   ).toBeVisible();
 });
@@ -51,7 +53,7 @@ test("displays loading state while courses are loading", async ({
 
   await expect(
     courses.getByRole("heading", {
-      name: "React Fundamentals",
+      name: reactCourse.name,
     }),
   ).toBeVisible();
 });

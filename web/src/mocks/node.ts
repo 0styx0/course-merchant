@@ -1,15 +1,22 @@
+import type { RequestHandler } from "msw";
 import { setupServer } from "msw/node";
 import { courseListHandlers } from "./handlers/courses.list";
 import { courseByIdHandlers } from "./handlers/course.get";
 
 const scenario = "success"; // change to the mock you want to test
-const courseListHandler =
-  courseListHandlers[scenario as keyof typeof courseListHandlers];
-const courseByIdHandler =
-  courseByIdHandlers[scenario as keyof typeof courseByIdHandlers];
 
-if (!courseListHandler) {
-  throw new Error(`[MSW Setup] Unknown MOCK_COURSES scenario: ${scenario}`);
+// An endpoint without the chosen scenario falls back to its success one.
+function pick(handlers: Record<string, RequestHandler>): RequestHandler {
+  return handlers[scenario] ?? handlers.success;
 }
 
-export const server = setupServer(courseListHandler, courseByIdHandler);
+if (!(scenario in courseListHandlers) && !(scenario in courseByIdHandlers)) {
+  throw new Error(
+    `[MSW Setup] Unknown scenario "${scenario}". Pick one in src/mocks/node.ts`,
+  );
+}
+
+export const server = setupServer(
+  pick(courseListHandlers),
+  pick(courseByIdHandlers),
+);

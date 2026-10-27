@@ -11,12 +11,8 @@ Each step is one commit. Every step's tests are part of the step. Steps 1–5 co
 - [x] **1. Refresh the home page every minute instead of freezing it at build time.**
 - [x] **2. One Result mapper and error model.**
 - [x] **3. A real 404 for an unknown course.**
-- [ ] **4. Shared test data and mock helpers.** **Next**
-  - `mocks/fixtures/courses.ts` replaces the four copies of the course literals (MSW, Vitest, Playwright use it).
-  - `problemResponse(status, body)` replaces the repeated problem+json boilerplate.
-  - Fix the `MOCK_COURSES` message in `mocks/node.ts`.
-  - `tests/integration` → `tests/browser`, `test:integration` → `test:browser`, including `.husky/pre-push`.
-- [ ] **5. Feature folders and plain-data components.** Moves only; no behaviour change.
+- [x] **4. Shared test data and mock helpers.**
+- [ ] **5. Feature folders and plain-data components.** **Next** Moves only; no behaviour change.
   - `app/` holds routes only. Public routes go in a `(shop)` group whose layout owns the one `<main>` and an `error.tsx`. Admin routes: `app/admin/login`, plus `app/admin/(signed-in)/` whose layout shows nav and logout only (it is not the security check).
   - Code lives in `src/features/`: `courses/`, `checkout/`, `admin-auth/`, `admin-courses/`. Each has `<feature>.api.ts` (server-only wrappers named after operationIds), `<feature>.actions.ts` (`"use server"`) when it has forms, and its components.
   - `components/ui/` holds shadcn primitives only; `components/` holds app-wide pieces like `ProblemAlert`.
@@ -61,7 +57,8 @@ Each step is one commit. Every step's tests are part of the step. Steps 1–5 co
 | Tests and `dev:mock` point `API_BASE_URL` at one constant, `MOCK_API_BASE_URL`, which the MSW handlers listen on | The app still goes through its real config, and Playwright's test process (where the handlers run) needs no env. `dev:mock` needs no `.env.local` | Handlers reading `apiBaseUrl()` (throws in the Playwright process); wildcard handlers (`*/v1/...`, which stop checking the URL) |
 | A failure is a `Result` only when the body is a problem (`title`, `detail`, `code` strings); anything else throws | Pages can trust `code`, and a 204 is a success. `toResult()` in `lib/api/` is the one place that decides; `ProblemAlert` shows `title` and `detail`; the root `error.tsx` shows thrown errors | `error \|\| !data` (let a 204 and non-problem bodies through as failures); a made-up problem for non-problem bodies; Zod for a three-field check |
 | `web/` is an ES module package (`"type": "module"`) | Vite's native config loader needs it, and it matches `api/`. Config files import `.ts` with the extension (`allowImportingTsExtensions`) | Silencing the warning with `VITE_CONFIG_NATIVE_IGNORE_WARNING`; copying the mock URL into the Vitest config |
-| Browser tests are named `tests/browser` and `test:browser` | They drive a browser against a mocked API. In `api/`, `integration` and `e2e` both mean a real database | `tests/integration` (today); `tests/e2e` |
+| Browser tests are named `tests/browser` and `test:browser` | They drive a browser against a mocked API. In `api/`, `integration` and `e2e` both mean a real database | `tests/integration`; `tests/e2e` |
+| Sample courses are fixtures with fixed IDs in `mocks/fixtures/`, and `dev:mock` falls back to an endpoint's `success` when it lacks the chosen scenario | One copy of the data for MSW, Vitest and Playwright, and failures that repeat. Fixtures sit in `mocks/` because `dev:mock` uses them too. Formatted output is still asserted as literals, so tests don't reuse the formatter they check. Without the fallback, a scenario like `empty` left the course page with no handler | `randomUUID()` per run; a `makeCourse()` factory; throwing when any endpoint lacks the scenario |
 
 ## Launch
 
