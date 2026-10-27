@@ -13,6 +13,7 @@ export function toPublicCourseResponse(
   return {
     id: course.id,
     name: course.title,
+    summary: course.summary,
     description: course.description,
     enrollmentCount: course.enrollments,
     price: {
@@ -36,6 +37,7 @@ export function toAdminCourseResponse(
   return {
     id: course.id,
     name: course.title,
+    summary: course.summary,
     description: course.description,
     contentUrl: course.contentUrl,
     schedule: {

@@ -9,6 +9,7 @@ import {
   courseDetailsShape,
   courseEndTimeSchema,
   courseNameSchema,
+  courseSummarySchema,
   coursePriceAmountSchema,
   coursePriceEffectiveAtSchema,
   courseScheduleFieldsSchema,
@@ -67,6 +68,41 @@ describe("courseNameSchema", () => {
     { label: "an object", value: {} },
   ])("rejects $label", ({ value }) => {
     expect(courseNameSchema.safeParse(value).success).toBe(false);
+  });
+});
+
+describe("courseSummarySchema", () => {
+  it("accepts a valid summary", () => {
+    expect(
+      courseSummarySchema.safeParse(
+        "Learn TypeScript fast. Build three small projects.",
+      ).success,
+    ).toBe(true);
+  });
+
+  it("accepts a summary at the maximum length", () => {
+    expect(courseSummarySchema.safeParse("a".repeat(300)).success).toBe(true);
+  });
+
+  it("rejects a summary exceeding the maximum length", () => {
+    expect(courseSummarySchema.safeParse("a".repeat(301)).success).toBe(false);
+  });
+
+  it.each(["", " ", "   ", "\t", "\n", " \t\n "])(
+    "rejects empty or whitespace-only input: %j",
+    (value) => {
+      expect(courseSummarySchema.safeParse(value).success).toBe(false);
+    },
+  );
+
+  it("trims leading and trailing whitespace", () => {
+    const result = courseSummarySchema.safeParse("  A short summary.  ");
+
+    expect(result.success && result.data).toBe("A short summary.");
+  });
+
+  it.each([123, null, undefined, false])("rejects %j", (value) => {
+    expect(courseSummarySchema.safeParse(value).success).toBe(false);
   });
 });
 
@@ -448,6 +484,7 @@ describe("courseDetailsShape", () => {
     expect(
       courseDetailsSchema.safeParse({
         name: "TypeScript Fundamentals",
+        summary: "Learn TypeScript fast.",
         description: "Learn TypeScript from the ground up.",
       }).success,
     ).toBe(true);

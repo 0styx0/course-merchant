@@ -41,6 +41,7 @@ describe("Admin Courses API (e2e)", () => {
       const { course, price } = await createPricedCourse(
         {
           title: "React Fundamentals",
+          summary: "Learn the fundamentals of React.",
           description: "Learn the fundamentals of React.",
           startsAt: Temporal.Instant.from("2026-10-15T18:00:00Z"),
           endsAt: Temporal.Instant.from("2026-10-15T20:00:00Z"),
@@ -96,6 +97,7 @@ describe("Admin Courses API (e2e)", () => {
           expect.objectContaining({
             id: course.id,
             name: "React Fundamentals",
+            summary: "Learn the fundamentals of React.",
             description: "Learn the fundamentals of React.",
             contentUrl: "https://example.com/course",
             schedule: {
@@ -241,6 +243,7 @@ describe("Admin Courses API (e2e)", () => {
 
       const futureCourse = await createCourse({
         title: "Future Price Course",
+        summary: "my future course",
         description: "my future course",
         startsAt: Temporal.Instant.from("2026-11-01T18:00:00Z"),
         endsAt: Temporal.Instant.from("2026-11-01T20:00:00Z"),

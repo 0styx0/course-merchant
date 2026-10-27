@@ -56,6 +56,7 @@ describe("CoursesService integration", () => {
       expect(result).toEqual({
         id: course.id,
         name: "React Fundamentals",
+        summary: "Learn React",
         description: "Learn React",
         enrollmentCount: 0,
         price: {
@@ -73,6 +74,7 @@ describe("CoursesService integration", () => {
     it("returns an in-progress course", async () => {
       const { course } = await createPricedCourse({
         title: "In Progress",
+        summary: "Currently running",
         description: "Currently running",
         startsAt: instant("2026-09-29T13:00:00Z"),
         endsAt: instant("2026-09-29T15:00:00Z"),
@@ -83,6 +85,7 @@ describe("CoursesService integration", () => {
       expect(result).toEqual({
         id: course.id,
         name: "In Progress",
+        summary: "Currently running",
         description: "Currently running",
         enrollmentCount: 0,
         price: {
@@ -100,6 +103,7 @@ describe("CoursesService integration", () => {
     it("returns an ended course", async () => {
       const { course } = await createPricedCourse({
         title: "Ended",
+        summary: "Already finished",
         description: "Already finished",
         startsAt: instant("2026-09-28T13:00:00Z"),
         endsAt: instant("2026-09-28T15:00:00Z"),
@@ -110,6 +114,7 @@ describe("CoursesService integration", () => {
       expect(result).toEqual({
         id: course.id,
         name: "Ended",
+        summary: "Already finished",
         description: "Already finished",
         enrollmentCount: 0,
         price: {
@@ -127,6 +132,7 @@ describe("CoursesService integration", () => {
     it("returns a course whose end time is exactly now", async () => {
       const { course } = await createPricedCourse({
         title: "Ending Now",
+        summary: "Ends now",
         description: "Ends now",
         startsAt: instant("2026-09-29T13:00:00Z"),
         endsAt: NOW,
@@ -215,6 +221,7 @@ describe("CoursesService integration", () => {
     it("returns 404 when all prices are future", async () => {
       const course = await createCourse({
         title: "Future Price Course",
+        summary: "Not yet priced",
         description: "Not yet priced",
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),

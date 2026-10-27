@@ -5,6 +5,7 @@ import { Models } from "@/prisma/contract.js";
 
 export async function createCourse(input: {
   title: string;
+  summary: string;
   description: string;
   startsAt: Temporal.Instant;
   endsAt: Temporal.Instant;
@@ -12,6 +13,7 @@ export async function createCourse(input: {
 }) {
   return db.orm.public.Course.create({
     title: input.title,
+    summary: input.summary,
     description: input.description,
     contentUrl: "https://example.com/course",
     startsAt: input.startsAt,
@@ -47,6 +49,7 @@ export async function createPricedCourse(
 ) {
   const course = await createCourse({
     title: "React Fundamentals",
+    summary: "Learn React",
     description: "Learn React",
     startsAt: instant("2026-10-01T18:00:00.000Z"),
     endsAt: instant("2026-10-01T20:00:00.000Z"),

@@ -37,6 +37,7 @@ describe("AdminCoursesService (integration)", () => {
 
     const course = await createCourse({
       title: "React Fundamentals",
+      summary: "Learn React",
       description: "Learn React",
       startsAt: now.subtract({ hours: 1 }),
       endsAt: now.add({ hours: 1 }),
@@ -78,6 +79,7 @@ describe("AdminCoursesService (integration)", () => {
   function toRequest(course: CourseRepositoryModelAdmin): UpdateCourseRequest {
     return {
       name: course.title,
+      summary: course.summary,
       description: course.description,
       contentUrl: course.contentUrl,
       status: course.statuses[0].name,
@@ -100,6 +102,7 @@ describe("AdminCoursesService (integration)", () => {
       const request = {
         ...toRequest(await findCourse(course.id)),
         name: "React Advanced",
+        summary: "Hooks in depth",
         description: "Hooks in depth",
         contentUrl: "https://zoom.us/j/123456789",
       };
@@ -108,6 +111,7 @@ describe("AdminCoursesService (integration)", () => {
 
       expect(await findCourse(course.id)).toMatchObject({
         title: "React Advanced",
+        summary: "Hooks in depth",
         description: "Hooks in depth",
         contentUrl: "https://zoom.us/j/123456789",
       });
@@ -211,6 +215,7 @@ describe("AdminCoursesService (integration)", () => {
         prisma.db.transaction((tx) =>
           repository.updateCourse(tx, course.id, {
             title: "Should not persist",
+            summary: before.summary,
             description: before.description,
             contentUrl: before.contentUrl,
             startsAt: before.startsAt,

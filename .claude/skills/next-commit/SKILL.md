@@ -1,7 +1,7 @@
 ---
 name: next-commit
 description: Outline the next commit from a design doc's Status, wait for approval, then implement, verify and update the doc. Use when the owner says "next", "next commit", or names a status item to work on.
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Next commit

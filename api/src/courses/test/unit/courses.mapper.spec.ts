@@ -9,6 +9,7 @@ const COURSE_ID = "crs_01HZX3";
 const repositoryCourse = {
   id: COURSE_ID,
   title: "React Fundamentals",
+  summary: "Learn the fundamentals of React",
   description: "Learn the fundamentals of React",
   startsAt: instant("2026-10-01T18:00:00Z"),
   endsAt: instant("2026-10-01T20:00:00Z"),
@@ -27,6 +28,7 @@ describe("toPublicCourseResponse", () => {
     expect(toPublicCourseResponse(repositoryCourse)).toEqual({
       id: COURSE_ID,
       name: "React Fundamentals",
+      summary: "Learn the fundamentals of React",
       description: "Learn the fundamentals of React",
       enrollmentCount: 12,
       price: {

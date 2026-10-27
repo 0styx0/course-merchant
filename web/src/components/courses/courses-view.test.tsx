@@ -8,6 +8,7 @@ import { Course } from "@/lib/types";
 const course: Course = {
   id: randomUUID(),
   name: "React Fundamentals",
+  summary: "Learn React",
   description: "Learn React",
   enrollmentCount: 12,
   price: {

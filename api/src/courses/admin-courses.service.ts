@@ -33,6 +33,7 @@ export class AdminCoursesService {
   ): Promise<GetCourseAdminResponse> {
     const input: CourseRepositoryCreateInput = {
       title: request.name,
+      summary: request.summary,
       description: request.description,
       contentUrl: request.contentUrl,
       startsAt: Temporal.Instant.from(request.schedule.startTime),
@@ -82,6 +83,7 @@ export class AdminCoursesService {
 
       return this.coursesRepository.updateCourse(tx, courseId, {
         title: request.name,
+        summary: request.summary,
         description: request.description,
         contentUrl: request.contentUrl,
         startsAt: Temporal.Instant.from(request.schedule.startTime),

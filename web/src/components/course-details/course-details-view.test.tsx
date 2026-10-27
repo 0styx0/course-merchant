@@ -9,6 +9,7 @@ import { CourseDetailsView } from "./course-details-view";
 const course = {
   id: "550e8400-e29b-41d4-a716-446655440000",
   name: "React Fundamentals",
+  summary: "Learn the fundamentals of React.",
   description: "Learn the fundamentals of React.",
   enrollmentCount: 12,
   price: {

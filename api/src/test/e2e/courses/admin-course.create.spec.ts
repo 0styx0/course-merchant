@@ -39,6 +39,7 @@ describe("POST /admin/courses (e2e)", () => {
 
     return {
       name: `E2E course ${randomUUID()}`,
+      summary: "Course created by an E2E test.",
       description: "Course created by an E2E test.",
       contentUrl: "https://drive.google.com/drive/folders/e2e",
       status: "drafted",
@@ -80,6 +81,7 @@ describe("POST /admin/courses (e2e)", () => {
     expect(response.body).toMatchObject({
       id: expect.any(String),
       name: body.name,
+      summary: body.summary,
       description: body.description,
       status: {
         name: body.status,

@@ -58,6 +58,7 @@ describe("CoursesService integration", () => {
     it("returns an upcoming course", async () => {
       const course = await createCourse({
         title: "React Fundamentals",
+        summary: "Learn React",
         description: "Learn React",
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
@@ -76,6 +77,7 @@ describe("CoursesService integration", () => {
       expect(result.courses).toEqual([
         {
           name: "React Fundamentals",
+          summary: "Learn React",
           description: "Learn React",
           enrollmentCount: 0,
           id: course.id,
@@ -95,6 +97,7 @@ describe("CoursesService integration", () => {
     it("returns a course that has started but has not ended", async () => {
       const course = await createCourse({
         title: "In Progress",
+        summary: "Currently running",
         description: "Currently running",
         startsAt: instant("2026-09-29T13:00:00Z"),
         endsAt: instant("2026-09-29T15:00:00Z"),
@@ -117,6 +120,7 @@ describe("CoursesService integration", () => {
     it("does not return a course whose end time is exactly now", async () => {
       const course = await createCourse({
         title: "Ending Now",
+        summary: "Ends now",
         description: "Ends now",
         startsAt: instant("2026-09-29T13:00:00Z"),
         endsAt: NOW,
@@ -140,6 +144,7 @@ describe("CoursesService integration", () => {
     it("orders courses by start time ascending", async () => {
       const later = await createCourse({
         title: "Later",
+        summary: "Later course",
         description: "Later course",
         startsAt: instant("2026-10-03T18:00:00Z"),
         endsAt: instant("2026-10-03T20:00:00Z"),
@@ -148,6 +153,7 @@ describe("CoursesService integration", () => {
 
       const earlier = await createCourse({
         title: "Earlier",
+        summary: "Earlier course",
         description: "Earlier course",
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
@@ -179,6 +185,7 @@ describe("CoursesService integration", () => {
     it("uses course id as a deterministic tie-breaker when start times are equal", async () => {
       const courseA = await createCourse({
         title: "Course A",
+        summary: "A",
         description: "A",
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
@@ -187,6 +194,7 @@ describe("CoursesService integration", () => {
 
       const courseB = await createCourse({
         title: "Course B",
+        summary: "B",
         description: "B",
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
@@ -221,6 +229,7 @@ describe("CoursesService integration", () => {
     it("excludes ended courses while retaining active courses in start-time order", async () => {
       const ended = await createCourse({
         title: "Ended",
+        summary: "Finished",
         description: "Finished",
         startsAt: instant("2026-09-01T18:00:00Z"),
         endsAt: instant("2026-09-01T20:00:00Z"),
@@ -229,6 +238,7 @@ describe("CoursesService integration", () => {
 
       const later = await createCourse({
         title: "Later",
+        summary: "Later",
         description: "Later",
         startsAt: instant("2026-10-03T18:00:00Z"),
         endsAt: instant("2026-10-03T20:00:00Z"),
@@ -237,6 +247,7 @@ describe("CoursesService integration", () => {
 
       const earlier = await createCourse({
         title: "Earlier",
+        summary: "Earlier",
         description: "Earlier",
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
@@ -263,6 +274,7 @@ describe("CoursesService integration", () => {
     it("returns the most recent currently effective price", async () => {
       const course = await createCourse({
         title: "Priced Course",
+        summary: "Price history",
         description: "Price history",
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
@@ -301,6 +313,7 @@ describe("CoursesService integration", () => {
     it("uses a price that becomes effective exactly at now", async () => {
       const course = await createCourse({
         title: "Boundary Price Course",
+        summary: "Price boundary",
         description: "Price boundary",
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
@@ -325,6 +338,7 @@ describe("CoursesService integration", () => {
     it("does not select a future price", async () => {
       const course = await createCourse({
         title: "Future Price Course",
+        summary: "Future pricing",
         description: "Future pricing",
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
@@ -353,6 +367,7 @@ describe("CoursesService integration", () => {
     it("counts enrollments for the course", async () => {
       const course = await createCourse({
         title: "Popular Course",
+        summary: "Many students",
         description: "Many students",
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
@@ -391,6 +406,7 @@ describe("CoursesService integration", () => {
     it("counts only enrollments that still give access", async () => {
       const course = await createCourse({
         title: "Refunded Course",
+        summary: "Some students left",
         description: "Some students left",
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
@@ -425,6 +441,7 @@ describe("CoursesService integration", () => {
     it("does not count enrollments belonging to another course", async () => {
       const courseA = await createCourse({
         title: "Course A",
+        summary: "A",
         description: "A",
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
@@ -433,6 +450,7 @@ describe("CoursesService integration", () => {
 
       const courseB = await createCourse({
         title: "Course B",
+        summary: "B",
         description: "B",
         startsAt: instant("2026-10-02T18:00:00Z"),
         endsAt: instant("2026-10-02T20:00:00Z"),
@@ -480,6 +498,7 @@ describe("CoursesService integration", () => {
     it("returns the schedule with the course timezone", async () => {
       const course = await createCourse({
         title: "Timezone Course",
+        summary: "Timezone test",
         description: "Timezone test",
         startsAt: instant("2027-01-15T18:00:00Z"),
         endsAt: instant("2027-01-15T20:00:00Z"),

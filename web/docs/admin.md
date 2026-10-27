@@ -4,6 +4,7 @@
 
 When the admin goes to the course creation page
 Then they can create a course title of up to 100 characters
+And a course summary of up to 300 chars, about 2-3 sentences
 And a course description of up to 5,000 chars
 And they can specify a future start time
 And they can specify a future end time greater than start time
@@ -57,7 +58,7 @@ And submissions should be allowed again
 When the page is submitted to the server
 Then currency should be validated as an existent currency
 And time zone should be validated as a valid time zone
-And length requirements for title and details should be validated
+And length requirements for title, summary and details should be validated
 And start/end times should be in the future
 And end time should be greater than start time
 And all fields should be ensured to exist

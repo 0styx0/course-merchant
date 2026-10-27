@@ -191,6 +191,7 @@ describe("AdminCoursesService integration", () => {
       const { course, price } = await createPricedCourse(
         {
           title: "Future Price Course",
+          summary: "Not publicly available yet",
           description: "Not publicly available yet",
         },
         {
@@ -219,6 +220,7 @@ describe("AdminCoursesService integration", () => {
       const { course } = await createPricedCourse(
         {
           title: "Ended Course",
+          summary: "This course has finished",
           description: "This course has finished",
           startsAt: instant("2025-09-27T18:00:00Z"),
           endsAt: instant("2025-09-27T20:00:00Z"),

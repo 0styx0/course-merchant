@@ -388,6 +388,13 @@
                   "kind": "scalar"
                 }
               },
+              "summary": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "timeZone": {
                 "nullable": false,
                 "type": {
@@ -476,6 +483,9 @@
                 },
                 "startsAt": {
                   "column": "startsAt"
+                },
+                "summary": {
+                  "column": "summary"
                 },
                 "timeZone": {
                   "column": "timeZone"
@@ -1567,6 +1577,11 @@
                   "dataType": "pg/timestamptz",
                   "nullable": false
                 },
+                "summary": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
                 "timeZone": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
@@ -2419,7 +2434,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "24859d55f665cfb270d8dde4aef8468274a6b46d26edfd63dd582c398a2e4f95"
+    "storageHash": "09327caa102587aafecf1c91ad845a15a44494ef4d2eff38ba0b9b80b58bcc16"
   },
   "execution": {
     "executionHash": "d1495c3b8e6815988349bf06c895fb0f22c7519bee94768d674ace149b2df27b",

@@ -35,6 +35,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
 
     return {
       name: `E2E course ${randomUUID()}`,
+      summary: "Course created by an E2E test.",
       description: "Course created by an E2E test.",
       contentUrl: "https://drive.google.com/drive/folders/e2e",
       status: "drafted",
@@ -79,6 +80,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
   // what a form sends back after loading getCourseAsAdmin
   function toUpdateBody(course: {
     name: string;
+    summary: string;
     description: string;
     contentUrl: string;
     status: { name: string };
@@ -87,6 +89,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
   }) {
     return {
       name: course.name,
+      summary: course.summary,
       description: course.description,
       contentUrl: course.contentUrl,
       status: course.status.name,
@@ -142,6 +145,7 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
     const now = Temporal.Now.instant();
     const course = await createCourse({
       title: "Started course",
+      summary: "Learn React",
       description: "Learn React",
       startsAt: now.subtract({ hours: 1 }),
       endsAt: now.add({ hours: 1 }),

@@ -7,6 +7,7 @@ import { visibleCoursesWithCurrentPrice } from "../course-visibility.js";
 export type CourseRepositoryModelPublic = {
   id: string;
   title: string;
+  summary: string;
   description: string;
   startsAt: Temporal.Instant;
   endsAt: Temporal.Instant;

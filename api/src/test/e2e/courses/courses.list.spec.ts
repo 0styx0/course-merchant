@@ -34,6 +34,7 @@ describe("GET /v1/courses (e2e)", () => {
     const earlier = await createPricedCourse(
       {
         title: "React Fundamentals",
+        summary: "Learn the fundamentals of React.",
         description: "Learn the fundamentals of React.",
         startsAt: instant("2026-10-01T14:00:00Z"),
         endsAt: instant("2026-10-01T16:00:00Z"),
@@ -49,6 +50,7 @@ describe("GET /v1/courses (e2e)", () => {
     const later = await createPricedCourse(
       {
         title: "TypeScript Essentials",
+        summary: "Learn TypeScript fundamentals.",
         description: "Learn TypeScript fundamentals.",
         startsAt: instant("2026-10-02T14:00:00Z"),
         endsAt: instant("2026-10-02T16:00:00Z"),
@@ -73,6 +75,7 @@ describe("GET /v1/courses (e2e)", () => {
         {
           id: earlier.course.id,
           name: "React Fundamentals",
+          summary: "Learn the fundamentals of React.",
           description: "Learn the fundamentals of React.",
           enrollmentCount: 0,
           price: {
@@ -88,6 +91,7 @@ describe("GET /v1/courses (e2e)", () => {
         {
           id: later.course.id,
           name: "TypeScript Essentials",
+          summary: "Learn TypeScript fundamentals.",
           description: "Learn TypeScript fundamentals.",
           enrollmentCount: 0,
           price: {
@@ -125,6 +129,7 @@ describe("GET /v1/courses (e2e)", () => {
     const available = await createPricedCourse(
       {
         title: "Available Course",
+        summary: "This course should appear.",
         description: "This course should appear.",
         startsAt: instant("2026-10-15T14:00:00Z"),
         endsAt: instant("2026-10-15T16:00:00Z"),
@@ -140,6 +145,7 @@ describe("GET /v1/courses (e2e)", () => {
     const ended = await createPricedCourse(
       {
         title: "Ended Course",
+        summary: "This course has ended.",
         description: "This course has ended.",
         startsAt: instant("2026-09-25T14:00:00Z"),
         endsAt: instant("2026-09-26T16:00:00Z"),
@@ -155,6 +161,7 @@ describe("GET /v1/courses (e2e)", () => {
     const archived = await createPricedCourse(
       {
         title: "Archived Course",
+        summary: "This course is archived.",
         description: "This course is archived.",
         startsAt: instant("2026-10-17T14:00:00Z"),
         endsAt: instant("2026-10-17T16:00:00Z"),
@@ -174,6 +181,7 @@ describe("GET /v1/courses (e2e)", () => {
 
     const unpriced = await createCourse({
       title: "Unpriced Course",
+      summary: "This course has no price.",
       description: "This course has no price.",
       startsAt: instant("2026-10-18T14:00:00Z"),
       endsAt: instant("2026-10-18T16:00:00Z"),
@@ -183,6 +191,7 @@ describe("GET /v1/courses (e2e)", () => {
     const futurePriced = await createPricedCourse(
       {
         title: "Future-Priced Course",
+        summary: "Its price is not effective yet.",
         description: "Its price is not effective yet.",
         startsAt: instant("2026-10-19T14:00:00Z"),
         endsAt: instant("2026-10-19T16:00:00Z"),
@@ -208,6 +217,7 @@ describe("GET /v1/courses (e2e)", () => {
     expect(courses).toContainEqual({
       id: available.course.id,
       name: "Available Course",
+      summary: "This course should appear.",
       description: "This course should appear.",
       enrollmentCount: 0,
       price: {

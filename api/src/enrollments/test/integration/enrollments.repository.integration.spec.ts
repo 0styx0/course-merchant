@@ -19,6 +19,7 @@ describe("EnrollmentsRepository (integration)", () => {
     const now = Temporal.Now.instant();
     const course = await createCourse({
       title: "React Fundamentals",
+      summary: "Learn React",
       description: "Learn React",
       startsAt: now.add({ hours: 24 }),
       endsAt: now.add({ hours: 26 }),

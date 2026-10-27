@@ -12,6 +12,8 @@ export const courseNameSchema = nonEmptyTrimmedString.max(100);
 // private: emailed to buyers, only ever returned to admins
 export const courseContentUrlSchema = z.url({ protocol: /^https?$/ }).max(2048);
 
+export const courseSummarySchema = nonEmptyTrimmedString.max(300);
+
 export const courseDescriptionSchema = nonEmptyTrimmedString.max(5000);
 
 export const createStatusSchema = z.enum(["published", "archived", "drafted"]);
@@ -80,5 +82,6 @@ export const courseScheduleFieldsSchema = z.strictObject({
 
 export const courseDetailsShape = {
   name: courseNameSchema,
+  summary: courseSummarySchema,
   description: courseDescriptionSchema,
 };

@@ -193,6 +193,9 @@ paths:
 
         - `name`: 1 to 100 characters.
 
+        - `summary`: 1 to 300 characters after trimming, about two or three
+        sentences.
+
         - `description`: 1 to 5,000 characters.
 
         - `schedule.timeZone`: must be a valid IANA time zone identifier.
@@ -249,6 +252,7 @@ paths:
               reactFundamentals:
                 value:
                   name: React Fundamentals
+                  summary: A hands-on introduction to React.
                   description: Learn the fundamentals of React.
                   contentUrl: https://drive.google.com/drive/folders/1a2b3c4d5e
                   status: published
@@ -288,6 +292,7 @@ paths:
                   value:
                     id: 123e4567-e89b-12d3-a456-426614174000
                     name: React Fundamentals
+                    summary: A hands-on introduction to React.
                     description: Learn the fundamentals of React.
                     contentUrl: https://drive.google.com/drive/folders/1a2b3c4d5e
                     status:
@@ -384,7 +389,7 @@ paths:
         validation fails, nothing is changed.
 
 
-        **Details.** `name`, `description`, `contentUrl` and `schedule`
+        **Details.** `name`, `summary`, `description`, `contentUrl` and `schedule`
         overwrite the stored values and follow the same rules as
         `createCourse`, except that the
         past-time checks apply only to values that changed:
@@ -454,6 +459,7 @@ paths:
                 summary: Keep a past price, change a future one, add a new one
                 value:
                   name: React Fundamentals
+                  summary: A hands-on introduction to React, with labs.
                   description: Learn the fundamentals of React, with hands-on labs.
                   contentUrl: https://drive.google.com/drive/folders/1a2b3c4d5e
                   status: published
@@ -1104,6 +1110,16 @@ components:
       examples:
         - React Fundamentals
 
+    CourseSummary:
+      type: string
+      minLength: 1
+      maxLength: 300
+      description: >
+        Short public summary of the course, about two or three sentences.
+        Trimmed before it is checked.
+      examples:
+        - A hands-on introduction to React. Build three small apps and learn components, state and hooks.
+
     CourseDescription:
       type: string
       minLength: 1
@@ -1130,11 +1146,14 @@ components:
       type: object
       required:
         - name
+        - summary
         - description
         - schedule
       properties:
         name:
           $ref: "#/components/schemas/CourseName"
+        summary:
+          $ref: "#/components/schemas/CourseSummary"
         description:
           $ref: "#/components/schemas/CourseDescription"
         schedule:

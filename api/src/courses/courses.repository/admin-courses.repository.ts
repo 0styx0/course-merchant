@@ -9,6 +9,7 @@ import { latestStatusIsNot } from "../course-visibility.js";
 export type CourseRepositoryModelAdmin = {
   id: string;
   title: string;
+  summary: string;
   description: string;
   contentUrl: string;
   startsAt: Temporal.Instant;
@@ -48,6 +49,7 @@ export type CourseRepositoryModelAdmin = {
 
 export type CourseRepositoryCreateInput = {
   title: string;
+  summary: string;
   description: string;
   contentUrl: string;
   startsAt: Temporal.Instant;
@@ -63,6 +65,7 @@ export type CourseRepositoryCreateInput = {
 
 export type CourseRepositoryUpdateInput = {
   title: string;
+  summary: string;
   description: string;
   contentUrl: string;
   startsAt: Temporal.Instant;
@@ -139,6 +142,7 @@ export class AdminCoursesRepository {
   ): Promise<CourseRepositoryModelAdmin> {
     const course = await scope.orm.public.Course.create({
       title: input.title,
+      summary: input.summary,
       description: input.description,
       contentUrl: input.contentUrl,
       startsAt: input.startsAt,
@@ -189,6 +193,7 @@ export class AdminCoursesRepository {
       candidate.id.eq(courseId),
     ).update({
       title: input.title,
+      summary: input.summary,
       description: input.description,
       contentUrl: input.contentUrl,
       startsAt: input.startsAt,

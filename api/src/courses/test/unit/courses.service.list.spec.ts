@@ -13,6 +13,7 @@ const makeCourseRecord = (overrides = {}) =>
   ({
     id: "course-1",
     title: "React Fundamentals",
+    summary: "Learn React",
     description: "Learn React",
     startsAt: instant("2026-10-01T18:00:00Z"),
     endsAt: instant("2026-10-01T20:00:00Z"),
@@ -70,6 +71,7 @@ describe("CoursesService", () => {
           {
             name: "React Fundamentals",
             id: "course-1",
+            summary: "Learn React",
             description: "Learn React",
             enrollmentCount: 0,
             price: {
@@ -104,6 +106,7 @@ describe("CoursesService", () => {
           {
             name: "Course One",
             id: "course-1",
+            summary: "Learn React",
             description: "Learn React",
             enrollmentCount: 0,
             price: {
@@ -119,6 +122,7 @@ describe("CoursesService", () => {
           {
             name: "Course Two",
             id: "course-2",
+            summary: "Learn React",
             description: "Learn React",
             enrollmentCount: 0,
             price: {
@@ -244,6 +248,7 @@ describe("CoursesService", () => {
         courses: [
           {
             name: "React Fundamentals",
+            summary: "Learn React",
             description: "Learn React",
             id: "course-1",
             enrollmentCount: 0,

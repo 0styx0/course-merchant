@@ -54,6 +54,7 @@ describe("AdminCoursesService integration", () => {
       const { course, price } = await createPricedCourse(
         {
           title: "React Fundamentals",
+          summary: "Learn React",
           description: "Learn React",
           startsAt: instant("2026-10-01T18:00:00Z"),
           endsAt: instant("2026-10-01T20:00:00Z"),
@@ -69,6 +70,7 @@ describe("AdminCoursesService integration", () => {
       expect(result).toEqual({
         id: course.id,
         name: "React Fundamentals",
+        summary: "Learn React",
         description: "Learn React",
         contentUrl: "https://example.com/course",
         schedule: {
@@ -121,6 +123,7 @@ describe("AdminCoursesService integration", () => {
       const { course } = await createPricedCourse(
         {
           title: "Ended Course",
+          summary: "This course has finished",
           description: "This course has finished",
           startsAt: instant("2026-09-27T18:00:00Z"),
           endsAt: instant("2026-09-27T20:00:00Z"),
@@ -146,6 +149,7 @@ describe("AdminCoursesService integration", () => {
       const { course, price } = await createPricedCourse(
         {
           title: "Future Price Course",
+          summary: "Not publicly available yet",
           description: "Not publicly available yet",
         },
         {

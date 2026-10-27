@@ -15,6 +15,7 @@ export const coursesResponse = {
     {
       id: randomUUID(),
       name: "React Fundamentals",
+      summary: "Learn React",
       description: "Learn React",
       enrollmentCount: 12,
       price: {
@@ -30,6 +31,7 @@ export const coursesResponse = {
     {
       id: randomUUID(),
       name: "Advanced TypeScript",
+      summary: "Build robust applications with TypeScript",
       description: "Build robust applications with TypeScript",
       enrollmentCount: 37,
       price: {

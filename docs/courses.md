@@ -29,7 +29,7 @@ Keep this file current **in the same commit as the work**.
 
 ## Editing a course (`PUT`)
 
-- **Same request shape as create, and the same response as `POST` and admin `GET`.** Name, description, `contentUrl` and schedule overwrite the stored values.
+- **Same request shape as create, and the same response as `POST` and admin `GET`.** Name, summary, description, `contentUrl` and schedule overwrite the stored values.
 - **Status is an append-only log.** A row is added only when the status actually changes, so the log records real transitions and `changedAt` stays meaningful. `deleted` can only be set by an update; create doesn't accept it.
 - **Prices are an append-only history, and price entries have no ids.** The request's `prices` are the course's complete **future** schedule:
   - a stored future price that exactly matches a request entry (same amount, currency and `effectiveAt`) is kept, so retrying a PUT, or re-sending what the form loaded, changes nothing;
@@ -57,13 +57,7 @@ Keep this file current **in the same commit as the work**.
 | PUT replaces the future price schedule, with no ids | Simple for the form to send; prices in effect stay fixed for payments | Matching entries by id, which needs `UNKNOWN_ID`, `IMMUTABLE` and `MISSING_ENTRY` errors; editing prices already in effect, which rewrites history that payments point to |
 | An exact price match is a no-op | Retries and re-sent forms are safe | Treating any collision as an error |
 | Past-time checks only on changed values | Otherwise a course that has started could never be edited again | The same checks as create |
-| Status row only on change | Keeps a meaningful log | Appending on every save |
-| Validation in the pipe plus the service | The body is typed early; checks against the stored course stay in the service | An `unknown` body parsed in the service, which would give one round of errors |
 | Concurrent updates to the same course: leave as is | Rare; the race rolls back and returns a 500 | A server version check returning 409; a client `If-Match` header |
-| Never detect DB errors by driver error code (for example a unique-violation SQLSTATE) | That relies on library internals. Use documented ORM features (`onConflict: "skip"`, conditional updates) instead, or let it become a 500 | Catching `unique_violation` |
-| Generic field error codes | `field` already says which field | Per-field prefixed codes such as `NAME_TOO_SHORT` |
-| Free courses (price 0) allowed | They skip Stripe entirely | Rejecting 0 |
-| `Idempotency-Key` removed from create; bearer auth kept in the spec (now a session token, not a JWT) | Auth is next; idempotency wasn't needed | Keeping both, or removing both |
 | Public get still returns ended courses | Existing links keep working; checkout gives a clear 409 | Hiding them everywhere |
 | Public `enrollmentCount` counts only active enrollments; the admin list still returns every enrollment of every course | The public number means people who have access. Admins need the full history, and there are few enrollments per course | Counting all rows publicly; filtering the admin list |
 | A course's latest status stays computed from the `CourseStatus` log, through one shared helper, with `@@unique([courseId, changedAt])` | No second copy of the status to keep in step. The query is cheap at this shop's size. The constraint closes the one real gap: two statuses with the same `changedAt` (Postgres's `now()` is fixed for a whole transaction) would both count as latest, so a deleted course could show as published. A second status write for a course in the same transaction now fails instead of tying. Same pattern as `CoursePrice`'s `@@unique([courseId, effectiveAt])` | A `Course.currentStatus` column written beside each log row (duplicated state that can drift, plus a migration and backfill); a tie-breaking sequence column |

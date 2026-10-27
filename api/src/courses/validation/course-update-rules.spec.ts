@@ -41,6 +41,7 @@ type Stored = ReturnType<typeof makeStored>;
 function makeRequest(stored: Stored): UpdateCourseRequest {
   return {
     name: "TypeScript Fundamentals",
+    summary: "Learn TypeScript from the ground up.",
     description: "Learn TypeScript from the ground up.",
     contentUrl: "https://drive.google.com/drive/folders/typescript",
     status: "published",

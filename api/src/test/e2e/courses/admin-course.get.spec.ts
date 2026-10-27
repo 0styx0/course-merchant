@@ -39,6 +39,7 @@ describe("Admin Courses Create API (e2e)", () => {
       const { course, price } = await createPricedCourse(
         {
           title: "React Fundamentals",
+          summary: "Learn the fundamentals of React.",
           description: "Learn the fundamentals of React.",
           startsAt: instant("2026-10-15T18:00:00Z"),
           endsAt: instant("2026-10-15T20:00:00Z"),
@@ -62,6 +63,7 @@ describe("Admin Courses Create API (e2e)", () => {
       expect(response.body).toEqual({
         id: course.id,
         name: "React Fundamentals",
+        summary: "Learn the fundamentals of React.",
         description: "Learn the fundamentals of React.",
         contentUrl: "https://example.com/course",
         schedule: {
@@ -152,6 +154,7 @@ describe("Admin Courses Create API (e2e)", () => {
       const { course } = await createPricedCourse(
         {
           title: "Ended Course",
+          summary: "This course has finished.",
           description: "This course has finished.",
           startsAt: instant("2025-09-27T18:00:00Z"),
           endsAt: instant("2025-09-27T20:00:00Z"),
@@ -182,6 +185,7 @@ describe("Admin Courses Create API (e2e)", () => {
       const { course, price } = await createPricedCourse(
         {
           title: "Future Price Course",
+          summary: "This price is not active yet.",
           description: "This price is not active yet.",
         },
         {

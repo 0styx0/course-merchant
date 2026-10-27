@@ -35,6 +35,7 @@ describe("AdminCoursesService (integration)", () => {
 
     return {
       name: `Integration course ${randomUUID()}`,
+      summary: "Course created by an integration test.",
       description: "Course created by an integration test.",
       contentUrl: "https://drive.google.com/drive/folders/integration",
       status: "drafted",
@@ -94,6 +95,7 @@ describe("AdminCoursesService (integration)", () => {
       expect(persisted).toMatchObject({
         id: created.id,
         title: request.name,
+        summary: request.summary,
         description: request.description,
         contentUrl: request.contentUrl,
         timeZone: request.schedule.timeZone,

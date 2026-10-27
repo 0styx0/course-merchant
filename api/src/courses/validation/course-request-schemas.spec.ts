@@ -8,6 +8,7 @@ import {
 
 type CourseRequestInput = {
   name: string;
+  summary: string;
   description: string;
   contentUrl: string;
   status: "published" | "archived" | "drafted";
@@ -38,6 +39,7 @@ function makeValidRequest(): CourseRequestInput {
 
   return {
     name: "TypeScript Fundamentals",
+    summary: "Learn TypeScript from the ground up.",
     description: "Learn TypeScript from the ground up.",
     contentUrl: "https://drive.google.com/drive/folders/typescript",
     status: "published",
@@ -182,6 +184,7 @@ describe("createCourseRequestSchema", () => {
   describe("required fields", () => {
     it.each([
       "name",
+      "summary",
       "description",
       "contentUrl",
       "status",
@@ -201,6 +204,7 @@ describe("createCourseRequestSchema", () => {
 
     it.each([
       ["name", null],
+      ["summary", null],
       ["description", null],
       ["contentUrl", null],
       ["status", null],

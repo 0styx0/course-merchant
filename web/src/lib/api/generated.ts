@@ -109,6 +109,7 @@ export interface paths {
          *
          *     Validation rules:
          *     - `name`: 1 to 100 characters.
+         *     - `summary`: 1 to 300 characters after trimming, about two or three sentences.
          *     - `description`: 1 to 5,000 characters.
          *     - `schedule.timeZone`: must be a valid IANA time zone identifier.
          *     - `schedule.startTime`: must be an RFC 3339 date-time in UTC (ending in `Z`), and must be now or in the future.
@@ -155,7 +156,7 @@ export interface paths {
          *
          *     Validation runs in two stages, each reporting all of its failures at once in the `errors` array of a 400 response. Format errors (types, lengths, date-time formats, currencies, `endTime` after `startTime`, duplicate `effectiveAt` values) are reported first. Only a well-formed request is then checked against the course's current state (past times, the resulting price schedule). The update is atomic: if any validation fails, nothing is changed.
          *
-         *     **Details.** `name`, `description`, `contentUrl` and `schedule` overwrite the stored values and follow the same rules as `createCourse`, except that the past-time checks apply only to values that changed:
+         *     **Details.** `name`, `summary`, `description`, `contentUrl` and `schedule` overwrite the stored values and follow the same rules as `createCourse`, except that the past-time checks apply only to values that changed:
          *     - `schedule.startTime` must be now or in the future only if it differs from the stored value.
          *     - `schedule.endTime` must be in the future only if it differs from the stored value.
          *     - `endTime` must always be after `startTime`.
@@ -373,6 +374,11 @@ export interface components {
          */
         CourseName: string;
         /**
+         * @description Short public summary of the course, about two or three sentences. Trimmed before it is checked.
+         * @example A hands-on introduction to React. Build three small apps and learn components, state and hooks.
+         */
+        CourseSummary: string;
+        /**
          * @description Public description of the course.
          * @example Learn the fundamentals of React.
          */
@@ -385,6 +391,7 @@ export interface components {
         CourseContentUrl: string;
         CourseDetails: {
             name: components["schemas"]["CourseName"];
+            summary: components["schemas"]["CourseSummary"];
             description: components["schemas"]["CourseDescription"];
             schedule: components["schemas"]["CourseSchedule"];
         };

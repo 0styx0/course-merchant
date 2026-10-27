@@ -22,6 +22,7 @@ function makeRepositoryCourse() {
   return {
     id: COURSE_ID,
     title: "React Fundamentals",
+    summary: "Learn the fundamentals of React",
     description: "Learn the fundamentals of React",
     contentUrl: "https://drive.google.com/drive/folders/react",
     startsAt: now.add({ hours: 24 }).round({ smallestUnit: "microseconds" }),
@@ -58,6 +59,7 @@ function makeRepositoryCourse() {
 function makeRequest(course: CourseRepositoryModelAdmin): UpdateCourseRequest {
   return {
     name: course.title,
+    summary: course.summary,
     description: course.description,
     contentUrl: course.contentUrl,
     status: course.statuses[0].name,
@@ -117,6 +119,7 @@ describe("AdminCoursesService", () => {
       const request = {
         ...makeRequest(repositoryCourse),
         name: "React Advanced",
+        summary: "Hooks in depth",
         description: "Hooks in depth",
         contentUrl: "https://zoom.us/j/123456789",
       };
@@ -128,6 +131,7 @@ describe("AdminCoursesService", () => {
         COURSE_ID,
         expect.objectContaining({
           title: "React Advanced",
+          summary: "Hooks in depth",
           description: "Hooks in depth",
           contentUrl: "https://zoom.us/j/123456789",
           startsAt: repositoryCourse.startsAt,

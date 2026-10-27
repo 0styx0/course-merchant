@@ -27,6 +27,7 @@ describe("Courses API (e2e)", () => {
       const { course } = await createPricedCourse(
         {
           title: "React Fundamentals",
+          summary: "Learn the fundamentals of React.",
           description: "Learn the fundamentals of React.",
           startsAt: Temporal.Instant.from("2026-10-15T18:00:00Z"),
           endsAt: Temporal.Instant.from("2026-10-15T20:00:00Z"),
@@ -49,6 +50,7 @@ describe("Courses API (e2e)", () => {
       expect(response.body).toEqual({
         id: course.id,
         name: "React Fundamentals",
+        summary: "Learn the fundamentals of React.",
         description: "Learn the fundamentals of React.",
         enrollmentCount: 0,
         price: {

@@ -23,7 +23,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'24859d55f665cfb270d8dde4aef8468274a6b46d26edfd63dd582c398a2e4f95'>;
+  StorageHashBase<'09327caa102587aafecf1c91ad845a15a44494ef4d2eff38ba0b9b80b58bcc16'>;
 export type ExecutionHash =
   ExecutionHashBase<'d1495c3b8e6815988349bf06c895fb0f22c7519bee94768d674ace149b2df27b'>;
 export type ProfileHash =
@@ -362,6 +362,7 @@ export namespace Models {
     endsAt: FieldOutputTypes['public']['Course']['endsAt'];
     id: FieldOutputTypes['public']['Course']['id'];
     startsAt: FieldOutputTypes['public']['Course']['startsAt'];
+    summary: FieldOutputTypes['public']['Course']['summary'];
     timeZone: FieldOutputTypes['public']['Course']['timeZone'];
     title: FieldOutputTypes['public']['Course']['title'];
     updatedAt: FieldOutputTypes['public']['Course']['updatedAt'];
@@ -664,6 +665,12 @@ type ContractBase = Omit<
                 readonly startsAt: {
                   readonly dataType: 'pg/timestamptz';
                   readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly summary: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
                   readonly nullable: false;
                   readonly many: false;
                 };
@@ -1511,6 +1518,10 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/timestamptz-temporal@1';
                 };
               };
+              readonly summary: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly timeZone: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -1572,6 +1583,7 @@ type ContractBase = Omit<
                 readonly endsAt: { readonly column: 'endsAt' };
                 readonly id: { readonly column: 'id' };
                 readonly startsAt: { readonly column: 'startsAt' };
+                readonly summary: { readonly column: 'summary' };
                 readonly timeZone: { readonly column: 'timeZone' };
                 readonly title: { readonly column: 'title' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
