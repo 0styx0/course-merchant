@@ -10,7 +10,19 @@ And they can specify a future start time
 And they can specify a future end time greater than start time
 And they can specify a valid time zone
 And they can set a price in USD
+And they must choose a course image (JPEG, PNG or WebP, up to 5 MB, at least 800×450)
 And all fields should be required
+
+When the admin chooses an image
+Then they see it in a 16:9 frame, cropped around its centre, the same way the public pages will show it
+And if the file is too large, too small or not JPEG/PNG/WebP, they see the error before submitting
+
+When the admin saves a new course
+Then it is created as a draft, then the image is uploaded, then the course is published if they chose to
+And if the image upload fails, the course stays a draft and the admin can upload the image again
+
+When the admin tries to publish a course that has no image
+Then they see an error asking them to upload an image first
 
 When the user sets a price
 Then the price must be above fifty cents
@@ -66,3 +78,9 @@ And all fields should be ensured to exist
 ### Editing a course
 
 When the admin wants to edit a course
+Then they see the course's current image
+And they can choose a new one, previewed the same way
+And if they don't choose one, the current image is kept
+
+When the admin views the course list
+Then courses without an image are marked "missing image"
