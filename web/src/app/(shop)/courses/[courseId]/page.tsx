@@ -15,7 +15,9 @@ export async function generateMetadata({
   const result = await getCourse(courseId);
 
   // The page alone decides on a 404.
-  return result.state === "success" ? { title: result.data.name } : {};
+  return result.state === "success"
+    ? { title: result.data.name, description: result.data.summary }
+    : {};
 }
 
 export default async function CoursePage({ params }: CoursePageProps) {

@@ -15,7 +15,9 @@ Each step is one commit. Every step's tests are part of the step. Steps 1–5 co
 - [x] **5. Feature folders and plain-data components.**
 - [x] **6. Course cards link to their page,** show `summary`, show formatted times, and use `key={course.id}`.
 - [x] **7. Security headers** in `next.config.ts`: `poweredByHeader: false`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `frame-ancestors 'none'` (stops other sites framing the admin pages).
-- [ ] **8. Real site metadata and one font** in the root layout (today: "Create Next App", and Geist Sans loaded but unused). **Next**
+- [x] **8. Real site metadata and one font** in the root layout.
+
+All web steps are done.
 
 ## Principles
 
@@ -65,6 +67,8 @@ Each step is one commit. Every step's tests are part of the step. Steps 1–5 co
 | Fixture times are UTC ending in `Z` | The API only emits such instants | Offsets like `-04:00` |
 | Security headers are one rule for every path in `next.config.ts` | Pages, route handlers and static files all get them, and a new route can't forget them. Nothing needs framing, so `frame-ancestors 'none'` is global | `proxy.ts` (only worth it with a nonce CSP); an admin-only rule |
 | The CSP holds only `frame-ancestors` until a nonce-based one exists; no `X-Frame-Options` | An `unsafe-inline` policy protects little and Next's inline scripts need a nonce. `frame-ancestors` is honoured by every supported browser, so the older header is redundant | A full CSP with `'unsafe-inline'`; adding `X-Frame-Options: DENY` |
+| Titles use a template in the root layout (`%s · Course Merchant`, default `Course Merchant`); the course page also sets `description` to the course summary | Tabs and search results show which site; pages only name themselves | Each page writing the full title |
+| Inter is the one font; Geist and Geist Mono are not loaded | Inter already backs `font-sans` and the heading font; nothing used mono, which falls back to Tailwind's system stack | Switching to Geist; keeping all three |
 
 ## Launch
 
