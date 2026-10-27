@@ -13,8 +13,8 @@ Keep this file current **in the same commit as the work**.
 - [ ] Web admin pages (spec in [web/docs/admin.md](../web/docs/admin.md)).
 - [ ] Estimated payout under the admin price field (payments step 7).
 - [ ] **Course images** (design in *Course images* below):
-  - [ ] **1. API: check and convert an uploaded image.** **Next** A focused module in `api/src/courses/` (e.g. `course-image.ts`) that takes uploaded bytes and returns either a 1600×900 WebP or field errors on `/image`. Adds the `sharp` dependency (record it in ARCHITECTURE.md). Limits are constants in that module. Unit tests only; nothing calls it yet. Check the real page widths before fixing the 1600×900 numbers.
-  - [ ] **2a. API: store a course's image.** `CourseImage` table (migration, `onDelete: Restrict`), a repository, `CourseImage` in the test wipe list before `Course`; admin course responses gain `image: { updatedAt, version } | null` (always `null` until 2b).
+  - [x] **1. API: check and convert an uploaded image** ([course-image.ts](../api/src/courses/course-image.ts)). Nothing calls it yet.
+  - [ ] **2a. API: store a course's image.** **Next** `CourseImage` table (migration, `onDelete: Restrict`), a repository, `CourseImage` in the test wipe list before `Course`; admin course responses gain `image: { updatedAt, version } | null` (always `null` until 2b).
   - [ ] **2b. API: upload and read back the image (admin).** `PUT /v1/admin/courses/{courseId}/image` (multipart, one `image` file, 204) and admin `GET /v1/admin/courses/{courseId}/image`. Adds `multer` and `@types/multer` as direct dependencies. The e2e test downloads and checks the stored WebP.
   - [ ] **3. API: don't allow publishing a course without an image.** Create accepts only `drafted` and `archived`; an update to `published` needs an image. Spec, Zod schemas, fixtures and e2e tests change accordingly.
   - [ ] **4. API: serve the image publicly.** Public course responses (list and get) gain `image: { version }`; `GET /v1/courses/{courseId}/image/{version}`, visible courses only.
@@ -62,15 +62,13 @@ Keep this file current **in the same commit as the work**.
 
 Every course has exactly one image, shown on every public page. It is uploaded separately from the course, stored in Postgres, always 16:9, and a course can't be published without one.
 
-- **Checking and converting (step 1).** The file name and the client's `Content-Type` are never trusted.
-  1. When the module loads, call `sharp.block()` on the loaders for SVG, HEIF, PDF and GIF.
-  2. Read `sharp(bytes, { limitInputPixels: 25_000_000 }).metadata()`. Refuse anything whose `format` isn't `jpeg`, `png` or `webp`. Compare width × height with the pixel limit yourself, so the error is `ABOVE_MAXIMUM` and doesn't depend on sharp's message; keep `limitInputPixels` on the conversion as a backstop.
-  3. Check the 800×450 minimum **after** applying the orientation flag (swap width and height for rotated photos), so a rotated 800×450 photo is judged as it will look.
-  4. Convert: `.rotate()`, `.resize(1600, 900, { fit: "cover", position: "centre" })`, `.webp()`.
-
-  Why each step: a phone stores the photo in the sensor's orientation plus a hidden orientation tag, and re-encoding drops the tag, so `.rotate()` must turn the pixels first (before the crop, or the wrong part is cut). `cover` scales to fill the frame and cuts the overflow evenly, so every card is the same shape. WebP is smaller than JPEG or PNG. Re-encoding also drops all metadata (such as GPS location) and anything hidden in the file.
-
-  Errors use the usual validation response with `field: "/image"`: `REQUIRED` (no file), `INVALID_FORMAT` (not a readable JPEG, PNG or WebP), `ABOVE_MAXIMUM` (over 5 MB or over the pixel limit), `BELOW_MINIMUM` (smaller than 800×450). Test images are made in the test with `sharp({ create: … })`, so no binary files are committed.
+- **Checking and converting (step 1).** [course-image.ts](../api/src/courses/course-image.ts) returns `converted` (a 1600×900 WebP) or `rejected` (one error on `/image`). The file name and the client's `Content-Type` are never trusted; sharp decides the format from the bytes.
+  - Loaders for SVG, HEIF, PDF, GIF and TIFF are blocked with `sharp.block()`. A misspelt operation name is silently ignored, so each blocked format has a refusal test.
+  - Order: missing file, over 5 MB (before parsing), unreadable or not JPEG/PNG/WebP, over the pixel limit (from the header, so the error is ours and not sharp's), under 800×450. `limitInputPixels` stays on the conversion as a backstop.
+  - The minimum is judged on `metadata().autoOrient` (the size after the orientation flag), so a rotated 800×450 photo is judged as it will look.
+  - Convert: `.autoOrient()` before the crop (a phone stores the sensor's orientation plus a hidden tag, and re-encoding drops the tag), `cover` (fill the frame, cut the overflow evenly, so every card is the same shape), then WebP (smaller than JPEG or PNG). Re-encoding drops all metadata, such as GPS, and anything hidden in the file.
+  - Animated images are accepted and keep only their first frame (sharp's default; refusing them would be extra code).
+  - Errors: `REQUIRED`, `INVALID_FORMAT`, `ABOVE_MAXIMUM` (over 5 MB or the pixel limit), `BELOW_MINIMUM`. Tests build images with `sharp({ create: … })`, so no binary files are committed.
 - **Storage (step 2a).** `CourseImage`: `courseId` (primary key and foreign key to `Course`, `onDelete: Restrict`), `bytes`, `updatedAt`.
   - **Never removed.** No repository method deletes a `CourseImage`. The test wipe list in [integration.setup.ts](../api/src/test/integration.setup.ts) deletes it before `Course`.
   - **Never load the bytes by accident.** Course queries include only `image.updatedAt`. Only the image endpoints read `bytes`.
@@ -91,7 +89,7 @@ Every course has exactly one image, shown on every public page. It is uploaded s
 - **Serving publicly (step 4).** `GET /v1/courses/{courseId}/image/{version}` is `@Public()` and uses the shared visibility rule (ended courses included, like public get). It returns 404 `COURSE_NOT_FOUND` if the course isn't visible **or the version isn't the current one**; this keeps the cache from being filled with made-up URLs. The cost: a page loaded before a replacement shows a broken image until it is reloaded. It sends `Content-Type: image/webp`, `Cache-Control: public, max-age=31536000, immutable` and the app-wide `nosniff`. The spec declares the response `image/webp`, `type: string, format: binary`, 1600×900. No ETag: browsers only talk to Next's image endpoint.
 - **Showing it (step 5).** The browser never talks to the API.
   - A Next route handler, `web/src/app/courses/[courseId]/image/[version]/route.ts`, checks the id is a UUID and the version is digits, fetches the bytes through a wrapper in `web/src/lib/api/` (`parseAs: "arrayBuffer"`, returns a `Result`) and sends them on with the same headers.
-  - `CourseCard` and `CourseDetailsView` render `next/image` with `src="/courses/{id}/image/{image.version}"`, `width={1600} height={900}`, `alt=""` and a `sizes` suited to each layout. On the course page add `priority`: it is the largest thing on screen.
+  - `CourseCard` and `CourseDetailsView` render `next/image` with `src="/courses/{id}/image/{image.version}"`, `width={1600} height={900}`, `alt=""` and a `sizes` suited to each layout. On the course page add `priority` (it is the largest thing on screen) and cap the page at about 800 CSS px wide (e.g. `max-w-3xl`), so the 1600 px image stays sharp on 2× screens. Cards are about 350 CSS px wide, so they are covered.
   - `next.config.ts` sets `images.localPatterns: [{ pathname: "/courses/*/image/*", search: "" }]` and `qualities: [75]` (not set today). Read `web/node_modules/next/dist/docs/` first.
   - The MSW handler returns a tiny real WebP embedded as base64 (Next's optimizer decodes it), with `success` and `notFound` scenarios.
   - `openapi-typescript` types `format: binary` as `string`, so a later web upload needs a `bodySerializer` with `FormData`.
@@ -131,5 +129,6 @@ Every course has exactly one image, shown on every public page. It is uploaded s
 | Pixel limit 25M with no conversion queue | Accepts large phone photos. Worst case about 100 MB per upload, fine for one admin | A 16M limit (refuses 48 MP photos); a one-at-a-time queue |
 | The image is decorative (`alt=""`) | The course name beside it already says what it is | A required alt-text field; the course name as alt (read twice) |
 | Cached for a year, with the version (`updatedAt` in epoch milliseconds) in the URL path; a non-current version is a 404 | A change makes a new URL, so long caching is safe and a replaced image shows at once. In the path, Next's allow-list can match it exactly, and made-up URLs can't fill the cache | A short cache time (lag of up to about a day); a `?v=` query string (the allow-list can't match a changing query, so it would have to stay open); an ETag (the browser only sees Next's image endpoint) |
+| Block TIFF as well as SVG, HEIF, PDF and GIF; animated images keep their first frame | TIFF is a large parser we never need. Animated images need no extra code to flatten | Blocking only the four first listed; refusing animated images (extra code) |
 | `multer` is a direct dependency, used by our own interceptor | Nest's `FileInterceptor` hides the multer error codes we need to map to field errors, and a transitive dependency shouldn't be relied on | `FileInterceptor` plus a wrapper (never sees the codes) |
 | The web serves images through its own route | Keeps the API off the public internet, as for all other data | Pointing `<img>` at the API directly |
