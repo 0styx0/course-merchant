@@ -11,6 +11,7 @@ beforeEach(async () => {
     db.orm.public.EmailOutbox.where({}).deleteAll(),
     db.orm.public.CourseStatus.where({}).deleteAll(),
     db.orm.public.CoursePrice.where({}).deleteAll(),
+    db.orm.public.CourseImage.where({}).deleteAll(),
   ]);
 
   await Promise.all([

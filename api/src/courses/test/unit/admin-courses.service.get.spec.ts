@@ -30,6 +30,7 @@ const repositoryCourse = {
       changedAt: instant("2026-09-29T14:00:00Z"),
     },
   ],
+  image: null,
   prices: [
     {
       id: "price_early",

@@ -27,6 +27,7 @@ const repositoryCourse = {
     },
   ],
 
+  image: null,
   prices: [
     {
       id: "price_early",
@@ -95,6 +96,8 @@ describe("toAdminCourseResponse", () => {
         name: "published",
         changedAt: "2026-09-29T14:00:00Z",
       },
+
+      image: null,
 
       prices: [
         {
@@ -227,6 +230,20 @@ describe("toAdminCourseResponse", () => {
         },
       },
     ]);
+  });
+
+  it("maps a stored image to its UTC time and epoch-millisecond version", () => {
+    const course = {
+      ...repositoryCourse,
+      image: { updatedAt: instant("2026-09-30T12:00:00Z") },
+    } satisfies CourseRepositoryModelAdmin;
+
+    const result = toAdminCourseResponse(course);
+
+    expect(result.image).toEqual({
+      updatedAt: "2026-09-30T12:00:00Z",
+      version: String(Date.parse("2026-09-30T12:00:00Z")),
+    });
   });
 
   it("returns an empty enrollment list when there are no enrollments", () => {

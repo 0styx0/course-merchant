@@ -23,6 +23,8 @@ import {
 import { PrismaModule } from "../../../prisma/prisma.module.js";
 import { AdminCoursesService } from "@/courses/admin-courses.service.js";
 import { AdminCoursesRepository } from "@/courses/courses.repository/admin-courses.repository.js";
+import { CourseImagesRepository } from "@/courses/courses.repository/course-images.repository.js";
+import { db } from "@/prisma/db.js";
 
 const NOW = instant("2026-09-29T14:00:00Z");
 
@@ -82,6 +84,7 @@ describe("AdminCoursesService integration", () => {
           name: "published",
           changedAt: expect.any(String),
         },
+        image: null,
         prices: [
           {
             id: price.id,
@@ -96,6 +99,24 @@ describe("AdminCoursesService integration", () => {
       expect(Temporal.Instant.from(result.status.changedAt)).toBeInstanceOf(
         Temporal.Instant,
       );
+    });
+
+    it("reports a stored image's time and version, never its bytes", async () => {
+      const { course } = await createPricedCourse();
+      const imageTime = instant("2026-09-30T12:00:00Z");
+      vi.spyOn(Temporal.Now, "instant").mockReturnValue(imageTime);
+      await new CourseImagesRepository().saveImage(
+        db,
+        course.id,
+        new Uint8Array([1, 2, 3]),
+      );
+
+      const result = await service.findByIdAdmin(course.id);
+
+      expect(result.image).toEqual({
+        updatedAt: "2026-09-30T12:00:00Z",
+        version: String(imageTime.epochMilliseconds),
+      });
     });
 
     it("returns the most recent status, not an older status", async () => {

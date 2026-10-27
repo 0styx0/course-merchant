@@ -6,6 +6,7 @@ import { CoursesController } from "./courses.controller.js";
 import { AdminCoursesController } from "./admin-courses.controller.js";
 import { AdminCoursesService } from "./admin-courses.service.js";
 import { AdminCoursesRepository } from "./courses.repository/admin-courses.repository.js";
+import { CourseImagesRepository } from "./courses.repository/course-images.repository.js";
 
 @Module({
   imports: [PrismaModule],
@@ -15,6 +16,7 @@ import { AdminCoursesRepository } from "./courses.repository/admin-courses.repos
     AdminCoursesService,
     CoursesRepository,
     AdminCoursesRepository,
+    CourseImagesRepository,
   ],
 })
 export class CoursesModule {}

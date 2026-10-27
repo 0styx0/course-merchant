@@ -20,6 +20,10 @@
       "model": "Course",
       "namespace": "public"
     },
+    "CourseImage": {
+      "model": "CourseImage",
+      "namespace": "public"
+    },
     "CoursePrice": {
       "model": "CoursePrice",
       "namespace": "public"
@@ -433,6 +437,22 @@
                   "namespace": "public"
                 }
               },
+              "image": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "courseId"
+                  ]
+                },
+                "to": {
+                  "model": "CourseImage",
+                  "namespace": "public"
+                }
+              },
               "prices": {
                 "cardinality": "1:N",
                 "on": {
@@ -499,6 +519,64 @@
               },
               "namespaceId": "public",
               "table": "Course"
+            }
+          },
+          "CourseImage": {
+            "fields": {
+              "bytes": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bytea@1",
+                  "kind": "scalar"
+                }
+              },
+              "courseId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "course": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "courseId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Course",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "bytes": {
+                  "column": "bytes"
+                },
+                "courseId": {
+                  "column": "courseId"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "CourseImage"
             }
           },
           "CoursePrice": {
@@ -1616,6 +1694,54 @@
               },
               "uniques": []
             },
+            "CourseImage": {
+              "columns": {
+                "bytes": {
+                  "codecId": "pg/bytea@1",
+                  "dataType": "pg/bytea",
+                  "nullable": false
+                },
+                "courseId": {
+                  "codecId": "pg/uuid@1",
+                  "dataType": "pg/uuid",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "primaryKey": true
+                  },
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "courseId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "CourseImage"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Course"
+                  }
+                }
+              ],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "courseId"
+                ]
+              },
+              "uniques": []
+            },
             "CoursePrice": {
               "columns": {
                 "amount": {
@@ -2434,7 +2560,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "09327caa102587aafecf1c91ad845a15a44494ef4d2eff38ba0b9b80b58bcc16"
+    "storageHash": "beceb30746f7431c8b5918d86e9f1dd49b9c8f1c29a1bb44c010588c44c5f901"
   },
   "execution": {
     "executionHash": "d1495c3b8e6815988349bf06c895fb0f22c7519bee94768d674ace149b2df27b",

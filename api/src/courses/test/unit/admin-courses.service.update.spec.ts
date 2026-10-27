@@ -34,6 +34,7 @@ function makeRepositoryCourse() {
         changedAt: now.subtract({ hours: 72 }),
       },
     ],
+    image: null,
     prices: [
       {
         id: "price_past",

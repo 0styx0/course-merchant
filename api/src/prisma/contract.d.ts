@@ -23,7 +23,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'09327caa102587aafecf1c91ad845a15a44494ef4d2eff38ba0b9b80b58bcc16'>;
+  StorageHashBase<'beceb30746f7431c8b5918d86e9f1dd49b9c8f1c29a1bb44c010588c44c5f901'>;
 export type ExecutionHash =
   ExecutionHashBase<'d1495c3b8e6815988349bf06c895fb0f22c7519bee94768d674ace149b2df27b'>;
 export type ProfileHash =
@@ -367,9 +367,17 @@ export namespace Models {
     title: FieldOutputTypes['public']['Course']['title'];
     updatedAt: FieldOutputTypes['public']['Course']['updatedAt'];
     enrollments: public_Enrollment[];
+    image: public_CourseImage | null;
     prices: public_CoursePrice[];
     statuses: public_CourseStatus[];
-    readonly [RelationKeys]?: 'enrollments' | 'prices' | 'statuses';
+    readonly [RelationKeys]?: 'enrollments' | 'image' | 'prices' | 'statuses';
+  };
+  export type public_CourseImage = {
+    bytes: FieldOutputTypes['public']['CourseImage']['bytes'];
+    courseId: FieldOutputTypes['public']['CourseImage']['courseId'];
+    updatedAt: FieldOutputTypes['public']['CourseImage']['updatedAt'];
+    course: public_Course;
+    readonly [RelationKeys]?: 'course';
   };
   export type public_CoursePrice = {
     amount: FieldOutputTypes['public']['CoursePrice']['amount'];
@@ -468,6 +476,7 @@ export declare const models: {
     AdminLoginAttempt: Models.public_AdminLoginAttempt;
     AdminSession: Models.public_AdminSession;
     Course: Models.public_Course;
+    CourseImage: Models.public_CourseImage;
     CoursePrice: Models.public_CoursePrice;
     CourseStatus: Models.public_CourseStatus;
     Customer: Models.public_Customer;
@@ -704,6 +713,45 @@ type ContractBase = Omit<
                 },
               ];
               foreignKeys: readonly [];
+            };
+            readonly CourseImage: {
+              columns: {
+                readonly bytes: {
+                  readonly dataType: 'pg/bytea';
+                  readonly codecId: 'pg/bytea@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly courseId: {
+                  readonly dataType: 'pg/uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly updatedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['courseId'] };
+              uniques: readonly [];
+              indexes: readonly [];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'CourseImage';
+                    readonly columns: readonly ['courseId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Course';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
             };
             readonly CoursePrice: {
               columns: {
@@ -1314,6 +1362,10 @@ type ContractBase = Omit<
       readonly model: 'AdminSession';
     };
     readonly Course: { readonly namespace: 'public' & NamespaceId; readonly model: 'Course' };
+    readonly CourseImage: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'CourseImage';
+    };
     readonly CoursePrice: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'CoursePrice';
@@ -1550,6 +1602,18 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['courseId'];
                 };
               };
+              readonly image: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'CourseImage';
+                };
+                readonly cardinality: '1:1';
+                readonly nullable: true;
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['courseId'];
+                };
+              };
               readonly prices: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -1586,6 +1650,48 @@ type ContractBase = Omit<
                 readonly summary: { readonly column: 'summary' };
                 readonly timeZone: { readonly column: 'timeZone' };
                 readonly title: { readonly column: 'title' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
+          readonly CourseImage: {
+            readonly fields: {
+              readonly bytes: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bytea@1' };
+              };
+              readonly courseId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly course: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Course';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['courseId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'CourseImage';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly bytes: { readonly column: 'bytes' };
+                readonly courseId: { readonly column: 'courseId' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
             };

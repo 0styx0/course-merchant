@@ -5,6 +5,14 @@ import { GetCourseAdminResponse, GetCourseResponse } from "types.js";
 import type { CourseRepositoryModelPublic } from "./courses.repository/courses.repository.js";
 import { CourseRepositoryModelAdmin } from "./courses.repository/admin-courses.repository.js";
 
+/**
+ * The image's version: its `updatedAt` as epoch milliseconds, in decimal. The
+ * one place it is built, so responses and URLs agree on it.
+ */
+export function imageVersion(updatedAt: Temporal.Instant): string {
+  return String(updatedAt.epochMilliseconds);
+}
+
 export function toPublicCourseResponse(
   course: CourseRepositoryModelPublic,
 ): GetCourseResponse {
@@ -48,6 +56,10 @@ export function toAdminCourseResponse(
     status: {
       name: course.statuses[0].name,
       changedAt: formatDate(course.statuses[0].changedAt),
+    },
+    image: course.image && {
+      updatedAt: formatDate(course.image.updatedAt),
+      version: imageVersion(course.image.updatedAt),
     },
     prices: course.prices.map((price) => ({
       id: price.id,

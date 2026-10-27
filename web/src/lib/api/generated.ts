@@ -438,10 +438,25 @@ export interface components {
             id: components["schemas"]["CourseId"];
             contentUrl: components["schemas"]["CourseContentUrl"];
             status: components["schemas"]["CourseStatusDetails"];
+            /** @description The course's image, or null until one has been uploaded. */
+            image: components["schemas"]["AdminCourseImage"] | null;
             /** @description Enrolled customers and their associated payment details. */
             enrollments: components["schemas"]["AdminEnrollment"][];
             /** @description The course's full price schedule, ordered by effectiveAt ascending. The entry in effect now is the last one whose effectiveAt is in the past. */
             prices: components["schemas"]["AdminScheduledPrice"][];
+        };
+        /** @description Details of a course's stored image, never its bytes. */
+        AdminCourseImage: {
+            /**
+             * Format: date-time
+             * @description When the image was last uploaded, in UTC.
+             */
+            updatedAt: string;
+            /**
+             * @description `updatedAt` as milliseconds since the Unix epoch, written as a decimal string. It changes whenever the image is replaced.
+             * @example 1793102400000
+             */
+            version: string;
         };
         /** @description A customer's enrollment. It gives access only while both `revokedAt` and `suspendedAt` are null. */
         AdminEnrollment: {

@@ -25,6 +25,8 @@ export type CourseRepositoryModelAdmin = {
     name: Models.public_CourseStatus["name"];
     changedAt: Temporal.Instant;
   }[];
+  // never the bytes. null until an image is uploaded
+  image: { updatedAt: Temporal.Instant } | null;
   enrollments: {
     revokedAt: Temporal.Instant | null;
     suspendedAt: Temporal.Instant | null;
@@ -89,7 +91,8 @@ type CourseDelegate = DbScope["orm"]["public"]["Course"];
 export class AdminCoursesRepository {
   /**
    * Builds the shared query for admin course details.
-   * Includes all prices, the latest status, and enrollment details.
+   * Includes all prices, the latest status, the image's `updatedAt` (never
+   * its bytes), and enrollment details.
    */
   private adminCourseDetailsQuery(course: CourseDelegate) {
     return course
@@ -102,6 +105,7 @@ export class AdminCoursesRepository {
           .orderBy((status) => status.changedAt.desc())
           .limit(1),
       )
+      .include("image", (image) => image.select("updatedAt"))
       .include("enrollments", (enrollments) =>
         enrollments
           .include("customer")

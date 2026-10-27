@@ -49,8 +49,21 @@ model Course {
   statuses    CourseStatus[]
   prices      CoursePrice[]
   enrollments Enrollment[]
+  image       CourseImage?
 
   @@index([startsAt])
+}
+
+// a course's one image, already converted to a 1600x900 WebP. Never deleted.
+// Course queries select only updatedAt: only the image endpoints read bytes
+model CourseImage {
+  courseId  Uuid     @id
+  bytes     Bytes
+  // set by the repository on every save. Its epoch milliseconds are the
+  // image's version in URLs and responses
+  updatedAt DateTime
+
+  course    Course   @relation(fields:[courseId], references:[id], onDelete: Restrict)
 }
 
 model CourseStatus {
