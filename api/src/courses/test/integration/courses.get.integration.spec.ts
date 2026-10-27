@@ -11,6 +11,7 @@ import {
 } from "vitest";
 
 import { instant } from "../../../test/test-helpers.js";
+import { CourseImagesRepository } from "../../courses.repository/course-images.repository.js";
 import { CoursesRepository } from "../../courses.repository/courses.repository.js";
 import { CoursesService } from "../../courses.service.js";
 import { PrismaModule } from "../../../prisma/prisma.module.js";
@@ -33,7 +34,7 @@ describe("CoursesService integration", () => {
   beforeAll(async () => {
     testingModule = await Test.createTestingModule({
       imports: [PrismaModule],
-      providers: [CoursesService, CoursesRepository],
+      providers: [CoursesService, CoursesRepository, CourseImagesRepository],
     }).compile();
 
     service = testingModule.get(CoursesService);
@@ -59,6 +60,8 @@ describe("CoursesService integration", () => {
         summary: "Learn React",
         description: "Learn React",
         enrollmentCount: 0,
+        // the fixture's image is made at NOW
+        image: { version: String(NOW.epochMilliseconds) },
         price: {
           amount: 9900,
           currency: "USD",
@@ -88,6 +91,7 @@ describe("CoursesService integration", () => {
         summary: "Currently running",
         description: "Currently running",
         enrollmentCount: 0,
+        image: { version: String(NOW.epochMilliseconds) },
         price: {
           amount: 9900,
           currency: "USD",
@@ -117,6 +121,7 @@ describe("CoursesService integration", () => {
         summary: "Already finished",
         description: "Already finished",
         enrollmentCount: 0,
+        image: { version: String(NOW.epochMilliseconds) },
         price: {
           amount: 9900,
           currency: "USD",

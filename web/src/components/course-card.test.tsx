@@ -11,6 +11,7 @@ const course: Course = {
   summary: "Learn React",
   description: "Learn React",
   enrollmentCount: 12,
+  image: { version: "1790856000000" },
   price: {
     amount: 9900,
     currency: "USD",

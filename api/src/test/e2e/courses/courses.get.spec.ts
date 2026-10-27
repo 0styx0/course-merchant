@@ -53,6 +53,7 @@ describe("Courses API (e2e)", () => {
         summary: "Learn the fundamentals of React.",
         description: "Learn the fundamentals of React.",
         enrollmentCount: 0,
+        image: { version: expect.stringMatching(/^[0-9]+$/) },
         price: {
           amount: 9900,
           currency: "USD",

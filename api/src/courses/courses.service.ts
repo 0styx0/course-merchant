@@ -7,7 +7,8 @@ import {
 import { Temporal } from "@js-temporal/polyfill";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import { courseNotFound } from "./course-errors.js";
-import { toPublicCourseResponse } from "./courses.mapper.js";
+import { imageVersion, toPublicCourseResponse } from "./courses.mapper.js";
+import { CourseImagesRepository } from "./courses.repository/course-images.repository.js";
 
 @Injectable()
 export class CoursesService {
@@ -16,6 +17,8 @@ export class CoursesService {
     private readonly prisma: PrismaService,
     @Inject(CoursesRepository)
     private readonly coursesRepository: CoursesRepository,
+    @Inject(CourseImagesRepository)
+    private readonly imagesRepository: CourseImagesRepository,
   ) {}
 
   async findAll(): Promise<ListCoursesResponse> {
@@ -45,6 +48,21 @@ export class CoursesService {
     validatePublicCourse(course, courseId);
 
     return toPublicCourseResponse(course);
+  }
+
+  /** 404 unless `version` is the current version of a visible course's image. */
+  async findImageBytes(courseId: string, version: string): Promise<Uint8Array> {
+    const image = await this.imagesRepository.findVisibleImage(
+      this.prisma.db,
+      courseId,
+      Temporal.Now.instant(),
+    );
+
+    if (!image || imageVersion(image.updatedAt) !== version) {
+      throw courseNotFound(courseId);
+    }
+
+    return image.bytes;
   }
 }
 

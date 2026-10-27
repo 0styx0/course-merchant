@@ -44,6 +44,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/courses/{courseId}/image/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download a course's image
+         * @description Returns the image (a 1600×900 WebP) of a publicly viewable course, as for `getCourse`: ended courses are included. `version` must be the `image.version` of the course's current image. Because a replaced image gets a new version, and so a new URL, the response is cached for a year. Any other version, including one that is not a number, returns 404, so made-up URLs cannot fill a cache.
+         */
+        get: operations["getCourseImage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/sessions": {
         parameters: {
             query?: never;
@@ -452,6 +472,7 @@ export interface components {
         };
         Course: components["schemas"]["CourseDetails"] & {
             id: components["schemas"]["CourseId"];
+            image: components["schemas"]["PublicCourseImage"];
             /**
              * Format: int32
              * @description Number of users who currently have access to the course. Refunded and suspended enrollments are not counted.
@@ -480,12 +501,17 @@ export interface components {
              * @description When the image was last uploaded, in UTC.
              */
             updatedAt: string;
-            /**
-             * @description `updatedAt` as milliseconds since the Unix epoch, written as a decimal string. It changes whenever the image is replaced.
-             * @example 1793102400000
-             */
-            version: string;
+            version: components["schemas"]["CourseImageVersion"];
         };
+        /** @description A course's image. Download it from `getCourseImage` with this `version`. */
+        PublicCourseImage: {
+            version: components["schemas"]["CourseImageVersion"];
+        };
+        /**
+         * @description The image's `updatedAt` as milliseconds since the Unix epoch, written as a decimal string. It changes whenever the image is replaced.
+         * @example 1793102400000
+         */
+        CourseImageVersion: string;
         /** @description A customer's enrollment. It gives access only while both `revokedAt` and `suspendedAt` are null. */
         AdminEnrollment: {
             /**
@@ -671,7 +697,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["ProblemDetails"];
             };
         };
-        /** @description Course not found, archived, or does not have a currently active price (including a course whose prices all take effect in the future). */
+        /** @description Course not found, archived, or does not have a currently active price (including a course whose prices all take effect in the future). For `getCourseImage`, also returned when `version` is not the version of the course's current image. */
         CourseNotFound: {
             headers: {
                 [name: string]: unknown;
@@ -743,6 +769,8 @@ export interface components {
         CheckoutId: string;
         /** @description Public identifier of the course. */
         CourseId: components["schemas"]["CourseId"];
+        /** @description The `image.version` of the course's current image. */
+        CourseImageVersion: components["schemas"]["CourseImageVersion"];
     };
     requestBodies: never;
     headers: {
@@ -793,6 +821,36 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Course"];
+                };
+            };
+            400: components["responses"]["InvalidCourseId"];
+            404: components["responses"]["CourseNotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    getCourseImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public identifier of the course. */
+                courseId: components["parameters"]["CourseId"];
+                /** @description The `image.version` of the course's current image. */
+                version: components["parameters"]["CourseImageVersion"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The course's image. */
+            200: {
+                headers: {
+                    /** @description Always `public, max-age=31536000, immutable`. */
+                    "Cache-Control"?: "public, max-age=31536000, immutable";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/webp": string;
                 };
             };
             400: components["responses"]["InvalidCourseId"];

@@ -12,6 +12,7 @@ function makeCourseResponse(courseId: string): GetCourseResponse {
     summary: "Learn React",
     description: "Learn React",
     enrollmentCount: 12,
+    image: { version: "1790856000000" },
     price: {
       amount: 9900,
       currency: "USD",
@@ -59,6 +60,7 @@ describe("CoursesController", () => {
             summary: "Learn React",
             description: "Learn React",
             enrollmentCount: 12,
+            image: { version: "1790856000000" },
             price: {
               amount: 9900,
               currency: "USD",

@@ -7,6 +7,7 @@ import {
   instant,
   type MockMethods,
 } from "../../../test/test-helpers.js";
+import type { CourseImagesRepository } from "../../courses.repository/course-images.repository.js";
 import type {
   CourseRepositoryModelPublic,
   CoursesRepository,
@@ -31,6 +32,7 @@ const repositoryCourse = {
       currency: "USD",
     },
   ],
+  image: { updatedAt: instant("2026-10-01T12:00:00Z") },
   enrollments: 12,
 } satisfies CourseRepositoryModelPublic;
 
@@ -51,6 +53,7 @@ describe("CoursesService", () => {
     service = new CoursesService(
       prisma,
       asDependency<CoursesRepository>(coursesRepository),
+      asDependency<CourseImagesRepository>({}),
     );
   });
 

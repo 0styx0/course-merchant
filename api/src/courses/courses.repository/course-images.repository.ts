@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 
 import type { DbScope } from "types.js";
+import { visibleCoursesWithCurrentPrice } from "../course-visibility.js";
 
 export type StoredCourseImage = {
   bytes: Uint8Array;
@@ -32,6 +33,27 @@ export class CourseImagesRepository {
       update: { bytes, updatedAt },
       conflictOn: { courseId },
     });
+  }
+
+  /**
+   * The image of a course the public can see (see `course-visibility.ts`), or
+   * null when the course isn't visible or has no image.
+   */
+  async findVisibleImage(
+    scope: DbScope,
+    courseId: string,
+    now: Temporal.Instant,
+  ): Promise<StoredCourseImage | null> {
+    const course = await visibleCoursesWithCurrentPrice(
+      scope.orm.public.Course,
+      now,
+    )
+      .where((course) => course.id.eq(courseId))
+      .select("id")
+      .include("image", (image) => image.select("bytes", "updatedAt"))
+      .first();
+
+    return course?.image ?? null;
   }
 
   async findImage(

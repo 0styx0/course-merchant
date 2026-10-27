@@ -7,6 +7,7 @@ import {
   CourseRepositoryModelPublic,
   CoursesRepository,
 } from "../../courses.repository/courses.repository.js";
+import { CourseImagesRepository } from "../../courses.repository/course-images.repository.js";
 import { fakePrisma, instant } from "../../../test/test-helpers.js";
 
 const makeCourseRecord = (overrides = {}) =>
@@ -24,6 +25,7 @@ const makeCourseRecord = (overrides = {}) =>
         currency: "USD",
       },
     ],
+    image: { updatedAt: instant("2026-10-01T12:00:00Z") },
     enrollments: 0,
     ...overrides,
   }) satisfies CourseRepositoryModelPublic;
@@ -43,6 +45,7 @@ describe("CoursesService", () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CoursesService,
+        { provide: CourseImagesRepository, useValue: {} },
         { provide: PrismaService, useValue: fakePrisma().prisma },
         {
           provide: CoursesRepository,
@@ -74,6 +77,7 @@ describe("CoursesService", () => {
             summary: "Learn React",
             description: "Learn React",
             enrollmentCount: 0,
+            image: { version: "1790856000000" },
             price: {
               amount: 9900,
               currency: "USD",
@@ -109,6 +113,7 @@ describe("CoursesService", () => {
             summary: "Learn React",
             description: "Learn React",
             enrollmentCount: 0,
+            image: { version: "1790856000000" },
             price: {
               amount: 9900,
               currency: "USD",
@@ -125,6 +130,7 @@ describe("CoursesService", () => {
             summary: "Learn React",
             description: "Learn React",
             enrollmentCount: 0,
+            image: { version: "1790856000000" },
             price: {
               amount: 9900,
               currency: "USD",
@@ -166,6 +172,7 @@ describe("CoursesService", () => {
         courses: [
           expect.objectContaining({
             enrollmentCount: 0,
+            image: { version: "1790856000000" },
           }),
         ],
       });
@@ -252,6 +259,7 @@ describe("CoursesService", () => {
             description: "Learn React",
             id: "course-1",
             enrollmentCount: 0,
+            image: { version: "1790856000000" },
             price: {
               amount: 9900,
               currency: "USD",

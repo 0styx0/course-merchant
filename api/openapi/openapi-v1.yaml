@@ -76,6 +76,43 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /courses/{courseId}/image/{version}:
+    get:
+      tags:
+        - Courses
+      operationId: getCourseImage
+      summary: Download a course's image
+      description: >
+        Returns the image (a 1600×900 WebP) of a publicly viewable course, as
+        for `getCourse`: ended courses are included. `version` must be the
+        `image.version` of the course's current image. Because a replaced
+        image gets a new version, and so a new URL, the response is cached for
+        a year. Any other version, including one that is not a number, returns
+        404, so made-up URLs cannot fill a cache.
+      parameters:
+        - $ref: "#/components/parameters/CourseId"
+        - $ref: "#/components/parameters/CourseImageVersion"
+      responses:
+        "200":
+          description: The course's image.
+          headers:
+            Cache-Control:
+              description: Always `public, max-age=31536000, immutable`.
+              schema:
+                type: string
+                const: public, max-age=31536000, immutable
+          content:
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "#/components/responses/InvalidCourseId"
+        "404":
+          $ref: "#/components/responses/CourseNotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   /admin/sessions:
     post:
       tags:
@@ -816,6 +853,14 @@ components:
       schema:
         $ref: "#/components/schemas/CourseId"
 
+    CourseImageVersion:
+      name: version
+      in: path
+      required: true
+      description: The `image.version` of the course's current image.
+      schema:
+        $ref: "#/components/schemas/CourseImageVersion"
+
   responses:
     ValidationFailed:
       description: >
@@ -926,7 +971,9 @@ components:
     CourseNotFound:
       description: >
         Course not found, archived, or does not have a currently active price
-        (including a course whose prices all take effect in the future).
+        (including a course whose prices all take effect in the future). For
+        `getCourseImage`, also returned when `version` is not the version of
+        the course's current image.
       content:
         application/problem+json:
           schema:
@@ -1378,9 +1425,12 @@ components:
             - id
             - enrollmentCount
             - price
+            - image
           properties:
             id:
               $ref: "#/components/schemas/CourseId"
+            image:
+              $ref: "#/components/schemas/PublicCourseImage"
             enrollmentCount:
               type: integer
               format: int32
@@ -1446,13 +1496,27 @@ components:
           format: date-time
           description: When the image was last uploaded, in UTC.
         version:
-          type: string
-          pattern: "^[0-9]+$"
-          description: >
-            `updatedAt` as milliseconds since the Unix epoch, written as a
-            decimal string. It changes whenever the image is replaced.
-          examples:
-            - "1793102400000"
+          $ref: "#/components/schemas/CourseImageVersion"
+
+    PublicCourseImage:
+      description: >
+        A course's image. Download it from `getCourseImage` with this
+        `version`.
+      type: object
+      required:
+        - version
+      properties:
+        version:
+          $ref: "#/components/schemas/CourseImageVersion"
+
+    CourseImageVersion:
+      type: string
+      pattern: "^[0-9]+$"
+      description: >
+        The image's `updatedAt` as milliseconds since the Unix epoch, written
+        as a decimal string. It changes whenever the image is replaced.
+      examples:
+        - "1793102400000"
 
     AdminEnrollment:
       description: >

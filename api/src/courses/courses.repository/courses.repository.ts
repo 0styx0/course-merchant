@@ -16,22 +16,24 @@ export type CourseRepositoryModelPublic = {
     amount: number;
     currency: string;
   }[];
+  // never the bytes. A published course always has one (see docs/courses.md)
+  image: { updatedAt: Temporal.Instant } | null;
   enrollments: number;
 };
 
 @Injectable()
 export class CoursesRepository {
   private publicCourseDetails(scope: DbScope, now: Temporal.Instant) {
-    return visibleCoursesWithCurrentPrice(scope.orm.public.Course, now).include(
-      "enrollments",
-      (enrollments) =>
+    return visibleCoursesWithCurrentPrice(scope.orm.public.Course, now)
+      .include("image", (image) => image.select("updatedAt"))
+      .include("enrollments", (enrollments) =>
         // active only: not refunded and not suspended
         enrollments
           .where((enrollment) =>
             and(enrollment.revokedAt.isNull(), enrollment.suspendedAt.isNull()),
           )
           .count(),
-    );
+      );
   }
 
   async findAvailable(

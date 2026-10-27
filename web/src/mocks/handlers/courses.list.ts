@@ -18,6 +18,7 @@ export const coursesResponse = {
       summary: "Learn React",
       description: "Learn React",
       enrollmentCount: 12,
+      image: { version: "1790856000000" },
       price: {
         amount: 9900,
         currency: "USD",
@@ -34,6 +35,7 @@ export const coursesResponse = {
       summary: "Build robust applications with TypeScript",
       description: "Build robust applications with TypeScript",
       enrollmentCount: 37,
+      image: { version: "1790856000000" },
       price: {
         amount: 14900,
         currency: "USD",

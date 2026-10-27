@@ -4,7 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CourseImagesRepository } from "@/courses/courses.repository/course-images.repository.js";
 import { AdminCoursesRepository } from "@/courses/courses.repository/admin-courses.repository.js";
 import { db } from "@/prisma/db.js";
-import { createCourse } from "@/test/course-fixtures.js";
+import {
+  createCourse,
+  createCoursePrice,
+  createPricedCourse,
+} from "@/test/course-fixtures.js";
 import { instant } from "@/test/test-helpers.js";
 
 const NOW = instant("2026-09-29T14:00:00Z");
@@ -84,6 +88,79 @@ describe("CourseImagesRepository (integration)", () => {
 
     it("returns null for a course without an image", async () => {
       expect(await repository.findImage(db, courseId)).toBeNull();
+    });
+  });
+
+  describe("findVisibleImage", () => {
+    const BYTES = new Uint8Array([7, 8, 9]);
+
+    it("returns the image of a published course with a price in effect", async () => {
+      const { course } = await createPricedCourse();
+      await repository.saveImage(db, course.id, BYTES);
+
+      const image = await repository.findVisibleImage(db, course.id, NOW);
+
+      expect(Array.from(image!.bytes)).toEqual([7, 8, 9]);
+      expect(image!.updatedAt.equals(NOW)).toBe(true);
+    });
+
+    it("returns the image of an ended course", async () => {
+      const { course } = await createPricedCourse({
+        startsAt: NOW.subtract({ hours: 48 }),
+        endsAt: NOW.subtract({ hours: 46 }),
+      });
+      await repository.saveImage(db, course.id, BYTES);
+
+      expect(
+        await repository.findVisibleImage(db, course.id, NOW),
+      ).not.toBeNull();
+    });
+
+    it("returns null for a course that isn't published", async () => {
+      const { course } = await createPricedCourse({ status: "drafted" });
+      await repository.saveImage(db, course.id, BYTES);
+
+      expect(await repository.findVisibleImage(db, course.id, NOW)).toBeNull();
+    });
+
+    it("returns null while every price is still in the future", async () => {
+      const { course } = await createPricedCourse(
+        {},
+        { effectiveAt: NOW.add({ hours: 1 }) },
+      );
+
+      expect(await repository.findVisibleImage(db, course.id, NOW)).toBeNull();
+    });
+
+    it("returns null for a visible course with no image", async () => {
+      const course = await createCourse({
+        status: "drafted",
+        title: "No image",
+        summary: "No image",
+        description: "No image",
+        startsAt: NOW.add({ hours: 24 }),
+        endsAt: NOW.add({ hours: 26 }),
+        timeZone: "UTC",
+      });
+      await createCoursePrice({
+        courseId: course.id,
+        amount: 9900,
+        currency: "USD",
+        effectiveAt: NOW.subtract({ hours: 24 }),
+      });
+      await db.orm.public.CourseStatus.create({
+        courseId: course.id,
+        name: "published",
+        changedAt: NOW.subtract({ hours: 1 }),
+      });
+
+      expect(await repository.findVisibleImage(db, course.id, NOW)).toBeNull();
+    });
+
+    it("returns null for an unknown course", async () => {
+      expect(
+        await repository.findVisibleImage(db, NONEXISTENT_COURSE_ID, NOW),
+      ).toBeNull();
     });
   });
 

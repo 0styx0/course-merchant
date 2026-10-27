@@ -19,6 +19,7 @@ import {
   createPayment,
   createEnrollment,
 } from "../../../test/course-fixtures.js";
+import { CourseImagesRepository } from "../../courses.repository/course-images.repository.js";
 import { CoursesService } from "../../courses.service.js";
 import { instant } from "../../../test/test-helpers.js";
 import { PrismaModule } from "../../../prisma/prisma.module.js";
@@ -32,7 +33,7 @@ describe("CoursesService integration", () => {
   beforeAll(async () => {
     testingModule = await Test.createTestingModule({
       imports: [PrismaModule],
-      providers: [CoursesService, CoursesRepository],
+      providers: [CoursesService, CoursesRepository, CourseImagesRepository],
     }).compile();
 
     service = testingModule.get(CoursesService);
@@ -80,6 +81,7 @@ describe("CoursesService integration", () => {
           summary: "Learn React",
           description: "Learn React",
           enrollmentCount: 0,
+          image: { version: expect.stringMatching(/^[0-9]+$/) },
           id: course.id,
           price: {
             amount: 9900,

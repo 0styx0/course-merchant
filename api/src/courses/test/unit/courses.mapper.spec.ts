@@ -20,6 +20,7 @@ const repositoryCourse = {
       currency: "USD",
     },
   ],
+  image: { updatedAt: instant("2026-10-01T12:00:00Z") },
   enrollments: 12,
 } satisfies CourseRepositoryModelPublic;
 
@@ -31,6 +32,7 @@ describe("toPublicCourseResponse", () => {
       summary: "Learn the fundamentals of React",
       description: "Learn the fundamentals of React",
       enrollmentCount: 12,
+      image: { version: "1790856000000" },
       price: {
         amount: 9900,
         currency: "USD",
@@ -41,5 +43,11 @@ describe("toPublicCourseResponse", () => {
         timeZone: "America/New_York",
       },
     });
+  });
+
+  it("throws when the course has no image, which publishing rules out", () => {
+    expect(() =>
+      toPublicCourseResponse({ ...repositoryCourse, image: null }),
+    ).toThrow(`Published course ${COURSE_ID} has no image.`);
   });
 });

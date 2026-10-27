@@ -13,6 +13,15 @@ export function imageVersion(updatedAt: Temporal.Instant): string {
   return String(updatedAt.epochMilliseconds);
 }
 
+// publishing requires an image and images are never removed
+function requireImage(course: CourseRepositoryModelPublic) {
+  if (!course.image) {
+    throw new Error(`Published course ${course.id} has no image.`);
+  }
+
+  return course.image;
+}
+
 export function toPublicCourseResponse(
   course: CourseRepositoryModelPublic,
 ): GetCourseResponse {
@@ -24,6 +33,7 @@ export function toPublicCourseResponse(
     summary: course.summary,
     description: course.description,
     enrollmentCount: course.enrollments,
+    image: { version: imageVersion(requireImage(course).updatedAt) },
     price: {
       amount: price.amount,
       currency: price.currency,
