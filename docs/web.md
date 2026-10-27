@@ -14,8 +14,8 @@ Each step is one commit. Every step's tests are part of the step. Steps 1–5 co
 - [x] **4. Shared test data and mock helpers.**
 - [x] **5. Feature folders and plain-data components.**
 - [x] **6. Course cards link to their page,** show `summary`, show formatted times, and use `key={course.id}`.
-- [ ] **7. Security headers** in `next.config.ts`: `poweredByHeader: false`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `frame-ancestors 'none'` (stops other sites framing the admin pages). **Next**
-- [ ] **8. Real site metadata and one font** in the root layout (today: "Create Next App", and Geist Sans loaded but unused).
+- [x] **7. Security headers** in `next.config.ts`: `poweredByHeader: false`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `frame-ancestors 'none'` (stops other sites framing the admin pages).
+- [ ] **8. Real site metadata and one font** in the root layout (today: "Create Next App", and Geist Sans loaded but unused). **Next**
 
 ## Principles
 
@@ -63,7 +63,10 @@ Each step is one commit. Every step's tests are part of the step. Steps 1–5 co
 | The card's heading is its one link, stretched over the card with `after:absolute after:inset-0` | A big click target, and screen readers read only the name as the link | Wrapping the whole card in `<a>` (reads every line as the link name) |
 | `CourseSchedule` formats start and end for card and course page | One formatting, and each end keeps its own `datetime` | Two copies; `formatRange` (one string, loses per-end `datetime`) |
 | Fixture times are UTC ending in `Z` | The API only emits such instants | Offsets like `-04:00` |
+| Security headers are one rule for every path in `next.config.ts` | Pages, route handlers and static files all get them, and a new route can't forget them. Nothing needs framing, so `frame-ancestors 'none'` is global | `proxy.ts` (only worth it with a nonce CSP); an admin-only rule |
+| The CSP holds only `frame-ancestors` until a nonce-based one exists; no `X-Frame-Options` | An `unsafe-inline` policy protects little and Next's inline scripts need a nonce. `frame-ancestors` is honoured by every supported browser, so the older header is redundant | A full CSP with `'unsafe-inline'`; adding `X-Frame-Options: DENY` |
 
 ## Launch
 
 - Edge rate limits per path: allow request bodies up to 6 MB only for POST `/admin/courses/*`. A Server Action posts to its page's own URL, so the buy-form limit in [payments.md](payments.md) applies to POST `/courses/*` (course pages are otherwise only fetched with GET).
+- The edge sets `Strict-Transport-Security` (HSTS): it only means something over HTTPS, and a wrong value locks the domain to HTTPS for months, so the app doesn't send it.

@@ -224,6 +224,7 @@ Break one of these and something subtle goes wrong, usually money or access.
   - Rate limits belong at the CDN or edge (see the launch checklist in [payments.md](docs/payments.md)).
   - Every route needs an admin login unless it is marked `@Public()`; see [Admin login](#admin-login).
   - Responses don't name the framework (`X-Powered-By` is off) and carry `X-Content-Type-Options: nosniff`, set in [configure-app.ts](api/src/configure-app.ts).
+  - The web app sends the same two protections, plus `Referrer-Policy: strict-origin-when-cross-origin` and `frame-ancestors 'none'` (no site may frame its pages), set in [next.config.ts](web/next.config.ts).
   - The API refuses to start if `DATABASE_URL` reaches another machine without TLS ([database-config.ts](api/src/prisma/database-config.ts)), and refuses to send mail to a remote SMTP server that can't encrypt ([email-config.ts](api/src/email/email-config.ts)). Both skip `localhost`.
 - **Testing.** Each layer has its own kind of test: unit tests with typed mocks, integration tests against a real database, and end-to-end tests through HTTP with stripe-mock. See [CONTRIBUTING.md](CONTRIBUTING.md#writing-tests).
 
