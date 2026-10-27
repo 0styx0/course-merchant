@@ -84,7 +84,7 @@ All routes are URI-versioned (`/v1/...`): controllers declare `version: "1"`, an
 - Data is typically fetched server-side through `src/lib/api/client.ts` (`openapi-fetch` typed by `generated.ts`, `server-only`). Each endpoint gets a wrapper in `src/features/<feature>/<feature>.api.ts` that passes the answer through `toResult()` and returns `Result<T, ProblemDetails>` (`state: "success" | "failure"`). Only a problem+json body is a failure; any other error answer throws.
 - MSW handlers in `src/mocks/handlers/` (one file per endpoint, named after its operationId, typed from `operations[...]`; sample courses come from `src/mocks/fixtures/courses.ts` and problem answers from `problemResponse`) export named scenarios (`success`, `notFound`, `error`, `slow`, …). They serve three purposes:
   - Vitest — `src/test/setup.ts`; unhandled requests fail the test.
-  - `yarn dev:mock` — via `src/instrumentation.ts`; choose the scenario in `src/mocks/node.ts`.
+  - `yarn dev:mock` — via `src/instrumentation.ts` (Node-only startup in `src/instrumentation-node.ts`); choose the scenario in `src/mocks/node.ts`.
   - Playwright (`tests/browser`, `yarn test:browser`) — via Next's experimental test proxy: import `test` from `next/experimental/testmode/playwright/msw` and switch scenarios with `msw.use(...)`.
 
 ## Conventions
