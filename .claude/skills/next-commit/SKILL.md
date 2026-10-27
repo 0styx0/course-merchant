@@ -2,15 +2,17 @@
 name: next-commit
 description: Outline the next commit from a design doc's Status, wait for approval, then implement, verify and update the doc. Use when the owner says "next", "next commit", or names a status item to work on.
 disable-model-invocation: false
+argument-hint: "[module: payments|courses|auth|web] [task]"
+arguments: [module]
 ---
 
 # Next commit
 
-Arguments (optional): a design doc area (`payments`, `courses`, `auth`) or a free-text task. Follow CLAUDE.md's working agreements throughout; this skill is the order of work.
+Module: `$module` — one of `payments`, `courses`, `auth`, `web` (the matching `docs/<module>.md`). Anything typed after it is a free-text task: `$ARGUMENTS`. Both are optional. Follow CLAUDE.md's working agreements throughout; this skill is the order of work.
 
 ## 1. Find the work
 
-- With no argument, read the Status section of each file in `docs/` and take the item marked **Next**. If there is none, or more than one, ask which.
+- With no module, read the Status section of each file in `docs/`; with a module, read only the Status of `docs/$module.md`. Take the item marked **Next**. If there is none, or more than one, ask which.
 - Read what the item needs: the doc's sections about it, and the files it links.
 - Before outlining, look for existing patterns and helpers:
   - read one existing sibling of each kind of file you'll add (for example an existing repository and its integration spec) and follow its conventions;
