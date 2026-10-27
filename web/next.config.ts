@@ -4,7 +4,7 @@ import path from "path";
 const nextConfig: NextConfig = {
   experimental: { testProxy: process.env.PLAYWRIGHT === "1" },
   turbopack: {
-    root: path.resolve(__dirname, ".."),
+    root: path.resolve(import.meta.dirname, ".."),
   },
 };
 

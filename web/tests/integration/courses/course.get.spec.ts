@@ -6,7 +6,9 @@ import {
   courseByIdNotFound,
   courseByIdInvalidId,
 } from "@/mocks/handlers/course.get";
-import { test, expect } from "next/experimental/testmode/playwright/msw";
+import msw from "next/experimental/testmode/playwright/msw.js";
+
+const { test, expect } = msw;
 
 test.use({
   mswHandlers: [[courseByIdSuccess], { scope: "test" }],

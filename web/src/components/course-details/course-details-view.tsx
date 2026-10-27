@@ -1,6 +1,6 @@
 import { GetCourseResult } from "@/lib/api/course.get";
 import { formatDate, formatPrice } from "@/lib/utils/formatters";
-import { ApiErrorMessage } from "../api-error-message";
+import { ProblemAlert } from "../problem-alert";
 
 type CourseDetailsViewProps = {
   result: GetCourseResult;
@@ -10,7 +10,7 @@ export function CourseDetailsView({ result }: CourseDetailsViewProps) {
   if (result.state === "failure") {
     return (
       <main>
-        <ApiErrorMessage problem={result.error} />
+        <ProblemAlert problem={result.error} />
       </main>
     );
   }

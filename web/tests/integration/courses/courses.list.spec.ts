@@ -1,4 +1,6 @@
-import { test, expect } from "next/experimental/testmode/playwright/msw";
+import msw from "next/experimental/testmode/playwright/msw.js";
+
+const { test, expect } = msw;
 import {
   coursesError,
   coursesSlow,

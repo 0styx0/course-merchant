@@ -1,5 +1,6 @@
 {
   "includeCoAuthoredBy": false,
+  "model": "opusplan",
   "permissions": {
     "allow": [
       "Bash(python3 - src/courses/test/integration/admin-courses.update.integration.spec.ts)",

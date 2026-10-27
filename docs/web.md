@@ -9,13 +9,8 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
 Each step is one commit. Every step's tests are part of the step. Steps 1–5 come before courses step 5 (images), because that step's paths depend on step 5 here.
 
 - [x] **1. Refresh the home page every minute instead of freezing it at build time.**
-- [ ] **2. One Result mapper and error model.** **Next**
-  - `toResult()` in `lib/api/` branches on `response.ok`, so a 204 (image upload, logout) is a success. Today's `error || !data` reports it as a failure.
-  - A failure is a `Result` only when the body has the problem+json shape (`title`, `detail`, `code` strings). Anything else (API unreachable, empty or non-JSON body) throws and is shown by `error.tsx`.
-  - `ProblemAlert` replaces `ApiErrorMessage`. Code branches on `code`, never on `title`.
-  - The exception is the home page's course list (`getCourses` in `courses.list.ts`, step 1), which throws; with no good copy yet, the root `app/error.tsx` shows the error.
-  - Move `getCourse` (course page) to `toResult()` and `ProblemAlert`; delete `api-error-message.tsx`.
-- [ ] **3. A real 404 for an unknown course.**
+- [x] **2. One Result mapper and error model.**
+- [ ] **3. A real 404 for an unknown course.** **Next**
   - `page.tsx` fetches the course before any Suspense boundary and calls `notFound()` for `COURSE_NOT_FOUND` and `INVALID_COURSE_ID`; add `not-found.tsx`.
   - `generateMetadata` shares the fetch through React `cache`, giving each course page a real `<title>`.
   - Drop that route's `loading.tsx` and its Playwright test: once a loading state streams, the status can't change from 200.
@@ -65,6 +60,8 @@ Each step is one commit. Every step's tests are part of the step. Steps 1–5 co
 | Each API call times out after 10 s, with its own `AbortSignal.timeout()` | A hung API can't hold server requests open. One shared signal would expire for every later call. A constant, since nothing needs to tune it per environment yet | An env setting; no timeout (today) |
 | A root `app/error.tsx` until step 5 moves it into `(shop)` | Once the list throws, a render with no good copy (always in `next dev`) needs a page; it shows no error text, since production only sends a digest | Next's bare default error page |
 | Tests and `dev:mock` point `API_BASE_URL` at one constant, `MOCK_API_BASE_URL`, which the MSW handlers listen on | The app still goes through its real config, and Playwright's test process (where the handlers run) needs no env. `dev:mock` needs no `.env.local` | Handlers reading `apiBaseUrl()` (throws in the Playwright process); wildcard handlers (`*/v1/...`, which stop checking the URL) |
+| A failure is a `Result` only when the body is a problem (`title`, `detail`, `code` strings); anything else throws | Pages can trust `code`, and a 204 is a success. `toResult()` in `lib/api/` is the one place that decides; `ProblemAlert` shows `title` and `detail`; the root `error.tsx` shows thrown errors | `error \|\| !data` (let a 204 and non-problem bodies through as failures); a made-up problem for non-problem bodies; Zod for a three-field check |
+| `web/` is an ES module package (`"type": "module"`) | Vite's native config loader needs it, and it matches `api/`. Config files import `.ts` with the extension (`allowImportingTsExtensions`) | Silencing the warning with `VITE_CONFIG_NATIVE_IGNORE_WARNING`; copying the mock URL into the Vitest config |
 | Browser tests are named `tests/browser` and `test:browser` | They drive a browser against a mocked API. In `api/`, `integration` and `e2e` both mean a real database | `tests/integration` (today); `tests/e2e` |
 
 ## Launch

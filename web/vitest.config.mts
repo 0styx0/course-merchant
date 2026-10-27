@@ -1,5 +1,5 @@
 import { defineConfig } from "vitest/config";
-import { MOCK_API_BASE_URL } from "./src/mocks/mock-api";
+import { MOCK_API_BASE_URL } from "./src/mocks/mock-api.ts";
 
 export default defineConfig({
   resolve: {
