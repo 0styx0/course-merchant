@@ -1,5 +1,9 @@
 import { test, expect } from "next/experimental/testmode/playwright/msw";
-import { coursesSlow, coursesSuccess } from "@/mocks/handlers/courses.list";
+import {
+  coursesError,
+  coursesSlow,
+  coursesSuccess,
+} from "@/mocks/handlers/courses.list";
 
 test.use({
   mswHandlers: [[coursesSuccess], { scope: "test" }],
@@ -48,4 +52,18 @@ test("displays loading state while courses are loading", async ({
       name: "React Fundamentals",
     }),
   ).toBeVisible();
+});
+
+test("shows an error page when the courses can't be loaded", async ({
+  page,
+  msw,
+}) => {
+  msw.use(coursesError);
+
+  await page.goto("/");
+
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "We couldn't load this page",
+  );
+  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
 });

@@ -62,9 +62,9 @@ Stripe is the record of money: the app stores only what it needs to decide who h
 
 | Folder | Responsibility |
 |---|---|
-| [app/](web/src/app/) | Pages: the home page with the course list, and a page for each course. |
+| [app/](web/src/app/) | Pages: the home page with the course list (rendered again at most once a minute), and a page for each course. |
 | [components/](web/src/components/) | An async *container* that fetches data, plus a pure *view* that renders it. |
-| [lib/api/](web/src/lib/api/) | The typed API client (server-only), with one wrapper per endpoint. |
+| [lib/api/](web/src/lib/api/) | The typed API client (server-only; each call times out after 10 s), with one wrapper per endpoint. |
 | [mocks/](web/src/mocks/) | MSW handlers, one file per endpoint, each with named scenarios (`success`, `notFound`, `error`, …). |
 
 ## Layers inside the API

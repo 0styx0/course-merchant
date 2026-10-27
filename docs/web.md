@@ -8,19 +8,13 @@ Keep this file current **in the same commit as the work**. Tick off status, add 
 
 Each step is one commit. Every step's tests are part of the step. Steps 1–5 come before courses step 5 (images), because that step's paths depend on step 5 here.
 
-- [ ] **1. Refresh the home page every minute instead of freezing it at build time.** **Next**
-  - Today the home page fetches the course list with no cache setting and reads nothing from the request, so Next renders it once during `next build` and serves that copy until the next deploy.
-  - `export const revalidate = 60` in the home page, with a one-line comment saying why. The build still renders the page once, so it needs `API_BASE_URL` and a reachable API.
-  - When the API fails, the course list fetch **throws** instead of returning a failure `Result`. Next then keeps serving the last good page and retries on the next request (`incremental-static-regeneration.md`, error handling). A failure `Result` would cache the error for a minute.
-  - `api-config.ts` wraps `validateApiBaseUrl`, reads `API_BASE_URL` on first use and remembers it.
-  - `instrumentation.ts` `register()` calls it, and on a bad setting logs and calls `process.exit(1)`. Today a throw there only logs `Failed to prepare server` and every request then fails.
-  - Vitest sets `API_BASE_URL` through `test.env`; the MSW handlers read the same config instead of their own default.
-  - Each API call gets a timeout: `createClient` is given a `fetch` that adds `AbortSignal.timeout()` per call (one shared signal would expire for every later call).
-- [ ] **2. One Result mapper and error model.**
+- [x] **1. Refresh the home page every minute instead of freezing it at build time.**
+- [ ] **2. One Result mapper and error model.** **Next**
   - `toResult()` in `lib/api/` branches on `response.ok`, so a 204 (image upload, logout) is a success. Today's `error || !data` reports it as a failure.
   - A failure is a `Result` only when the body has the problem+json shape (`title`, `detail`, `code` strings). Anything else (API unreachable, empty or non-JSON body) throws and is shown by `error.tsx`.
   - `ProblemAlert` replaces `ApiErrorMessage`. Code branches on `code`, never on `title`.
-  - The exception is the home page's course list (step 1), which throws; with no good copy yet, `error.tsx` shows the error.
+  - The exception is the home page's course list (`getCourses` in `courses.list.ts`, step 1), which throws; with no good copy yet, the root `app/error.tsx` shows the error.
+  - Move `getCourse` (course page) to `toResult()` and `ProblemAlert`; delete `api-error-message.tsx`.
 - [ ] **3. A real 404 for an unknown course.**
   - `page.tsx` fetches the course before any Suspense boundary and calls `notFound()` for `COURSE_NOT_FOUND` and `INVALID_COURSE_ID`; add `not-found.tsx`.
   - `generateMetadata` shares the fetch through React `cache`, giving each course page a real `<title>`.
@@ -66,7 +60,11 @@ Each step is one commit. Every step's tests are part of the step. Steps 1–5 co
 | No `proxy.ts` until a nonce-based CSP needs one | A cookie-presence check would be a second place to keep in sync, and the API already decides | Redirecting logged-out admins in `proxy.ts` |
 | The admin cookie is `__Host-admin_session` in every environment | The prefix makes browsers refuse it unless it's `Secure`, site-wide and tied to one host. Chromium (Playwright) accepts it on http://localhost; Safari on localhost is a known limitation | A different name per environment |
 | The image route sets `Content-Type: image/webp` itself and forwards only `Cache-Control` | A misbehaving upstream can't serve another type from the web's origin | Copying the API's headers |
-| A bad `API_BASE_URL` stops the server at boot | A startup error beats every request failing, and matches [auth.md](auth.md) step 5 | Rewording the docs to match today's behaviour |
+| A bad `API_BASE_URL` stops the server at boot | A startup error beats every request failing, and matches [auth.md](auth.md) step 5. `register()` in `instrumentation.ts` checks it and calls `process.exit(1)`: a throw there only logs "Failed to prepare server". `api-config.ts` reads it once and remembers it | Rewording the docs to match today's behaviour; throwing from `register()` |
+| The home page's course list fetch throws on any failure | During background regeneration a throw keeps the last good copy and retries on the next request; a returned error would be saved and shown for a minute | Returning a failure `Result` like the other wrappers |
+| Each API call times out after 10 s, with its own `AbortSignal.timeout()` | A hung API can't hold server requests open. One shared signal would expire for every later call. A constant, since nothing needs to tune it per environment yet | An env setting; no timeout (today) |
+| A root `app/error.tsx` until step 5 moves it into `(shop)` | Once the list throws, a render with no good copy (always in `next dev`) needs a page; it shows no error text, since production only sends a digest | Next's bare default error page |
+| Tests and `dev:mock` point `API_BASE_URL` at one constant, `MOCK_API_BASE_URL`, which the MSW handlers listen on | The app still goes through its real config, and Playwright's test process (where the handlers run) needs no env. `dev:mock` needs no `.env.local` | Handlers reading `apiBaseUrl()` (throws in the Playwright process); wildcard handlers (`*/v1/...`, which stop checking the URL) |
 | Browser tests are named `tests/browser` and `test:browser` | They drive a browser against a mocked API. In `api/`, `integration` and `e2e` both mean a real database | `tests/integration` (today); `tests/e2e` |
 
 ## Launch

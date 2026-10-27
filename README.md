@@ -91,11 +91,11 @@ echo 'API_BASE_URL=http://localhost:3001' > web/.env.local
 yarn --cwd web dev
 ```
 
-The API checks its settings when it starts. A missing or invalid one stops it with an error naming the variable.
+The API and the web app check their settings when they start. A missing or invalid one stops them with an error naming the variable.
 
-**Web app only, with fake data:** `yarn --cwd web dev:mock` serves the pages with MSW's canned API responses, so no API or database is needed. It still reads `API_BASE_URL` from step 7.
+**Web app only, with fake data:** `yarn --cwd web dev:mock` serves the pages with MSW's canned API responses, so no API, database or `.env.local` is needed.
 
-In production the web app refuses to start unless `API_BASE_URL` starts with `https://` (or points at the same machine), because admin tokens travel in that connection.
+In production the web app refuses to start unless `API_BASE_URL` starts with `https://` (or points at the same machine), because admin tokens travel in that connection. `yarn --cwd web build` needs the API running: it renders the home page once, and the server then renders it again at most once a minute.
 
 **Emails locally:** run `docker run -d -p 1025:1025 -p 8025:8025 axllent/mailpit`, set `SMTP_URL="smtp://localhost:1025"`, and read the mail at http://localhost:8025.
 

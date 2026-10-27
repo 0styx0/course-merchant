@@ -36,40 +36,8 @@ describe("CoursesView", () => {
     expect(screen.queryByRole("article")).not.toBeInTheDocument();
   });
 
-  it("renders the error state", () => {
-    render(
-      <CoursesView
-        result={{
-          state: "failure",
-          error: {
-            title: "error title",
-            detail: "error details",
-            code: "code_red",
-          },
-        }}
-      />,
-    );
-
-    expect(
-      screen.getByRole("heading", { name: "Courses" }),
-    ).toBeInTheDocument();
-
-    expect(screen.getByText("error details")).toBeInTheDocument();
-
-    expect(screen.queryByRole("article")).not.toBeInTheDocument();
-  });
-
   it("renders the empty state when there are no courses", () => {
-    render(
-      <CoursesView
-        result={{
-          state: "success",
-          data: {
-            courses: [],
-          },
-        }}
-      />,
-    );
+    render(<CoursesView courses={[]} />);
 
     expect(
       screen.getByRole("heading", { name: "Courses" }),
@@ -85,18 +53,7 @@ describe("CoursesView", () => {
   it("renders the available courses", () => {
     render(
       <CoursesView
-        result={{
-          state: "success",
-          data: {
-            courses: [
-              course,
-              {
-                ...course,
-                name: "Advanced TypeScript",
-              },
-            ],
-          },
-        }}
+        courses={[course, { ...course, name: "Advanced TypeScript" }]}
       />,
     );
 

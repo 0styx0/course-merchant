@@ -1,10 +1,9 @@
 import type { ReactNode } from "react";
-import type { GetCoursesResult } from "@/lib/api/courses.list";
+import type { Course } from "@/lib/types";
 import { CourseCard } from "../course-card";
-import { ApiErrorMessage } from "../api-error-message";
 
 type CoursesViewProps = {
-  result: GetCoursesResult;
+  courses: Course[];
 };
 
 function CoursesSection({ children }: { children: ReactNode }) {
@@ -33,16 +32,8 @@ export function CoursesLoading() {
   );
 }
 
-export function CoursesView({ result }: CoursesViewProps) {
-  if (result.state === "failure") {
-    return (
-      <CoursesSection>
-        <ApiErrorMessage problem={result.error} />
-      </CoursesSection>
-    );
-  }
-
-  if (result.data.courses.length === 0) {
+export function CoursesView({ courses }: CoursesViewProps) {
+  if (courses.length === 0) {
     return (
       <CoursesSection>
         <CoursesEmpty />
@@ -53,7 +44,7 @@ export function CoursesView({ result }: CoursesViewProps) {
   return (
     <CoursesSection>
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {result.data.courses.map((course) => (
+        {courses.map((course) => (
           <CourseCard
             key={`${course.name}-${course.schedule.startTime}`}
             course={course}

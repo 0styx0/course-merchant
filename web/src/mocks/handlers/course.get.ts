@@ -1,6 +1,6 @@
 import type { operations } from "@/lib/api/generated";
 import { delay, http, HttpResponse } from "msw";
-import { apiBaseUrl } from "./handler-utils";
+import { MOCK_API_BASE_URL } from "../mock-api";
 import { coursesResponse } from "./courses.list";
 
 type GetCourseResponse =
@@ -15,7 +15,7 @@ type CourseNotFoundResponse =
 type InternalServerErrorResponse =
   operations["getCourse"]["responses"][500]["content"]["application/problem+json"];
 
-export const courseByIdUrl = `${apiBaseUrl}/v1/courses/:courseId`;
+export const courseByIdUrl = `${MOCK_API_BASE_URL}/v1/courses/:courseId`;
 
 export const courseResponse: GetCourseResponse = coursesResponse.courses[0];
 

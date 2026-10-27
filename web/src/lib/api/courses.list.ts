@@ -1,26 +1,20 @@
 import "server-only";
 
-import type { operations } from "./generated";
+import type { CoursesResponse } from "../types";
 import { api } from "./client";
-import { ProblemDetails, Result } from "../types";
 
-type CoursesResponse =
-  operations["listCourses"]["responses"][200]["content"]["application/json"];
-
-export type GetCoursesResult = Result<CoursesResponse, ProblemDetails>;
-
-export async function getCourses(): Promise<GetCoursesResult> {
-  const { data, error } = await api.GET("/courses");
+/**
+ * Throws instead of returning a failure: the home page is regenerated in the
+ * background, and a throw makes Next keep serving the last good copy.
+ */
+export async function getCourses(): Promise<CoursesResponse> {
+  const { data, error, response } = await api.GET("/courses");
 
   if (error || !data) {
-    return {
-      state: "failure",
-      error,
-    };
+    throw new Error(
+      `listCourses failed with status ${response.status} (${error?.code ?? "no problem code"})`,
+    );
   }
 
-  return {
-    state: "success",
-    data,
-  };
+  return data;
 }

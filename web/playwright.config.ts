@@ -1,5 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
-import { apiBaseUrl } from "./src/mocks/handlers/handler-utils";
+import { MOCK_API_BASE_URL } from "./src/mocks/mock-api";
 
 export default defineConfig({
   testDir: "./tests/integration",
@@ -21,6 +21,6 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     // The same URL the MSW handlers intercept, so the tests don't depend on a
     // local .env.local
-    env: { API_BASE_URL: apiBaseUrl },
+    env: { API_BASE_URL: MOCK_API_BASE_URL },
   },
 });

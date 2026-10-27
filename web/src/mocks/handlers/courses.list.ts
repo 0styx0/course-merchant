@@ -1,14 +1,13 @@
 import type { operations } from "@/lib/api/generated";
+import type { CoursesResponse } from "@/lib/types";
 import { randomUUID } from "crypto";
 import { http, HttpResponse, delay } from "msw";
-import { apiBaseUrl } from "./handler-utils";
+import { MOCK_API_BASE_URL } from "../mock-api";
 
-type CoursesResponse =
-  operations["listCourses"]["responses"][200]["content"]["application/json"];
 type InternalServerError =
   operations["listCourses"]["responses"][500]["content"]["application/problem+json"];
 
-const coursesUrl = `${apiBaseUrl}/v1/courses`;
+const coursesUrl = `${MOCK_API_BASE_URL}/v1/courses`;
 
 export const coursesResponse = {
   courses: [
