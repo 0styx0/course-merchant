@@ -1,9 +1,27 @@
 import { Temporal } from "@js-temporal/polyfill";
+import sharp from "sharp";
 import { db } from "../prisma/db.js";
 import { instant } from "./test-helpers.js";
 import { Models } from "@/prisma/contract.js";
 
+let tinyWebp: Promise<Buffer> | undefined;
+
+function tinyImage() {
+  tinyWebp ??= sharp({
+    create: { width: 16, height: 9, channels: 3, background: "#3366cc" },
+  })
+    .webp()
+    .toBuffer();
+
+  return tinyWebp;
+}
+
+/**
+ * Creates a course whose latest status is `status`. A published course also
+ * gets an image, as the API only publishes courses that have one.
+ */
 export async function createCourse(input: {
+  status?: "published" | "drafted" | "archived";
   title: string;
   summary: string;
   description: string;
@@ -11,7 +29,9 @@ export async function createCourse(input: {
   endsAt: Temporal.Instant;
   timeZone: string;
 }) {
-  return db.orm.public.Course.create({
+  const status = input.status ?? "published";
+
+  const course = await db.orm.public.Course.create({
     title: input.title,
     summary: input.summary,
     description: input.description,
@@ -22,9 +42,19 @@ export async function createCourse(input: {
     statuses: (statuses) =>
       // use a status far in past, so tests can easly clobber it
       statuses.create([
-        { name: "published", changedAt: instant("1970-01-01T10:00:00-04:00") },
+        { name: status, changedAt: instant("1970-01-01T10:00:00-04:00") },
       ]),
   });
+
+  if (status === "published") {
+    await db.orm.public.CourseImage.create({
+      courseId: course.id,
+      bytes: await tinyImage(),
+      updatedAt: Temporal.Now.instant(),
+    });
+  }
+
+  return course;
 }
 
 export async function createCoursePrice(input: {

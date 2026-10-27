@@ -8,7 +8,7 @@ import type { UpdateCourseRequest } from "types.js";
 
 type StoredCourse = Pick<
   CourseRepositoryModelAdmin,
-  "startsAt" | "endsAt" | "prices"
+  "startsAt" | "endsAt" | "prices" | "statuses" | "image"
 >;
 
 type StoredPrice = StoredCourse["prices"][number];
@@ -64,6 +64,15 @@ function isInEffect(price: StoredPrice, now: Temporal.Instant): boolean {
   return Temporal.Instant.compare(price.effectiveAt, now) <= 0;
 }
 
+function isPublishing(
+  request: UpdateCourseRequest,
+  stored: StoredCourse,
+): boolean {
+  return (
+    request.status === "published" && stored.statuses[0].name !== "published"
+  );
+}
+
 /**
  * Rules that depend on the stored course. Runs after the request has passed
  * `updateCourseRequestSchema`, and reports every violation at once.
@@ -75,6 +84,14 @@ export function findUpdateRuleViolations({
 }: UpdateRuleContext): ValidationError[] {
   const errors: ValidationError[] = [];
   const { startTime, endTime } = request.schedule;
+
+  if (isPublishing(request, stored) && stored.image === null) {
+    errors.push({
+      field: toJsonPointer(["status"]),
+      code: FieldErrorCode.INVALID_VALUE,
+      detail: "Upload an image before publishing.",
+    });
+  }
 
   if (!isSameInstant(startTime, stored.startsAt) && isInPast(startTime, now)) {
     errors.push({

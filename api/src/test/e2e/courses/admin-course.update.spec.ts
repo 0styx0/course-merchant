@@ -2,6 +2,7 @@ import { INestApplication } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 import { randomUUID } from "node:crypto";
 import request from "supertest";
+import sharp from "sharp";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createCourse, createCoursePrice } from "@/test/course-fixtures.js";
@@ -11,7 +12,11 @@ import {
   httpServer,
   type TypedResponse,
 } from "../e2e-helpers.js";
-import type { GetCourseAdminResponse, ProblemDetails } from "types.js";
+import type {
+  GetCourseAdminResponse,
+  ProblemDetails,
+  ValidationProblemDetails,
+} from "types.js";
 
 describe("PUT /admin/courses/:courseId (e2e)", () => {
   let app: INestApplication;
@@ -66,6 +71,20 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
     return response.body;
   }
 
+  async function uploadImage(courseId: string) {
+    const image = await sharp({
+      create: { width: 1200, height: 900, channels: 3, background: "#3366cc" },
+    })
+      .jpeg()
+      .toBuffer();
+
+    await request(httpServer(app))
+      .put(`/v1/admin/courses/${courseId}/image`)
+      .set("Authorization", bearer(token))
+      .attach("image", image, "a.jpg")
+      .expect(204);
+  }
+
   async function getAdminCourse(courseId: string) {
     const response: TypedResponse<GetCourseAdminResponse> = await request(
       httpServer(app),
@@ -103,7 +122,9 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
   }
 
   it("updates a course and returns the same representation as POST", async () => {
-    const created = await createViaApi();
+    const draft = await createViaApi();
+    await uploadImage(draft.id);
+    const created = await getAdminCourse(draft.id);
     const body = {
       ...toUpdateBody(created),
       name: "Updated name",
@@ -127,6 +148,23 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
       },
     });
     expect(await getAdminCourse(created.id)).toEqual(response.body);
+  });
+
+  it("refuses to publish a course that has no image", async () => {
+    const created = await createViaApi();
+
+    const response: TypedResponse<ValidationProblemDetails> = await request(
+      httpServer(app),
+    )
+      .put(`/v1/admin/courses/${created.id}`)
+      .set("Authorization", bearer(token))
+      .send({ ...toUpdateBody(created), status: "published" })
+      .expect(400);
+
+    expect(response.body.errors).toEqual([
+      expect.objectContaining({ field: "/status", code: "INVALID_VALUE" }),
+    ]);
+    expect((await getAdminCourse(created.id)).status.name).toBe("drafted");
   });
 
   it("changes nothing when the loaded course is sent back", async () => {

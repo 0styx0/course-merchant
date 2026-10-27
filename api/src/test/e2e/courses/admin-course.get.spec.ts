@@ -75,7 +75,7 @@ describe("Admin Courses Create API (e2e)", () => {
           name: "published",
           changedAt: expect.any(String),
         },
-        image: null,
+        image: { updatedAt: expect.any(String), version: expect.any(String) },
         prices: [
           {
             id: price.id,

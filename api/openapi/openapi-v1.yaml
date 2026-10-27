@@ -227,12 +227,10 @@ paths:
 
 
         A course is publicly visible only when its `status` is `published` and
-        a price is in effect. If every entry in `prices` has a future
-        `effectiveAt`, the course is hidden from `listCourses` and `getCourse`
-        until the earliest `effectiveAt`. Include a price with an `effectiveAt`
-        of now to make the course visible immediately. Create a course with
-        `status: archived` to keep it hidden, regardless of its prices, until
-        it is published.
+        a price is in effect. A new course is never published: create it as
+        `drafted` (or `archived`), upload its image, then update its `status`
+        to `published`. Once published, it is hidden from `listCourses` and
+        `getCourse` until the earliest price `effectiveAt`.
 
 
         The response is the same representation returned by
@@ -255,7 +253,7 @@ paths:
                   summary: A hands-on introduction to React.
                   description: Learn the fundamentals of React.
                   contentUrl: https://drive.google.com/drive/folders/1a2b3c4d5e
-                  status: published
+                  status: drafted
                   prices:
                     - amount: 7900
                       currency: USD
@@ -296,7 +294,7 @@ paths:
                     description: Learn the fundamentals of React.
                     contentUrl: https://drive.google.com/drive/folders/1a2b3c4d5e
                     status:
-                      name: published
+                      name: drafted
                       changedAt: "2026-10-15T18:30:00Z"
                     enrollments: []
                     prices:
@@ -412,8 +410,11 @@ paths:
         current status, it is appended to the course's status history and
         `status.changedAt` is updated. Sending the current status changes
         nothing. Send `archived` to hide the course from the public API,
-        `published` to make it publicly viewable again (once a price is in
+        `published` to make it publicly viewable (once a price is in
         effect), or `deleted` to remove it from `listCoursesAsAdmin`.
+        Changing the status to `published` requires an uploaded image,
+        otherwise the request fails with a `/status` `INVALID_VALUE` error.
+        A course that is already published can be edited without re-checking.
 
 
         **Prices.** A stored price is in effect once its `effectiveAt` has
@@ -1186,15 +1187,15 @@ components:
 
     CreateCourseStatus:
       description: >
-        A `CourseStatus` a course can be created with. Use `drafted` or
-        `archived` to create the course hidden from the public API.
+        A `CourseStatus` a course can be created with. A course is created
+        hidden from the public API and published by updating it once its image
+        is uploaded.
       type: string
       enum:
-        - published
         - archived
         - drafted
       examples:
-        - published
+        - drafted
 
     ListCoursesResponse:
       type: object

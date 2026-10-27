@@ -79,7 +79,7 @@ All routes are URI-versioned (`/v1/...`): controllers declare `version: "1"`, an
 
 ## Web architecture
 
-- Data is fetched only server-side through `src/lib/api/client.ts` (`openapi-fetch` typed by `generated.ts`, `server-only`). Each endpoint gets a wrapper in `src/lib/api/` that returns `Result<T, ProblemDetails>` (`state: "success" | "failure"`) instead of throwing.
+- Data is typically fetched server-side through `src/lib/api/client.ts` (`openapi-fetch` typed by `generated.ts`, `server-only`). Each endpoint gets a wrapper in `src/lib/api/` that returns `Result<T, ProblemDetails>` (`state: "success" | "failure"`) instead of throwing.
 - Components are split into an async server container that fetches (e.g. `courses.tsx`) and a pure `*-view.tsx` that renders a `Result`. Unit tests target the view with a hand-built `Result`.
 - MSW handlers in `src/mocks/handlers/` (one file per endpoint, typed from `operations[...]`) export named scenarios (`success`, `notFound`, `error`, `slow`, …). They serve three purposes:
   - Vitest — `src/test/setup.ts`; unhandled requests fail the test.

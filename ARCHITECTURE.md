@@ -203,7 +203,7 @@ Break one of these and something subtle goes wrong, usually money or access.
 1. **No network calls inside a database transaction.** Call Stripe before the transaction or after it commits.
 2. **Guarded changes use `updateAndCount` with the condition in the `WHERE`.** Inserts that might already exist use `createAndCount(…, { onConflict: "skip" })`. Never read-then-write, and never detect database errors by driver error code.
 3. **Only the verified webhook grants paid access.** The success redirect only shows status.
-4. **"Publicly visible" has one definition**, in [course-visibility.ts](api/src/courses/course-visibility.ts): the latest status is `published` and some price has taken effect. Reuse it. Course status and prices are append-only histories.
+4. **"Publicly visible" has one definition**, in [course-visibility.ts](api/src/courses/course-visibility.ts): the latest status is `published` and some price has taken effect. A course can only be published once it has an image. Reuse it. Course status and prices are append-only histories.
 5. **A payment copies its amount and currency at checkout start.** A later price change never alters what someone paid.
 6. **The content link is private.** Only admin responses and the access email include it.
 7. **The OpenAPI spec comes first.** Change it, regenerate the types, then write code. Never edit generated files.

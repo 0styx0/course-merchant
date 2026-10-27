@@ -42,7 +42,7 @@ function makeValidRequest(): CourseRequestInput {
     summary: "Learn TypeScript from the ground up.",
     description: "Learn TypeScript from the ground up.",
     contentUrl: "https://drive.google.com/drive/folders/typescript",
-    status: "published",
+    status: "drafted",
     schedule: {
       startTime,
       endTime: Temporal.Instant.from(startTime).add({ hours: 1 }).toString(),

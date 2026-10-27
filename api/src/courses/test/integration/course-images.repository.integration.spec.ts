@@ -19,6 +19,7 @@ describe("CourseImagesRepository (integration)", () => {
     vi.spyOn(Temporal.Now, "instant").mockReturnValue(NOW);
 
     const course = await createCourse({
+      status: "drafted",
       title: "React Fundamentals",
       summary: "Learn React",
       description: "Learn React",

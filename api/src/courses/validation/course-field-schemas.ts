@@ -16,7 +16,8 @@ export const courseSummarySchema = nonEmptyTrimmedString.max(300);
 
 export const courseDescriptionSchema = nonEmptyTrimmedString.max(5000);
 
-export const createStatusSchema = z.enum(["published", "archived", "drafted"]);
+// never published: a course needs its image first, which comes after creation
+export const createStatusSchema = z.enum(["archived", "drafted"]);
 
 export const updateStatusSchema = z.enum([
   "published",

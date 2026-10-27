@@ -121,7 +121,7 @@ export interface paths {
          *     - `prices[].effectiveAt`: must be an RFC 3339 date-time in UTC (ending in `Z`), and must be now or in the future.
          *     - `status`: see #/components/schemas/CreateCourseStatus
          *
-         *     A course is publicly visible only when its `status` is `published` and a price is in effect. If every entry in `prices` has a future `effectiveAt`, the course is hidden from `listCourses` and `getCourse` until the earliest `effectiveAt`. Include a price with an `effectiveAt` of now to make the course visible immediately. Create a course with `status: archived` to keep it hidden, regardless of its prices, until it is published.
+         *     A course is publicly visible only when its `status` is `published` and a price is in effect. A new course is never published: create it as `drafted` (or `archived`), upload its image, then update its `status` to `published`. Once published, it is hidden from `listCourses` and `getCourse` until the earliest price `effectiveAt`.
          *
          *     The response is the same representation returned by `getCourseAsAdmin`: `prices` contains the full schedule, each entry with a generated `id`, ordered by `effectiveAt` ascending. Public course responses (`listCourses`, `getCourse`) instead return a single `price`, the currently active price, without `effectiveAt`.
          */
@@ -163,7 +163,7 @@ export interface paths {
          *
          *     This lets an admin edit the description of a course that has already started. Times are compared as instants, at the microsecond precision the server stores.
          *
-         *     **Status.** `status` is required. When it differs from the course's current status, it is appended to the course's status history and `status.changedAt` is updated. Sending the current status changes nothing. Send `archived` to hide the course from the public API, `published` to make it publicly viewable again (once a price is in effect), or `deleted` to remove it from `listCoursesAsAdmin`.
+         *     **Status.** `status` is required. When it differs from the course's current status, it is appended to the course's status history and `status.changedAt` is updated. Sending the current status changes nothing. Send `archived` to hide the course from the public API, `published` to make it publicly viewable (once a price is in effect), or `deleted` to remove it from `listCoursesAsAdmin`. Changing the status to `published` requires an uploaded image, otherwise the request fails with a `/status` `INVALID_VALUE` error. A course that is already published can be edited without re-checking.
          *
          *     **Prices.** A stored price is in effect once its `effectiveAt` has passed, evaluated when the request is processed. In-effect prices can never be changed or deleted, since payments refer to them. `prices` is the course's complete future schedule:
          *     - An entry that exactly matches a stored price (same `effectiveAt` instant, `amount` and `currency`) is kept unchanged, including its `id`. This lets a form send back the schedule it loaded, and makes retries safe.
@@ -385,11 +385,11 @@ export interface components {
          */
         CourseStatus: "published" | "archived" | "drafted" | "deleted";
         /**
-         * @description A `CourseStatus` a course can be created with. Use `drafted` or `archived` to create the course hidden from the public API.
-         * @example published
+         * @description A `CourseStatus` a course can be created with. A course is created hidden from the public API and published by updating it once its image is uploaded.
+         * @example drafted
          * @enum {string}
          */
-        CreateCourseStatus: "published" | "archived" | "drafted";
+        CreateCourseStatus: "archived" | "drafted";
         ListCoursesResponse: {
             courses: components["schemas"]["Course"][];
         };

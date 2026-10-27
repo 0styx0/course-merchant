@@ -16,6 +16,13 @@ function at(hoursFromNow: number): Temporal.Instant {
 
 function makeStored() {
   return {
+    statuses: [
+      {
+        name: "published" as "published" | "archived" | "drafted",
+        changedAt: at(-72),
+      },
+    ],
+    image: { updatedAt: at(-60) } as { updatedAt: Temporal.Instant } | null,
     startsAt: at(24),
     endsAt: at(26),
     prices: [
@@ -79,6 +86,62 @@ describe("isSameInstant", () => {
 });
 
 describe("findUpdateRuleViolations", () => {
+  describe("publishing", () => {
+    function publish(
+      current: "drafted" | "archived" | "published",
+      image: { updatedAt: Temporal.Instant } | null,
+    ) {
+      const stored = {
+        ...makeStored(),
+        statuses: [{ name: current, changedAt: at(-72) }],
+        image,
+      };
+
+      return findUpdateRuleViolations({
+        request: makeRequest(stored),
+        stored,
+        now,
+      });
+    }
+
+    it.each(["drafted", "archived"] as const)(
+      "refuses publishing a %s course with no image",
+      (current) => {
+        expect(publish(current, null)).toEqual([
+          {
+            field: "/status",
+            code: "INVALID_VALUE",
+            detail: "Upload an image before publishing.",
+          },
+        ]);
+      },
+    );
+
+    it("allows publishing a course that has an image", () => {
+      expect(publish("drafted", { updatedAt: at(-1) })).toEqual([]);
+    });
+
+    it("does not re-check a course that is already published", () => {
+      expect(publish("published", null)).toEqual([]);
+    });
+
+    it("allows archiving a course with no image", () => {
+      const stored = {
+        ...makeStored(),
+        statuses: [{ name: "drafted" as const, changedAt: at(-72) }],
+        image: null,
+      };
+
+      expect(
+        findUpdateRuleViolations({
+          request: { ...makeRequest(stored), status: "archived" },
+          stored,
+          now,
+        }),
+      ).toEqual([]);
+    });
+  });
+
   it("accepts an unchanged round-trip", () => {
     const stored = makeStored();
 

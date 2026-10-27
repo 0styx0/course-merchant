@@ -219,13 +219,13 @@ describe("POST /admin/courses (e2e)", () => {
     ]);
   });
 
-  it("rejects the deleted status", async () => {
+  it.each(["published", "deleted"])("rejects the %s status", async (status) => {
     const response: TypedResponse<ValidationProblemDetails> = await request(
       httpServer(app),
     )
       .post("/v1/admin/courses")
       .set("Authorization", bearer(token))
-      .send({ ...makeCreateRequest(), status: "deleted" })
+      .send({ ...makeCreateRequest(), status })
       .expect(400);
 
     expect(response.body.errors).toEqual([

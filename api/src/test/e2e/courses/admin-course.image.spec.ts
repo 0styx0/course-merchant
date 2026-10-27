@@ -36,6 +36,7 @@ describe("Admin course image API (e2e)", () => {
     token = await logInAsAdmin(app);
     courseId = (
       await createCourse({
+        status: "drafted",
         title: "React Fundamentals",
         summary: "Learn React",
         description: "Learn React",

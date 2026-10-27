@@ -164,19 +164,22 @@ describe("courseDescriptionSchema", () => {
 });
 
 describe("createStatusSchema", () => {
-  it.each(["published", "archived", "drafted"] as const)(
-    "accepts %s",
-    (status) => {
-      expect(createStatusSchema.safeParse(status).success).toBe(true);
-    },
-  );
+  it.each(["archived", "drafted"] as const)("accepts %s", (status) => {
+    expect(createStatusSchema.safeParse(status).success).toBe(true);
+  });
 
-  it.each(["deleted", "Published", "unknown", "", null, undefined, 123])(
-    "rejects %s",
-    (status) => {
-      expect(createStatusSchema.safeParse(status).success).toBe(false);
-    },
-  );
+  it.each([
+    "published",
+    "deleted",
+    "Published",
+    "unknown",
+    "",
+    null,
+    undefined,
+    123,
+  ])("rejects %s", (status) => {
+    expect(createStatusSchema.safeParse(status).success).toBe(false);
+  });
 });
 
 describe("updateStatusSchema", () => {
