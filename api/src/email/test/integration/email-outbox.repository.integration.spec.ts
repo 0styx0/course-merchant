@@ -195,7 +195,7 @@ describe("EmailOutboxRepository (integration)", () => {
 
     it("holds the email for 10 minutes, so it is no longer due", async () => {
       const email = await queuedEmail("ada@example.com");
-      const now = Temporal.Now.instant();
+      const now = await clock.now(db);
 
       await repository.claim(db, email, now);
 
@@ -232,7 +232,7 @@ describe("EmailOutboxRepository (integration)", () => {
   describe("markFailedAttempt", () => {
     it("counts the attempt and schedules a retry", async () => {
       const email = await queuedEmail("ada@example.com");
-      const now = Temporal.Now.instant();
+      const now = await clock.now(db);
 
       await repository.markFailedAttempt(db, email, "provider down", now);
 
