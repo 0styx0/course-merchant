@@ -1,7 +1,6 @@
 import {
   courseByIdSuccess,
   courseResponse,
-  courseByIdSlow,
   courseByIdError,
   courseByIdNotFound,
   courseByIdInvalidId,
@@ -15,7 +14,10 @@ test.use({
 });
 
 test("displays course details", async ({ page }) => {
-  await page.goto(`/courses/${courseResponse.id}`);
+  const response = await page.goto(`/courses/${courseResponse.id}`);
+
+  expect(response?.status()).toBe(200);
+  await expect(page).toHaveTitle(courseResponse.name);
 
   await expect(
     page.getByRole("heading", {
@@ -44,26 +46,6 @@ test("displays course details", async ({ page }) => {
   await expect(endTime).not.toBeEmpty();
 });
 
-test("displays loading state while the course is loading", async ({
-  page,
-  msw,
-}) => {
-  msw.use(courseByIdSlow);
-
-  const navigation = page.goto(`/courses/${courseResponse.id}`);
-
-  await expect(page.getByRole("status")).toHaveText("Loading course...");
-
-  await navigation;
-
-  await expect(
-    page.getByRole("heading", {
-      level: 1,
-      name: "React Fundamentals",
-    }),
-  ).toBeVisible();
-});
-
 test("displays an error when the API returns a server error", async ({
   page,
   msw,
@@ -82,27 +64,27 @@ test("displays an error when the API returns a server error", async ({
   await expect(page.getByRole("heading", { level: 1 })).not.toBeVisible();
 });
 
-test("displays an error when the course does not exist", async ({
+test("shows a 404 page when the course does not exist", async ({
   page,
   msw,
 }) => {
   msw.use(courseByIdNotFound);
 
-  await page.goto(`/courses/${courseResponse.id}`);
+  const response = await page.goto(`/courses/${courseResponse.id}`);
 
+  expect(response?.status()).toBe(404);
   await expect(
-    page.getByRole("alert").filter({ hasText: "Course not found" }),
+    page.getByRole("heading", { level: 1, name: "Course not found" }),
   ).toBeVisible();
 });
 
-test("displays an error for an invalid course ID", async ({ page, msw }) => {
+test("shows a 404 page for an invalid course ID", async ({ page, msw }) => {
   msw.use(courseByIdInvalidId);
 
-  await page.goto("/courses/not-a-uuid");
+  const response = await page.goto("/courses/not-a-uuid");
 
+  expect(response?.status()).toBe(404);
   await expect(
-    page
-      .getByRole("alert")
-      .filter({ hasText: "is not a valid course identifier." }),
+    page.getByRole("heading", { level: 1, name: "Course not found" }),
   ).toBeVisible();
 });

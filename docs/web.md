@@ -10,11 +10,8 @@ Each step is one commit. Every step's tests are part of the step. Steps 1–5 co
 
 - [x] **1. Refresh the home page every minute instead of freezing it at build time.**
 - [x] **2. One Result mapper and error model.**
-- [ ] **3. A real 404 for an unknown course.** **Next**
-  - `page.tsx` fetches the course before any Suspense boundary and calls `notFound()` for `COURSE_NOT_FOUND` and `INVALID_COURSE_ID`; add `not-found.tsx`.
-  - `generateMetadata` shares the fetch through React `cache`, giving each course page a real `<title>`.
-  - Drop that route's `loading.tsx` and its Playwright test: once a loading state streams, the status can't change from 200.
-- [ ] **4. Shared test data and mock helpers.**
+- [x] **3. A real 404 for an unknown course.**
+- [ ] **4. Shared test data and mock helpers.** **Next**
   - `mocks/fixtures/courses.ts` replaces the four copies of the course literals (MSW, Vitest, Playwright use it).
   - `problemResponse(status, body)` replaces the repeated problem+json boilerplate.
   - Fix the `MOCK_COURSES` message in `mocks/node.ts`.
@@ -49,6 +46,8 @@ Each step is one commit. Every step's tests are part of the step. Steps 1–5 co
 | Feature folders under `src/features/`, `app/` for routes only | They match the API's modules and the design docs, and pieces used by several routes (`getCourse`, the course form) have one home | Colocating in `app/` with `_components` folders; today's folders by kind of file |
 | Async `…Section` components plus plain-data components | A component that shows a course doesn't know about API errors, so it can be reused (e.g. the admin preview) | Views that take a `Result` (today) |
 | A real 404 for an unknown course, without a loading state | The status code is right and the page gets a real title. The course fetch is fast | A soft 404 (200 plus `noindex`) keeping `loading.tsx` |
+| `getCourse` is wrapped in React `cache` | The page and `generateMetadata` share one API call per render. Next's fetch dedup wouldn't catch it, since each call gets its own `AbortSignal.timeout()` | Two API calls; `cache` in the page file |
+| Only the page calls `notFound()`; `generateMetadata` returns no title on failure | One place decides the status, and it runs before anything streams | Both calling `notFound()` |
 | Forms use Server Actions with `useActionState` | Works without JavaScript, shows field errors from the returned state, and runs on the server where the token is. Actions read named fields only and never send a price. They return the submitted values (never a password) because React 19 empties the form after an action | Route handlers called with `fetch` from the browser (own Origin check and auth) |
 | Image upload is a Server Action with a body limit of about 6 MB | One function creates the draft, uploads the image, then publishes, keeping the draft if the upload fails. The limit applies to every action, so the edge limits each path (see Launch) | A route handler streaming to the API (its own auth, Origin check and client-side orchestration) |
 | The checkout success page polls with `router.refresh()` | No extra endpoint; the status is rendered on the server. It stops on any status other than `pending`, or after about a minute ("your email is on its way"), and calls `notFound()` for a missing or unknown checkout id | A polling route handler; `<meta http-equiv="refresh">` (full reloads) |
