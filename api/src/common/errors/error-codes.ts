@@ -7,6 +7,7 @@ export enum ErrorCodeGeneric {
 export enum ErrorCodeCourse {
   COURSE_NOT_FOUND = "COURSE_NOT_FOUND",
   INVALID_COURSE_ID = "INVALID_COURSE_ID",
+  COURSE_IMAGE_NOT_FOUND = "COURSE_IMAGE_NOT_FOUND",
 }
 
 export enum ErrorCodeValidation {
@@ -72,6 +73,10 @@ export const ERROR_DEFINITIONS = {
   [ErrorCode.COURSE_NOT_FOUND]: {
     status: HttpStatus.NOT_FOUND,
     title: "Course not found",
+  },
+  [ErrorCode.COURSE_IMAGE_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    title: "Course image not found",
   },
   [ErrorCode.INVALID_COURSE_ID]: {
     status: HttpStatus.BAD_REQUEST,

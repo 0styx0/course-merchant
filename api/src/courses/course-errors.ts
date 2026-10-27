@@ -6,3 +6,9 @@ export function courseNotFound(courseId: string): ApiException {
     detail: `No course exists with ID ${courseId}.`,
   });
 }
+
+export function courseImageNotFound(courseId: string): ApiException {
+  return new ApiException(ErrorCodeCourse.COURSE_IMAGE_NOT_FOUND, {
+    detail: `Course ${courseId} has no image yet.`,
+  });
+}

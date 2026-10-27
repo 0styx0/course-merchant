@@ -496,6 +496,120 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /admin/courses/{courseId}/image:
+    put:
+      tags:
+        - Admin
+      operationId: uploadCourseImage
+      summary: Upload a course's image
+      description: >
+        Stores the course's image, replacing any earlier one. Requires an
+        administrator.
+
+
+        Send `multipart/form-data` with exactly one file in a field named
+        `image` and no other fields. The file is judged by its content, never
+        its name or `Content-Type`: it must be a JPEG, PNG or WebP of at most
+        5 MB and 25 megapixels, and at least 800×450 pixels (after its
+        orientation flag is applied). The server crops it to 16:9, resizes it
+        to 1600×900 and stores it as a WebP, dropping all metadata.
+
+
+        Every validation error of this request has `field` `/image`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CourseId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              additionalProperties: false
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: The image file.
+      responses:
+        "204":
+          description: Image stored.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+        "400":
+          description: >
+            The image is missing or rejected (`errors` has one entry, with
+            `field` `/image`), or the course identifier is malformed.
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ValidationProblemDetails"
+                  - $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/AdminCourseNotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    get:
+      tags:
+        - Admin
+      operationId: getCourseImageAsAdmin
+      summary: Download a course's stored image
+      description: >
+        Returns the image exactly as stored (a 1600×900 WebP), for any course
+        regardless of its status. Requires an administrator. Never cached, so
+        the admin always sees what is stored.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CourseId"
+      responses:
+        "200":
+          description: The stored image.
+          headers:
+            Cache-Control:
+              description: Always `private, no-cache`.
+              schema:
+                type: string
+                const: private, no-cache
+          content:
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "#/components/responses/InvalidCourseId"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: >
+            No course exists with the given ID (`COURSE_NOT_FOUND`), or the
+            course has no image yet (`COURSE_IMAGE_NOT_FOUND`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              examples:
+                courseNotFound:
+                  value:
+                    title: Course not found
+                    detail: No course exists with ID 123e4567-e89b-12d3-a456-426614174000.
+                    code: COURSE_NOT_FOUND
+                noImage:
+                  value:
+                    title: Course image not found
+                    detail: Course 123e4567-e89b-12d3-a456-426614174000 has no image yet.
+                    code: COURSE_IMAGE_NOT_FOUND
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   /checkout-sessions:
     post:
       tags:
@@ -1541,7 +1655,8 @@ components:
         field:
           type: string
           description: >
-            JSON Pointer (RFC 6901) to the invalid field in the request body.
+            JSON Pointer (RFC 6901) to the invalid field in the request body or
+            the uploaded file.
           examples:
             - /schedule/endTime
         code:
@@ -1561,14 +1676,17 @@ components:
               list has fewer entries than the minimum.
             - `TOO_LONG`: a string is longer than the maximum length, or a
               list has more entries than the maximum.
-            - `BELOW_MINIMUM`: a number is below the minimum allowed.
-            - `ABOVE_MAXIMUM`: a number is above the maximum allowed.
+            - `BELOW_MINIMUM`: a number, or an image's width or height, is below
+              the minimum allowed.
+            - `ABOVE_MAXIMUM`: a number, a file size or an image's pixel count
+              is above the maximum allowed.
             - `IN_PAST`: a date-time must be now or in the future.
             - `INVALID_RANGE`: the value is inconsistent with a related
               field, such as `endTime` not being after `startTime`.
             - `DUPLICATE_VALUE`: the value must be unique within its list.
             - `UNKNOWN_FIELD`: the field is not part of the request. `field`
-              points at the unknown field.
+              points at the unknown field (for an upload, always `/image`,
+              also when the extra part has another name).
 
             Treat unrecognized values as a generic validation error.
           examples:

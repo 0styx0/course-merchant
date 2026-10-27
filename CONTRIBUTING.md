@@ -102,7 +102,7 @@ ESLint and Prettier handle formatting. The rest is up to you:
 
 Run `yarn --cwd api audit --groups dependencies` (and the same for `web`). Update to a patched version when the fix fits the existing version ranges. These advisories are known and accepted in `api/`, because nothing in them runs when a request reaches the API:
 
-- **`multer`**, pinned by `@nestjs/platform-express`. It only runs on routes that accept file uploads, and the API has none. Upgrade when Nest does, or before adding an upload route.
+- **`multer`**, the 2.4.0 copy pinned by `@nestjs/platform-express`. It only runs through Nest's `FileInterceptor`, which the API doesn't use. The upload route uses the API's own direct `multer` dependency, kept on a patched release.
 - **`hono`, `@hono/node-server`, `lodash`, `valibot`** under `prisma`. They belong to the Prisma command-line tool's local dev server and deploy tooling, which the running API never loads (it uses `@prisma/orm-postgres`). Pinned inside Prisma's pre-release packages; upgrade with Prisma.
 
 ## Commits

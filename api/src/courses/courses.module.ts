@@ -6,14 +6,21 @@ import { CoursesController } from "./courses.controller.js";
 import { AdminCoursesController } from "./admin-courses.controller.js";
 import { AdminCoursesService } from "./admin-courses.service.js";
 import { AdminCoursesRepository } from "./courses.repository/admin-courses.repository.js";
+import { AdminCourseImagesController } from "./admin-course-images.controller.js";
+import { AdminCourseImagesService } from "./admin-course-images.service.js";
 import { CourseImagesRepository } from "./courses.repository/course-images.repository.js";
 
 @Module({
   imports: [PrismaModule],
-  controllers: [CoursesController, AdminCoursesController],
+  controllers: [
+    CoursesController,
+    AdminCoursesController,
+    AdminCourseImagesController,
+  ],
   providers: [
     CoursesService,
     AdminCoursesService,
+    AdminCourseImagesService,
     CoursesRepository,
     AdminCoursesRepository,
     CourseImagesRepository,

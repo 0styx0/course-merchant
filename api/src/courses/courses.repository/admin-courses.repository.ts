@@ -131,6 +131,14 @@ export class AdminCoursesRepository {
       .first();
   }
 
+  async courseExists(scope: DbScope, courseId: string): Promise<boolean> {
+    const course = await scope.orm.public.Course.select("id")
+      .where((candidate) => candidate.id.eq(courseId))
+      .first();
+
+    return course !== null;
+  }
+
   async findAllCourseDetailsAdmin(
     scope: DbScope,
   ): Promise<CourseRepositoryModelAdmin[]> {

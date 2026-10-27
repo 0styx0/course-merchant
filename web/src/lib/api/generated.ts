@@ -183,6 +183,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/courses/{courseId}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download a course's stored image
+         * @description Returns the image exactly as stored (a 1600×900 WebP), for any course regardless of its status. Requires an administrator. Never cached, so the admin always sees what is stored.
+         */
+        get: operations["getCourseImageAsAdmin"];
+        /**
+         * Upload a course's image
+         * @description Stores the course's image, replacing any earlier one. Requires an administrator.
+         *
+         *     Send `multipart/form-data` with exactly one file in a field named `image` and no other fields. The file is judged by its content, never its name or `Content-Type`: it must be a JPEG, PNG or WebP of at most 5 MB and 25 megapixels, and at least 800×450 pixels (after its orientation flag is applied). The server crops it to 16:9, resizes it to 1600×900 and stores it as a WebP, dropping all metadata.
+         *
+         *     Every validation error of this request has `field` `/image`.
+         */
+        put: operations["uploadCourseImage"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/checkout-sessions": {
         parameters: {
             query?: never;
@@ -552,7 +580,7 @@ export interface components {
         };
         FieldError: {
             /**
-             * @description JSON Pointer (RFC 6901) to the invalid field in the request body.
+             * @description JSON Pointer (RFC 6901) to the invalid field in the request body or the uploaded file.
              * @example /schedule/endTime
              */
             field: string;
@@ -571,14 +599,17 @@ export interface components {
              *       list has fewer entries than the minimum.
              *     - `TOO_LONG`: a string is longer than the maximum length, or a
              *       list has more entries than the maximum.
-             *     - `BELOW_MINIMUM`: a number is below the minimum allowed.
-             *     - `ABOVE_MAXIMUM`: a number is above the maximum allowed.
+             *     - `BELOW_MINIMUM`: a number, or an image's width or height, is below
+             *       the minimum allowed.
+             *     - `ABOVE_MAXIMUM`: a number, a file size or an image's pixel count
+             *       is above the maximum allowed.
              *     - `IN_PAST`: a date-time must be now or in the future.
              *     - `INVALID_RANGE`: the value is inconsistent with a related
              *       field, such as `endTime` not being after `startTime`.
              *     - `DUPLICATE_VALUE`: the value must be unique within its list.
              *     - `UNKNOWN_FIELD`: the field is not part of the request. `field`
-             *       points at the unknown field.
+             *       points at the unknown field (for an upload, always `/image`,
+             *       also when the extra part has another name).
              *
              *     Treat unrecognized values as a generic validation error.
              * @example INVALID_RANGE
@@ -931,6 +962,87 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["AdminCourseNotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    getCourseImageAsAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public identifier of the course. */
+                courseId: components["parameters"]["CourseId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The stored image. */
+            200: {
+                headers: {
+                    /** @description Always `private, no-cache`. */
+                    "Cache-Control"?: "private, no-cache";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/webp": string;
+                };
+            };
+            400: components["responses"]["InvalidCourseId"];
+            401: components["responses"]["Unauthorized"];
+            /** @description No course exists with the given ID (`COURSE_NOT_FOUND`), or the course has no image yet (`COURSE_IMAGE_NOT_FOUND`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    uploadCourseImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public identifier of the course. */
+                courseId: components["parameters"]["CourseId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description The image file.
+                     */
+                    image: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Image stored. */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The image is missing or rejected (`errors` has one entry, with `field` `/image`), or the course identifier is malformed. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ValidationProblemDetails"] | components["schemas"]["ProblemDetails"];
+                };
+            };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["AdminCourseNotFound"];
             500: components["responses"]["InternalServerError"];
