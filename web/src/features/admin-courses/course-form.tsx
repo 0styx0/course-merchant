@@ -3,7 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Controller, useForm, useWatch, type Path } from "react-hook-form";
+import {
+  Controller,
+  useFieldArray,
+  useForm,
+  useWatch,
+  type Path,
+} from "react-hook-form";
 
 import { ErrorSummary } from "@/components/form/error-summary";
 import { Button } from "@/components/ui/button";
@@ -18,8 +24,15 @@ import {
 import { createCourseAction } from "./create-course.action";
 import { DescriptionEditor } from "./description-editor";
 import { scheduleLength } from "./format-course-length";
+import { PriceRow } from "./price-row";
 
 const DEFAULT_TIME_ZONE = "America/New_York";
+
+const emptyPrice = {
+  amountDollars: "",
+  effectiveDate: "",
+  effectiveTimeOfDay: "",
+};
 
 const defaultValues: CourseFormValues = {
   name: "",
@@ -33,7 +46,7 @@ const defaultValues: CourseFormValues = {
     endTimeOfDay: "",
     timeZone: DEFAULT_TIME_ZONE,
   },
-  prices: [{ amountDollars: "", effectiveDate: "", effectiveTimeOfDay: "" }],
+  prices: [emptyPrice],
 };
 
 type CourseFormProps = {
@@ -50,6 +63,7 @@ export function CourseForm({ timeZones }: CourseFormProps) {
     mode: "onTouched",
     shouldFocusError: false,
   });
+  const priceRows = useFieldArray({ control: form.control, name: "prices" });
   const [serverProblem, setServerProblem] = useState<{
     title: string;
     detail: string;
@@ -57,7 +71,9 @@ export function CourseForm({ timeZones }: CourseFormProps) {
   const summaryRef = useRef<HTMLDivElement>(null);
 
   const { errors, isSubmitted, isSubmitting, submitCount } = form.formState;
-  const problems = isSubmitted ? courseFormProblems(errors) : [];
+  const problems = isSubmitted
+    ? courseFormProblems(errors, priceRows.fields.length)
+    : [];
   const length = scheduleLength(
     useWatch({ control: form.control, name: "schedule" }),
   );
@@ -168,22 +184,29 @@ export function CourseForm({ timeZones }: CourseFormProps) {
         {length && <p className="self-end text-sm">Lasts {length}</p>}
       </fieldset>
 
-      <fieldset className="grid gap-4 sm:grid-cols-3">
+      <fieldset className="flex flex-col gap-4">
         <legend className="mb-2 font-medium">Price (USD)</legend>
-        <InputField form={form} name="prices.0.amountDollars" label="Price" />
-        <InputField
-          form={form}
-          name="prices.0.effectiveDate"
-          label="Price start date"
-          type="date"
-          description="Leave the date and time empty to start when the course is saved."
-        />
-        <InputField
-          form={form}
-          name="prices.0.effectiveTimeOfDay"
-          label="Price start time"
-          type="time"
-        />
+        {priceRows.fields.map((row, index) => (
+          <PriceRow
+            key={row.id}
+            form={form}
+            index={index}
+            rowCount={priceRows.fields.length}
+            onRemove={() => {
+              priceRows.remove(index);
+              // A "same time as another row" error may now be gone.
+              void form.trigger("prices");
+            }}
+          />
+        ))}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => priceRows.append(emptyPrice)}
+          className="self-start"
+        >
+          Add price
+        </Button>
       </fieldset>
 
       <Button type="submit" disabled={isSubmitting} className="self-start">

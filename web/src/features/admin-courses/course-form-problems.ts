@@ -15,10 +15,32 @@ export const COURSE_FORM_FIELD_LABELS = [
   ["schedule.endDate", "End date"],
   ["schedule.endTimeOfDay", "End time"],
   ["schedule.timeZone", "Time zone"],
-  ["prices.0.amountDollars", "Price"],
-  ["prices.0.effectiveDate", "Price start date"],
-  ["prices.0.effectiveTimeOfDay", "Price start time"],
 ] as const;
+
+/**
+ * The labels of one price row. They carry the row's number only when there are
+ * several rows, so one row keeps the plain "Price".
+ */
+export function priceRowLabels(index: number, rowCount: number) {
+  const price = rowCount > 1 ? `Price ${index + 1}` : "Price";
+  return {
+    amountDollars: price,
+    effectiveDate: `${price} start date`,
+    effectiveTimeOfDay: `${price} start time`,
+  };
+}
+
+/** The price rows' fields in page order, after the fixed fields. */
+function priceFieldLabels(rowCount: number) {
+  return Array.from({ length: rowCount }, (_, index) => {
+    const labels = priceRowLabels(index, rowCount);
+    return [
+      [`prices.${index}.amountDollars`, labels.amountDollars],
+      [`prices.${index}.effectiveDate`, labels.effectiveDate],
+      [`prices.${index}.effectiveTimeOfDay`, labels.effectiveTimeOfDay],
+    ] as const;
+  }).flat();
+}
 
 /** The error message at a field's path, if it has one. */
 export function fieldErrorMessage(
@@ -36,8 +58,13 @@ export function fieldErrorMessage(
  */
 export function courseFormProblems(
   errors: FieldErrors<CourseFormValues>,
+  priceRowCount: number,
 ): ErrorSummaryProblem[] {
-  return COURSE_FORM_FIELD_LABELS.flatMap(([fieldName, label]) => {
+  const fields = [
+    ...COURSE_FORM_FIELD_LABELS,
+    ...priceFieldLabels(priceRowCount),
+  ];
+  return fields.flatMap(([fieldName, label]) => {
     const message = fieldErrorMessage(errors, fieldName);
     return message ? [{ fieldName, label, message }] : [];
   });

@@ -17,8 +17,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **3b.** `error-summary.tsx`, the error list at the top with a link per problem and focus on a refused submit.
   - [x] **3c.** `description-editor.tsx`, first version with no toolbar (adds `@tiptap/react`). It renders its own `FormField` (label, state icon, error, counter); `FormField` gained `labelId` and `onLabelClick`.
   - [x] **3d-i.** `course-form.tsx` with the text fields, description editor, schedule, `formatCourseLength`, one price row, error list and submit handling; `page.tsx` at `app/admin/(signed-in)/courses/new/` (no layout until the login lands); component tests.
-  - [ ] **3d-ii.** **Next**: price rows: `useFieldArray`, add and remove buttons (at least one row), per-row error-list entries (`courseFormProblems` lists only `prices.0` now) and tests.
-  - [ ] **3e.** Playwright browser test; admin.md, courses.md and README updates.
+  - [x] **3d-ii.** Price rows: `useFieldArray` in `course-form.tsx`, `price-row.tsx` (add and remove, at least one row, new rows start empty), error-list entries per row (`courseFormProblems` takes the row count; labels are numbered only with several rows), and tests. The empty-time help text now says "when the course is published" (wording only: an empty time is still set to now + 1 minute when saved).
+  - [ ] **3e.** **Next**: Playwright browser test; admin.md, courses.md and README updates.
 - [ ] **4. Description toolbar, list depth and Google Docs paste tests.**
 - [ ] **5. Image and publish in the create form.**
 

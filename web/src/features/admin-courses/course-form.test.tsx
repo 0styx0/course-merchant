@@ -245,4 +245,68 @@ describe("CourseForm", () => {
       "Please try again later.",
     );
   });
+
+  it("adds and removes price rows, numbering them only when there are several", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    expect(screen.getByRole("button", { name: "Remove price" })).toBeDisabled();
+
+    await user.type(screen.getByLabelText("Price"), "10");
+    await user.click(screen.getByRole("button", { name: "Add price" }));
+
+    expect(screen.getByLabelText("Price 1")).toHaveValue("10");
+    expect(screen.getByLabelText("Price 2")).toHaveValue("");
+    expect(screen.getByLabelText("Price 2 start date")).toHaveValue("");
+
+    await user.type(screen.getByLabelText("Price 2"), "20");
+    await user.click(screen.getByRole("button", { name: "Remove price 1" }));
+
+    expect(screen.getByLabelText("Price")).toHaveValue("20");
+    expect(screen.queryByLabelText("Price 2")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove price" })).toBeDisabled();
+  });
+
+  it("lists a problem on a later price row with its number and focuses it", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await user.click(screen.getByRole("button", { name: "Add price" }));
+    await user.click(screen.getByRole("button", { name: "Save course" }));
+
+    await user.click(await screen.findByRole("button", { name: "Price 2" }));
+
+    expect(screen.getByLabelText("Price 2")).toHaveFocus();
+  });
+
+  it("shows a server error on the second price row", async () => {
+    const user = userEvent.setup();
+    action.mockResolvedValue({
+      state: "failure",
+      error: {
+        problem: {
+          title: "Validation failed",
+          detail: "The request contains 1 invalid field.",
+          code: "VALIDATION_FAILED",
+        },
+        fieldErrors: [
+          { path: "prices.1.amountDollars", message: "Too cheap." },
+        ],
+      },
+    });
+    renderForm();
+    await fillValidForm(user);
+    await user.click(screen.getByRole("button", { name: "Add price" }));
+    await user.type(screen.getByLabelText("Price 2"), "50");
+    await user.type(screen.getByLabelText("Price 2 start date"), "2099-02-01");
+    await user.type(screen.getByLabelText("Price 2 start time"), "09:00");
+    await user.click(screen.getByRole("button", { name: "Save course" }));
+
+    await screen.findByRole("heading", { name: "Validation failed" });
+    expect(screen.getByLabelText("Price 2")).toHaveAccessibleDescription(
+      "Too cheap.",
+    );
+    expect(screen.getByLabelText("Price 1")).toHaveAttribute(
+      "aria-invalid",
+      "false",
+    );
+  });
 });
