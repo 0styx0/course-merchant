@@ -14,8 +14,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 - [x] **2. Server side of the create form** (no page yet): description helpers, form limits and contract test, wall-clock time to UTC, form schema, request builder, API wrapper, error mapping, Server Action and MSW handler (`createCourseAction`; its design is in *Step 2* below).
 - [ ] **3. The create form page**, in five commits (design in *Step 3* below):
   - [x] **3a.** Form libraries (react-hook-form, resolvers, user-event), shadcn `field`/`input`/`label`, and `FormField` (message, red X, green check).
-  - [ ] **3b.** **Next**: `error-summary.tsx`, the error list at the top with a link per problem and focus on a refused submit.
-  - [ ] **3c.** `description-editor.tsx`, first version with no toolbar (adds `@tiptap/react`).
+  - [x] **3b.** `error-summary.tsx`, the error list at the top with a link per problem and focus on a refused submit.
+  - [ ] **3c.** **Next**: `description-editor.tsx`, first version with no toolbar (adds `@tiptap/react`).
   - [ ] **3d.** `course-form.tsx`, `page.tsx` at `app/admin/(signed-in)/courses/new/` (no layout until the login lands), `formatCourseLength`, submit handling and component tests.
   - [ ] **3e.** Playwright browser test; admin.md, courses.md and README updates.
 - [ ] **4. Description toolbar, list depth and Google Docs paste tests.**
