@@ -56,7 +56,7 @@ How the owner wants Claude to work on this repo:
 - **Plan mode.** A question or comment from the owner gets an answer in chat first. Don't edit the plan file or ask for plan approval until they say to update the plan. A message starting with `Q:` is chat-only; one starting with `plan:` goes into the plan.
 - **Public library APIs only**, in code and tests: no undocumented error fields (e.g. `sqlState`), transitive-only exports or private members. If the public API can't do it, say so and suggest alternatives.
 - **Modular, not speculative.** Give real responsibilities and shared logic their own focused module, but add no interfaces or abstractions for hypothetical needs (e.g. no payment gateway interface). Put flexibility where change is expensive: the DB schema. A thin concrete wrapper around an SDK is fine.
-- **Small composed functions/files.** A top-level method reads as a short orchestration of well-named steps, one method per outcome; a switch is only a thin dispatch with one line per case.
+- **Small composed functions/files/commits.** A top-level method reads as a short orchestration of well-named steps, one method per outcome; a switch is only a thin dispatch with one line per case. The same with planning commits/work
 - **Unambiguous labels.** Nest or qualify fields by owner (`customer.name`, not `name` beside `courseId`), in contracts, types and variables.
 - **Clarify jargon** Use clear, easy-to-understand language.
 - **Link files.** Any list of files is markdown links relative to the repo root, e.g. `[types.ts](api/types.ts)`.

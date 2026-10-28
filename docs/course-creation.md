@@ -13,8 +13,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 - [x] **1b-ii. Store and show the document** (contract, database, API, course page).
 - [ ] **2. Server side of the create form** (no page yet), in six commits, in this order (each uses the ones before it; details in *Step 2* below):
   - [x] **2a. Description helpers** (`feat(courses)`).
-  - [ ] **2b. Form limits and the contract test** (`feat(admin-courses)`). **Next**
-  - [ ] **2c. Wall-clock time to UTC** (`feat(admin-courses)`).
+  - [x] **2b. Form limits and the contract test** (`feat(admin-courses)`).
+  - [ ] **2c. Wall-clock time to UTC** (`feat(admin-courses)`). **Next**
   - [ ] **2d. The form schema** (`feat(admin-courses)`).
   - [ ] **2e. The request builder** (`feat(admin-courses)`).
   - [ ] **2f. API wrappers, error mapping, the Server Action and MSW handler** (`feat(admin-courses)`). Ticking this also ticks step 2, marks step 3 **Next** and cuts the *Step 2* notes down to decision rows.
@@ -137,10 +137,10 @@ Decided at the outline:
 
 **Limits** (2b):
 
-- `course-form-limits.ts` holds the named constants: name 100, summary 300, description text 5,000, list levels 3, content link 2,048, and the price minimum of 50 cents.
+- `course-form-limits.ts` holds the named constants: name 100, summary 300, description text 5,000, content link 2,048, and the price minimum of 50 cents. The list depth (3) is left out: the contract and API don't enforce one yet, so it is added with its API check when step 4 needs it.
 - The contract test, `course-form-limits.test.ts`, reads [openapi-v1.yaml](../api/openapi/openapi-v1.yaml) and compares each constant with the contract:
   - `CourseName`, `CourseSummary` and `CourseContentUrl` `maxLength`;
-  - `CourseDescription`'s `x-max-text-length` and `x-max-list-depth`;
+  - `CourseDescription`'s `x-max-text-length`;
   - `ScheduledPrice`'s minimum (under `allOf` → `anyOf`).
 
 **Description helpers** (`src/features/courses/description-document.ts`):
