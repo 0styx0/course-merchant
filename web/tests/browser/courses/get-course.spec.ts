@@ -17,7 +17,7 @@ test("displays course details", async ({ page }) => {
   const response = await page.goto(`/courses/${reactCourse.id}`);
 
   expect(response?.status()).toBe(200);
-  await expect(page).toHaveTitle(`${reactCourse.name} · Course Merchant`);
+  await expect(page).toHaveTitle(`${reactCourse.name} · Embodying Emptiness`);
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
     "content",
     reactCourse.summary,

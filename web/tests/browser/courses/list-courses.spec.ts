@@ -17,7 +17,7 @@ test.use({
 test("displays available courses", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page).toHaveTitle("Course Merchant");
+  await expect(page).toHaveTitle("Embodying Emptiness");
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
     "content",
     "A storefront for selling online courses, with payment through Stripe Checkout.",
