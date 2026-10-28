@@ -73,6 +73,6 @@ How the owner wants Claude to work on this repo.
 - **Don't duplicate state.** Don't add a column that duplicates derivable state (e.g. a `currentStatus` beside the append-only status log). Prefer a DB constraint plus a shared query helper; raise denormalization only with a measured performance reason, and name its sync cost.
 
 **Writing**
-- **Plain language** in chat, outlines, docs and code comments. Define jargon the first time. Say what a database term means instead of using it: "once the database changes are saved", not "after commit"; don't assume "tick" or "outbox" means what it usually does.
+- **Plain language** in chat, outlines, docs and code comments. Define jargon the first time. Say what a term means when using it: 'commit (i.e,once the database changes are saved)'; don't assume "tick" or "outbox" means what it usually does.
 - **Link files.** Any list of files is markdown links relative to the repo root, e.g. `[types.ts](api/types.ts)`.
 - **Search for specific things**; skip wide, open-ended surveys of the codebase. Read a sibling file by line range when you only need a pattern.

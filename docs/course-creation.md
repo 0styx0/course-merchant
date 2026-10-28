@@ -12,11 +12,12 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 - [x] **1b-i. Description validator** (API only, not wired in).
 - [x] **1b-ii. Store and show the document** (contract, database, API, course page).
 - [x] **2. Server side of the create form** (no page yet): description helpers, form limits and contract test, wall-clock time to UTC, form schema, request builder, API wrapper, error mapping, Server Action and MSW handler (`createCourseAction`; its design is in *Step 2* below).
-- [ ] **3. The create form page**, in five commits (design in *Step 3* below):
+- [ ] **3. The create form page**, in six commits (design in *Step 3* below):
   - [x] **3a.** Form libraries (react-hook-form, resolvers, user-event), shadcn `field`/`input`/`label`, and `FormField` (message, red X, green check).
   - [x] **3b.** `error-summary.tsx`, the error list at the top with a link per problem and focus on a refused submit.
   - [x] **3c.** `description-editor.tsx`, first version with no toolbar (adds `@tiptap/react`). It renders its own `FormField` (label, state icon, error, counter); `FormField` gained `labelId` and `onLabelClick`.
-  - [ ] **3d.** **Next**: `course-form.tsx`, loading the editor with `next/dynamic`, `page.tsx` at `app/admin/(signed-in)/courses/new/` (no layout until the login lands), `formatCourseLength`, submit handling and component tests.
+  - [x] **3d-i.** `course-form.tsx` with the text fields, description editor, schedule, `formatCourseLength`, one price row, error list and submit handling; `page.tsx` at `app/admin/(signed-in)/courses/new/` (no layout until the login lands); component tests.
+  - [ ] **3d-ii.** **Next**: price rows: `useFieldArray`, add and remove buttons (at least one row), per-row error-list entries (`courseFormProblems` lists only `prices.0` now) and tests.
   - [ ] **3e.** Playwright browser test; admin.md, courses.md and README updates.
 - [ ] **4. Description toolbar, list depth and Google Docs paste tests.**
 - [ ] **5. Image and publish in the create form.**
@@ -62,6 +63,7 @@ Not part of this work: admin login and logout, the admin course page and list, e
 | After a refused submit, focus moves to the error list | Screen readers read every problem; each link jumps to its field | Focusing the first invalid field |
 | [temporal-polyfill](https://github.com/fullcalendar/temporal-polyfill) for wall-clock time to UTC | Correct across daylight-saving changes, with `disambiguation: "reject"` for skipped or repeated times. About a third of the size of [@js-temporal/polyfill](https://github.com/js-temporal/temporal-polyfill) | `@js-temporal/polyfill`; hand-written offset maths |
 | Native `date`, `time`, `<select>` and file inputs | They already do the job | Date pickers, a time zone combobox, [react-dropzone](https://react-dropzone.js.org), [next-safe-action](https://next-safe-action.dev) |
+| The create form is built in two commits: the plain fields and schedule first, price rows second | The full form is too large to review as one change; price rows are an independent addition (`useFieldArray`) | One commit for the whole form |
 
 ## Libraries to add (web only)
 
@@ -140,7 +142,7 @@ Shipped in six commits (2a–2f). Limits and the currency constant live in the `
 
 **Description editor, first version** (`description-editor.tsx`, no toolbar yet):
 
-- `useEditor` with the shared extension list and `immediatelyRender: false` (Tiptap's setting for server-rendered React, avoiding a server/browser mismatch). Loaded with `next/dynamic` so the editor code is only downloaded on this page.
+- `useEditor` with the shared extension list and `immediatelyRender: false` (Tiptap's setting for server-rendered React, avoiding a server/browser mismatch).
 - Connected through react-hook-form's `Controller`: `onUpdate` sets the value through `toCourseDescription`, the editor's blur calls `onBlur`.
 - Pasting from Google Docs and the keyboard shortcuts (Ctrl+B, Ctrl+I, Ctrl+Z, Shift+Enter) already work without a toolbar.
 - The editable area gets `id`, `role="textbox"`, `aria-multiline`, `aria-labelledby`, `aria-invalid`, `aria-describedby` and the shared `description-content` class through `editorProps.attributes`.
