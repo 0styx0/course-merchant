@@ -21,8 +21,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **3e.** Playwright browser test (`tests/browser/admin-courses/create-course.spec.ts`: save and land on `/`, an API refusal, no console errors); admin.md, courses.md, web.md and README updates.
 - [ ] **4. Description toolbar, list depth and Google Docs paste tests**, in four commits (design in *Step 4* below; browser tests go in the same spec file as 3e):
   - [x] **4a.** Formatting toolbar (`description-toolbar.tsx`, shadcn `toggle`): Bold, Italic, Heading, Subheading, Bulleted list, Numbered list.
-  - [ ] **4b.** **Next**: Link button: a small inline field for the address (no browser `prompt()`), refusing the addresses Tiptap's `isAllowedUri` refuses with a message, and "Remove link" when the cursor is on a link. It goes in the same toolbar, after the six format toggles.
-  - [ ] **4c.** Tab stops at list level 3. Before starting, settle the pasted-deeper-lists message: nothing produces it today (the API doesn't check depth, nor does the form schema), so either add a depth check to the form schema or drop that line.
+  - [x] **4b.** Link and Remove link buttons after the six format toggles (`description-link-field.tsx`, `description-link.ts`).
+  - [ ] **4c.** **Next**: Tab stops at list level 3. Deeper lists can still arrive by paste and are saved as they are, with no message.
   - [ ] **4d.** Google Docs paste fixture and tests (needs the owner's clipboard sample), the browser paste test, and the admin.md list of what pasting doesn't keep.
 - [ ] **UX pass on the create form**, after step 4 and before step 5, from a UX review of the page (design in *UX pass* below). Grouped by complexity; each group is one commit, outlined and approved first as usual:
   - [ ] **U1. Copy and small layout fixes** (wording and markup only).
@@ -73,6 +73,8 @@ Not part of this work: admin login and logout, the admin course page and list, e
 | Native `date`, `time`, `<select>` and file inputs | They already do the job | Date pickers, a time zone combobox, [react-dropzone](https://react-dropzone.js.org), [next-safe-action](https://next-safe-action.dev) |
 | The create form is built in two commits: the plain fields and schedule first, price rows second | The full form is too large to review as one change; price rows are an independent addition (`useFieldArray`) | One commit for the whole form |
 | Step 4 is built in four commits: toolbar, link, list depth, paste | Each part has its own tests, and the paste fixture waits on the owner's clipboard sample | One commit for all of step 4 |
+| The Link button checks the address against the API's schemes (`https:`, `http:`, `mailto:`, `tel:`, full address, at most 2,048 characters) before `setLink`; the shared extension list keeps Tiptap's default `isAllowedUri` | Tiptap's default also accepts `ftp:`, `sms:` and addresses with no scheme, which the API refuses, so the admin would only find out on save. A stricter `isAllowedUri` in the shared list would also stop autolinking `www.example.com` (autolink checks the raw word) and change the API's copy | A stricter `isAllowedUri` in the shared extension list; relying on `setLink`'s own check |
+| The link address is typed in an inline field under the toolbar; Link is disabled until text is selected or the cursor is on a link; Remove link is its own toolbar button, disabled off a link | Plain markup with simple tab order, no positioning or focus trap; removing takes one click; disabled rather than hidden keeps the toolbar's arrow-key order stable | `prompt()`; a popover; inserting the address as text when nothing is selected |
 | Toolbar buttons keep focus in the editor on a mouse click (`preventDefault` on mouse down) | A click would otherwise blur the editor, mark it touched and show "Enter a description" on an empty field; the selection stays where the admin made it | Letting focus move to the button and refocusing with `.focus()` only |
 
 ## Libraries to add (web only)
@@ -214,17 +216,17 @@ Browser test (`yarn --cwd web test:browser`):
 
 **Toolbar** (4a, done: `description-toolbar.tsx`, above the editable area): Base UI's Toolbar (`role="toolbar"`, arrow keys move between buttons) with shadcn `toggle` buttons; `aria-pressed` comes from `useEditorState`. Icon buttons named by `aria-label` and `title`. Heading and Subheading are levels 2 and 3; level 4 exists for pasted content. Buttons are disabled until the editor exists in the browser. Underline, strike, quote and rule have no button (shortcuts and paste still work).
 
-- Link (4b): opens a small inline field for the address (no browser `prompt()`), refusing the addresses Tiptap refuses, with a message; "Remove link" when the cursor is on one.
+- Link (4b, done): a Link button (enabled with text selected or the cursor on a link) opens an inline field under the toolbar (`description-link-field.tsx`; Enter applies, Escape cancels, prefilled and changing the whole link when on one). The address is checked by `isAllowedDescriptionLink` (the API's rules), with a message. A separate "Remove link" button is enabled on a link.
 
 Each button calls Tiptap's chain commands (`toggleBold`, `toggleHeading`, `setLink`, …), so undo keeps working.
 
-**List depth:** a small keyboard override on ListItem stops Tab from indenting past level 3. Deeper lists can still arrive by paste and get the "Press Shift+Tab" message.
+**List depth:** a small keyboard override on ListItem stops Tab from indenting past level 3. Deeper lists can still arrive by paste; nothing checks depth (see the "Not enforced by the API" row), so they are saved as they are.
 
 **Paste:**
 
 - A real Google Docs clipboard sample (bold, italic, a Title, headings 1–4, a nested list, a numbered list starting at 3, a link, a table-of-contents link, blank lines, an image and a table), saved as a test fixture. The owner captures it: paste into the browser console's `addEventListener("paste", e => console.log(e.clipboardData.getData("text/html")))` page.
 - Expected gap: Docs puts a nested `<ul>` beside the `<li>` instead of inside it, which may give an extra empty bullet. If the sample shows it, offer the owner a `transformPastedHTML` fix before adding it. Also check whether links come wrapped in `google.com/url?q=` redirects.
-- Record in [web/docs/admin.md](../web/docs/admin.md) what pasting doesn't keep: Title, Subtitle and headings 1 and 5–6 become paragraphs; colours, fonts and spacing are dropped; numbered lists restart at 1; links with other schemes keep only their text.
+- Record in [web/docs/admin.md](../web/docs/admin.md) what pasting doesn't keep: Title, Subtitle and headings 1 and 5–6 become paragraphs; colours, fonts and spacing are dropped; numbered lists restart at 1; links with other schemes: Tiptap keeps `ftp:` and similar on paste and the API refuses them, so decide with the fixture whether paste should drop them.
 
 **Tests:**
 

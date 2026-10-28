@@ -39,6 +39,15 @@ async function fillValidForm(page: Page) {
   await page.keyboard.type("course");
   await expect(description.locator("strong")).toHaveText("course");
 
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.getByRole("button", { name: "Link", exact: true }).click();
+  await page.getByLabel("Link address").fill("https://example.com/welcome");
+  await page.keyboard.press("Enter");
+  await expect(description.locator("a")).toHaveAttribute(
+    "href",
+    "https://example.com/welcome",
+  );
+
   await page.getByLabel("Content link").fill("https://example.com/c");
   await page.getByLabel("Start date", { exact: true }).fill("2099-01-10");
   await page.getByLabel("Start time", { exact: true }).fill("09:00");

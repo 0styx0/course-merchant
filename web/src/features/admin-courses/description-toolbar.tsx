@@ -8,12 +8,18 @@ import {
   Heading2,
   Heading3,
   Italic,
+  Link,
   List,
   ListOrdered,
   type LucideIcon,
+  Unlink,
 } from "lucide-react";
+import { useId, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
+
+import { DescriptionLinkField } from "./description-link-field";
 
 type Format = {
   label: string;
@@ -80,35 +86,90 @@ export function DescriptionToolbar({
   editor,
   controlsId,
 }: DescriptionToolbarProps) {
-  const active = useEditorState({
+  const linkFieldId = useId();
+  const [linkFieldOpen, setLinkFieldOpen] = useState(false);
+  const state = useEditorState({
     editor,
-    selector: ({ editor }) =>
-      FORMATS.map((format) => (editor ? format.isActive(editor) : false)),
+    selector: ({ editor }) => ({
+      active: FORMATS.map((format) =>
+        editor ? format.isActive(editor) : false,
+      ),
+      onLink: editor?.isActive("link") ?? false,
+      hasSelection: editor ? !editor.state.selection.empty : false,
+    }),
   });
+  const preventBlur = (event: React.MouseEvent) => event.preventDefault();
 
   return (
-    <Toolbar.Root
-      aria-label="Formatting"
-      aria-controls={controlsId}
-      className="flex flex-wrap gap-1"
-    >
-      {FORMATS.map((format, index) => (
+    <div className="flex flex-col gap-1">
+      <Toolbar.Root
+        aria-label="Formatting"
+        aria-controls={controlsId}
+        className="flex flex-wrap gap-1"
+      >
+        {FORMATS.map((format, index) => (
+          <Toolbar.Button
+            key={format.label}
+            disabled={!editor}
+            onMouseDown={preventBlur}
+            render={
+              <Toggle
+                aria-label={format.label}
+                title={format.label}
+                pressed={state?.active[index] ?? false}
+                onPressedChange={() => editor && format.toggle(editor)}
+              />
+            }
+          >
+            <format.Icon aria-hidden />
+          </Toolbar.Button>
+        ))}
         <Toolbar.Button
-          key={format.label}
-          disabled={!editor}
-          onMouseDown={(event) => event.preventDefault()}
+          disabled={!editor || !(state?.onLink || state?.hasSelection)}
+          onMouseDown={preventBlur}
           render={
             <Toggle
-              aria-label={format.label}
-              title={format.label}
-              pressed={active?.[index] ?? false}
-              onPressedChange={() => editor && format.toggle(editor)}
+              aria-label="Link"
+              title="Link (select text first)"
+              aria-expanded={linkFieldOpen}
+              aria-controls={linkFieldOpen ? linkFieldId : undefined}
+              pressed={linkFieldOpen || (state?.onLink ?? false)}
+              onPressedChange={() => setLinkFieldOpen((open) => !open)}
             />
           }
         >
-          <format.Icon aria-hidden />
+          <Link aria-hidden />
         </Toolbar.Button>
-      ))}
-    </Toolbar.Root>
+        <Toolbar.Button
+          disabled={!editor || !state?.onLink}
+          onMouseDown={preventBlur}
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Remove link"
+              title="Remove link"
+              onClick={() =>
+                editor
+                  ?.chain()
+                  .focus()
+                  .extendMarkRange("link")
+                  .unsetLink()
+                  .run()
+              }
+            />
+          }
+        >
+          <Unlink aria-hidden />
+        </Toolbar.Button>
+      </Toolbar.Root>
+      {editor && linkFieldOpen && (
+        <DescriptionLinkField
+          editor={editor}
+          id={linkFieldId}
+          onClose={() => setLinkFieldOpen(false)}
+        />
+      )}
+    </div>
   );
 }
