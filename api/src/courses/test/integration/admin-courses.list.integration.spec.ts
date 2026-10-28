@@ -20,6 +20,7 @@ import {
   createPayment,
   createPricedCourse,
   updateCourseStatus,
+  descriptionDoc,
 } from "@/test/course-fixtures.js";
 import { instant } from "@/test/test-helpers.js";
 import { AdminCoursesService } from "@/courses/admin-courses.service.js";
@@ -192,7 +193,7 @@ describe("AdminCoursesService integration", () => {
         {
           title: "Future Price Course",
           summary: "Not publicly available yet",
-          description: "Not publicly available yet",
+          description: descriptionDoc("Not publicly available yet"),
         },
         {
           amount: 12900,
@@ -221,7 +222,7 @@ describe("AdminCoursesService integration", () => {
         {
           title: "Ended Course",
           summary: "This course has finished",
-          description: "This course has finished",
+          description: descriptionDoc("This course has finished"),
           startsAt: instant("2025-09-27T18:00:00Z"),
           endsAt: instant("2025-09-27T20:00:00Z"),
           timeZone: "America/New_York",

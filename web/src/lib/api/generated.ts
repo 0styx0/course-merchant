@@ -130,7 +130,7 @@ export interface paths {
          *     Validation rules:
          *     - `name`: 1 to 100 characters.
          *     - `summary`: 1 to 300 characters after trimming, about two or three sentences.
-         *     - `description`: 1 to 5,000 characters.
+         *     - `description`: a rich-text document (see `CourseDescription`) with 1 to 5,000 characters of text.
          *     - `schedule.timeZone`: must be a valid IANA time zone identifier.
          *     - `schedule.startTime`: must be an RFC 3339 date-time in UTC (ending in `Z`), and must be now or in the future.
          *     - `schedule.endTime`: must be an RFC 3339 date-time in UTC (ending in `Z`), in the future, and after `startTime`.
@@ -427,10 +427,40 @@ export interface components {
          */
         CourseSummary: string;
         /**
-         * @description Public description of the course.
-         * @example Learn the fundamentals of React.
+         * @description Public description of the course, as a rich-text document: a subset of [Tiptap](https://tiptap.dev)'s JSON.
+         *
+         *     - Blocks: `paragraph`, `heading` (levels 2 to 4), `bulletList`, `orderedList`, `blockquote` and `horizontalRule`. Text may contain `hardBreak`.
+         *     - Marks on text: `bold`, `italic`, `strike`, `underline` and `link`. A link's `attrs.href` is at most 2,048 characters and starts with `https:`, `http:`, `mailto:` or `tel:`.
+         *     - The text must contain at least one character that isn't whitespace, and at most 5,000 characters in total (the sum of every `text` value).
+         *     - Text must not contain U+0000 or unpaired surrogates.
+         *     - Anything else (unknown nodes or marks, wrong nesting) is refused. Attributes the editor doesn't know are dropped, not stored.
+         *     - The whole request body is limited to 100 KB.
+         * @example {
+         *       "type": "doc",
+         *       "content": [
+         *         {
+         *           "type": "paragraph",
+         *           "content": [
+         *             {
+         *               "type": "text",
+         *               "text": "Learn the fundamentals of React."
+         *             }
+         *           ]
+         *         }
+         *       ]
+         *     }
          */
-        CourseDescription: string;
+        CourseDescription: {
+            /** @constant */
+            type: "doc";
+            content: ({
+                type: string;
+            } & {
+                [key: string]: unknown;
+            })[];
+        } & {
+            [key: string]: unknown;
+        };
         /**
          * Format: uri
          * @description Private link to the course material, such as a Google Drive folder or a Zoom meeting. It is emailed to buyers and only ever returned to administrators.

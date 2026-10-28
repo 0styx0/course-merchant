@@ -8,6 +8,7 @@ import {
   createCourse,
   createCoursePrice,
   createPricedCourse,
+  descriptionDoc,
 } from "@/test/course-fixtures.js";
 import { instant } from "@/test/test-helpers.js";
 
@@ -26,7 +27,7 @@ describe("CourseImagesRepository (integration)", () => {
       status: "drafted",
       title: "React Fundamentals",
       summary: "Learn React",
-      description: "Learn React",
+      description: descriptionDoc("Learn React"),
       startsAt: NOW.add({ hours: 24 }),
       endsAt: NOW.add({ hours: 26 }),
       timeZone: "UTC",
@@ -137,7 +138,7 @@ describe("CourseImagesRepository (integration)", () => {
         status: "drafted",
         title: "No image",
         summary: "No image",
-        description: "No image",
+        description: descriptionDoc("No image"),
         startsAt: NOW.add({ hours: 24 }),
         endsAt: NOW.add({ hours: 26 }),
         timeZone: "UTC",

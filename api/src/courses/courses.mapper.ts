@@ -1,7 +1,11 @@
 import { Temporal } from "@js-temporal/polyfill";
 
 import { formatDate } from "@/utils/formatters.js";
-import { GetCourseAdminResponse, GetCourseResponse } from "types.js";
+import {
+  CourseDescription,
+  GetCourseAdminResponse,
+  GetCourseResponse,
+} from "types.js";
 import type { CourseRepositoryModelPublic } from "./courses.repository/courses.repository.js";
 import { CourseRepositoryModelAdmin } from "./courses.repository/admin-courses.repository.js";
 
@@ -11,6 +15,21 @@ import { CourseRepositoryModelAdmin } from "./courses.repository/admin-courses.r
  */
 export function imageVersion(updatedAt: Temporal.Instant): string {
   return String(updatedAt.epochMilliseconds);
+}
+
+// the column is generic JSON, but only validated documents are ever written
+export function storedDescription(
+  json: CourseRepositoryModelPublic["description"],
+): CourseDescription {
+  return json as CourseDescription;
+}
+
+// the document is JSON as parsed from the request, which the generated type
+// can't say, as it has an index signature
+export function toStoredDescription(
+  description: CourseDescription,
+): CourseRepositoryModelPublic["description"] {
+  return description as CourseRepositoryModelPublic["description"];
 }
 
 // publishing requires an image and images are never removed
@@ -31,7 +50,7 @@ export function toPublicCourseResponse(
     id: course.id,
     name: course.title,
     summary: course.summary,
-    description: course.description,
+    description: storedDescription(course.description),
     enrollmentCount: course.enrollments,
     image: { version: imageVersion(requireImage(course).updatedAt) },
     price: {
@@ -56,7 +75,7 @@ export function toAdminCourseResponse(
     id: course.id,
     name: course.title,
     summary: course.summary,
-    description: course.description,
+    description: storedDescription(course.description),
     contentUrl: course.contentUrl,
     schedule: {
       startTime: formatDate(course.startsAt),

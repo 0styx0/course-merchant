@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 import type { DbScope } from "types.js";
+import { Models } from "@/prisma/contract.js";
 import { and } from "@prisma/orm-postgres/orm-client";
 import { visibleCoursesWithCurrentPrice } from "../course-visibility.js";
 
@@ -8,7 +9,7 @@ export type CourseRepositoryModelPublic = {
   id: string;
   title: string;
   summary: string;
-  description: string;
+  description: Models.public_Course["description"];
   startsAt: Temporal.Instant;
   endsAt: Temporal.Instant;
   timeZone: string;

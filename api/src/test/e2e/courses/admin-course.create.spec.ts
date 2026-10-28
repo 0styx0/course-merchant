@@ -16,6 +16,7 @@ import type {
   ProblemDetails,
   ValidationProblemDetails,
 } from "types.js";
+import { descriptionDoc } from "@/test/course-fixtures.js";
 
 describe("POST /admin/courses (e2e)", () => {
   let app: INestApplication;
@@ -40,7 +41,7 @@ describe("POST /admin/courses (e2e)", () => {
     return {
       name: `E2E course ${randomUUID()}`,
       summary: "Course created by an E2E test.",
-      description: "Course created by an E2E test.",
+      description: descriptionDoc("Course created by an E2E test."),
       contentUrl: "https://drive.google.com/drive/folders/e2e",
       status: "drafted",
       schedule: {
@@ -216,6 +217,86 @@ describe("POST /admin/courses (e2e)", () => {
         code: "INVALID_VALUE",
         detail: "Must be one of the accepted currencies: USD.",
       },
+    ]);
+  });
+
+  it("stores a formatted description and returns it as written", async () => {
+    const description = {
+      type: "doc",
+      content: [
+        {
+          type: "heading",
+          attrs: { level: 2 },
+          content: [{ type: "text", text: "Intro" }],
+        },
+        {
+          type: "bulletList",
+          content: [
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [
+                    {
+                      type: "text",
+                      text: "Bold",
+                      marks: [{ type: "bold" }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const response: TypedResponse<GetCourseAdminResponse> = await request(
+      httpServer(app),
+    )
+      .post("/v1/admin/courses")
+      .set("Authorization", bearer(token))
+      .send({ ...makeCreateRequest(), description })
+      .expect(201);
+
+    expect(response.body.description).toEqual(description);
+
+    const getResponse = await getAdminCourse(response.body.id);
+
+    expect(getResponse.body.description).toEqual(description);
+  });
+
+  it("points at the link whose scheme is refused", async () => {
+    const description = {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "Click",
+              marks: [{ type: "link", attrs: { href: "javascript:alert(1)" } }],
+            },
+          ],
+        },
+      ],
+    };
+
+    const response: TypedResponse<ValidationProblemDetails> = await request(
+      httpServer(app),
+    )
+      .post("/v1/admin/courses")
+      .set("Authorization", bearer(token))
+      .send({ ...makeCreateRequest(), description })
+      .expect(400);
+
+    expect(response.body.errors).toEqual([
+      expect.objectContaining({
+        field: "/description/content/0/content/0/marks/0/attrs/href",
+        code: "INVALID_VALUE",
+      }),
     ]);
   });
 

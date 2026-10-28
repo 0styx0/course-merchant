@@ -1,6 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { describe, expect, it } from "vitest";
 
+import { descriptionDoc } from "@/test/course-fixtures.js";
 import {
   createCourseRequestSchema,
   updateCourseRequestSchema,
@@ -9,7 +10,7 @@ import {
 type CourseRequestInput = {
   name: string;
   summary: string;
-  description: string;
+  description: ReturnType<typeof descriptionDoc>;
   contentUrl: string;
   status: "published" | "archived" | "drafted";
   schedule: {
@@ -40,7 +41,7 @@ function makeValidRequest(): CourseRequestInput {
   return {
     name: "TypeScript Fundamentals",
     summary: "Learn TypeScript from the ground up.",
-    description: "Learn TypeScript from the ground up.",
+    description: descriptionDoc("Learn TypeScript from the ground up."),
     contentUrl: "https://drive.google.com/drive/folders/typescript",
     status: "drafted",
     schedule: {
@@ -125,11 +126,10 @@ describe("createCourseRequestSchema", () => {
       expect(result.success).toBe(true);
     });
 
-    it("returns trimmed course details", () => {
+    it("returns the trimmed name", () => {
       const request = makeValidRequest();
 
       request.name = "  TypeScript Fundamentals  ";
-      request.description = "  Learn TypeScript.  ";
 
       const result = createCourseRequestSchema.safeParse(request);
 
@@ -137,7 +137,6 @@ describe("createCourseRequestSchema", () => {
 
       if (result.success) {
         expect(result.data.name).toBe("TypeScript Fundamentals");
-        expect(result.data.description).toBe("Learn TypeScript.");
       }
     });
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { AdminCoursesRepository } from "@/courses/courses.repository/admin-courses.repository.js";
 import { db } from "@/prisma/db.js";
-import { createCourse } from "@/test/course-fixtures.js";
+import { createCourse, descriptionDoc } from "@/test/course-fixtures.js";
 import { instant } from "@/test/test-helpers.js";
 
 describe("AdminCoursesRepository.courseExists (integration)", () => {
@@ -12,7 +12,7 @@ describe("AdminCoursesRepository.courseExists (integration)", () => {
     const course = await createCourse({
       title: "React Fundamentals",
       summary: "Learn React",
-      description: "Learn React",
+      description: descriptionDoc("Learn React"),
       startsAt: instant("2026-10-15T18:00:00Z"),
       endsAt: instant("2026-10-15T20:00:00Z"),
       timeZone: "UTC",

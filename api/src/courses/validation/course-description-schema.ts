@@ -140,5 +140,5 @@ export const descriptionDocumentSchema = z
       });
     }
 
-    return doc ?? value;
+    return doc ?? z.never();
   });

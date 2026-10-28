@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { toPublicCourseResponse } from "@/courses/courses.mapper.js";
 import { instant } from "../../../test/test-helpers.js";
 import type { CourseRepositoryModelPublic } from "../../courses.repository/courses.repository.js";
+import { descriptionDoc } from "@/test/course-fixtures.js";
 
 const COURSE_ID = "crs_01HZX3";
 
@@ -10,7 +11,7 @@ const repositoryCourse = {
   id: COURSE_ID,
   title: "React Fundamentals",
   summary: "Learn the fundamentals of React",
-  description: "Learn the fundamentals of React",
+  description: descriptionDoc("Learn the fundamentals of React"),
   startsAt: instant("2026-10-01T18:00:00Z"),
   endsAt: instant("2026-10-01T20:00:00Z"),
   timeZone: "America/New_York",
@@ -30,7 +31,7 @@ describe("toPublicCourseResponse", () => {
       id: COURSE_ID,
       name: "React Fundamentals",
       summary: "Learn the fundamentals of React",
-      description: "Learn the fundamentals of React",
+      description: descriptionDoc("Learn the fundamentals of React"),
       enrollmentCount: 12,
       image: { version: "1790856000000" },
       price: {

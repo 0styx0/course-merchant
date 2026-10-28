@@ -30,7 +30,14 @@ test("displays course details", async ({ page }) => {
     }),
   ).toBeVisible();
 
-  await expect(page.getByText(reactCourse.description)).toBeVisible();
+  await expect(page.getByText(reactCourse.summary).first()).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 2, name: "What you will build" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "React docs" })).toHaveAttribute(
+    "href",
+    "https://react.dev",
+  );
 
   await expect(page.getByText("$99.00")).toBeVisible();
   await expect(page.getByText("12 enrolled")).toBeVisible();

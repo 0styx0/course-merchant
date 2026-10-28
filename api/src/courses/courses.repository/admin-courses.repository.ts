@@ -10,7 +10,7 @@ export type CourseRepositoryModelAdmin = {
   id: string;
   title: string;
   summary: string;
-  description: string;
+  description: Models.public_Course["description"];
   contentUrl: string;
   startsAt: Temporal.Instant;
   endsAt: Temporal.Instant;
@@ -52,7 +52,7 @@ export type CourseRepositoryModelAdmin = {
 export type CourseRepositoryCreateInput = {
   title: string;
   summary: string;
-  description: string;
+  description: Models.public_Course["description"];
   contentUrl: string;
   startsAt: Temporal.Instant;
   endsAt: Temporal.Instant;
@@ -68,7 +68,7 @@ export type CourseRepositoryCreateInput = {
 export type CourseRepositoryUpdateInput = {
   title: string;
   summary: string;
-  description: string;
+  description: Models.public_Course["description"];
   contentUrl: string;
   startsAt: Temporal.Instant;
   endsAt: Temporal.Instant;

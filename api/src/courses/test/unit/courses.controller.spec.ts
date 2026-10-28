@@ -4,13 +4,14 @@ import type { GetCourseResponse } from "types.js";
 import { asDependency, type MockMethods } from "@/test/test-helpers.js";
 import { CoursesController } from "../../courses.controller.js";
 import { CoursesService } from "../../courses.service.js";
+import { descriptionDoc } from "@/test/course-fixtures.js";
 
 function makeCourseResponse(courseId: string): GetCourseResponse {
   return {
     id: courseId,
     name: "React Fundamentals",
     summary: "Learn React",
-    description: "Learn React",
+    description: descriptionDoc("Learn React"),
     enrollmentCount: 12,
     image: { version: "1790856000000" },
     price: {
@@ -58,7 +59,7 @@ describe("CoursesController", () => {
             id: "550e8400-e29b-41d4-a716-446655440000",
             name: "React Fundamentals",
             summary: "Learn React",
-            description: "Learn React",
+            description: descriptionDoc("Learn React"),
             enrollmentCount: 12,
             image: { version: "1790856000000" },
             price: {

@@ -36,7 +36,7 @@ model Course {
   id          Uuid                       @id @onCreate(uuid())
   title       String
   summary     String
-  description String
+  description Jsonb
   contentUrl  String
 
   startsAt    DateTime

@@ -8,6 +8,7 @@ import { AdminCoursesService } from "@/courses/admin-courses.service.js";
 import { AdminCoursesRepository } from "@/courses/courses.repository/admin-courses.repository.js";
 import { CreateCourseRequest } from "types.js";
 import { toDatabasePrecision } from "@/test/test-helpers.js";
+import { descriptionDoc } from "@/test/course-fixtures.js";
 
 describe("AdminCoursesService (integration)", () => {
   let moduleRef: TestingModule;
@@ -36,7 +37,7 @@ describe("AdminCoursesService (integration)", () => {
     return {
       name: `Integration course ${randomUUID()}`,
       summary: "Course created by an integration test.",
-      description: "Course created by an integration test.",
+      description: descriptionDoc("Course created by an integration test."),
       contentUrl: "https://drive.google.com/drive/folders/integration",
       status: "drafted",
       schedule: {

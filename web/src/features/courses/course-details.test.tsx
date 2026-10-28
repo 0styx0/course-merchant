@@ -19,7 +19,16 @@ describe("CourseDetails", () => {
       }),
     ).toBeVisible();
 
-    expect(screen.getByText(course.description)).toBeVisible();
+    expect(screen.getByText(course.summary)).toBeVisible();
+
+    expect(
+      screen.getByRole("heading", { level: 2, name: "What you will build" }),
+    ).toBeVisible();
+    expect(screen.getByText("Three small apps")).toBeVisible();
+    expect(screen.getByRole("link", { name: "React docs" })).toHaveAttribute(
+      "href",
+      "https://react.dev",
+    );
 
     expect(screen.getByText(formatPrice(9900, "USD"))).toBeVisible();
 

@@ -4,6 +4,14 @@ import { db } from "../prisma/db.js";
 import { instant } from "./test-helpers.js";
 import { Models } from "@/prisma/contract.js";
 
+/** A one-paragraph description document. */
+export function descriptionDoc(text: string) {
+  return {
+    type: "doc" as const,
+    content: [{ type: "paragraph", content: [{ type: "text", text }] }],
+  };
+}
+
 let tinyWebp: Promise<Buffer> | undefined;
 
 function tinyImage() {
@@ -24,7 +32,7 @@ export async function createCourse(input: {
   status?: "published" | "drafted" | "archived";
   title: string;
   summary: string;
-  description: string;
+  description: ReturnType<typeof descriptionDoc>;
   startsAt: Temporal.Instant;
   endsAt: Temporal.Instant;
   timeZone: string;
@@ -80,7 +88,7 @@ export async function createPricedCourse(
   const course = await createCourse({
     title: "React Fundamentals",
     summary: "Learn React",
-    description: "Learn React",
+    description: descriptionDoc("Learn React"),
     startsAt: instant("2026-10-01T18:00:00.000Z"),
     endsAt: instant("2026-10-01T20:00:00.000Z"),
     timeZone: "America/New_York",

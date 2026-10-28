@@ -1,3 +1,4 @@
+import { storedDescription } from "@/courses/courses.mapper.js";
 import { Temporal } from "@js-temporal/polyfill";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -13,6 +14,7 @@ import {
   type MockMethods,
 } from "@/test/test-helpers.js";
 import type { UpdateCourseRequest } from "types.js";
+import { descriptionDoc } from "@/test/course-fixtures.js";
 
 const COURSE_ID = "crs_01HZX3";
 
@@ -23,7 +25,7 @@ function makeRepositoryCourse() {
     id: COURSE_ID,
     title: "React Fundamentals",
     summary: "Learn the fundamentals of React",
-    description: "Learn the fundamentals of React",
+    description: descriptionDoc("Learn the fundamentals of React"),
     contentUrl: "https://drive.google.com/drive/folders/react",
     startsAt: now.add({ hours: 24 }).round({ smallestUnit: "microseconds" }),
     endsAt: now.add({ hours: 26 }).round({ smallestUnit: "microseconds" }),
@@ -61,7 +63,7 @@ function makeRequest(course: CourseRepositoryModelAdmin): UpdateCourseRequest {
   return {
     name: course.title,
     summary: course.summary,
-    description: course.description,
+    description: storedDescription(course.description),
     contentUrl: course.contentUrl,
     status: course.statuses[0].name,
     schedule: {
@@ -121,7 +123,7 @@ describe("AdminCoursesService", () => {
         ...makeRequest(repositoryCourse),
         name: "React Advanced",
         summary: "Hooks in depth",
-        description: "Hooks in depth",
+        description: descriptionDoc("Hooks in depth"),
         contentUrl: "https://zoom.us/j/123456789",
       };
 
@@ -133,7 +135,7 @@ describe("AdminCoursesService", () => {
         expect.objectContaining({
           title: "React Advanced",
           summary: "Hooks in depth",
-          description: "Hooks in depth",
+          description: descriptionDoc("Hooks in depth"),
           contentUrl: "https://zoom.us/j/123456789",
           startsAt: repositoryCourse.startsAt,
           endsAt: repositoryCourse.endsAt,

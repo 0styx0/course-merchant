@@ -8,7 +8,10 @@ import {
 import { PrismaService } from "@/prisma/prisma.service.js";
 import { courseNotFound } from "./course-errors.js";
 import { ValidationException } from "../common/errors/validation.exception.js";
-import { toAdminCourseResponse } from "./courses.mapper.js";
+import {
+  toAdminCourseResponse,
+  toStoredDescription,
+} from "./courses.mapper.js";
 import {
   AdminCoursesRepository,
   CourseRepositoryCreateInput,
@@ -34,7 +37,7 @@ export class AdminCoursesService {
     const input: CourseRepositoryCreateInput = {
       title: request.name,
       summary: request.summary,
-      description: request.description,
+      description: toStoredDescription(request.description),
       contentUrl: request.contentUrl,
       startsAt: Temporal.Instant.from(request.schedule.startTime),
       endsAt: Temporal.Instant.from(request.schedule.endTime),
@@ -84,7 +87,7 @@ export class AdminCoursesService {
       return this.coursesRepository.updateCourse(tx, courseId, {
         title: request.name,
         summary: request.summary,
-        description: request.description,
+        description: toStoredDescription(request.description),
         contentUrl: request.contentUrl,
         startsAt: Temporal.Instant.from(request.schedule.startTime),
         endsAt: Temporal.Instant.from(request.schedule.endTime),

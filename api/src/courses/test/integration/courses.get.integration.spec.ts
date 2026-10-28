@@ -23,6 +23,7 @@ import {
   createEnrollment,
   archiveCourse,
   createPricedCourse,
+  descriptionDoc,
 } from "../../../test/course-fixtures.js";
 
 const NOW = instant("2026-09-29T14:00:00Z");
@@ -58,7 +59,7 @@ describe("CoursesService integration", () => {
         id: course.id,
         name: "React Fundamentals",
         summary: "Learn React",
-        description: "Learn React",
+        description: descriptionDoc("Learn React"),
         enrollmentCount: 0,
         // the fixture's image is made at NOW
         image: { version: String(NOW.epochMilliseconds) },
@@ -78,7 +79,7 @@ describe("CoursesService integration", () => {
       const { course } = await createPricedCourse({
         title: "In Progress",
         summary: "Currently running",
-        description: "Currently running",
+        description: descriptionDoc("Currently running"),
         startsAt: instant("2026-09-29T13:00:00Z"),
         endsAt: instant("2026-09-29T15:00:00Z"),
       });
@@ -89,7 +90,7 @@ describe("CoursesService integration", () => {
         id: course.id,
         name: "In Progress",
         summary: "Currently running",
-        description: "Currently running",
+        description: descriptionDoc("Currently running"),
         enrollmentCount: 0,
         image: { version: String(NOW.epochMilliseconds) },
         price: {
@@ -108,7 +109,7 @@ describe("CoursesService integration", () => {
       const { course } = await createPricedCourse({
         title: "Ended",
         summary: "Already finished",
-        description: "Already finished",
+        description: descriptionDoc("Already finished"),
         startsAt: instant("2026-09-28T13:00:00Z"),
         endsAt: instant("2026-09-28T15:00:00Z"),
       });
@@ -119,7 +120,7 @@ describe("CoursesService integration", () => {
         id: course.id,
         name: "Ended",
         summary: "Already finished",
-        description: "Already finished",
+        description: descriptionDoc("Already finished"),
         enrollmentCount: 0,
         image: { version: String(NOW.epochMilliseconds) },
         price: {
@@ -138,7 +139,7 @@ describe("CoursesService integration", () => {
       const { course } = await createPricedCourse({
         title: "Ending Now",
         summary: "Ends now",
-        description: "Ends now",
+        description: descriptionDoc("Ends now"),
         startsAt: instant("2026-09-29T13:00:00Z"),
         endsAt: NOW,
       });
@@ -227,7 +228,7 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "Future Price Course",
         summary: "Not yet priced",
-        description: "Not yet priced",
+        description: descriptionDoc("Not yet priced"),
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",

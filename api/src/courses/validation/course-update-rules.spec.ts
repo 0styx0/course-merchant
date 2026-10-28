@@ -7,6 +7,7 @@ import {
   findUpdateRuleViolations,
   isSameInstant,
 } from "./course-update-rules.js";
+import { descriptionDoc } from "@/test/course-fixtures.js";
 
 const now = Temporal.Instant.from("2026-10-21T12:00:00Z");
 
@@ -49,7 +50,7 @@ function makeRequest(stored: Stored): UpdateCourseRequest {
   return {
     name: "TypeScript Fundamentals",
     summary: "Learn TypeScript from the ground up.",
-    description: "Learn TypeScript from the ground up.",
+    description: descriptionDoc("Learn TypeScript from the ground up."),
     contentUrl: "https://drive.google.com/drive/folders/typescript",
     status: "published",
     schedule: {

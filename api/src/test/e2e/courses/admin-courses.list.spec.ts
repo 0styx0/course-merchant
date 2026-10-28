@@ -7,6 +7,7 @@ import {
   createPayment,
   createPricedCourse,
   updateCourseStatus,
+  descriptionDoc,
 } from "@/test/course-fixtures.js";
 import type { INestApplication } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
@@ -42,7 +43,7 @@ describe("Admin Courses API (e2e)", () => {
         {
           title: "React Fundamentals",
           summary: "Learn the fundamentals of React.",
-          description: "Learn the fundamentals of React.",
+          description: descriptionDoc("Learn the fundamentals of React."),
           startsAt: Temporal.Instant.from("2026-10-15T18:00:00Z"),
           endsAt: Temporal.Instant.from("2026-10-15T20:00:00Z"),
           timeZone: "America/New_York",
@@ -98,7 +99,7 @@ describe("Admin Courses API (e2e)", () => {
             id: course.id,
             name: "React Fundamentals",
             summary: "Learn the fundamentals of React.",
-            description: "Learn the fundamentals of React.",
+            description: descriptionDoc("Learn the fundamentals of React."),
             contentUrl: "https://example.com/course",
             schedule: {
               startTime: "2026-10-15T18:00:00Z",
@@ -244,7 +245,7 @@ describe("Admin Courses API (e2e)", () => {
       const futureCourse = await createCourse({
         title: "Future Price Course",
         summary: "my future course",
-        description: "my future course",
+        description: descriptionDoc("my future course"),
         startsAt: Temporal.Instant.from("2026-11-01T18:00:00Z"),
         endsAt: Temporal.Instant.from("2026-11-01T20:00:00Z"),
         timeZone: "America/New_York",

@@ -2,6 +2,7 @@ import {
   archiveCourse,
   createCourse,
   createPricedCourse,
+  descriptionDoc,
 } from "@/test/course-fixtures.js";
 import { instant } from "../../test-helpers.js";
 import type { INestApplication } from "@nestjs/common";
@@ -35,7 +36,7 @@ describe("GET /v1/courses (e2e)", () => {
       {
         title: "React Fundamentals",
         summary: "Learn the fundamentals of React.",
-        description: "Learn the fundamentals of React.",
+        description: descriptionDoc("Learn the fundamentals of React."),
         startsAt: instant("2026-10-01T14:00:00Z"),
         endsAt: instant("2026-10-01T16:00:00Z"),
         timeZone: "America/New_York",
@@ -51,7 +52,7 @@ describe("GET /v1/courses (e2e)", () => {
       {
         title: "TypeScript Essentials",
         summary: "Learn TypeScript fundamentals.",
-        description: "Learn TypeScript fundamentals.",
+        description: descriptionDoc("Learn TypeScript fundamentals."),
         startsAt: instant("2026-10-02T14:00:00Z"),
         endsAt: instant("2026-10-02T16:00:00Z"),
         timeZone: "America/New_York",
@@ -76,7 +77,7 @@ describe("GET /v1/courses (e2e)", () => {
           id: earlier.course.id,
           name: "React Fundamentals",
           summary: "Learn the fundamentals of React.",
-          description: "Learn the fundamentals of React.",
+          description: descriptionDoc("Learn the fundamentals of React."),
           enrollmentCount: 0,
           image: { version: expect.stringMatching(/^[0-9]+$/) },
           price: {
@@ -93,7 +94,7 @@ describe("GET /v1/courses (e2e)", () => {
           id: later.course.id,
           name: "TypeScript Essentials",
           summary: "Learn TypeScript fundamentals.",
-          description: "Learn TypeScript fundamentals.",
+          description: descriptionDoc("Learn TypeScript fundamentals."),
           enrollmentCount: 0,
           image: { version: expect.stringMatching(/^[0-9]+$/) },
           price: {
@@ -132,7 +133,7 @@ describe("GET /v1/courses (e2e)", () => {
       {
         title: "Available Course",
         summary: "This course should appear.",
-        description: "This course should appear.",
+        description: descriptionDoc("This course should appear."),
         startsAt: instant("2026-10-15T14:00:00Z"),
         endsAt: instant("2026-10-15T16:00:00Z"),
         timeZone: "America/New_York",
@@ -148,7 +149,7 @@ describe("GET /v1/courses (e2e)", () => {
       {
         title: "Ended Course",
         summary: "This course has ended.",
-        description: "This course has ended.",
+        description: descriptionDoc("This course has ended."),
         startsAt: instant("2026-09-25T14:00:00Z"),
         endsAt: instant("2026-09-26T16:00:00Z"),
         timeZone: "America/New_York",
@@ -164,7 +165,7 @@ describe("GET /v1/courses (e2e)", () => {
       {
         title: "Archived Course",
         summary: "This course is archived.",
-        description: "This course is archived.",
+        description: descriptionDoc("This course is archived."),
         startsAt: instant("2026-10-17T14:00:00Z"),
         endsAt: instant("2026-10-17T16:00:00Z"),
         timeZone: "America/New_York",
@@ -184,7 +185,7 @@ describe("GET /v1/courses (e2e)", () => {
     const unpriced = await createCourse({
       title: "Unpriced Course",
       summary: "This course has no price.",
-      description: "This course has no price.",
+      description: descriptionDoc("This course has no price."),
       startsAt: instant("2026-10-18T14:00:00Z"),
       endsAt: instant("2026-10-18T16:00:00Z"),
       timeZone: "America/New_York",
@@ -194,7 +195,7 @@ describe("GET /v1/courses (e2e)", () => {
       {
         title: "Future-Priced Course",
         summary: "Its price is not effective yet.",
-        description: "Its price is not effective yet.",
+        description: descriptionDoc("Its price is not effective yet."),
         startsAt: instant("2026-10-19T14:00:00Z"),
         endsAt: instant("2026-10-19T16:00:00Z"),
         timeZone: "America/New_York",
@@ -220,7 +221,7 @@ describe("GET /v1/courses (e2e)", () => {
       id: available.course.id,
       name: "Available Course",
       summary: "This course should appear.",
-      description: "This course should appear.",
+      description: descriptionDoc("This course should appear."),
       enrollmentCount: 0,
       image: { version: expect.stringMatching(/^[0-9]+$/) },
       price: {

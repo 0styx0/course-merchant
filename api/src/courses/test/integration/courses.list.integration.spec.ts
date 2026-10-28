@@ -18,6 +18,7 @@ import {
   createCustomer,
   createPayment,
   createEnrollment,
+  descriptionDoc,
 } from "../../../test/course-fixtures.js";
 import { CourseImagesRepository } from "../../courses.repository/course-images.repository.js";
 import { CoursesService } from "../../courses.service.js";
@@ -60,7 +61,7 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "React Fundamentals",
         summary: "Learn React",
-        description: "Learn React",
+        description: descriptionDoc("Learn React"),
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
@@ -79,7 +80,7 @@ describe("CoursesService integration", () => {
         {
           name: "React Fundamentals",
           summary: "Learn React",
-          description: "Learn React",
+          description: descriptionDoc("Learn React"),
           enrollmentCount: 0,
           image: { version: expect.stringMatching(/^[0-9]+$/) },
           id: course.id,
@@ -100,7 +101,7 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "In Progress",
         summary: "Currently running",
-        description: "Currently running",
+        description: descriptionDoc("Currently running"),
         startsAt: instant("2026-09-29T13:00:00Z"),
         endsAt: instant("2026-09-29T15:00:00Z"),
         timeZone: "America/New_York",
@@ -123,7 +124,7 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "Ending Now",
         summary: "Ends now",
-        description: "Ends now",
+        description: descriptionDoc("Ends now"),
         startsAt: instant("2026-09-29T13:00:00Z"),
         endsAt: NOW,
         timeZone: "America/New_York",
@@ -147,7 +148,7 @@ describe("CoursesService integration", () => {
       const later = await createCourse({
         title: "Later",
         summary: "Later course",
-        description: "Later course",
+        description: descriptionDoc("Later course"),
         startsAt: instant("2026-10-03T18:00:00Z"),
         endsAt: instant("2026-10-03T20:00:00Z"),
         timeZone: "America/New_York",
@@ -156,7 +157,7 @@ describe("CoursesService integration", () => {
       const earlier = await createCourse({
         title: "Earlier",
         summary: "Earlier course",
-        description: "Earlier course",
+        description: descriptionDoc("Earlier course"),
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
@@ -188,7 +189,7 @@ describe("CoursesService integration", () => {
       const courseA = await createCourse({
         title: "Course A",
         summary: "A",
-        description: "A",
+        description: descriptionDoc("A"),
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
@@ -197,7 +198,7 @@ describe("CoursesService integration", () => {
       const courseB = await createCourse({
         title: "Course B",
         summary: "B",
-        description: "B",
+        description: descriptionDoc("B"),
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
@@ -232,7 +233,7 @@ describe("CoursesService integration", () => {
       const ended = await createCourse({
         title: "Ended",
         summary: "Finished",
-        description: "Finished",
+        description: descriptionDoc("Finished"),
         startsAt: instant("2026-09-01T18:00:00Z"),
         endsAt: instant("2026-09-01T20:00:00Z"),
         timeZone: "America/New_York",
@@ -241,7 +242,7 @@ describe("CoursesService integration", () => {
       const later = await createCourse({
         title: "Later",
         summary: "Later",
-        description: "Later",
+        description: descriptionDoc("Later"),
         startsAt: instant("2026-10-03T18:00:00Z"),
         endsAt: instant("2026-10-03T20:00:00Z"),
         timeZone: "America/New_York",
@@ -250,7 +251,7 @@ describe("CoursesService integration", () => {
       const earlier = await createCourse({
         title: "Earlier",
         summary: "Earlier",
-        description: "Earlier",
+        description: descriptionDoc("Earlier"),
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
@@ -277,7 +278,7 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "Priced Course",
         summary: "Price history",
-        description: "Price history",
+        description: descriptionDoc("Price history"),
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
@@ -316,7 +317,7 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "Boundary Price Course",
         summary: "Price boundary",
-        description: "Price boundary",
+        description: descriptionDoc("Price boundary"),
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
@@ -341,7 +342,7 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "Future Price Course",
         summary: "Future pricing",
-        description: "Future pricing",
+        description: descriptionDoc("Future pricing"),
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
@@ -370,7 +371,7 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "Popular Course",
         summary: "Many students",
-        description: "Many students",
+        description: descriptionDoc("Many students"),
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
@@ -409,7 +410,7 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "Refunded Course",
         summary: "Some students left",
-        description: "Some students left",
+        description: descriptionDoc("Some students left"),
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
@@ -444,7 +445,7 @@ describe("CoursesService integration", () => {
       const courseA = await createCourse({
         title: "Course A",
         summary: "A",
-        description: "A",
+        description: descriptionDoc("A"),
         startsAt: instant("2026-10-01T18:00:00Z"),
         endsAt: instant("2026-10-01T20:00:00Z"),
         timeZone: "America/New_York",
@@ -453,7 +454,7 @@ describe("CoursesService integration", () => {
       const courseB = await createCourse({
         title: "Course B",
         summary: "B",
-        description: "B",
+        description: descriptionDoc("B"),
         startsAt: instant("2026-10-02T18:00:00Z"),
         endsAt: instant("2026-10-02T20:00:00Z"),
         timeZone: "America/New_York",
@@ -501,7 +502,7 @@ describe("CoursesService integration", () => {
       const course = await createCourse({
         title: "Timezone Course",
         summary: "Timezone test",
-        description: "Timezone test",
+        description: descriptionDoc("Timezone test"),
         startsAt: instant("2027-01-15T18:00:00Z"),
         endsAt: instant("2027-01-15T20:00:00Z"),
         timeZone: "America/New_York",

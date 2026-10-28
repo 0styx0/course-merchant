@@ -7,6 +7,7 @@ import {
   archiveCourse,
   createCourse,
   createCoursePrice,
+  descriptionDoc,
 } from "@/test/course-fixtures.js";
 
 describe("CheckoutRepository (integration)", () => {
@@ -19,7 +20,7 @@ describe("CheckoutRepository (integration)", () => {
     const course = await createCourse({
       title: "React Fundamentals",
       summary: "Learn React",
-      description: "Learn React",
+      description: descriptionDoc("Learn React"),
       startsAt: now.add({ hours: 24 }),
       endsAt: now.add({ hours: 26 }),
       timeZone: "UTC",

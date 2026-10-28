@@ -56,6 +56,7 @@ Keep this file current **in the same commit as the work**.
   Errors can therefore arrive in two rounds, and the spec says so.
 - **Field errors use the spec's generic codes**: `field` is a JSON Pointer, plus a `FieldErrorCode` (`TOO_SHORT`, `IN_PAST`, …) and a `detail`. A client looks up code plus field.
 - **Prices:** an integer number of minor units, either `0` (free, skips Stripe) or at least `50`, Stripe's 50¢ minimum. The currency must be in `ALLOWED_CURRENCIES`.
+- **Description:** a rich-text document (a subset of Tiptap's JSON), checked by the editor's own schema plus a pass over the text: allowed link schemes, at most 5,000 characters of text, at least one visible character. The rules are in [course-creation.md](course-creation.md) and the contract. The whole body is limited to 100 KB, by Express's default JSON limit that [configure-app.ts](../api/src/configure-app.ts) leaves in place.
 - **Times:** the API accepts and returns only UTC instants ending in `Z`. Time zones must be IANA names such as `America/New_York`; numeric offsets like `-07:00` are rejected for clarity.
 
 ## Course images
@@ -114,6 +115,7 @@ Every course has exactly one image, shown on every public page. It is uploaded s
 | An exact price match is a no-op | Retries and re-sent forms are safe | Treating any collision as an error |
 | Past-time checks only on changed values | Otherwise a course that has started could never be edited again | The same checks as create |
 | Concurrent updates to the same course: leave as is | Rare; the race rolls back and returns a 500 | A server version check returning 409; a client `If-Match` header |
+| The description is a rich-text document stored as `jsonb`, not a string | Pasting from Google Docs keeps its formatting, and the editor, API and page share one format | Markdown or HTML strings. Reasons and the other rejected options are in [course-creation.md](course-creation.md) |
 | Public get still returns ended courses | Existing links keep working; checkout gives a clear 409 | Hiding them everywhere |
 | Public `enrollmentCount` counts only active enrollments; the admin list still returns every enrollment of every course | The public number means people who have access. Admins need the full history, and there are few enrollments per course | Counting all rows publicly; filtering the admin list |
 | A course's latest status stays computed from the `CourseStatus` log, through one shared helper, with `@@unique([courseId, changedAt])` | No second copy of the status to keep in step. The query is cheap at this shop's size. The constraint closes the one real gap: two statuses with the same `changedAt` (Postgres's `now()` is fixed for a whole transaction) would both count as latest, so a deleted course could show as published. A second status write for a course in the same transaction now fails instead of tying. Same pattern as `CoursePrice`'s `@@unique([courseId, effectiveAt])` | A `Course.currentStatus` column written beside each log row (duplicated state that can drift, plus a migration and backfill); a tie-breaking sequence column |

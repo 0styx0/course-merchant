@@ -3,7 +3,7 @@ import request from "supertest";
 import sharp from "sharp";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { createCourse } from "@/test/course-fixtures.js";
+import { createCourse, descriptionDoc } from "@/test/course-fixtures.js";
 import { instant } from "@/test/test-helpers.js";
 import { bearer, logInAsAdmin } from "@/test/admin-fixtures.js";
 import {
@@ -39,7 +39,7 @@ describe("Admin course image API (e2e)", () => {
         status: "drafted",
         title: "React Fundamentals",
         summary: "Learn React",
-        description: "Learn React",
+        description: descriptionDoc("Learn React"),
         startsAt: instant("2026-10-15T18:00:00Z"),
         endsAt: instant("2026-10-15T20:00:00Z"),
         timeZone: "UTC",

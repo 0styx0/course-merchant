@@ -2,6 +2,7 @@ import {
   createCoursePrice,
   createPricedCourse,
   updateCourseStatus,
+  descriptionDoc,
 } from "@/test/course-fixtures.js";
 import type { INestApplication } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
@@ -40,7 +41,7 @@ describe("Admin Courses Create API (e2e)", () => {
         {
           title: "React Fundamentals",
           summary: "Learn the fundamentals of React.",
-          description: "Learn the fundamentals of React.",
+          description: descriptionDoc("Learn the fundamentals of React."),
           startsAt: instant("2026-10-15T18:00:00Z"),
           endsAt: instant("2026-10-15T20:00:00Z"),
           timeZone: "America/New_York",
@@ -64,7 +65,7 @@ describe("Admin Courses Create API (e2e)", () => {
         id: course.id,
         name: "React Fundamentals",
         summary: "Learn the fundamentals of React.",
-        description: "Learn the fundamentals of React.",
+        description: descriptionDoc("Learn the fundamentals of React."),
         contentUrl: "https://example.com/course",
         schedule: {
           startTime: "2026-10-15T18:00:00Z",
@@ -156,7 +157,7 @@ describe("Admin Courses Create API (e2e)", () => {
         {
           title: "Ended Course",
           summary: "This course has finished.",
-          description: "This course has finished.",
+          description: descriptionDoc("This course has finished."),
           startsAt: instant("2025-09-27T18:00:00Z"),
           endsAt: instant("2025-09-27T20:00:00Z"),
           timeZone: "America/New_York",
@@ -187,7 +188,7 @@ describe("Admin Courses Create API (e2e)", () => {
         {
           title: "Future Price Course",
           summary: "This price is not active yet.",
-          description: "This price is not active yet.",
+          description: descriptionDoc("This price is not active yet."),
         },
         {
           amount: 12900,

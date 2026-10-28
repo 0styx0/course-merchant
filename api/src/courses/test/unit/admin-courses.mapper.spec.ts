@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { instant } from "../../../test/test-helpers.js";
 import { toAdminCourseResponse } from "@/courses/courses.mapper.js";
 import { CourseRepositoryModelAdmin } from "@/courses/courses.repository/admin-courses.repository.js";
+import { descriptionDoc } from "@/test/course-fixtures.js";
 
 const COURSE_ID = "crs_01HZX3";
 
@@ -10,7 +11,7 @@ const repositoryCourse = {
   id: COURSE_ID,
   title: "React Fundamentals",
   summary: "Learn the fundamentals of React",
-  description: "Learn the fundamentals of React",
+  description: descriptionDoc("Learn the fundamentals of React"),
   contentUrl: "https://drive.google.com/drive/folders/react",
   startsAt: instant("2026-10-01T18:00:00Z"),
   endsAt: instant("2026-10-01T20:00:00Z"),
@@ -83,7 +84,7 @@ describe("toAdminCourseResponse", () => {
       id: COURSE_ID,
       name: "React Fundamentals",
       summary: "Learn the fundamentals of React",
-      description: "Learn the fundamentals of React",
+      description: descriptionDoc("Learn the fundamentals of React"),
       contentUrl: "https://drive.google.com/drive/folders/react",
 
       schedule: {
@@ -154,7 +155,9 @@ describe("toAdminCourseResponse", () => {
 
     expect(result.id).toBe(COURSE_ID);
     expect(result.name).toBe("React Fundamentals");
-    expect(result.description).toBe("Learn the fundamentals of React");
+    expect(result.description).toEqual(
+      descriptionDoc("Learn the fundamentals of React"),
+    );
   });
 
   it("formats schedule timestamps using the course time zone", () => {

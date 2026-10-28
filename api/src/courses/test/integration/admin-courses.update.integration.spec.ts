@@ -1,3 +1,4 @@
+import { storedDescription } from "@/courses/courses.mapper.js";
 import { Test, type TestingModule } from "@nestjs/testing";
 import { Temporal } from "@js-temporal/polyfill";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -8,7 +9,11 @@ import {
   AdminCoursesRepository,
   CourseRepositoryModelAdmin,
 } from "@/courses/courses.repository/admin-courses.repository.js";
-import { createCourse, createCoursePrice } from "@/test/course-fixtures.js";
+import {
+  createCourse,
+  createCoursePrice,
+  descriptionDoc,
+} from "@/test/course-fixtures.js";
 import { UpdateCourseRequest } from "types.js";
 
 describe("AdminCoursesService (integration)", () => {
@@ -38,7 +43,7 @@ describe("AdminCoursesService (integration)", () => {
     const course = await createCourse({
       title: "React Fundamentals",
       summary: "Learn React",
-      description: "Learn React",
+      description: descriptionDoc("Learn React"),
       startsAt: now.subtract({ hours: 1 }),
       endsAt: now.add({ hours: 1 }),
       timeZone: "UTC",
@@ -80,7 +85,7 @@ describe("AdminCoursesService (integration)", () => {
     return {
       name: course.title,
       summary: course.summary,
-      description: course.description,
+      description: storedDescription(course.description),
       contentUrl: course.contentUrl,
       status: course.statuses[0].name,
       schedule: {
@@ -103,7 +108,7 @@ describe("AdminCoursesService (integration)", () => {
         ...toRequest(await findCourse(course.id)),
         name: "React Advanced",
         summary: "Hooks in depth",
-        description: "Hooks in depth",
+        description: descriptionDoc("Hooks in depth"),
         contentUrl: "https://zoom.us/j/123456789",
       };
 
@@ -112,7 +117,7 @@ describe("AdminCoursesService (integration)", () => {
       expect(await findCourse(course.id)).toMatchObject({
         title: "React Advanced",
         summary: "Hooks in depth",
-        description: "Hooks in depth",
+        description: descriptionDoc("Hooks in depth"),
         contentUrl: "https://zoom.us/j/123456789",
       });
     });

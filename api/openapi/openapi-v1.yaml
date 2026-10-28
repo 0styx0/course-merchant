@@ -233,7 +233,8 @@ paths:
         - `summary`: 1 to 300 characters after trimming, about two or three
         sentences.
 
-        - `description`: 1 to 5,000 characters.
+        - `description`: a rich-text document (see `CourseDescription`) with 1 to
+        5,000 characters of text.
 
         - `schedule.timeZone`: must be a valid IANA time zone identifier.
 
@@ -288,7 +289,13 @@ paths:
                 value:
                   name: React Fundamentals
                   summary: A hands-on introduction to React.
-                  description: Learn the fundamentals of React.
+                  description:
+                    type: doc
+                    content:
+                      - type: paragraph
+                        content:
+                          - type: text
+                            text: Learn the fundamentals of React.
                   contentUrl: https://drive.google.com/drive/folders/1a2b3c4d5e
                   status: drafted
                   prices:
@@ -328,7 +335,13 @@ paths:
                     id: 123e4567-e89b-12d3-a456-426614174000
                     name: React Fundamentals
                     summary: A hands-on introduction to React.
-                    description: Learn the fundamentals of React.
+                    description:
+                      type: doc
+                      content:
+                        - type: paragraph
+                          content:
+                            - type: text
+                              text: Learn the fundamentals of React.
                     contentUrl: https://drive.google.com/drive/folders/1a2b3c4d5e
                     status:
                       name: drafted
@@ -498,7 +511,13 @@ paths:
                 value:
                   name: React Fundamentals
                   summary: A hands-on introduction to React, with labs.
-                  description: Learn the fundamentals of React, with hands-on labs.
+                  description:
+                    type: doc
+                    content:
+                      - type: paragraph
+                        content:
+                          - type: text
+                            text: Learn the fundamentals of React, with hands-on labs.
                   contentUrl: https://drive.google.com/drive/folders/1a2b3c4d5e
                   status: published
                   prices:
@@ -1283,12 +1302,53 @@ components:
         - A hands-on introduction to React. Build three small apps and learn components, state and hooks.
 
     CourseDescription:
-      type: string
-      minLength: 1
-      maxLength: 5000
-      description: Public description of the course.
+      type: object
+      required: [type, content]
+      additionalProperties: true
+      x-max-text-length: 5000
+      properties:
+        type:
+          type: string
+          const: doc
+        content:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [type]
+            additionalProperties: true
+            properties:
+              type:
+                type: string
+      description: >
+        Public description of the course, as a rich-text document: a subset of
+        [Tiptap](https://tiptap.dev)'s JSON.
+
+
+        - Blocks: `paragraph`, `heading` (levels 2 to 4), `bulletList`,
+        `orderedList`, `blockquote` and `horizontalRule`. Text may contain
+        `hardBreak`.
+
+        - Marks on text: `bold`, `italic`, `strike`, `underline` and `link`.
+        A link's `attrs.href` is at most 2,048 characters and starts with
+        `https:`, `http:`, `mailto:` or `tel:`.
+
+        - The text must contain at least one character that isn't whitespace,
+        and at most 5,000 characters in total (the sum of every `text` value).
+
+        - Text must not contain U+0000 or unpaired surrogates.
+
+        - Anything else (unknown nodes or marks, wrong nesting) is refused.
+        Attributes the editor doesn't know are dropped, not stored.
+
+        - The whole request body is limited to 100 KB.
       examples:
-        - Learn the fundamentals of React.
+        - type: doc
+          content:
+            - type: paragraph
+              content:
+                - type: text
+                  text: Learn the fundamentals of React.
 
     CourseContentUrl:
       type: string

@@ -10,8 +10,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 
 - [x] **1a. Description renderer** (web only, not used by a page yet).
 - [x] **1b-i. Description validator** (API only, not wired in).
-- [ ] **1b-ii. Store and show the document** (contract, database, API, course page). **Next**
-- [ ] **2. Server side of the create form** (no page yet).
+- [x] **1b-ii. Store and show the document** (contract, database, API, course page).
+- [ ] **2. Server side of the create form** (no page yet). **Next**
 - [ ] **3. The create form page.**
 - [ ] **4. Description toolbar, list depth and Google Docs paste tests.**
 - [ ] **5. Image and publish in the create form.**
@@ -41,6 +41,8 @@ Not part of this work: admin login and logout, the admin course page and list, e
 | The API keeps a byte-identical copy of the web's [description-extensions.ts](../web/src/features/courses/description-extensions.ts), and a unit test fails if they differ | The packages aren't a workspace, and a shared package would restructure the repo for one 15-line file | A workspace package; importing the web's file from the API |
 | The API stores the editor schema's normalised JSON, and extra attributes are dropped rather than refused | Comparing `toJSON()` with the request would refuse valid documents, since it adds default attributes (`link.target`, `rel`, `class`, `orderedList.start`). Unknown attributes are harmless once dropped, and the stored document is exactly what the renderer and editor understand | Refusing unknown attributes by comparison |
 | Link schemes are `https:`, `http:`, `mailto:` and `tel:` | Chosen by the owner; an explicit list is easier to state and test than Tiptap's defaults | Tiptap's default list; `https`, `http` and `mailto` only |
+| The column is `Jsonb` (Postgres `jsonb`), and the generic JSON type is cast to the contract's document type in one place, `storedDescription` in [courses.mapper.ts](../api/src/courses/courses.mapper.ts) (and `toStoredDescription` for writes) | Prisma 8's bare `Json` is plain `json`, which keeps raw text. Only validated documents are written, so the cast is safe, and two call sites beat casting in every repository finder. The generated type has an index signature, which Prisma's `JsonValue` refuses, so a write needs the cast too. The migration is a destructive `text → jsonb` change, and the databases were recreated | Casting in each repository finder (about six call sites) |
+| The course page shows the summary under the name and the description below the header | The description is now a block of headings and lists, which doesn't belong in a header. The summary is already the page's meta description and the card text | Showing no summary on the course page |
 | Not enforced by the API: list depth, blockquotes and rules inside lists, empty paragraphs, `maxItems` | Owner's call: the API checks security and basic correctness, the 100 KB body limit bounds size, and the editor is the only writer. Step 4's Tab override still stops deep lists in the editor. The web's `toCourseDescription` still strips empty paragraphs | Walking the tree for each rule (about 40 more lines and tests) |
 | Headings are levels 2-4 in the extension list, and the contract (1b) uses the same levels | The course name is the page's `<h1>`, so the editor never makes another; Tiptap's own output is then correct with no heading mapping. A pasted level 1 becomes a paragraph | Levels 1-3 with a renderer that shifts them down; allowing levels 1-6 |
 | Blockquotes, horizontal rules, strikethrough and underline are allowed; code and code blocks are not | The owner wants them; each is one Tiptap extension and styled by `.description-content`. Code stays off: nothing in a course description needs it. Underlined text looks like a link, so the toolbar (step 4) should label underline clearly | Leaving them out (first plan) |
@@ -103,23 +105,6 @@ The form's values are named after the request, so every field is qualified by it
 - `image` and `publishAfterSaving` (step 5; never sent as JSON).
 
 Price rows go to the API in the order shown, so the API's `/prices/0` is the form's first row. Any path under `/description/` maps to `description`.
-
-## Step 1b. The description becomes a rich-text document
-
-Two commits. The contract, the database column and the web display can't be split further: the pre-commit hook regenerates the web types and type-checks the web.
-
-**1b-i. Validator** (API only, not wired in): [course-description-schema.ts](../api/src/courses/validation/course-description-schema.ts) exports `descriptionDocumentSchema`; its spec includes the test that the extension copy equals the web's file.
-
-**1b-ii. Store and show the document** (both packages):
-
-- [openapi-v1.yaml](../api/openapi/openapi-v1.yaml): `CourseDescription` becomes a "Tiptap document" object with the rules in words and `x-max-text-length: 5000`; request and response share it. Regenerate both type files. The generated type is a loose object, so the web renderer keeps `JSONContent` as its prop type.
-- [course-field-schemas.ts](../api/src/courses/validation/course-field-schemas.ts): `courseDescriptionSchema` is replaced by `descriptionDocumentSchema`.
-- [contract.prisma](../api/src/prisma/contract.prisma): `description Json` (Postgres `jsonb`). `yarn contract:emit`, plan the migration (apply the *Migration trap* fix in [api/CLAUDE.md](../api/CLAUDE.md)), recreate both databases. No data transform.
-- Repository input and row types, [courses.mapper.ts](../api/src/courses/courses.mapper.ts) and [admin-courses.service.ts](../api/src/courses/admin-courses.service.ts) take the document type; rows read back as Prisma's JSON type are typed at the repository edge, since only validated documents are written.
-- [course-fixtures.ts](../api/src/test/course-fixtures.ts) gets `descriptionDoc("Learn React")`, used by every spec that sets a description.
-- Web: [course-details.tsx](../web/src/features/courses/course-details.tsx) renders `CourseDescription` below the `<header>`; card summaries stay plain text; [mocks/fixtures/courses.ts](../web/src/mocks/fixtures/courses.ts) descriptions become documents.
-- Tests: API e2e (create then get returns the document, an invalid one gets a 400) and a web test that the course page shows it.
-- Docs: [courses.md](courses.md) gets a *Validation* bullet (including the 100 KB body limit) and a decision row pointing here.
 
 ## Step 2. Server side of the create form (no page yet)
 

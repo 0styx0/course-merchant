@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
+import { descriptionDoc } from "@/test/course-fixtures.js";
+
 import {
   courseContentUrlSchema,
   courseCurrencySchema,
   courseDateTimeSchema,
-  courseDescriptionSchema,
   courseDetailsShape,
   courseEndTimeSchema,
   courseNameSchema,
@@ -103,63 +104,6 @@ describe("courseSummarySchema", () => {
 
   it.each([123, null, undefined, false])("rejects %j", (value) => {
     expect(courseSummarySchema.safeParse(value).success).toBe(false);
-  });
-});
-
-describe("courseDescriptionSchema", () => {
-  it("accepts a valid description", () => {
-    expect(
-      courseDescriptionSchema.safeParse("Learn TypeScript from the ground up.")
-        .success,
-    ).toBe(true);
-  });
-
-  it("accepts a one-character description", () => {
-    expect(courseDescriptionSchema.safeParse("A").success).toBe(true);
-  });
-
-  it("accepts a description at the maximum length", () => {
-    expect(courseDescriptionSchema.safeParse("a".repeat(5000)).success).toBe(
-      true,
-    );
-  });
-
-  it("rejects an empty description", () => {
-    expect(courseDescriptionSchema.safeParse("").success).toBe(false);
-  });
-
-  it("rejects a description exceeding the maximum length", () => {
-    expect(courseDescriptionSchema.safeParse("a".repeat(5001)).success).toBe(
-      false,
-    );
-  });
-
-  it.each(["", " ", "   ", "\t", "\n", " \t\n "])(
-    "rejects whitespace-only input: %j",
-    (value) => {
-      expect(courseDescriptionSchema.safeParse(value).success).toBe(false);
-    },
-  );
-
-  it("trims leading and trailing whitespace", () => {
-    const result = courseDescriptionSchema.safeParse(
-      "  TypeScript Fundamentals  ",
-    );
-
-    expect(result.success).toBe(true);
-
-    if (result.success) {
-      expect(result.data).toBe("TypeScript Fundamentals");
-    }
-  });
-
-  it.each([
-    { label: "a number", value: 123 },
-    { label: "null", value: null },
-    { label: "undefined", value: undefined },
-    { label: "a boolean", value: false },
-  ])("rejects $label", ({ value }) => {
-    expect(courseDescriptionSchema.safeParse(value).success).toBe(false);
   });
 });
 
@@ -488,7 +432,7 @@ describe("courseDetailsShape", () => {
       courseDetailsSchema.safeParse({
         name: "TypeScript Fundamentals",
         summary: "Learn TypeScript fast.",
-        description: "Learn TypeScript from the ground up.",
+        description: descriptionDoc("Learn TypeScript from the ground up."),
       }).success,
     ).toBe(true);
   });

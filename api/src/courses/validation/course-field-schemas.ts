@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { FieldErrorCode } from "@/common/errors/error-codes.js";
 import { ALLOWED_CURRENCIES } from "@/courses/allowed-currencies.js";
+import { descriptionDocumentSchema } from "./course-description-schema.js";
 
 const requiredString = z.string();
 
@@ -13,8 +14,6 @@ export const courseNameSchema = nonEmptyTrimmedString.max(100);
 export const courseContentUrlSchema = z.url({ protocol: /^https?$/ }).max(2048);
 
 export const courseSummarySchema = nonEmptyTrimmedString.max(300);
-
-export const courseDescriptionSchema = nonEmptyTrimmedString.max(5000);
 
 // never published: a course needs its image first, which comes after creation
 export const createStatusSchema = z.enum(["archived", "drafted"]);
@@ -84,5 +83,5 @@ export const courseScheduleFieldsSchema = z.strictObject({
 export const courseDetailsShape = {
   name: courseNameSchema,
   summary: courseSummarySchema,
-  description: courseDescriptionSchema,
+  description: descriptionDocumentSchema,
 };

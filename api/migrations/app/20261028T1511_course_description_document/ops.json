@@ -1,0 +1,55 @@
+[
+  {
+    "id": "alterType.Course.description",
+    "label": "Alter type of \"Course\".\"description\" to jsonb",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "description",
+        "table": "Course"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"description\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Course",
+          "description"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "alter type of \"description\" to jsonb",
+        "sql": "ALTER TABLE \"public\".\"Course\" ALTER COLUMN \"description\" TYPE jsonb USING \"description\"::jsonb",
+        "meta": {
+          "convertedColumn": {
+            "table": "Course",
+            "column": "description",
+            "by": "cast"
+          }
+        }
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"description\" has type \"jsonb\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "Course",
+          "description",
+          "jsonb"
+        ]
+      }
+    ],
+    "meta": {
+      "warning": "TABLE_REWRITE"
+    }
+  }
+]

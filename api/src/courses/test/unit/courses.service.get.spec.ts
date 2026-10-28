@@ -14,6 +14,7 @@ import type {
 } from "../../courses.repository/courses.repository.js";
 import { CoursesService } from "../../courses.service.js";
 import { toPublicCourseResponse } from "@/courses/courses.mapper.js";
+import { descriptionDoc } from "@/test/course-fixtures.js";
 
 const NOW = instant("2026-09-29T14:00:00Z");
 const COURSE_ID = "crs_01HZX3";
@@ -22,7 +23,7 @@ const repositoryCourse = {
   id: COURSE_ID,
   title: "React Fundamentals",
   summary: "Learn the fundamentals of React",
-  description: "Learn the fundamentals of React",
+  description: descriptionDoc("Learn the fundamentals of React"),
   startsAt: instant("2026-10-01T18:00:00Z"),
   endsAt: instant("2026-10-01T20:00:00Z"),
   timeZone: "America/New_York",

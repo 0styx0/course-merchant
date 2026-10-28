@@ -367,7 +367,7 @@
               "description": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/text@1",
+                  "codecId": "pg/jsonb@1",
                   "kind": "scalar"
                 }
               },
@@ -1636,8 +1636,8 @@
                   "nullable": false
                 },
                 "description": {
-                  "codecId": "pg/text@1",
-                  "dataType": "pg/text",
+                  "codecId": "pg/jsonb@1",
+                  "dataType": "pg/jsonb",
                   "nullable": false
                 },
                 "endsAt": {
@@ -2560,7 +2560,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "beceb30746f7431c8b5918d86e9f1dd49b9c8f1c29a1bb44c010588c44c5f901"
+    "storageHash": "dc546a9c053e82915b459b15a23f3b6d8d69a91850e3fcd0d4f3650e73859266"
   },
   "execution": {
     "executionHash": "d1495c3b8e6815988349bf06c895fb0f22c7519bee94768d674ace149b2df27b",

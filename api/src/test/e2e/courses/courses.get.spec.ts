@@ -1,4 +1,4 @@
-import { createPricedCourse } from "@/test/course-fixtures.js";
+import { createPricedCourse, descriptionDoc } from "@/test/course-fixtures.js";
 import type { INestApplication } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { Temporal } from "@js-temporal/polyfill";
@@ -28,7 +28,7 @@ describe("Courses API (e2e)", () => {
         {
           title: "React Fundamentals",
           summary: "Learn the fundamentals of React.",
-          description: "Learn the fundamentals of React.",
+          description: descriptionDoc("Learn the fundamentals of React."),
           startsAt: Temporal.Instant.from("2026-10-15T18:00:00Z"),
           endsAt: Temporal.Instant.from("2026-10-15T20:00:00Z"),
           timeZone: "America/New_York",
@@ -51,7 +51,7 @@ describe("Courses API (e2e)", () => {
         id: course.id,
         name: "React Fundamentals",
         summary: "Learn the fundamentals of React.",
-        description: "Learn the fundamentals of React.",
+        description: descriptionDoc("Learn the fundamentals of React."),
         enrollmentCount: 0,
         image: { version: expect.stringMatching(/^[0-9]+$/) },
         price: {

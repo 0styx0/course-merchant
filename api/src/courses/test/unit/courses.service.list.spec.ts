@@ -9,13 +9,14 @@ import {
 } from "../../courses.repository/courses.repository.js";
 import { CourseImagesRepository } from "../../courses.repository/course-images.repository.js";
 import { fakePrisma, instant } from "../../../test/test-helpers.js";
+import { descriptionDoc } from "@/test/course-fixtures.js";
 
 const makeCourseRecord = (overrides = {}) =>
   ({
     id: "course-1",
     title: "React Fundamentals",
     summary: "Learn React",
-    description: "Learn React",
+    description: descriptionDoc("Learn React"),
     startsAt: instant("2026-10-01T18:00:00Z"),
     endsAt: instant("2026-10-01T20:00:00Z"),
     timeZone: "America/New_York",
@@ -75,7 +76,7 @@ describe("CoursesService", () => {
             name: "React Fundamentals",
             id: "course-1",
             summary: "Learn React",
-            description: "Learn React",
+            description: descriptionDoc("Learn React"),
             enrollmentCount: 0,
             image: { version: "1790856000000" },
             price: {
@@ -111,7 +112,7 @@ describe("CoursesService", () => {
             name: "Course One",
             id: "course-1",
             summary: "Learn React",
-            description: "Learn React",
+            description: descriptionDoc("Learn React"),
             enrollmentCount: 0,
             image: { version: "1790856000000" },
             price: {
@@ -128,7 +129,7 @@ describe("CoursesService", () => {
             name: "Course Two",
             id: "course-2",
             summary: "Learn React",
-            description: "Learn React",
+            description: descriptionDoc("Learn React"),
             enrollmentCount: 0,
             image: { version: "1790856000000" },
             price: {
@@ -256,7 +257,7 @@ describe("CoursesService", () => {
           {
             name: "React Fundamentals",
             summary: "Learn React",
-            description: "Learn React",
+            description: descriptionDoc("Learn React"),
             id: "course-1",
             enrollmentCount: 0,
             image: { version: "1790856000000" },

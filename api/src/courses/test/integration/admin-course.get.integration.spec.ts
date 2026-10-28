@@ -19,6 +19,7 @@ import {
   createEnrollmentEmail,
   archiveCourse,
   createPricedCourse,
+  descriptionDoc,
 } from "../../../test/course-fixtures.js";
 import { PrismaModule } from "../../../prisma/prisma.module.js";
 import { AdminCoursesService } from "@/courses/admin-courses.service.js";
@@ -57,7 +58,7 @@ describe("AdminCoursesService integration", () => {
         {
           title: "React Fundamentals",
           summary: "Learn React",
-          description: "Learn React",
+          description: descriptionDoc("Learn React"),
           startsAt: instant("2026-10-01T18:00:00Z"),
           endsAt: instant("2026-10-01T20:00:00Z"),
           timeZone: "America/New_York",
@@ -73,7 +74,7 @@ describe("AdminCoursesService integration", () => {
         id: course.id,
         name: "React Fundamentals",
         summary: "Learn React",
-        description: "Learn React",
+        description: descriptionDoc("Learn React"),
         contentUrl: "https://example.com/course",
         schedule: {
           startTime: "2026-10-01T18:00:00Z",
@@ -145,7 +146,7 @@ describe("AdminCoursesService integration", () => {
         {
           title: "Ended Course",
           summary: "This course has finished",
-          description: "This course has finished",
+          description: descriptionDoc("This course has finished"),
           startsAt: instant("2026-09-27T18:00:00Z"),
           endsAt: instant("2026-09-27T20:00:00Z"),
           timeZone: "America/New_York",
@@ -171,7 +172,7 @@ describe("AdminCoursesService integration", () => {
         {
           title: "Future Price Course",
           summary: "Not publicly available yet",
-          description: "Not publicly available yet",
+          description: descriptionDoc("Not publicly available yet"),
         },
         {
           effectiveAt: instant("2026-10-01T00:00:00Z"),

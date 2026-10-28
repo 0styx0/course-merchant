@@ -18,7 +18,7 @@ describe("CourseCard", () => {
     ).toBeInTheDocument();
 
     expect(screen.getByText(course.summary)).toBeInTheDocument();
-    expect(screen.queryByText(course.description)).not.toBeInTheDocument();
+    expect(screen.queryByText("What you will build")).not.toBeInTheDocument();
 
     expect(screen.getByText("$99.00")).toBeInTheDocument();
 
