@@ -11,3 +11,6 @@ export const MIN_PAID_PRICE_CENTS = 50;
 
 /** A price time that is set must be this far ahead, so it can't equal "when saved" (now + this). */
 export const MIN_PRICE_LEAD_MS = 60_000;
+
+/** The only currency the storefront sells in. */
+export const COURSE_CURRENCY = "USD";

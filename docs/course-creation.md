@@ -16,8 +16,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **2b. Form limits and the contract test** (`feat(admin-courses)`).
   - [x] **2c. Wall-clock time to UTC** (`feat(admin-courses)`).
   - [x] **2d. The form schema** (`feat(admin-courses)`).
-  - [ ] **2e. The request builder** (`feat(admin-courses)`). **Next**: `to-course-request.ts`, typed from `CourseFormValues` (the schema's input type; it joins each date and time of day with `T` before `wallClockToUtc`) and `satisfies CreateCourseRequest`; the schema has already checked prices and times, and its `browserTimeZone()` is the form's starting zone.
-  - [ ] **2f. API wrappers, error mapping, the Server Action and MSW handler** (`feat(admin-courses)`). Ticking this also ticks step 2, marks step 3 **Next** and cuts the *Step 2* notes down to decision rows.
+  - [x] **2e. The request builder** (`feat(admin-courses)`).
+  - [ ] **2f. API wrappers, error mapping, the Server Action and MSW handler** (`feat(admin-courses)`). **Next**: `admin-courses.api.ts` (`createCourse`), `field-errors-from-problem.ts`, `create-course.action.ts` (it parses with `courseFormSchema` and passes the checked values to `toCourseRequest(values, "drafted")`) and the MSW handler and fixture; the remaining types (*Step 2* below). Ticking this also ticks step 2, marks step 3 **Next** and cuts the *Step 2* notes down to decision rows.
 - [ ] **3. The create form page.**
 - [ ] **4. Description toolbar, list depth and Google Docs paste tests.**
 - [ ] **5. Image and publish in the create form.**
@@ -62,7 +62,7 @@ Not part of this work: admin login and logout, the admin course page and list, e
 | An empty "takes effect" becomes now + 1 minute | The API refuses times in the past, and "now" is already past when the API checks it. Cost: a course published later can show up to a minute after its price's start | Sending "now" |
 | After a refused submit, focus moves to the error list | Screen readers read every problem; each link jumps to its field | Focusing the first invalid field |
 | [temporal-polyfill](https://github.com/fullcalendar/temporal-polyfill) for wall-clock time to UTC | Correct across daylight-saving changes, with `disambiguation: "reject"` for skipped or repeated times. About a third of the size of [@js-temporal/polyfill](https://github.com/js-temporal/temporal-polyfill) | `@js-temporal/polyfill`; hand-written offset maths |
-| Native `datetime-local`, `<select>` and file inputs | They already do the job | Date pickers, a time zone combobox, [react-dropzone](https://react-dropzone.js.org), [next-safe-action](https://next-safe-action.dev) |
+| Native `date`, `time`, `<select>` and file inputs | They already do the job | Date pickers, a time zone combobox, [react-dropzone](https://react-dropzone.js.org), [next-safe-action](https://next-safe-action.dev) |
 
 ## Libraries to add (web only)
 
@@ -122,7 +122,7 @@ Six commits, each finished, tested and ticked before the next. A library is adde
 | 2b `feat(admin-courses): keep the form's limits in step with the API contract` | `course-form-limits.ts`, `yaml` (dev) | the contract test |
 | 2c `feat(admin-courses): convert wall-clock times to UTC` | `wall-clock-time.ts`, `temporal-polyfill` | a spring gap, an autumn overlap, a normal time, a bad zone |
 | 2d `feat(admin-courses): validate the create-course form` | `course-form-schema.ts`, `zod` | every rule and message, cross-field checks with other fields empty |
-| 2e `feat(admin-courses): build the create-course request from the form` | `to-course-request.ts`, the request types | money, "when saved" with fake timers, the request shape |
+| 2e `feat(admin-courses): build the create-course request from the form` | `to-course-request.ts`, the request types, `COURSE_CURRENCY` | money, "when saved" with fake timers, the request shape |
 | 2f `feat(admin-courses): create a course from a Server Action` | `admin-courses.api.ts`, `field-errors-from-problem.ts`, `create-course.action.ts`, the MSW handler and fixture, the remaining types | pointer mapping, the action |
 
 Decided at the outline:
@@ -164,13 +164,14 @@ Decided at the outline:
 - Daylight saving: a wall-clock time a daylight-saving change skips or repeats in the chosen zone is refused with one generic message for both cases, for example "That time doesn't exist, or happens twice, on that day in America/New_York because of a daylight-saving change. Choose another time." `wallClockToUtc` in `wall-clock-time.ts` (2c) returns a `Result<string, WallClockFailureReason>` (`error` is `"daylight-saving"`, `"unknown-zone"` or `"invalid-time"`) (Temporal `disambiguation: "reject"`); the schema maps each reason to a message.
 - The checks that compare fields live in one object-level `.check` that reads the raw values, so they run even while unrelated fields are still empty or wrong (Zod only skips a check after a type-level failure, and the form's fields are all strings). A time whose zone is unknown is skipped there; the zone field reports its own problem.
 
-**Request builder** (`to-course-request.ts`): its result `satisfies CreateCourseRequest`.
+**Request builder** (`to-course-request.ts`): `toCourseRequest(values, status)`; its result `satisfies CreateCourseRequest`.
 
-- Local time plus zone → UTC `…Z`.
+- It takes the schema's **output** (`CheckedCourseFormValues`, already trimmed), not the raw input, so it doesn't repeat the schema's trimming. The action passes it what `courseFormSchema` returned.
+- Local date and time of day plus zone → UTC `…Z`. The schema has already refused bad times, so a failed conversion is a bug in the caller and throws.
 - "79.50" → `7950` with `Math.round(Number(dollars) * 100)`, safe because the schema allows at most two decimals.
-- Currency `USD` from one constant.
-- An empty "takes effect" → now + 1 minute.
-- Also used for updates (step 5), with the status passed in.
+- Currency from the `COURSE_CURRENCY` constant (`USD`) in `course-form-limits.ts`.
+- An empty "takes effect" → now + 1 minute (`Date.now()` read inside the builder).
+- `status` is typed `CreateCourseStatus` for now; step 5 widens it when it adds the update request.
 
 **API errors to form fields** (`field-errors-from-problem.ts`):
 

@@ -144,6 +144,9 @@ export const courseFormSchema = z
 
 export type CourseFormValues = z.input<typeof courseFormSchema>;
 
+/** The values after the schema has checked and trimmed them. */
+export type CheckedCourseFormValues = z.output<typeof courseFormSchema>;
+
 /**
  * Checks that compare fields. They run even while other fields are empty or
  * wrong (the zone is then unknown and the time is skipped, since that field
