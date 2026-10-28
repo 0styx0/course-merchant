@@ -19,7 +19,11 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **3d-i.** `course-form.tsx` with the text fields, description editor, schedule, `formatCourseLength`, one price row, error list and submit handling; `page.tsx` at `app/admin/(signed-in)/courses/new/` (no layout until the login lands); component tests.
   - [x] **3d-ii.** Price rows: `useFieldArray` in `course-form.tsx`, `price-row.tsx` (add and remove, at least one row, new rows start empty), error-list entries per row (`courseFormProblems` takes the row count; labels are numbered only with several rows), and tests. The empty-time help text now says "when the course is published" (wording only: an empty time is still set to now + 1 minute when saved).
   - [x] **3e.** Playwright browser test (`tests/browser/admin-courses/create-course.spec.ts`: save and land on `/`, an API refusal, no console errors); admin.md, courses.md, web.md and README updates.
-- [ ] **4. Description toolbar, list depth and Google Docs paste tests.** **Next** (design in *Step 4* below; its browser test goes in the same spec file as 3e).
+- [ ] **4. Description toolbar, list depth and Google Docs paste tests**, in four commits (design in *Step 4* below; browser tests go in the same spec file as 3e):
+  - [x] **4a.** Formatting toolbar (`description-toolbar.tsx`, shadcn `toggle`): Bold, Italic, Heading, Subheading, Bulleted list, Numbered list.
+  - [ ] **4b.** **Next**: Link button: a small inline field for the address (no browser `prompt()`), refusing the addresses Tiptap's `isAllowedUri` refuses with a message, and "Remove link" when the cursor is on a link. It goes in the same toolbar, after the six format toggles.
+  - [ ] **4c.** Tab stops at list level 3. Before starting, settle the pasted-deeper-lists message: nothing produces it today (the API doesn't check depth, nor does the form schema), so either add a depth check to the form schema or drop that line.
+  - [ ] **4d.** Google Docs paste fixture and tests (needs the owner's clipboard sample), the browser paste test, and the admin.md list of what pasting doesn't keep.
 - [ ] **UX pass on the create form**, after step 4 and before step 5, from a UX review of the page (design in *UX pass* below). Grouped by complexity; each group is one commit, outlined and approved first as usual:
   - [ ] **U1. Copy and small layout fixes** (wording and markup only).
   - [ ] **U2. Field and component behaviour** (price input, remove button, error summary height, time zone default, leave warning).
@@ -68,6 +72,8 @@ Not part of this work: admin login and logout, the admin course page and list, e
 | [temporal-polyfill](https://github.com/fullcalendar/temporal-polyfill) for wall-clock time to UTC | Correct across daylight-saving changes, with `disambiguation: "reject"` for skipped or repeated times. About a third of the size of [@js-temporal/polyfill](https://github.com/js-temporal/temporal-polyfill) | `@js-temporal/polyfill`; hand-written offset maths |
 | Native `date`, `time`, `<select>` and file inputs | They already do the job | Date pickers, a time zone combobox, [react-dropzone](https://react-dropzone.js.org), [next-safe-action](https://next-safe-action.dev) |
 | The create form is built in two commits: the plain fields and schedule first, price rows second | The full form is too large to review as one change; price rows are an independent addition (`useFieldArray`) | One commit for the whole form |
+| Step 4 is built in four commits: toolbar, link, list depth, paste | Each part has its own tests, and the paste fixture waits on the owner's clipboard sample | One commit for all of step 4 |
+| Toolbar buttons keep focus in the editor on a mouse click (`preventDefault` on mouse down) | A click would otherwise blur the editor, mark it touched and show "Enter a description" on an empty field; the selection stays where the admin made it | Letting focus move to the button and refocusing with `.focus()` only |
 
 ## Libraries to add (web only)
 
@@ -206,12 +212,9 @@ Browser test (`yarn --cwd web test:browser`):
 
 ## Step 4. Description toolbar, list depth and Google Docs paste tests
 
-**Toolbar** (in `description-editor.tsx`), built on Base UI's Toolbar (`role="toolbar"`, arrow keys move between buttons), with shadcn `toggle` styling and `aria-pressed` showing the state at the cursor:
+**Toolbar** (4a, done: `description-toolbar.tsx`, above the editable area): Base UI's Toolbar (`role="toolbar"`, arrow keys move between buttons) with shadcn `toggle` buttons; `aria-pressed` comes from `useEditorState`. Icon buttons named by `aria-label` and `title`. Heading and Subheading are levels 2 and 3; level 4 exists for pasted content. Buttons are disabled until the editor exists in the browser. Underline, strike, quote and rule have no button (shortcuts and paste still work).
 
-- Bold, Italic;
-- Heading and Subheading (levels 2 and 3; level 4 exists for pasted content);
-- Bulleted list, Numbered list;
-- Link: opens a small inline field for the address (no browser `prompt()`), refusing the addresses Tiptap refuses, with a message; "Remove link" when the cursor is on one.
+- Link (4b): opens a small inline field for the address (no browser `prompt()`), refusing the addresses Tiptap refuses, with a message; "Remove link" when the cursor is on one.
 
 Each button calls Tiptap's chain commands (`toggleBold`, `toggleHeading`, `setLink`, …), so undo keeps working.
 

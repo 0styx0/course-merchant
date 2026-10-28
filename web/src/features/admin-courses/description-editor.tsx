@@ -16,6 +16,7 @@ import {
 import { descriptionExtensions } from "@/features/courses/description-extensions";
 
 import { COURSE_DESCRIPTION_MAX_TEXT_LENGTH } from "./course-form-limits";
+import { DescriptionToolbar } from "./description-toolbar";
 
 type DescriptionEditorProps = {
   value: JSONContent;
@@ -32,11 +33,11 @@ const EDITABLE_AREA_CLASSES =
   "description-content min-h-40 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30";
 
 /**
- * The course description's rich-text field, with the label, state icon, error
- * message and a character counter around it. The counter is a plain
- * description, not a live region, so it isn't read out on every keystroke.
- * Typing past the limit is never blocked: the counter turns red and the form
- * shows the error.
+ * The course description's rich-text field, with the label, formatting
+ * toolbar, state icon, error message and a character counter around it. The
+ * counter is a plain description, not a live region, so it isn't read out on
+ * every keystroke. Typing past the limit is never blocked: the counter turns
+ * red and the form shows the error.
  */
 export function DescriptionEditor({
   value,
@@ -82,7 +83,12 @@ export function DescriptionEditor({
       submitted={submitted}
       onLabelClick={focus}
     >
-      {(inputProps) => <EditableArea editor={editor} {...inputProps} />}
+      {(inputProps) => (
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <DescriptionToolbar editor={editor} controlsId={inputProps.id} />
+          <EditableArea editor={editor} {...inputProps} />
+        </div>
+      )}
     </FormField>
   );
 }

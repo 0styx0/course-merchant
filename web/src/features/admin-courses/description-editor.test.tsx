@@ -39,6 +39,16 @@ describe("DescriptionEditor", () => {
     expect(textbox).toHaveAccessibleDescription("0 / 5,000");
   });
 
+  it("has a formatting toolbar that controls the textbox", async () => {
+    renderEditor();
+
+    const textbox = await screen.findByRole("textbox", { name: "Description" });
+    expect(screen.getByRole("toolbar", { name: "Formatting" })).toHaveAttribute(
+      "aria-controls",
+      textbox.id,
+    );
+  });
+
   it("shows the stored text and counts it with a thousands separator", async () => {
     renderEditor({ value: documentWithText("a".repeat(1234)) });
 

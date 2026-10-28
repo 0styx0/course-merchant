@@ -29,20 +29,15 @@ async function fillValidForm(page: Page) {
     .fill("Intro to Emptiness");
   await page.getByLabel("Summary", { exact: true }).fill("A short summary.");
 
+  // The toolbar is enabled once the editor exists in the browser
+  const bold = page.getByRole("button", { name: "Bold" });
+  await expect(bold).toBeEnabled();
   const description = page.getByLabel("Description");
   await description.click();
-  await page.keyboard.type("Welcome to the course");
-  await expect(description).toContainText("Welcome to the course");
-  // Select the last word again if the editor wasn't ready for the shortcut.
-  await expect(async () => {
-    await description.getByText("Welcome to the course").dblclick({
-      position: { x: 140, y: 8 },
-    });
-    await page.keyboard.press("ControlOrMeta+b");
-    await expect(description.locator("strong")).toHaveText("course", {
-      timeout: 500,
-    });
-  }).toPass();
+  await page.keyboard.type("Welcome to the ");
+  await bold.click();
+  await page.keyboard.type("course");
+  await expect(description.locator("strong")).toHaveText("course");
 
   await page.getByLabel("Content link").fill("https://example.com/c");
   await page.getByLabel("Start date", { exact: true }).fill("2099-01-10");
