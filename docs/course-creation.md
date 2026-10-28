@@ -14,8 +14,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 - [ ] **2. Server side of the create form** (no page yet), in six commits, in this order (each uses the ones before it; details in *Step 2* below):
   - [x] **2a. Description helpers** (`feat(courses)`).
   - [x] **2b. Form limits and the contract test** (`feat(admin-courses)`).
-  - [ ] **2c. Wall-clock time to UTC** (`feat(admin-courses)`). **Next**
-  - [ ] **2d. The form schema** (`feat(admin-courses)`).
+  - [x] **2c. Wall-clock time to UTC** (`feat(admin-courses)`).
+  - [ ] **2d. The form schema** (`feat(admin-courses)`). **Next**
   - [ ] **2e. The request builder** (`feat(admin-courses)`).
   - [ ] **2f. API wrappers, error mapping, the Server Action and MSW handler** (`feat(admin-courses)`). Ticking this also ticks step 2, marks step 3 **Next** and cuts the *Step 2* notes down to decision rows.
 - [ ] **3. The create form page.**
@@ -161,7 +161,7 @@ Decided at the outline:
   - "The end time must be after the start time."
   - "Two prices can't take effect at the same time."
   - A set price time must be at least a minute from now, so it can't collide with "when saved".
-- Daylight saving: a wall-clock time a daylight-saving change skips or repeats in the chosen zone is refused with a clear message, for example "2:30 AM doesn't exist on that day in America/New_York. Choose another time." (Temporal `disambiguation: "reject"`).
+- Daylight saving: a wall-clock time a daylight-saving change skips or repeats in the chosen zone is refused with one generic message for both cases, for example "That time doesn't exist, or happens twice, on that day in America/New_York because of a daylight-saving change. Choose another time." `wallClockToUtc` in `wall-clock-time.ts` (2c) returns a `Result<string, WallClockFailureReason>` (`error` is `"daylight-saving"`, `"unknown-zone"` or `"invalid-time"`) (Temporal `disambiguation: "reject"`); the schema maps each reason to a message.
 - Every check that compares fields uses Zod's [`when`](https://zod.dev/api#when), so it runs even while unrelated fields are still empty. The API's [course-request-schemas.ts](../api/src/courses/validation/course-request-schemas.ts) does the same.
 
 **Request builder** (`to-course-request.ts`): its result `satisfies CreateCourseRequest`.
