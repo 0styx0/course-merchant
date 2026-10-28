@@ -9,7 +9,8 @@ Keep this file current **in the same commit as the work**. Tick the step, mark t
 Each step is one commit, outlined in detail before it starts. Every step's tests are part of the step.
 
 - [x] **1a. Description renderer** (web only, not used by a page yet).
-- [ ] **1b. The description becomes a rich-text document** (contract, API, course page). **Next**
+- [x] **1b-i. Description validator** (API only, not wired in).
+- [ ] **1b-ii. Store and show the document** (contract, database, API, course page). **Next**
 - [ ] **2. Server side of the create form** (no page yet).
 - [ ] **3. The create form page.**
 - [ ] **4. Description toolbar, list depth and Google Docs paste tests.**
@@ -36,10 +37,14 @@ Not part of this work: admin login and logout, the admin course page and list, e
 | `CourseDescription` is a shared component: no `"use client"`, no `server-only`, no hooks. The course page renders it on the server | Visitors download no renderer code and the browser does no work for it, yet a later client preview can import it. Lock it to one side only when a real need appears | `server-only` (blocks a client preview); `"use client"` (renderer code in the page's JavaScript) |
 | `@tiptap/core` is a direct dependency, all `@tiptap/*` pinned to one exact version | `JSONContent` and the tests' headless `Editor` come from it, and the renderer needs it as a peer; transitive-only imports are against the rules | Importing it through `starter-kit` |
 | The description's CSS is a hand-written `.description-content` class in [globals.css](../web/src/app/globals.css) | About eight elements to style, and the editor sets the class as a plain string in step 3 | [@tailwindcss/typography](https://github.com/tailwindlabs/tailwindcss-typography) (a dependency styling far more); a CSS module |
+| The API checks the description with the editor's own schema (`getSchema` and `nodeFromJSON().check()` from `@tiptap/core`) plus one pass over the text, instead of hand-written Zod for every node, mark and list level | Far less code, and what the editor can make and what the API accepts can't drift on node and mark shape. A subagent review found the hand-mirrored Zod and OpenAPI tree more than a small storefront needs. Both calls are public API. Costs: the API depends on Tiptap; the generated TypeScript type of the description is a loose object; a refused structure is reported at `/description`, not at the exact node (the text pass does give exact pointers) | Strict Zod unions for each node and level (typed contract, exact pointers, but two descriptions of the document to keep in step); Markdown or sanitised HTML strings (see the first row) |
+| The API keeps a byte-identical copy of the web's [description-extensions.ts](../web/src/features/courses/description-extensions.ts), and a unit test fails if they differ | The packages aren't a workspace, and a shared package would restructure the repo for one 15-line file | A workspace package; importing the web's file from the API |
+| The API stores the editor schema's normalised JSON, and extra attributes are dropped rather than refused | Comparing `toJSON()` with the request would refuse valid documents, since it adds default attributes (`link.target`, `rel`, `class`, `orderedList.start`). Unknown attributes are harmless once dropped, and the stored document is exactly what the renderer and editor understand | Refusing unknown attributes by comparison |
+| Link schemes are `https:`, `http:`, `mailto:` and `tel:` | Chosen by the owner; an explicit list is easier to state and test than Tiptap's defaults | Tiptap's default list; `https`, `http` and `mailto` only |
+| Not enforced by the API: list depth, blockquotes and rules inside lists, empty paragraphs, `maxItems` | Owner's call: the API checks security and basic correctness, the 100 KB body limit bounds size, and the editor is the only writer. Step 4's Tab override still stops deep lists in the editor. The web's `toCourseDescription` still strips empty paragraphs | Walking the tree for each rule (about 40 more lines and tests) |
 | Headings are levels 2-4 in the extension list, and the contract (1b) uses the same levels | The course name is the page's `<h1>`, so the editor never makes another; Tiptap's own output is then correct with no heading mapping. A pasted level 1 becomes a paragraph | Levels 1-3 with a renderer that shifts them down; allowing levels 1-6 |
 | Blockquotes, horizontal rules, strikethrough and underline are allowed; code and code blocks are not | The owner wants them; each is one Tiptap extension and styled by `.description-content`. Code stays off: nothing in a course description needs it. Underlined text looks like a link, so the toolbar (step 4) should label underline clearly | Leaving them out (first plan) |
 | Links open in the same tab (`HTMLAttributes: { target: null }`), and `rel="noopener noreferrer nofollow"` stays | A new window is an unannounced change of context (WCAG G201 advises warning the reader), and a writer can't add that warning to their own link text | Tiptap's default `target="_blank"` |
-| Link schemes are Tiptap's defaults (`tel:` and others included), not a list of our own | Less code; the owner accepts it. The 1b outline decides what the API accepts | Our own `https:`/`http:`/`mailto:` check (`hasAllowedScheme`, removed) |
 | No `class` attribute on links in the contract | Nothing sets it. Stored CSS names tie old content to today's styles, Tailwind can't see names that live only in the database, and a free-text class could reuse utility classes (`fixed inset-0 z-50`) to cover the page. If button-style links are ever wanted, store a named option (`variant: "button"`) | A `class` field; an allow-list of class names |
 | The toolbar is built by hand from Base UI's [Toolbar](https://base-ui.com/react/components/toolbar) with shadcn `toggle` styling | About seven buttons, each one Tiptap command. [Tiptap UI Components](https://tiptap.dev/docs/ui-components/getting-started/overview) are best supported on React 18 / Next 15 (this repo is React 19 / Next 16) and bring a second set of button styles | Tiptap UI Components |
 | No empty paragraphs in the stored document; `toCourseDescription` strips them and the API refuses them | Blank lines from Docs and the editor's trailing empty line show as blank space in the editor but take no height on the page. Spacing between paragraphs comes from CSS | Keeping them and giving them a line of height |
@@ -68,31 +73,25 @@ Each library is added by the step that first uses it.
 
 ## The description document
 
-What the contract allows (a subset of Tiptap's JSON, so the editor and the static renderer read it as is):
+What the contract allows is what the editor's own schema allows (a subset of Tiptap's JSON, so the editor and the static renderer read it as is): `doc` → blocks (`paragraph`, `heading` levels 2-4, `bulletList`, `orderedList`, `blockquote`, `horizontalRule`), text with the marks `bold`, `italic`, `strike`, `underline` and `link`, and `hardBreak`. The API builds that schema from a copy of [description-extensions.ts](../api/src/courses/validation/description-extensions.ts) and loads the request through it (`nodeFromJSON().check()`), so unknown nodes and marks, wrong nesting and duplicate marks are refused without us listing them.
 
-- `doc` → at least one block: `paragraph`, `heading` (`level` 2–4), `bulletList`, `orderedList`, `blockquote`, `horizontalRule`.
-- `blockquote` → at least one `paragraph` or list, **one level only**: no blockquote inside a blockquote. Blockquotes and horizontal rules sit directly under `doc`, not inside list items (the owner chose one level; the list-item part is my reading of it, to confirm at the 1b outline). The editor doesn't enforce this by itself: step 4 stops the toolbar and Tab producing deeper nesting, and a paste that does gets the same kind of message as a list that is too deep.
-- `bulletList` / `orderedList` → at least one `listItem` → **starts with a paragraph**, then paragraphs and nested lists, **at most 3 list levels**. These follow ProseMirror's content rules, so every stored document can be loaded by the editor and the renderer.
-- Inside paragraphs and headings: `text` (at least 1 character, optional marks `bold`, `italic`, `strike`, `underline`, `link`, each at most once) and `hardBreak` (Shift+Enter).
-- **No empty paragraphs.**
-- `link` has only `href`: at most 2,048 characters, limited to a scheme list **to be settled at the 1b outline** (Tiptap's defaults are accepted; this line says `https:`, `http:` and `mailto:` until then) (`new URL()`, which also catches `JAVASCRIPT:`, leading spaces and `java\tscript:`).
-- **Text is well formed:** every `text` and `href` passes `isWellFormed()` and contains no U+0000, because Postgres `jsonb` refuses both and would otherwise cause a 500.
-- **Text limit:** 1 to 5,000 characters of visible text: the sum of the `text` lengths, counted with JavaScript's `.length` like the other limits, and containing at least one non-whitespace character (`/\S/u`; spaces, non-breaking spaces or line breaks only count as empty). JSON Schema can't express this, so the contract states it in words and as `x-max-text-length: 5000`.
-- **Size:** `maxItems` on every content array (values set at the 1b outline, checked against a heavily formatted real document). The other bound is Express's default 100 KB JSON body limit, which [configure-app.ts](../api/src/configure-app.ts) relies on implicitly; write it down in [courses.md](courses.md).
-- **Finite nesting:** the schemas are written out for each list level instead of recursing, so a deeply nested request can't exhaust the validator. The contract also states `x-max-list-depth: 3`.
+On top of that, one pass over the text enforces what ProseMirror can't know:
 
-Tiptap's own JSON carries extra attributes (`orderedList.start`, `link.target`, `rel`, `class`). The web's `toCourseDescription(editorJson)` keeps only the fields above, so the API stays strict (unknown keys refused).
+- **Text is storable:** no U+0000 and no unpaired surrogate in any `text` or link `href`, because Postgres `jsonb` refuses both and would otherwise cause a 500.
+- **Links:** `href` at most 2,048 characters and a scheme of `https:`, `http:`, `mailto:` or `tel:` (`new URL()` also catches `JAVASCRIPT:`, leading spaces and `java\tscript:`).
+- **Text limit:** at least one non-whitespace character (`/\S/u`; spaces, non-breaking spaces or line breaks only count as empty) and at most 5,000 characters in total (the sum of the `text` lengths, counted with `.length` like the other limits). The contract states it in words and as `x-max-text-length: 5000`.
+- **Size:** bounded by Express's default 100 KB JSON body limit, which [configure-app.ts](../api/src/configure-app.ts) relies on implicitly; write it down in [courses.md](courses.md).
 
-**API schema:** nodes and marks use `z.discriminatedUnion("type", …)`, so an unknown type is reported at its own `…/type` pointer rather than as one vague error on the parent.
+The API stores the schema's own JSON, not the request: attributes and keys the editor doesn't know are dropped, and the defaults Tiptap fills in (`link.target`, `rel`, `class`) are kept. The web's `toCourseDescription(editorJson)` still sends only the fields it needs.
 
 **Errors** (existing generic codes, pointer into the document):
 
 - no visible text → same code as an empty name, at `/description`;
 - over 5,000 characters → `TOO_LONG` at `/description`;
-- unknown node or mark, an empty paragraph, a 4th list level or a refused link → `INVALID_VALUE` at the exact pointer, e.g. `/description/content/2/content/0/marks/0/attrs/href`;
-- wrong JSON shape → `INVALID_TYPE`.
+- a refused link or unstorable text → `INVALID_VALUE` at the exact pointer, e.g. `/description/content/2/content/0/marks/0/attrs/href`;
+- a document the editor's schema refuses → `INVALID_VALUE` at `/description` (the check reports no path); a body that isn't a document at all → `INVALID_TYPE`.
 
-The form shows every `/description/…` error on the description field and merges them into **one entry** in the error list, so a bad paste can't flood it. The message is chosen from the pointer's ending: `…/attrs/href` → "Links must start with https://, http:// or mailto:"; a list too deep → "Lists can be nested at most 3 levels deep. Press Shift+Tab to move it out."; otherwise a general one.
+The form shows every `/description/…` error on the description field and merges them into **one entry** in the error list, so a bad paste can't flood it. The message is chosen from the pointer's ending: `…/attrs/href` → "Links must start with https://, http://, mailto: or tel:"; otherwise a general one.
 
 ## Form field names
 
@@ -107,42 +106,20 @@ Price rows go to the API in the order shown, so the API's `/prices/0` is the for
 
 ## Step 1b. The description becomes a rich-text document
 
-One commit across both packages: the pre-commit hook regenerates the web types and type-checks the web, so a contract change can't land without the web side.
+Two commits. The contract, the database column and the web display can't be split further: the pre-commit hook regenerates the web types and type-checks the web.
 
-**Contract** ([openapi-v1.yaml](../api/openapi/openapi-v1.yaml)): `CourseDescription` becomes the document above, with named schemas per node and per list level, the text rules in words, `maxItems`, `x-max-text-length` and `x-max-list-depth`. Request and response use the same schema. Then regenerate the API and web types.
+**1b-i. Validator** (API only, not wired in): [course-description-schema.ts](../api/src/courses/validation/course-description-schema.ts) exports `descriptionDocumentSchema`; its spec includes the test that the extension copy equals the web's file.
 
-**API:**
+**1b-ii. Store and show the document** (both packages):
 
-- [course-field-schemas.ts](../api/src/courses/validation/course-field-schemas.ts): `courseDescriptionSchema` becomes strict Zod objects for each node in discriminated unions, list levels built by a small function (`listSchema(level)`), plus refinements for visible text, well-formed text and link schemes.
-- [contract.prisma](../api/src/prisma/contract.prisma): `description Json` (Postgres `jsonb`). `yarn contract:emit`, then plan the migration (apply the *Migration trap* fix in [api/CLAUDE.md](../api/CLAUDE.md)). No data transform: the database is dev-only and is recreated.
-- Repository input and row types, [courses.mapper.ts](../api/src/courses/courses.mapper.ts) and [admin-courses.service.ts](../api/src/courses/admin-courses.service.ts) take the `CourseDescription` type from [types.ts](../api/types.ts) instead of `string`. Rows read back as Prisma's JSON type are typed by the contract's type at the repository edge, since only validated documents are ever written.
-- [course-fixtures.ts](../api/src/test/course-fixtures.ts) gets `descriptionDoc("Learn React")` (one paragraph), used by every spec that sets a description.
-
-**Web:**
-
-- `course-description.tsx` (from 1a) is typed on the generated `CourseDescription`, so the renderer is checked against the contract. Mappings:
-  - links, headings and lists are rendered by Tiptap from the shared extension list; there is no mapping to type;
-  - unknown nodes render their children as text and unknown marks their text unmarked.
-- [course-details.tsx](../web/src/features/courses/course-details.tsx) uses it instead of one `<p>`, moved out of the `<header>`. Card summaries stay plain text.
-- [mocks/fixtures/courses.ts](../web/src/mocks/fixtures/courses.ts) descriptions become documents.
-
-**Tests:**
-
-- API unit ([course-field-schemas.spec.ts](../api/src/courses/validation/course-field-schemas.spec.ts)): a valid document with every allowed node passes; a 5,000-character document passes; level 3 passes. Each refusal is reported at its exact pointer:
-  - unknown node or mark, duplicate mark, extra attribute, a 4th list level;
-  - a list item starting with a list, an empty list, an empty `doc`, empty text, an empty paragraph;
-  - `javascript:`, `JAVASCRIPT:`, ` javascript:` and `java\tscript:`, and an `href` over 2,048 characters;
-  - U+0000 and an unpaired surrogate;
-  - only spaces, only non-breaking spaces, only line breaks;
-  - 5,001 characters, and too many items.
-  - Decide at the outline whether `marks: []` and `content: []` are accepted, and test that choice.
-- API e2e: create and get return the same document; an invalid one gets a 400 with the pointer.
-- Web: the course page shows the document; the mapping tests now use contract-typed documents.
-
-**Docs:**
-
-- [courses.md](courses.md): a *Validation* bullet for the description rules (including the 100 KB body limit as the size bound) and a decision row pointing here.
-- Run the API type check, unit, integration and e2e tests for courses after recreating the dev and test databases and applying the migration.
+- [openapi-v1.yaml](../api/openapi/openapi-v1.yaml): `CourseDescription` becomes a "Tiptap document" object with the rules in words and `x-max-text-length: 5000`; request and response share it. Regenerate both type files. The generated type is a loose object, so the web renderer keeps `JSONContent` as its prop type.
+- [course-field-schemas.ts](../api/src/courses/validation/course-field-schemas.ts): `courseDescriptionSchema` is replaced by `descriptionDocumentSchema`.
+- [contract.prisma](../api/src/prisma/contract.prisma): `description Json` (Postgres `jsonb`). `yarn contract:emit`, plan the migration (apply the *Migration trap* fix in [api/CLAUDE.md](../api/CLAUDE.md)), recreate both databases. No data transform.
+- Repository input and row types, [courses.mapper.ts](../api/src/courses/courses.mapper.ts) and [admin-courses.service.ts](../api/src/courses/admin-courses.service.ts) take the document type; rows read back as Prisma's JSON type are typed at the repository edge, since only validated documents are written.
+- [course-fixtures.ts](../api/src/test/course-fixtures.ts) gets `descriptionDoc("Learn React")`, used by every spec that sets a description.
+- Web: [course-details.tsx](../web/src/features/courses/course-details.tsx) renders `CourseDescription` below the `<header>`; card summaries stay plain text; [mocks/fixtures/courses.ts](../web/src/mocks/fixtures/courses.ts) descriptions become documents.
+- Tests: API e2e (create then get returns the document, an invalid one gets a 400) and a web test that the course page shows it.
+- Docs: [courses.md](courses.md) gets a *Validation* bullet (including the 100 KB body limit) and a decision row pointing here.
 
 ## Step 2. Server side of the create form (no page yet)
 
