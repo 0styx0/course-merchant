@@ -8,17 +8,17 @@ arguments: [module]
 
 # Next commit
 
-Module: `$module` — one of `payments`, `courses`, `auth`, `web`, `course-creation` (the matching `docs/<module>.md`). Anything typed after it is a free-text task: `$ARGUMENTS`. Both are optional; with no module, reuse the one saved in memory (see step 1). Follow CLAUDE.md's working agreements throughout; this skill is the order of work.
+Module: `$module` — one of `payments`, `courses`, `auth`, `web`, `course-creation` (the matching `docs/<module>.md`). Anything typed after it is a free-text task: `$ARGUMENTS`. Both are optional; with no module, reuse the one saved in memory (see step 1). Follow CLAUDE.md's working agreements (especially *When to stop and ask* and *Writing*) throughout; this skill is only the order of work.
 
 ## 1. Find the work
 
 - Remember the module: the last one is kept in the memory file `project-next-commit-module.md` (type `project`, body: the module name, with an index line in `MEMORY.md`). When a module is given, create or update that file with it (update, don't duplicate). With no module, read that file and use its module, saying which one you picked.
-- With no module and no memory file, read the Status section of each file in `docs/`; with a module, read only the Status of `docs/$module.md`. Take the item marked **Next**. If there is none, or more than one, ask which.
+- With no module and no memory file, read the Status section of each file in `docs/`; with a module, read only the Status of `docs/$module.md`. Take the item marked **Next**. If there is none, or more than one (in this doc or across docs), ask which.
 - Read what the item needs: the doc's sections about it, and the files it links.
 - Before outlining, look for existing patterns and helpers:
   - read one existing sibling of each kind of file you'll add (for example an existing repository and its integration spec) and follow its conventions;
   - for each helper you think you need, grep for an existing one in `src/common/`, `src/test/` and the modules involved, and reuse it.
-- Search for specific things; skip wide, open-ended surveys of the codebase.
+- Search for specific things; skip wide, open-ended surveys of the codebase. Read a sibling by line range when you only need a pattern. Never read generated files whole (see CLAUDE.md).
 - Run `git status --short`. Leave uncommitted changes from other work alone, and mention them if they touch the same files.
 
 ## 2. Outline, then stop
@@ -33,7 +33,7 @@ Give the outline and wait for the go-ahead. In plan mode, present it with ExitPl
 - **Config:** keep module-specific settings (constants or env vars) inside that module, not in global config. If that would add real complexity, tell the owner before doing it.
 - **Questions:** any design or behaviour change not already decided in the doc, asked as a question with your recommendation.
 - **Tests:** which unit, integration or e2e tests you'll add.
-- **Doc update:** what changes in `docs/<area>.md`.
+- **Doc update:** what changes in `docs/<area>.md`. Write out the exact text of any new decision row, so the owner can approve it with the outline.
 
 If the owner replies with questions or objections, discuss them first: answer, give your recommendation, and ask follow-ups if needed. Don't edit the outline or write code while the discussion is open. Once the owner agrees on the answers, present the updated outline and wait for the go-ahead again.
 
@@ -43,19 +43,22 @@ If the owner replies with questions or objections, discuss them first: answer, g
 - In the same change, update the design doc:
   - tick the item;
   - mark the following item **Next**, with enough detail to start on it;
-  - add a decision row for anything decided along the way;
+  - add a decision row for anything decided along the way, using the text the owner approved (propose it in chat first if it came up during implementation);
   - when a whole step is done, cut its design notes down to decision rows.
-- As the last step of implementation, use a subagent to run `/simplify` (the Skill tool, skill `simplify`) on the change. If a cleanup would change design or behaviour, ask first instead of applying it. Run it before verifying, so step 4 checks the simplified code.
+- As the last step of implementation, use a subagent to run `/simplify` (the Skill tool, skill `simplify`) on the change. If a cleanup would change design or behaviour, ask first instead of applying it. Run it before verifying, so step 4 checks the simplified code. Skip it for pure moves/renames and doc-only changes.
+- A hook formats edited `api/` and `web/` files; don't run prettier yourself.
 
 ## 4. Verify
 
-From `api/` (or `web/`), run `yarn lint`, `yarn tsc --noEmit`, and the unit tests. Also run the single-file integration or e2e specs for the code you touched, using the `vitest` configs and `test:*` scripts in `package.json`. Report failures with their output; don't hide them.
+From `api/` (or `web/`), run `yarn lint`, `yarn tsc --noEmit` (in `web/`, run `yarn next typegen` first), and the unit tests. Also run the single-file integration or e2e specs for the code you touched; the commands are in [api/CLAUDE.md](../../../api/CLAUDE.md). Report failures with their output; don't hide them.
 
 ## 5. Hand off
 
 Keep it short:
 - the files changed, as a table links | high level changes;
 - the verification results;
-- a suggested conventional commit message.
+- whether README, CONTRIBUTING or ARCHITECTURE needed changes (yes with what, or no);
+- a suggested conventional commit message (no `Co-Authored-By` trailer);
+- the current context size, and a reminder to run `/clear` before the next commit.
 
-Then stop. The owner makes the commit. If this finished a whole step in the Status, follow the usage-review agreement in CLAUDE.md.
+Then stop. The owner makes the commit. If this finished a whole step in the Status, run `/usage-review`.
