@@ -15,8 +15,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 - [ ] **3. The create form page**, in five commits (design in *Step 3* below):
   - [x] **3a.** Form libraries (react-hook-form, resolvers, user-event), shadcn `field`/`input`/`label`, and `FormField` (message, red X, green check).
   - [x] **3b.** `error-summary.tsx`, the error list at the top with a link per problem and focus on a refused submit.
-  - [ ] **3c.** **Next**: `description-editor.tsx`, first version with no toolbar (adds `@tiptap/react`).
-  - [ ] **3d.** `course-form.tsx`, `page.tsx` at `app/admin/(signed-in)/courses/new/` (no layout until the login lands), `formatCourseLength`, submit handling and component tests.
+  - [x] **3c.** `description-editor.tsx`, first version with no toolbar (adds `@tiptap/react`). It renders its own `FormField` (label, state icon, error, counter); `FormField` gained `labelId` and `onLabelClick`.
+  - [ ] **3d.** **Next**: `course-form.tsx`, loading the editor with `next/dynamic`, `page.tsx` at `app/admin/(signed-in)/courses/new/` (no layout until the login lands), `formatCourseLength`, submit handling and component tests.
   - [ ] **3e.** Playwright browser test; admin.md, courses.md and README updates.
 - [ ] **4. Description toolbar, list depth and Google Docs paste tests.**
 - [ ] **5. Image and publish in the create form.**
@@ -145,7 +145,7 @@ Shipped in six commits (2a–2f). Limits and the currency constant live in the `
 - Pasting from Google Docs and the keyboard shortcuts (Ctrl+B, Ctrl+I, Ctrl+Z, Shift+Enter) already work without a toolbar.
 - The editable area gets `id`, `role="textbox"`, `aria-multiline`, `aria-labelledby`, `aria-invalid`, `aria-describedby` and the shared `description-content` class through `editorProps.attributes`.
 - Focus: clicking the label focuses the editor (a `<label>` can't focus a contenteditable area on its own); `field.ref({ focus: () => editor?.commands.focus() })` lets react-hook-form and the error-list link focus it.
-- Help text under the field: "Paste from Google Docs to keep formatting. In a list, Tab indents; press Esc then Tab to leave the editor." (exact wording and the way out of the editor confirmed at the outline).
+- No help text under the field (dropped at the 3c outline).
 - A "1,234 / 5,000" counter from `countDescriptionCharacters` (numbers formatted with `"en-US"`, so the server and browser show the same text): linked through `aria-describedby`, not a live region, so it isn't read out on every keystroke; typing past 5,000 is never blocked, the counter turns red and the field shows the error.
 
 **How a field shows its state** (`components/form/form-field.tsx`, built on shadcn [`field`](https://ui.shadcn.com/docs/components/field); done in 3a). It takes `touched`, `submitted` and `error` as plain props, with no react-hook-form import, and renders its one input through a render function that hands over `id`, `aria-invalid` and `aria-describedby` (help text and message both), which the caller spreads onto the input:

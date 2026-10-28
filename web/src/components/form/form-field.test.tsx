@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { Input } from "@/components/ui/input";
 
@@ -103,5 +103,24 @@ describe("FormField", () => {
     expect(input).toHaveAccessibleDescription(
       "Shown on the course card. Enter a course name.",
     );
+  });
+
+  it("calls onLabelClick when the label is clicked", async () => {
+    const user = userEvent.setup();
+    const onLabelClick = vi.fn();
+    render(
+      <FormField
+        label="Description"
+        touched={false}
+        submitted={false}
+        onLabelClick={onLabelClick}
+      >
+        {({ labelId }) => <div role="textbox" aria-labelledby={labelId} />}
+      </FormField>,
+    );
+
+    await user.click(screen.getByText("Description"));
+    expect(onLabelClick).toHaveBeenCalledOnce();
+    expect(screen.getByRole("textbox")).toHaveAccessibleName("Description");
   });
 });

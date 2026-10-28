@@ -10,6 +10,8 @@ import {
 
 export type FormFieldInputProps = {
   id?: string;
+  /** For inputs that aren't labelable elements and use `aria-labelledby`. */
+  labelId?: string;
   "aria-invalid"?: boolean;
   "aria-describedby"?: string;
 };
@@ -17,13 +19,15 @@ export type FormFieldInputProps = {
 type FormFieldProps = {
   label: string;
   /** Help text shown under the input. */
-  description?: string;
+  description?: ReactNode;
   /** The field's current problem, if any. */
   error?: string;
   /** The admin has focused the field and left it. */
   touched: boolean;
   /** The form has been submitted at least once. */
   submitted: boolean;
+  /** Called when the label is clicked, for inputs a label can't focus itself. */
+  onLabelClick?: () => void;
   /** Renders the one input; spread the props it receives onto the input. */
   children: (inputProps: FormFieldInputProps) => ReactNode;
 };
@@ -39,9 +43,11 @@ export function FormField({
   error,
   touched,
   submitted,
+  onLabelClick,
   children,
 }: FormFieldProps) {
   const id = useId();
+  const labelId = `${id}-label`;
   const descriptionId = `${id}-description`;
   const errorId = `${id}-error`;
 
@@ -56,10 +62,13 @@ export function FormField({
 
   return (
     <Field data-invalid={showsError}>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <FieldLabel id={labelId} htmlFor={id} onClick={onLabelClick}>
+        {label}
+      </FieldLabel>
       <div className="flex items-center gap-2">
         {children({
           id,
+          labelId,
           "aria-invalid": showsError,
           "aria-describedby": describedBy || undefined,
         })}
