@@ -12,14 +12,18 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 - [x] **1b-i. Description validator** (API only, not wired in).
 - [x] **1b-ii. Store and show the document** (contract, database, API, course page).
 - [x] **2. Server side of the create form** (no page yet): description helpers, form limits and contract test, wall-clock time to UTC, form schema, request builder, API wrapper, error mapping, Server Action and MSW handler (`createCourseAction`; its design is in *Step 2* below).
-- [ ] **3. The create form page**, in six commits (design in *Step 3* below):
+- [x] **3. The create form page**, in six commits (design in *Step 3* below):
   - [x] **3a.** Form libraries (react-hook-form, resolvers, user-event), shadcn `field`/`input`/`label`, and `FormField` (message, red X, green check).
   - [x] **3b.** `error-summary.tsx`, the error list at the top with a link per problem and focus on a refused submit.
   - [x] **3c.** `description-editor.tsx`, first version with no toolbar (adds `@tiptap/react`). It renders its own `FormField` (label, state icon, error, counter); `FormField` gained `labelId` and `onLabelClick`.
   - [x] **3d-i.** `course-form.tsx` with the text fields, description editor, schedule, `formatCourseLength`, one price row, error list and submit handling; `page.tsx` at `app/admin/(signed-in)/courses/new/` (no layout until the login lands); component tests.
   - [x] **3d-ii.** Price rows: `useFieldArray` in `course-form.tsx`, `price-row.tsx` (add and remove, at least one row, new rows start empty), error-list entries per row (`courseFormProblems` takes the row count; labels are numbered only with several rows), and tests. The empty-time help text now says "when the course is published" (wording only: an empty time is still set to now + 1 minute when saved).
-  - [ ] **3e.** **Next**: Playwright browser test; admin.md, courses.md and README updates.
-- [ ] **4. Description toolbar, list depth and Google Docs paste tests.**
+  - [x] **3e.** Playwright browser test (`tests/browser/admin-courses/create-course.spec.ts`: save and land on `/`, an API refusal, no console errors); admin.md, courses.md, web.md and README updates.
+- [ ] **4. Description toolbar, list depth and Google Docs paste tests.** **Next** (design in *Step 4* below; its browser test goes in the same spec file as 3e).
+- [ ] **UX pass on the create form**, after step 4 and before step 5, from a UX review of the page (design in *UX pass* below). Grouped by complexity; each group is one commit, outlined and approved first as usual:
+  - [ ] **U1. Copy and small layout fixes** (wording and markup only).
+  - [ ] **U2. Field and component behaviour** (price input, remove button, error summary height, time zone default, leave warning).
+  - [ ] **U3. Live summaries and the time zone picker** (new components).
 - [ ] **5. Image and publish in the create form.**
 
 Not part of this work: admin login and logout, the admin course page and list, editing a course (loading a stored document into the editor is `setContent`, no conversion), the payout estimate under the price (payments step 7), a Playwright test comparing the image preview with the saved image, and plain-text or email versions of the description (the static renderer can produce Markdown later).
@@ -275,6 +279,46 @@ Each button calls Tiptap's chain commands (`toggleBold`, `toggleHeading`, `setLi
 - a failed upload keeps the id, and the retry calls `updateCourseAction` with the edited values, not `createCourseAction`.
 
 **Docs:** when this step ships, the *Web admin pages* item in [courses.md](courses.md) and the README *Status* are ticked, and this file is cut down to decision rows.
+
+## UX pass
+
+Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), then the planned fixes. The first version works and its errors are clear; the problems are structure and guidance. Not checked yet: phone width (about 400 px) and keyboard-only use. Check both after each group.
+
+**What the review found**
+
+- One long column of 10+ fields. "Schedule" and "Price" are small labels; the page has no intro and no sections.
+- The description editor shows no sign of formatting (step 4's toolbar fixes this). Typing `**bold**` silently turns bold.
+- "Schedule" doesn't say what it controls (when the course runs). Four separate date and time fields; the "Lasts X" line is easy to miss.
+- Price: the legend says USD but the field has no `$`; `$79,50` is refused with "Enter a price, like 79.50". The price row has no explanation of a price schedule; the "leave empty" help sits under one of the three fields; the disabled Remove gives no reason.
+- Each problem shows twice (summary and field), as intended for accessibility, but the summary changes height as errors clear, so the page jumps while the admin types.
+- The save button is at the very bottom and doesn't say it saves a draft.
+- Time zone is a native select of about 420 names. Leaving the page loses all work.
+
+**U1. Copy and small layout fixes**
+
+1. A one-line intro under the title: details, price, saved as a draft, nothing public until published.
+2. Titled sections with a one-line description each: **Basics** (name, summary, description), **Content** (link), **Schedule** ("when the course runs"), **Pricing**. Leave room for step 5's image and publish checkbox.
+3. Placeholders or example help text for name and summary, and a visible character limit on both (as the description already has).
+4. One shared help line for the price start date and time, instead of one under a single field.
+5. Button label **Save as draft**. Until step 5 adds "Publish after saving", saving always makes a draft; revisit the label when step 5 lands.
+
+**U2. Field and component behaviour** (each is a behaviour change; propose the exact wording or rule first)
+
+6. Price input: a `$` prefix inside the field, and accept `79,50` (comma as the decimal mark). Keep the API's rules (free allowed, otherwise at least $0.50).
+7. The disabled Remove explains itself ("A course needs at least one price"), or is hidden while there is one row.
+8. Keep the error summary's height stable so the page doesn't jump (reserve space, or a compact sticky summary).
+9. Default the time zone to the browser's own and place it next to the times it applies to.
+10. A "leave page? you have unsaved changes" warning while the form is dirty.
+
+**U3. Live summaries and the time zone picker** (new components)
+
+11. A plain-sentence summary of the schedule, e.g. "Runs 3 Jan 2027, 9:00 AM to 28 Feb 2027, 5:00 PM (America/New_York). Lasts 8 weeks." This replaces or extends the "Lasts X" line.
+12. A plain-sentence summary of the price schedule ("$99 from publish, $79 from 1 Feb").
+13. A searchable time zone picker or a short list of common zones, instead of the native select.
+
+**Out of scope here:** where the form goes after saving, and any "saved" confirmation. The owner will change the redirect later; add the confirmation with it.
+
+**Tests:** update the component tests and `tests/browser/admin-courses/create-course.spec.ts` for changed labels and behaviour; each new component gets its own test; no hydration warnings.
 
 ## Verification (each step)
 

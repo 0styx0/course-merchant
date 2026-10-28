@@ -17,7 +17,7 @@ Each step is one commit. Every step's tests are part of the step. Steps 1–5 co
 - [x] **7. Security headers** in `next.config.ts`: `poweredByHeader: false`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `frame-ancestors 'none'` (stops other sites framing the admin pages).
 - [x] **8. Real site metadata and one font** in the root layout.
 
-All web steps are done.
+All web steps are done. The admin create-course form's decisions are in [course-creation.md](course-creation.md).
 
 ## Principles
 

@@ -52,6 +52,9 @@ And the default time zone should be america/new york
 When the user fixes a field they have already left
 Then its message updates on every keystroke
 
+When the browser has JavaScript turned off
+Then the create page doesn't work (the form is built with JavaScript)
+
 When the user blurs a field
 And the field contains invalid input
 Then the user should see a red outline around the field
