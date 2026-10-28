@@ -8,11 +8,12 @@ arguments: [module]
 
 # Next commit
 
-Module: `$module` — one of `payments`, `courses`, `auth`, `web`, `course-creation` (the matching `docs/<module>.md`). Anything typed after it is a free-text task: `$ARGUMENTS`. Both are optional. Follow CLAUDE.md's working agreements throughout; this skill is the order of work.
+Module: `$module` — one of `payments`, `courses`, `auth`, `web`, `course-creation` (the matching `docs/<module>.md`). Anything typed after it is a free-text task: `$ARGUMENTS`. Both are optional; with no module, reuse the one saved in memory (see step 1). Follow CLAUDE.md's working agreements throughout; this skill is the order of work.
 
 ## 1. Find the work
 
-- With no module, read the Status section of each file in `docs/`; with a module, read only the Status of `docs/$module.md`. Take the item marked **Next**. If there is none, or more than one, ask which.
+- Remember the module: the last one is kept in the memory file `project-next-commit-module.md` (type `project`, body: the module name, with an index line in `MEMORY.md`). When a module is given, create or update that file with it (update, don't duplicate). With no module, read that file and use its module, saying which one you picked.
+- With no module and no memory file, read the Status section of each file in `docs/`; with a module, read only the Status of `docs/$module.md`. Take the item marked **Next**. If there is none, or more than one, ask which.
 - Read what the item needs: the doc's sections about it, and the files it links.
 - Before outlining, look for existing patterns and helpers:
   - read one existing sibling of each kind of file you'll add (for example an existing repository and its integration spec) and follow its conventions;

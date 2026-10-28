@@ -23,6 +23,8 @@ Package-specific guidance lives in [api/CLAUDE.md](api/CLAUDE.md) and [web/CLAUD
 - [docs/auth.md](docs/auth.md) — admin login, logout, sessions, the auth guard, and the command that creates admins: status checklist, principles, decisions.
 - [docs/web.md](docs/web.md) — the web app: folder layout, how it calls the API, caching, errors, forms, admin login cookie: status checklist (what's next), principles, decisions.
 
+The docs record decisions made with the information available at the time; they are not absolute. When new information (a library's real behaviour, a bug, a constraint found while coding, a better option) undermines a documented decision, say so before building on it: state what changed, why the decision may no longer hold, and recommend a revised approach. Don't silently follow a stale decision, and don't silently deviate from it either; the owner decides, then the doc is updated.
+
 Update them in the same commit as the code they describe: tick status, add a decision row when something is decided. Record only what the code can't say (progress, why, what was rejected); never copy schemas or contract shapes into them.
 
 The root [README.md](README.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [ARCHITECTURE.md](ARCHITECTURE.md) are the public face of the repo (it's linked from the owner's resume). Update them in the same commit whenever setup steps, commands, ports, env settings, the folder layout, module responsibilities, a diagrammed flow or the status of a major feature changes. Keep their claims true to the code, and keep the README's *Status* note honest about what isn't built yet.
@@ -51,6 +53,7 @@ Never hand-edit generated files. Both sides alias the generated schemas rather t
 How the owner wants Claude to work on this repo:
 
 - **One commit at a time.** Before coding a commit, give a detailed, easy-to-read outline (what, why, trade-offs) and wait for the go-ahead. Then implement, verify (type check and the relevant tests), and stop with a suggested conventional commit message. The owner makes the commits. Finish one commit's changes before starting the next: interactive `git add -p` isn't available, so mixed hunks can't be split.
+- **Push back as information comes in.** Past decisions (in docs, plans or earlier in the session) aren't binding when new facts contradict them. Raise the conflict in chat with a recommendation instead of complying or working around it quietly.
 - **Ask before any design or behaviour change**, however small, even inside an approved refactor. Mentioning it afterwards isn't enough.
 - **Questions aren't instructions.** Answer them and stop; offer any resulting change as an option.
 - **Plan mode.** A question or comment from the owner gets an answer in chat first. Don't edit the plan file or ask for plan approval until they say to update the plan. A message starting with `Q:` is chat-only; one starting with `plan:` goes into the plan.
