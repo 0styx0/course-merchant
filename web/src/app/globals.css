@@ -131,3 +131,50 @@
     @apply font-sans;
   }
 }
+
+@layer components {
+  /* Course description: Tailwind's reset removes list markers and heading sizes */
+  .description-content {
+    > * + *,
+    li > * + * {
+      margin-top: 0.75rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+    h4 {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+    ul,
+    ol {
+      padding-left: 1.5rem;
+    }
+    ul {
+      list-style: disc;
+    }
+    ol {
+      list-style: decimal;
+    }
+    li > ul,
+    li > ol {
+      margin-top: 0.25rem;
+    }
+    a {
+      text-decoration: underline;
+    }
+    blockquote {
+      border-left: 4px solid var(--border);
+      padding-left: 1rem;
+      font-style: italic;
+    }
+    hr {
+      border-top: 1px solid var(--border);
+    }
+  }
+}

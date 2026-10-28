@@ -19,6 +19,7 @@ Package-specific guidance lives in [api/CLAUDE.md](api/CLAUDE.md) and [web/CLAUD
   - [docs/payments/email.md](docs/payments/email.md) — outbox, worker, templates, sender.
   - [docs/payments/refunds.md](docs/payments/refunds.md) — refunds, disputes, access, sweeper.
 - [docs/courses.md](docs/courses.md) — creating, editing and browsing courses: who sees what, `PUT` semantics, validation, decisions.
+- [docs/course-creation.md](docs/course-creation.md) — the admin "create course" page and the rich-text (Tiptap) description it needs: status checklist with the **Next** step, per-step design, decisions with rejected alternatives. Run with `/next-commit course-creation`.
 - [docs/auth.md](docs/auth.md) — admin login, logout, sessions, the auth guard, and the command that creates admins: status checklist, principles, decisions.
 - [docs/web.md](docs/web.md) — the web app: folder layout, how it calls the API, caching, errors, forms, admin login cookie: status checklist (what's next), principles, decisions.
 

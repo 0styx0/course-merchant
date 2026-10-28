@@ -2,13 +2,13 @@
 name: next-commit
 description: Outline the next commit from a design doc's Status, wait for approval, then implement, verify and update the doc. Use when the owner says "next", "next commit", or names a status item to work on.
 disable-model-invocation: false
-argument-hint: "[module: payments|courses|auth|web] [task]"
+argument-hint: "[module: payments|courses|auth|web|course-creation] [task]"
 arguments: [module]
 ---
 
 # Next commit
 
-Module: `$module` — one of `payments`, `courses`, `auth`, `web` (the matching `docs/<module>.md`). Anything typed after it is a free-text task: `$ARGUMENTS`. Both are optional. Follow CLAUDE.md's working agreements throughout; this skill is the order of work.
+Module: `$module` — one of `payments`, `courses`, `auth`, `web`, `course-creation` (the matching `docs/<module>.md`). Anything typed after it is a free-text task: `$ARGUMENTS`. Both are optional. Follow CLAUDE.md's working agreements throughout; this skill is the order of work.
 
 ## 1. Find the work
 

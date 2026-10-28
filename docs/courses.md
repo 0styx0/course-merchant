@@ -10,7 +10,7 @@ Keep this file current **in the same commit as the work**.
 - [x] API, admin: list, get, create (`POST`) and update (`PUT`).
 - [x] Web: home page with the course list, and the course page.
 - [x] Admin authentication: every admin route requires a login (see [auth.md](auth.md)).
-- [ ] Web admin pages (spec in [web/docs/admin.md](../web/docs/admin.md)).
+- [ ] Web admin pages (spec in [web/docs/admin.md](../web/docs/admin.md)). The create page and its rich-text description are planned step by step in [course-creation.md](course-creation.md); the course list and edit pages come after.
 - [ ] Estimated payout under the admin price field (payments step 7).
 - [ ] **Course images** (design in *Course images* below):
   - [x] **1. API: check and convert an uploaded image** ([course-image.ts](../api/src/courses/course-image.ts)). Nothing calls it yet.
