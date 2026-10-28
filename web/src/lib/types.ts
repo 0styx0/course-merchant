@@ -11,6 +11,8 @@ export type Result<T, E> =
     };
 
 export type Course = components["schemas"]["Course"];
+export type CourseDescriptionDocument =
+  components["schemas"]["CourseDescription"];
 export type ProblemDetails = components["schemas"]["ProblemDetails"];
 export type CoursesResponse =
   operations["listCourses"]["responses"][200]["content"]["application/json"];

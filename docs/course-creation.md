@@ -11,7 +11,13 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 - [x] **1a. Description renderer** (web only, not used by a page yet).
 - [x] **1b-i. Description validator** (API only, not wired in).
 - [x] **1b-ii. Store and show the document** (contract, database, API, course page).
-- [ ] **2. Server side of the create form** (no page yet). **Next**
+- [ ] **2. Server side of the create form** (no page yet), in six commits, in this order (each uses the ones before it; details in *Step 2* below):
+  - [x] **2a. Description helpers** (`feat(courses)`).
+  - [ ] **2b. Form limits and the contract test** (`feat(admin-courses)`). **Next**
+  - [ ] **2c. Wall-clock time to UTC** (`feat(admin-courses)`).
+  - [ ] **2d. The form schema** (`feat(admin-courses)`).
+  - [ ] **2e. The request builder** (`feat(admin-courses)`).
+  - [ ] **2f. API wrappers, error mapping, the Server Action and MSW handler** (`feat(admin-courses)`). Ticking this also ticks step 2, marks step 3 **Next** and cuts the *Step 2* notes down to decision rows.
 - [ ] **3. The create form page.**
 - [ ] **4. Description toolbar, list depth and Google Docs paste tests.**
 - [ ] **5. Image and publish in the create form.**
@@ -108,11 +114,28 @@ Price rows go to the API in the order shown, so the API's `/prices/0` is the for
 
 ## Step 2. Server side of the create form (no page yet)
 
-**Types** in [types.ts](../web/src/lib/types.ts): `AdminCourse`, `CreateCourseRequest`, `UpdateCourseRequest`, `CourseDescription`, `ValidationProblemDetails`, `FieldError`.
+Six commits, each finished, tested and ticked before the next. A library is added by the commit that first uses it: `yaml` (dev) in 2b, `temporal-polyfill` in 2c, `zod` v4 in 2d. `react-hook-form` and `@hookform/resolvers` wait for step 3. Nothing here is global config: limits and the currency constant live in the `admin-courses` feature.
 
-**Wrappers** in `src/features/admin-courses/admin-courses.api.ts`: `createCourse` and `updateCourse`, each returning a `Result` through `toResult()`.
+| Commit | Adds | Tests |
+|---|---|---|
+| 2a `feat(courses): count and tidy rich-text descriptions on the web` | `description-document.ts` and the `CourseDescriptionDocument` type | the description helper tests below |
+| 2b `feat(admin-courses): keep the form's limits in step with the API contract` | `course-form-limits.ts`, `yaml` (dev) | the contract test |
+| 2c `feat(admin-courses): convert wall-clock times to UTC` | `wall-clock-time.ts`, `temporal-polyfill` | a spring gap, an autumn overlap, a normal time, a bad zone |
+| 2d `feat(admin-courses): validate the create-course form` | `course-form-schema.ts`, `zod` | every rule and message, cross-field checks with other fields empty |
+| 2e `feat(admin-courses): build the create-course request from the form` | `to-course-request.ts`, the request types | money, "when saved" with fake timers, the request shape |
+| 2f `feat(admin-courses): create a course from a Server Action` | `admin-courses.api.ts`, `field-errors-from-problem.ts`, `create-course.action.ts`, the MSW handler and fixture, the remaining types | pointer mapping, the action |
 
-**Limits:**
+Decided at the outline:
+
+- The "at least a minute from now" rule for a set price time is in the schema and uses the browser's clock; the API has the final say.
+- The time zone is checked against `Intl.supportedValuesOf("timeZone")`. The browser and server lists can differ slightly; a zone the server doesn't know is refused with "Choose a time zone." Accepted as rare.
+- Dollars to cents is `Math.round(Number(dollars) * 100)`. `Intl.NumberFormat` only formats (cents to "$79.50"), it can't parse, so it is for showing prices later, not for this. The schema's two-decimal check comes first and is the guard: with at most two decimals the rounding only absorbs float noise (`1.1 * 100`). Record this as a decision row only after asking the owner (they asked to be asked before any decision row is added).
+
+**Types** in [types.ts](../web/src/lib/types.ts): `CourseDescriptionDocument` (2a; not `CourseDescription`, the component's name), `CreateCourseRequest` and `UpdateCourseRequest` (2e), `AdminCourse`, `ValidationProblemDetails` and `FieldError` (2f).
+
+**Wrappers** (2f) in `src/features/admin-courses/admin-courses.api.ts`: `createCourse` and `updateCourse`, each returning a `Result` through `toResult()`.
+
+**Limits** (2b):
 
 - `course-form-limits.ts` holds the named constants: name 100, summary 300, description text 5,000, list levels 3, content link 2,048, and the price minimum of 50 cents.
 - The contract test, `course-form-limits.test.ts`, reads [openapi-v1.yaml](../api/openapi/openapi-v1.yaml) and compares each constant with the contract:
@@ -144,7 +167,7 @@ Price rows go to the API in the order shown, so the API's `/prices/0` is the for
 **Request builder** (`to-course-request.ts`): its result `satisfies CreateCourseRequest`.
 
 - Local time plus zone → UTC `…Z`.
-- "79.50" → `7950`, with string arithmetic and no floating point.
+- "79.50" → `7950` with `Math.round(Number(dollars) * 100)`, safe because the schema allows at most two decimals.
 - Currency `USD` from one constant.
 - An empty "takes effect" → now + 1 minute.
 - Also used for updates (step 5), with the status passed in.
