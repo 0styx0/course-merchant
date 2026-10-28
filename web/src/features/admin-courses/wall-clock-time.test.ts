@@ -45,13 +45,16 @@ describe("wallClockToUtc", () => {
     });
   });
 
-  it.each(["", "not a time", "2026-02-30T10:00"])(
-    "refuses %j as an invalid time",
-    (text) => {
-      expect(wallClockToUtc(text, "America/New_York")).toEqual({
-        state: "failure",
-        error: "invalid-time",
-      });
-    },
-  );
+  it.each([
+    "",
+    "not a time",
+    "2026-02-30T10:00",
+    "2026-07-01",
+    "2026-07-01T10",
+  ])("refuses %j as an invalid time", (text) => {
+    expect(wallClockToUtc(text, "America/New_York")).toEqual({
+      state: "failure",
+      error: "invalid-time",
+    });
+  });
 });

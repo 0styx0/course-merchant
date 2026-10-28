@@ -8,3 +8,6 @@ export const COURSE_CONTENT_URL_MAX_LENGTH = 2_048;
 
 /** The payment processor's minimum charge; a free course (0) is also allowed. */
 export const MIN_PAID_PRICE_CENTS = 50;
+
+/** A price time that is set must be this far ahead, so it can't equal "when saved" (now + this). */
+export const MIN_PRICE_LEAD_MS = 60_000;

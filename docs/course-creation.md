@@ -15,8 +15,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **2a. Description helpers** (`feat(courses)`).
   - [x] **2b. Form limits and the contract test** (`feat(admin-courses)`).
   - [x] **2c. Wall-clock time to UTC** (`feat(admin-courses)`).
-  - [ ] **2d. The form schema** (`feat(admin-courses)`). **Next**
-  - [ ] **2e. The request builder** (`feat(admin-courses)`).
+  - [x] **2d. The form schema** (`feat(admin-courses)`).
+  - [ ] **2e. The request builder** (`feat(admin-courses)`). **Next**: `to-course-request.ts`, typed from `CourseFormValues` (the schema's input type; it joins each date and time of day with `T` before `wallClockToUtc`) and `satisfies CreateCourseRequest`; the schema has already checked prices and times, and its `browserTimeZone()` is the form's starting zone.
   - [ ] **2f. API wrappers, error mapping, the Server Action and MSW handler** (`feat(admin-courses)`). Ticking this also ticks step 2, marks step 3 **Next** and cuts the *Step 2* notes down to decision rows.
 - [ ] **3. The create form page.**
 - [ ] **4. Description toolbar, list depth and Google Docs paste tests.**
@@ -106,8 +106,8 @@ The form shows every `/description/…` error on the description field and merge
 The form's values are named after the request, so every field is qualified by its owner, and an API error path maps by replacing `/` with `.`:
 
 - `name`, `summary`, `description` (the document), `contentUrl`;
-- `schedule.startTime`, `schedule.endTime` (wall-clock `datetime-local` text), `schedule.timeZone`;
-- `prices.N.amountDollars` ("79.50"; the API's `amount` is cents), `prices.N.effectiveAt` (wall-clock text, or empty for "when saved");
+- `schedule.startDate` and `schedule.startTimeOfDay`, `schedule.endDate` and `schedule.endTimeOfDay` (two inputs each: a date `2026-07-01` and a time of day `09:00`, typed in the chosen zone), `schedule.timeZone`. The API's `startTime` and `endTime` are the combined UTC instants, so the form avoids those names;
+- `prices.N.amountDollars` ("79.50"; the API's `amount` is cents), `prices.N.effectiveDate` and `prices.N.effectiveTimeOfDay` (both empty for "when saved"; one without the other is refused);
 - `image` and `publishAfterSaving` (step 5; never sent as JSON).
 
 Price rows go to the API in the order shown, so the API's `/prices/0` is the form's first row. Any path under `/description/` maps to `description`.
@@ -162,7 +162,7 @@ Decided at the outline:
   - "Two prices can't take effect at the same time."
   - A set price time must be at least a minute from now, so it can't collide with "when saved".
 - Daylight saving: a wall-clock time a daylight-saving change skips or repeats in the chosen zone is refused with one generic message for both cases, for example "That time doesn't exist, or happens twice, on that day in America/New_York because of a daylight-saving change. Choose another time." `wallClockToUtc` in `wall-clock-time.ts` (2c) returns a `Result<string, WallClockFailureReason>` (`error` is `"daylight-saving"`, `"unknown-zone"` or `"invalid-time"`) (Temporal `disambiguation: "reject"`); the schema maps each reason to a message.
-- Every check that compares fields uses Zod's [`when`](https://zod.dev/api#when), so it runs even while unrelated fields are still empty. The API's [course-request-schemas.ts](../api/src/courses/validation/course-request-schemas.ts) does the same.
+- The checks that compare fields live in one object-level `.check` that reads the raw values, so they run even while unrelated fields are still empty or wrong (Zod only skips a check after a type-level failure, and the form's fields are all strings). A time whose zone is unknown is skipped there; the zone field reports its own problem.
 
 **Request builder** (`to-course-request.ts`): its result `satisfies CreateCourseRequest`.
 
@@ -174,7 +174,7 @@ Decided at the outline:
 
 **API errors to form fields** (`field-errors-from-problem.ts`):
 
-- The API's JSON Pointers become form paths: `/schedule/startTime` → `schedule.startTime`, `/prices/0/amount` → `prices.0.amountDollars`, and anything under `/description/` → `description`.
+- The API's JSON Pointers become form paths: `/schedule/startTime` → `schedule.startTimeOfDay`, `/prices/0/amount` → `prices.0.amountDollars`, and anything under `/description/` → `description`.
 - Paths the form doesn't have go to the summary only.
 
 **Action** (`create-course.action.ts`, `"use server"`): `createCourseAction(values)`.

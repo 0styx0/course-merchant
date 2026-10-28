@@ -7,6 +7,9 @@ export type WallClockFailureReason =
 
 export type WallClockToUtcResult = Result<string, WallClockFailureReason>;
 
+// What a `datetime-local` input gives: a date and a time, never a date alone.
+const WALL_CLOCK_FORMAT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/;
+
 function failure(error: WallClockFailureReason): WallClockToUtcResult {
   return { state: "failure", error };
 }
@@ -20,6 +23,8 @@ export function wallClockToUtc(
   wallClock: string,
   timeZone: string,
 ): WallClockToUtcResult {
+  if (!WALL_CLOCK_FORMAT.test(wallClock)) return failure("invalid-time");
+
   let dateTime: Temporal.PlainDateTime;
   try {
     dateTime = Temporal.PlainDateTime.from(wallClock, { overflow: "reject" });
