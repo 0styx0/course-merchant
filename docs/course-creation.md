@@ -11,14 +11,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 - [x] **1a. Description renderer** (web only, not used by a page yet).
 - [x] **1b-i. Description validator** (API only, not wired in).
 - [x] **1b-ii. Store and show the document** (contract, database, API, course page).
-- [ ] **2. Server side of the create form** (no page yet), in six commits, in this order (each uses the ones before it; details in *Step 2* below):
-  - [x] **2a. Description helpers** (`feat(courses)`).
-  - [x] **2b. Form limits and the contract test** (`feat(admin-courses)`).
-  - [x] **2c. Wall-clock time to UTC** (`feat(admin-courses)`).
-  - [x] **2d. The form schema** (`feat(admin-courses)`).
-  - [x] **2e. The request builder** (`feat(admin-courses)`).
-  - [ ] **2f. API wrappers, error mapping, the Server Action and MSW handler** (`feat(admin-courses)`). **Next**: `admin-courses.api.ts` (`createCourse`), `field-errors-from-problem.ts`, `create-course.action.ts` (it parses with `courseFormSchema` and passes the checked values to `toCourseRequest(values, "drafted")`) and the MSW handler and fixture; the remaining types (*Step 2* below). Ticking this also ticks step 2, marks step 3 **Next** and cuts the *Step 2* notes down to decision rows.
-- [ ] **3. The create form page.**
+- [x] **2. Server side of the create form** (no page yet): description helpers, form limits and contract test, wall-clock time to UTC, form schema, request builder, API wrapper, error mapping, Server Action and MSW handler (`createCourseAction`; its design is in *Step 2* below).
+- [ ] **3. The create form page.** **Next**: `page.tsx`, `course-form.tsx` and the first description editor, calling `createCourseAction` (*Step 3* below).
 - [ ] **4. Description toolbar, list depth and Google Docs paste tests.**
 - [ ] **5. Image and publish in the create form.**
 
@@ -112,91 +106,17 @@ The form's values are named after the request, so every field is qualified by it
 
 Price rows go to the API in the order shown, so the API's `/prices/0` is the form's first row. Any path under `/description/` maps to `description`.
 
-## Step 2. Server side of the create form (no page yet)
+## Step 2. Server side of the create form (done)
 
-Six commits, each finished, tested and ticked before the next. A library is added by the commit that first uses it: `yaml` (dev) in 2b, `temporal-polyfill` in 2c, `zod` v4 in 2d. `react-hook-form` and `@hookform/resolvers` wait for step 3. Nothing here is global config: limits and the currency constant live in the `admin-courses` feature.
-
-| Commit | Adds | Tests |
-|---|---|---|
-| 2a `feat(courses): count and tidy rich-text descriptions on the web` | `description-document.ts` and the `CourseDescriptionDocument` type | the description helper tests below |
-| 2b `feat(admin-courses): keep the form's limits in step with the API contract` | `course-form-limits.ts`, `yaml` (dev) | the contract test |
-| 2c `feat(admin-courses): convert wall-clock times to UTC` | `wall-clock-time.ts`, `temporal-polyfill` | a spring gap, an autumn overlap, a normal time, a bad zone |
-| 2d `feat(admin-courses): validate the create-course form` | `course-form-schema.ts`, `zod` | every rule and message, cross-field checks with other fields empty |
-| 2e `feat(admin-courses): build the create-course request from the form` | `to-course-request.ts`, the request types, `COURSE_CURRENCY` | money, "when saved" with fake timers, the request shape |
-| 2f `feat(admin-courses): create a course from a Server Action` | `admin-courses.api.ts`, `field-errors-from-problem.ts`, `create-course.action.ts`, the MSW handler and fixture, the remaining types | pointer mapping, the action |
-
-Decided at the outline:
+Shipped in six commits (2a–2f). Limits and the currency constant live in the `admin-courses` feature, not in global config. What is left to know:
 
 - The "at least a minute from now" rule for a set price time is in the schema and uses the browser's clock; the API has the final say.
 - The time zone is checked against `Intl.supportedValuesOf("timeZone")`. The browser and server lists can differ slightly; a zone the server doesn't know is refused with "Choose a time zone." Accepted as rare.
-- Dollars to cents is `Math.round(Number(dollars) * 100)`. `Intl.NumberFormat` only formats (cents to "$79.50"), it can't parse, so it is for showing prices later, not for this. The schema's two-decimal check comes first and is the guard: with at most two decimals the rounding only absorbs float noise (`1.1 * 100`). Record this as a decision row only after asking the owner (they asked to be asked before any decision row is added).
-
-**Types** in [types.ts](../web/src/lib/types.ts): `CourseDescriptionDocument` (2a; not `CourseDescription`, the component's name), `CreateCourseRequest` and `UpdateCourseRequest` (2e), `AdminCourse`, `ValidationProblemDetails` and `FieldError` (2f).
-
-**Wrappers** (2f) in `src/features/admin-courses/admin-courses.api.ts`: `createCourse` and `updateCourse`, each returning a `Result` through `toResult()`.
-
-**Limits** (2b):
-
-- `course-form-limits.ts` holds the named constants: name 100, summary 300, description text 5,000, content link 2,048, and the price minimum of 50 cents. The list depth (3) is left out: the contract and API don't enforce one yet, so it is added with its API check when step 4 needs it.
-- The contract test, `course-form-limits.test.ts`, reads [openapi-v1.yaml](../api/openapi/openapi-v1.yaml) and compares each constant with the contract:
-  - `CourseName`, `CourseSummary` and `CourseContentUrl` `maxLength`;
-  - `CourseDescription`'s `x-max-text-length`;
-  - `ScheduledPrice`'s minimum (under `allOf` → `anyOf`).
-
-**Description helpers** (`src/features/courses/description-document.ts`):
-
-- `toCourseDescription(editorJson)` keeps only the contract's fields and drops empty paragraphs;
-- `countDescriptionCharacters(doc)` sums the text lengths, and `hasVisibleText(doc)` applies `/\S/u`: the same rules as the API.
-
-**Schema** (`course-form-schema.ts`): the values as typed, with plain messages.
-
-- Required fields: "Enter a course name." The description is required when it has no visible text.
-- Lengths: "The name must be 100 characters or fewer." The summary is trimmed before it is checked, as the contract does. The description uses `countDescriptionCharacters`.
-- Description structure: only list depth and link schemes need messages; the editor can't produce other nodes.
-- Content link: must be an `http(s)` URL.
-- Price amount: "The payment processor needs a price of at least $0.50. Enter 0 for a free course." and "Use at most two decimal places."
-- Time zone: "Choose a time zone." from the list.
-- Time rules:
-  - "The start time must be in the future."
-  - "The end time must be after the start time."
-  - "Two prices can't take effect at the same time."
-  - A set price time must be at least a minute from now, so it can't collide with "when saved".
-- Daylight saving: a wall-clock time a daylight-saving change skips or repeats in the chosen zone is refused with one generic message for both cases, for example "That time doesn't exist, or happens twice, on that day in America/New_York because of a daylight-saving change. Choose another time." `wallClockToUtc` in `wall-clock-time.ts` (2c) returns a `Result<string, WallClockFailureReason>` (`error` is `"daylight-saving"`, `"unknown-zone"` or `"invalid-time"`) (Temporal `disambiguation: "reject"`); the schema maps each reason to a message.
-- The checks that compare fields live in one object-level `.check` that reads the raw values, so they run even while unrelated fields are still empty or wrong (Zod only skips a check after a type-level failure, and the form's fields are all strings). A time whose zone is unknown is skipped there; the zone field reports its own problem.
-
-**Request builder** (`to-course-request.ts`): `toCourseRequest(values, status)`; its result `satisfies CreateCourseRequest`.
-
-- It takes the schema's **output** (`CheckedCourseFormValues`, already trimmed), not the raw input, so it doesn't repeat the schema's trimming. The action passes it what `courseFormSchema` returned.
-- Local date and time of day plus zone → UTC `…Z`. The schema has already refused bad times, so a failed conversion is a bug in the caller and throws.
-- "79.50" → `7950` with `Math.round(Number(dollars) * 100)`, safe because the schema allows at most two decimals.
-- Currency from the `COURSE_CURRENCY` constant (`USD`) in `course-form-limits.ts`.
-- An empty "takes effect" → now + 1 minute (`Date.now()` read inside the builder).
-- `status` is typed `CreateCourseStatus` for now; step 5 widens it when it adds the update request.
-
-**API errors to form fields** (`field-errors-from-problem.ts`):
-
-- The API's JSON Pointers become form paths: `/schedule/startTime` → `schedule.startTimeOfDay`, `/prices/0/amount` → `prices.0.amountDollars`, and anything under `/description/` → `description`.
-- Paths the form doesn't have go to the summary only.
-
-**Action** (`create-course.action.ts`, `"use server"`): `createCourseAction(values)`.
-
-1. Re-checks `values` with the schema, because anyone can call an action with anything.
-2. Builds the request with status `drafted`.
-3. Calls `createCourse`.
-4. Returns `Result<{ courseId }, { problem, fieldErrors: { path, message }[] }>`.
-
-**MSW:** `mocks/handlers/create-course.ts` (`success`, `validationFailed`, `error`), with an `AdminCourse` fixture in `mocks/fixtures/`.
-
-**Tests:**
-
-- each schema rule and its message, including cross-field checks with other fields left empty;
-- a time in a daylight-saving gap and one in an overlap;
-- dollars to cents;
-- "when saved" → now + 1 minute (fake timers);
-- `toCourseDescription` drops Tiptap's extra attributes and empty paragraphs; `countDescriptionCharacters`; `hasVisibleText` with spaces, non-breaking spaces and line breaks only;
-- the contract test;
-- JSON Pointer mapping, including a deep `/description/…` pointer;
-- the action with MSW: success, a validation refusal, a non-validation problem, and invalid input refused before any API call.
+- Dollars to cents is `Math.round(Number(dollars) * 100)`. `Intl.NumberFormat` only formats, it can't parse. The schema's two-decimal check is the guard.
+- `toCourseRequest(values, status)` takes the schema's output and throws if a time can't be converted (a bug in the caller). `status` is typed `CreateCourseStatus`; step 5 widens it when it adds the update request. `updateCourse` is added with step 5 too, as nothing uses it before.
+- `fieldErrorsFromProblem` maps JSON Pointers to form paths. A pointer for a date-and-time value (`/schedule/startTime`, `/prices/N/effectiveAt`) maps to the time-of-day box. Pointers the form has no field for appear only in the summary (the problem's `detail`).
+- `createCourseAction(values)` re-checks with `courseFormSchema` (no API call if invalid), saves with status `drafted`, and returns `Result<{ courseId }, { problem, fieldErrors }>`. A problem that isn't a validation one returns empty `fieldErrors`.
+- MSW: `mocks/handlers/create-course.ts` (`success`, `validationFailed`, `error`) with the `draftedAdminCourse` fixture.
 
 ## Step 3. The create form page
 
