@@ -230,20 +230,22 @@ export class PaymentsRepository {
       .limit(limit)
       .all();
 
-    return payments.flatMap((payment) =>
+    return payments.flatMap((payment) => {
       // a succeeded payment always has its payment id, and both foreign keys
       // are required, but the ORM types them as nullable
-      payment.providerPaymentId
-        ? [
-            {
-              id: payment.id,
-              courseId: payment.coursePrice!.courseId,
-              customerId: payment.customerId,
-              providerPaymentId: payment.providerPaymentId,
-            },
-          ]
-        : [],
-    );
+      if (!payment.providerPaymentId) {
+        return [];
+      }
+
+      return [
+        {
+          id: payment.id,
+          courseId: payment.coursePrice!.courseId,
+          customerId: payment.customerId,
+          providerPaymentId: payment.providerPaymentId,
+        },
+      ];
+    });
   }
 
   /**

@@ -28,7 +28,7 @@ Give the outline and wait for the go-ahead. In plan mode, present it with ExitPl
 
 - **Heading:** a plain-language sentence saying what the commit does (for example "Send queued emails automatically"), not a class or file name. Clear communication comes first.
 - **Terms:** define every specialized term or unit of work the outline uses (for example "tick", "sweeper", "outbox"): what it means here, why use it, and the alternatives. Don't assume a term means its usual meaning elsewhere.
-- **What:** each file to add or change, as links, with what changes in it. For each new function longer than about 15 lines, list the small named functions it will be composed of (see *Small composed functions* and *No ternaries* in CLAUDE.md), so the split is reviewed before any code exists.
+- **What:** each file to add or change, as links, with what changes in it. For each new function longer than about 15 lines, list the small named functions it will be composed of (see *Small composed functions* and *Simple ternaries only* in CLAUDE.md), so the split is reviewed before any code exists.
 - **Why:** the reason this is the next step, and how it fits the design doc.
 - **Trade-offs:** the alternatives you considered and why you didn't pick them.
 - **Config:** keep module-specific settings (constants or env vars) inside that module, not in global config. If that would add real complexity, tell the owner before doing it.
@@ -46,7 +46,7 @@ If the owner replies with questions or objections, discuss them first: answer, g
   - mark the following item **Next**, with enough detail to start on it;
   - add a decision row for anything decided along the way, using the text the owner approved (propose it in chat first if it came up during implementation);
   - when a whole step is done, cut its design notes down to decision rows.
-- As the last step of implementation, use a subagent to run `/simplify` (the Skill tool, skill `simplify`) on the change. If a cleanup would change design or behaviour, ask first instead of applying it. Tell the subagent to check the change against CLAUDE.md's *Small composed functions*, *No ternaries* and *Flat and immutable by default* rules and to split or rewrite what breaks them; that is style, not a behaviour change, so apply it without asking. Run it before verifying, so step 4 checks the simplified code. Skip it for pure moves/renames and doc-only changes.
+- As the last step of implementation, use a subagent to run `/simplify` (the Skill tool, skill `simplify`) on the change. If a cleanup would change design or behaviour, ask first instead of applying it. Tell the subagent to check the change against CLAUDE.md's *Small composed functions*, *Simple ternaries only* and *Flat and immutable by default* rules and to split or rewrite what breaks them; that is style, not a behaviour change, so apply it without asking. Run it before verifying, so step 4 checks the simplified code. Skip it for pure moves/renames and doc-only changes.
 - A hook formats edited `api/` and `web/` files; don't run prettier yourself.
 
 ## 4. Verify

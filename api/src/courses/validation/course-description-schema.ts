@@ -101,6 +101,12 @@ function findProblems(doc: JSONContent): Problem[] {
   return problems;
 }
 
+const NOT_A_DOCUMENT: Problem = {
+  path: [],
+  message: "Description is not a valid document.",
+  code: FieldErrorCode.INVALID_VALUE,
+};
+
 // Loads the document through the editor's schema. The result is that schema's
 // own JSON, so attributes the editor doesn't know are dropped, not stored.
 function normalize(value: JSONContent): JSONContent | undefined {
@@ -120,15 +126,7 @@ export const descriptionDocumentSchema = z
   })
   .transform((value, ctx): JSONContent => {
     const doc = normalize(value);
-    const problems = doc
-      ? findProblems(doc)
-      : [
-          {
-            path: [],
-            message: "Description is not a valid document.",
-            code: FieldErrorCode.INVALID_VALUE,
-          },
-        ];
+    const problems = doc ? findProblems(doc) : [NOT_A_DOCUMENT];
 
     for (const problem of problems) {
       ctx.issues.push({

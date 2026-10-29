@@ -24,20 +24,26 @@ const upload = multer({
  */
 export function toUploadException(error: unknown): ValidationException {
   if (error instanceof MulterError) {
-    return error.code === "LIMIT_FILE_SIZE"
-      ? uploadError(
-          FieldErrorCode.ABOVE_MAXIMUM,
-          `The image file must be ${MAX_IMAGE_BYTES / 1024 / 1024} MB or smaller.`,
-        )
-      : uploadError(
-          FieldErrorCode.UNKNOWN_FIELD,
-          "Send exactly one file, in a field named 'image'.",
-        );
+    return toMulterException(error);
   }
 
   return uploadError(
     FieldErrorCode.INVALID_FORMAT,
     "The request body is not a valid multipart upload.",
+  );
+}
+
+function toMulterException(error: MulterError): ValidationException {
+  if (error.code === "LIMIT_FILE_SIZE") {
+    return uploadError(
+      FieldErrorCode.ABOVE_MAXIMUM,
+      `The image file must be ${MAX_IMAGE_BYTES / 1024 / 1024} MB or smaller.`,
+    );
+  }
+
+  return uploadError(
+    FieldErrorCode.UNKNOWN_FIELD,
+    "Send exactly one file, in a field named 'image'.",
   );
 }
 

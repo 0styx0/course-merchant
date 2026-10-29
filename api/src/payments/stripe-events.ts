@@ -2,6 +2,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import type Stripe from "stripe";
 
 import type {
+  CheckoutCompletion,
   CompletedCheckout,
   ExpiredCheckout,
   RetrievedCheckout,
@@ -16,18 +17,27 @@ export function completedCheckoutFromEvent(
   event: Stripe.CheckoutSessionCompletedEvent,
 ): CompletedCheckout {
   const session = event.data.object;
-  const isPaid = session.payment_status === "paid";
 
   return {
     event: { provider: "stripe", eventId: event.id, type: event.type },
     paymentId: session.client_reference_id,
     providerCheckoutId: session.id,
-    providerPayment: isPaid
-      ? {
-          id: paymentIntentId(session),
-          paidAt: Temporal.Instant.fromEpochMilliseconds(event.created * 1000),
-        }
-      : null,
+    providerPayment: paymentFromEvent(event),
+  };
+}
+
+function paymentFromEvent(
+  event: Stripe.CheckoutSessionCompletedEvent,
+): CheckoutCompletion["providerPayment"] {
+  const session = event.data.object;
+
+  if (session.payment_status !== "paid") {
+    return null;
+  }
+
+  return {
+    id: paymentIntentId(session),
+    paidAt: Temporal.Instant.fromEpochMilliseconds(event.created * 1000),
   };
 }
 
@@ -57,21 +67,24 @@ export function retrievedCheckoutFromSession(
     return { state: "open" };
   }
 
-  const isPaid = session.payment_status === "paid";
-
   return {
     state: "completed",
     completion: {
       paymentId: session.client_reference_id,
       providerCheckoutId: session.id,
-      providerPayment: isPaid
-        ? {
-            id: paymentIntentId(session),
-            paidAt: chargeTime(session),
-          }
-        : null,
+      providerPayment: paymentFromSession(session),
     },
   };
+}
+
+function paymentFromSession(
+  session: Stripe.Checkout.Session,
+): CheckoutCompletion["providerPayment"] {
+  if (session.payment_status !== "paid") {
+    return null;
+  }
+
+  return { id: paymentIntentId(session), paidAt: chargeTime(session) };
 }
 
 // the session was fetched with the charge expanded, so it is an object

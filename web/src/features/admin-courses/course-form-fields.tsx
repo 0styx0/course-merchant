@@ -45,6 +45,19 @@ function FieldHelp({
   );
 }
 
+function helpFor({
+  limit,
+  ...rest
+}: Pick<FieldProps, "form" | "name" | "description"> & {
+  limit?: number;
+}): ReactNode {
+  if (limit === undefined) {
+    return rest.description;
+  }
+
+  return <FieldHelp {...rest} limit={limit} />;
+}
+
 // `labelId` is for inputs that aren't labelable elements; these are.
 function ariaProps({
   id,
@@ -85,18 +98,7 @@ export function InputField({
   return (
     <FormField
       label={label}
-      description={
-        limit === undefined ? (
-          description
-        ) : (
-          <FieldHelp
-            form={form}
-            name={name}
-            description={description}
-            limit={limit}
-          />
-        )
-      }
+      description={helpFor({ form, name, description, limit })}
       {...stateOf(form, name)}
     >
       {(inputProps) => (

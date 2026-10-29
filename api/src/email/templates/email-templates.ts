@@ -26,6 +26,12 @@ export type EmailViews = {
   };
 };
 
+const DOUBLE_CHARGE_REFUNDED =
+  "You were charged a second time, so we've refunded that payment. It can take a few days to appear on your statement.";
+
+const SUSPENDED_CHARGE_REFUNDED =
+  "You were charged for this purchase, so we've refunded that payment. It can take a few days to appear on your statement.";
+
 function schedule(course: CourseView): string {
   const starts = formatCourseTime(course.startsAt, course.timeZone);
   const ends = formatCourseTime(course.endsAt, course.timeZone);
@@ -53,11 +59,7 @@ export function alreadyOwned(view: EmailViews["already_owned"]): EmailContent {
     heading: "You already have access",
     paragraphs: [
       `Hello again! You already own ${view.course.title}, so there was nothing new to buy.`,
-      ...(view.refundIssued
-        ? [
-            "You were charged a second time, so we've refunded that payment. It can take a few days to appear on your statement.",
-          ]
-        : []),
+      ...(view.refundIssued ? [DOUBLE_CHARGE_REFUNDED] : []),
       schedule(view.course),
     ],
     button: { label: "Open the course", url: view.course.contentUrl },
@@ -72,11 +74,7 @@ export function accessSuspended(
     heading: "Your access is suspended",
     paragraphs: [
       `Hello, thanks for your patience. Your access to ${view.course.title} is currently suspended, so we can't send you the course link.`,
-      ...(view.refundIssued
-        ? [
-            "You were charged for this purchase, so we've refunded that payment. It can take a few days to appear on your statement.",
-          ]
-        : []),
+      ...(view.refundIssued ? [SUSPENDED_CHARGE_REFUNDED] : []),
       "If you think this is a mistake, reply to this email and we'll look into it.",
     ],
   };
