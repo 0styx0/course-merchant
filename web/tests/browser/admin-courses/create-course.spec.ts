@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
@@ -96,4 +97,33 @@ test("shows the API's refusal and lets the admin try again", async ({
   await expect(page).toHaveURL(/\/admin\/courses\/new$/);
   await expect(save).toBeEnabled();
   expect(consoleErrors).toEqual([]);
+});
+
+test("keeps bold and a list when pasting from Google Docs", async ({
+  page,
+}) => {
+  const html = readFileSync(
+    "src/mocks/fixtures/google-docs-paste.html",
+    "utf8",
+  );
+
+  await page.goto("/admin/courses/new");
+  await expect(page.getByRole("button", { name: "Bold" })).toBeEnabled();
+  const description = page.getByLabel("Description");
+  await description.click();
+  await description.evaluate((editor, html) => {
+    const data = new DataTransfer();
+    data.setData("text/html", html);
+    editor.dispatchEvent(
+      new ClipboardEvent("paste", {
+        clipboardData: data,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+  }, html);
+
+  await expect(description.locator("strong")).toHaveText("Bold text");
+  await expect(description.locator("ul li")).toHaveCount(3);
+  await expect(description.locator("h2")).toHaveText("Heading two");
 });

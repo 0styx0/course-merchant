@@ -19,12 +19,12 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **3d-i.** `course-form.tsx` with the text fields, description editor, schedule, `formatCourseLength`, one price row, error list and submit handling; `page.tsx` at `app/admin/(signed-in)/courses/new/` (no layout until the login lands); component tests.
   - [x] **3d-ii.** Price rows: `useFieldArray` in `course-form.tsx`, `price-row.tsx` (add and remove, at least one row, new rows start empty), error-list entries per row (`courseFormProblems` takes the row count; labels are numbered only with several rows), and tests. The empty-time help text now says "when the course is published" (wording only: an empty time is still set to now + 1 minute when saved).
   - [x] **3e.** Playwright browser test (`tests/browser/admin-courses/create-course.spec.ts`: save and land on `/`, an API refusal, no console errors); admin.md, courses.md, web.md and README updates.
-- [ ] **4. Description toolbar and Google Docs paste tests**, in three commits (design in *Step 4* below; browser tests go in the same spec file as 3e):
+- [x] **4. Description toolbar and Google Docs paste tests**, in three commits (design in *Step 4* below; browser tests go in the same spec file as 3e):
   - [x] **4a.** Formatting toolbar (`description-toolbar.tsx`, shadcn `toggle`): Bold, Italic, Heading, Subheading, Bulleted list, Numbered list.
   - [x] **4b.** Link and Remove link buttons after the six format toggles (`description-link-field.tsx`, `description-link.ts`).
-  - [ ] **4c.** **Next**: Google Docs paste fixture and tests (needs the owner's clipboard sample), the browser paste test, and the admin.md list of what pasting doesn't keep.
+  - [x] **4c.** Google Docs paste fixture and tests (`src/mocks/fixtures/google-docs-paste.html`, `description-paste.test.ts`), the browser paste test, and the admin.md list of what pasting doesn't keep.
 - [ ] **UX pass on the create form**, after step 4 and before step 5, from a UX review of the page (design in *UX pass* below). Grouped by complexity; each group is one commit, outlined and approved first as usual:
-  - [ ] **U1. Copy and small layout fixes** (wording and markup only).
+  - [ ] **U1. Copy and small layout fixes** (wording and markup only). **Next**
   - [ ] **U2. Field and component behaviour** (price input, remove button, error summary height, time zone default, leave warning).
   - [ ] **U3. Live summaries and the time zone picker** (new components).
 - [ ] **5. Image and publish in the create form.**
@@ -74,6 +74,7 @@ Not part of this work: admin login and logout, the admin course page and list, e
 | The Link button checks the address against the API's schemes (`https:`, `http:`, `mailto:`, `tel:`, full address, at most 2,048 characters) before `setLink`; the shared extension list keeps Tiptap's default `isAllowedUri` | Tiptap's default also accepts `ftp:`, `sms:` and addresses with no scheme, which the API refuses, so the admin would only find out on save. A stricter `isAllowedUri` in the shared list would also stop autolinking `www.example.com` (autolink checks the raw word) and change the API's copy | A stricter `isAllowedUri` in the shared extension list; relying on `setLink`'s own check |
 | The link address is typed in an inline field under the toolbar; Link is disabled until text is selected or the cursor is on a link; Remove link is its own toolbar button, disabled off a link | Plain markup with simple tab order, no positioning or focus trap; removing takes one click; disabled rather than hidden keeps the toolbar's arrow-key order stable | `prompt()`; a popover; inserting the address as text when nothing is selected |
 | Toolbar buttons keep focus in the editor on a mouse click (`preventDefault` on mouse down) | A click would otherwise blur the editor, mark it touched and show "Enter a description" on an empty field; the selection stays where the admin made it | Letting focus move to the button and refocusing with `.focus()` only |
+| Pasted Google Docs content is kept as the editor reads it, with no paste-cleaning code | Tiptap's own paste handling already puts a Docs nested list inside its item, keeps links (including Docs' own table-of-contents links) and turns the Title and Heading 1 into paragraphs. The admin sees what they expect, so a `transformPastedHTML` hook would add code for nothing. Links with other schemes are left to the API's error on save; blank lines from Docs stay as line-break paragraphs | A `transformPastedHTML` nested-list fix; dropping same-document and non-API-scheme links on paste; stripping line-break-only paragraphs |
 
 ## Libraries to add (web only)
 
@@ -218,18 +219,9 @@ Browser test (`yarn --cwd web test:browser`):
 
 Each button calls Tiptap's chain commands (`toggleBold`, `toggleHeading`, `setLink`, …), so undo keeps working.
 
-**Paste:**
+**Paste** (4c, done): see the decision row on Google Docs paste. The captured sample is `src/mocks/fixtures/google-docs-paste.html`; Docs puts a nested list beside its item, but Tiptap reads it correctly. A pasted `<ol start>` keeps its number.
 
-- A real Google Docs clipboard sample (bold, italic, a Title, headings 1–4, a nested list, a numbered list starting at 3, a link, a table-of-contents link, blank lines, an image and a table), saved as a test fixture. The owner captures it: paste into the browser console's `addEventListener("paste", e => console.log(e.clipboardData.getData("text/html")))` page.
-- Expected gap: Docs puts a nested `<ul>` beside the `<li>` instead of inside it, which may give an extra empty bullet. If the sample shows it, offer the owner a `transformPastedHTML` fix before adding it. Also check whether links come wrapped in `google.com/url?q=` redirects.
-- Record in [web/docs/admin.md](../web/docs/admin.md) what pasting doesn't keep: Title, Subtitle and headings 1 and 5–6 become paragraphs; colours, fonts and spacing are dropped; numbered lists restart at 1; links with other schemes: Tiptap keeps `ftp:` and similar on paste and the API refuses them, so decide with the fixture whether paste should drop them.
-
-**Tests:**
-
-- the Google Docs sample pasted with `editor.view.pasteHTML(html)` (the real paste path, including Link's checks) and passed through `toCourseDescription` gives the expected document: formatting kept, image dropped, table text kept, table-of-contents link reduced to text, blank lines removed;
-- each toolbar button changes the document and shows as pressed;
-- a refused link address shows the message;
-- browser test: paste the sample into the editor and see bold and a list.
+**Tests** (done): paste tests in `description-paste.test.ts` and one browser test; toolbar button and refused-link tests were added with 4a and 4b.
 
 ## Step 5. Image and publish in the create form
 
