@@ -11,7 +11,9 @@ Each milestone delivers one outcome. A milestone is split into one-line commits 
 - [x] **1. Style rules enforced by lint.** Turn on the rules in *Numbers* as errors, after fixing the code that breaks them (details in *Step 1*). Lint already runs on commit through lint-staged, so a violation blocks the commit. Two commits:
   - [x] **1a.** API: flatten `toFieldErrorCode` (`zod-validation.pipe.ts`, complexity 11), split the 21 spec files over 250 lines by topic (10 unit, 7 integration, 4 e2e), then turn the API rules on (`api/eslint.config.mjs`).
   - [x] **1b.** Web: flatten `toFormPath` (`field-errors-from-problem.ts`, complexity 13), split `FormField` and `ErrorSummary` (`components/form/`), `CourseForm`, `InputField`, `BasicsSection`, `ScheduleSection`, `DescriptionEditor`, `DescriptionLinkField` and `DescriptionToolbar`, split `course-form.test.tsx` and `course-form-schema.test.ts` by topic, then turn the web rules on (`web/eslint.config.mjs`) and tick this step.
-- [ ] **2. Unused-code check.** **Next.** Needs `/plan-create-implementation code-quality-guardrails` first to split it into commits. Add [knip](https://knip.dev) (finds unused files, exports and dependencies). Report first, clean up, then enforce on pre-push and CI. Riskiest unknown: false positives from Nest decorators and Next's file-based routes, so it goes early.
+- [ ] **2. Unused-code check.** Add [knip](https://knip.dev) (finds unused files, exports and dependencies), clean up what it reports, then enforce it on pre-push and CI (details in *Step 2*). Two commits:
+  - [ ] **2a.** **Next.** API: add knip (`api/knip.json`, `api/package.json`), remove what it reports (unused exports, `pg`, `@eslint/eslintrc`, the value import of `express`), then run `yarn --cwd api knip` on pre-push and in CI's `api` job; update the hook table in [CONTRIBUTING.md](../CONTRIBUTING.md).
+  - [ ] **2b.** Web: the same for `web/` (`web/knip.json`, about 5 files under `web/src`, the unused `strict-event-emitter` dev dependency), knip in pre-push and CI's `web` job, CONTRIBUTING, and tick this step.
 - [ ] **3. Behaviour pinned before refactors.** Use the existing `@vitest/coverage-v8` (both packages already have it) to see which lines a refactor touches that no test runs. Add a step to the `next-commit` skill for refactors: check coverage of the touched code first, and add a test in its own commit if it is missing. Add the missing test for the order of the description error list, which the cleanup changed without a test failing.
 - [ ] **4. Naming and layout rules.** Short rules in CLAUDE.md for what lint can't check (see *Principles*), including 7 files per folder. Then fix the 11 folders that already break it (listed in *Numbers*), one layout commit per folder, each outlined with before/after file trees and needing the owner's OK.
 - [ ] **5. Short outlines for mechanical steps.** Change the `next-commit` skill and CLAUDE.md: moves, renames, splits, doc-only and lint-fix commits get a short outline and no wait for approval.
@@ -57,6 +59,8 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 | 7 files per folder is a guideline, not a test. | A test would block commits over a judgement call. | A tiny test that counts files. |
 | The 11 folders over 7 files are fixed now, in milestone 4. | A rule the code already breaks gets ignored. This is the same "fix first, then enforce" principle as the lint rules. | Applying the rule only to folders touched from now on. |
 | Spec files count toward the 7. | The reason is scanning a file tree, and a tree full of specs is as hard to scan as one full of source. | Counting only source files. |
+| knip runs on pre-push and in CI, not on commit. | It checks the whole project; a half-done refactor can leave an export briefly unused between commits. | Pre-commit (blocks valid in-between commits). |
+| One knip config per package; false positives go in its `entry`, `ignore` or `ignoreBinaries`, each with a reason. Generated files and `components/ui/` are ignored. | Matches the two independent yarn projects and the lint exemptions. | A root workspace config (they aren't yarn workspaces); `ignoreExportsUsedInFile` (hides exports that should just not be exported). |
 
 ## Step 1. Style rules enforced by lint
 
@@ -67,6 +71,21 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 **Test splits.** Split by topic into sibling files, with no change to what is tested. The files from one split (the specs, plus a `<name>.fixtures.ts` for shared helpers) go together in a sub-folder named after the original spec, e.g. `courses/test/unit/course-request-schemas/`. This keeps the parent folder under the 7-file guideline and shows at a glance which specs belong together. The test count before and after must match; the hand-off reports it.
 
 **Left unchecked.** 21 API `it` bodies are over 40 lines; the function limit skips tests, so they stay.
+
+## Step 2. Unused-code check
+
+**Measured report** (knip 6.41.0, run with `npx` on 2026-10-29, no repo changes). The feared false positives from Nest decorators and Next's file-based routes did not appear. The real ones are different:
+- API: 12 "unused" files (10 Prisma migrations, `set-admin-password.ts`, `contract.prisma`), `@inquirer/password` (used by the CLI), `dotenv run` read as a binary called `run`, and `ErrorCodeCourse.INVALID_COURSE_ID` (used through the merged `ErrorCode`). The 4 duplicate exports in `course-field-schemas.ts` are deliberate aliases.
+- API, real: unused dependencies `pg` (Prisma's own package already depends on it) and `@eslint/eslintrc`; `express` imported as a value in `problem-details.filter.ts` but not listed (the other eight imports are `import type`); 11 unused exports and 2 unused alias types in `types.ts`.
+- Web, real: dev dependency `strict-event-emitter` and about 6 unused exports or types. Hits in `components/ui/` (vendored) and `generated.ts` (generated) are ignored.
+
+**Config.** `api/knip.json` and `web/knip.json`. Migrations, the CLI and the contract become `entry` files; `run` goes in `ignoreBinaries`; the deliberate aliases get knip's `@alias` JSDoc tag. JSON has no comments, so 2a's outline decides whether the reasons live in `knip.json` or in a `knip.ts` beside each entry.
+
+**Clean-up rule.** An export used only in its own file loses `export`; one used nowhere is deleted; an unused dependency is removed. The enum hit is fixed by using `ErrorCodeCourse.INVALID_COURSE_ID` in the pipe, as its siblings do.
+
+**Version.** Pin knip to `6.41.0`, the newest release older than two weeks.
+
+**Verification.** `yarn knip`, lint, type check, the package's unit tests; 2a also runs `yarn build`, the integration and e2e suites (removing `pg` must not break the database connection).
 
 ## Open questions
 
