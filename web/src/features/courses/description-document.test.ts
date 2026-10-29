@@ -1,4 +1,5 @@
-import type { JSONContent } from "@tiptap/core";
+import { Editor, type JSONContent } from "@tiptap/core";
+import { CharacterCount } from "@tiptap/extensions";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -6,6 +7,7 @@ import {
   hasVisibleText,
   toCourseDescription,
 } from "./description-document";
+import { descriptionExtensions } from "./description-extensions";
 
 const text = (value: string, marks?: JSONContent["marks"]): JSONContent => ({
   type: "text",
@@ -22,48 +24,6 @@ const doc = (...content: JSONContent[]): JSONContent => ({
 });
 
 describe("toCourseDescription", () => {
-  it("keeps only the href of a link", () => {
-    const link = {
-      type: "link",
-      attrs: {
-        href: "https://example.com",
-        target: null,
-        rel: "noopener noreferrer nofollow",
-        class: null,
-      },
-    };
-
-    expect(toCourseDescription(doc(paragraph(text("hi", [link]))))).toEqual(
-      doc(
-        paragraph(
-          text("hi", [
-            { type: "link", attrs: { href: "https://example.com" } },
-          ]),
-        ),
-      ),
-    );
-  });
-
-  it("keeps the heading level and the ordered list start, drops other attributes", () => {
-    const result = toCourseDescription(
-      doc(
-        { type: "heading", attrs: { level: 2, id: "x" }, content: [text("A")] },
-        {
-          type: "orderedList",
-          attrs: { start: 3, type: null },
-          content: [{ type: "listItem", content: [paragraph(text("one"))] }],
-        },
-      ),
-    );
-
-    expect(result.content[0]).toEqual({
-      type: "heading",
-      attrs: { level: 2 },
-      content: [text("A")],
-    });
-    expect(result.content[1]).toMatchObject({ attrs: { start: 3 } });
-  });
-
   it("drops empty paragraphs but keeps line breaks, marks and nested lists", () => {
     const nested: JSONContent = {
       type: "bulletList",
@@ -84,6 +44,16 @@ describe("toCourseDescription", () => {
     expect(toCourseDescription(doc(paragraph(), nested, paragraph()))).toEqual(
       doc(nested),
     );
+  });
+
+  it("sends the attributes the editor adds as they are", () => {
+    const heading = {
+      type: "heading",
+      attrs: { level: 2 },
+      content: [text("A")],
+    };
+
+    expect(toCourseDescription(doc(heading))).toEqual(doc(heading));
   });
 
   it("does not change its input", () => {
@@ -115,6 +85,27 @@ describe("countDescriptionCharacters", () => {
 
   it("counts an emoji as two, like the API", () => {
     expect(countDescriptionCharacters(doc(paragraph(text("😀"))))).toBe(2);
+  });
+
+  it("counts an empty document as zero", () => {
+    expect(countDescriptionCharacters({ type: "doc", content: [] })).toBe(0);
+  });
+
+  it("matches the count Tiptap's CharacterCount extension shows", () => {
+    const withBreak = doc(
+      paragraph(text("ab"), { type: "hardBreak" }, text("cd")),
+      { type: "horizontalRule" },
+      paragraph(text("ef")),
+    );
+    const editor = new Editor({
+      extensions: [...descriptionExtensions, CharacterCount],
+      content: withBreak,
+    });
+
+    expect(countDescriptionCharacters(withBreak)).toBe(
+      editor.storage.characterCount.characters(),
+    );
+    editor.destroy();
   });
 });
 

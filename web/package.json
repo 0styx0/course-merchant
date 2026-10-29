@@ -20,6 +20,7 @@
     "@base-ui/react": "^1.9.0",
     "@hookform/resolvers": "6.0.2",
     "@tiptap/core": "3.32.0",
+    "@tiptap/extensions": "3.32.0",
     "@tiptap/pm": "3.32.0",
     "@tiptap/react": "3.32.0",
     "@tiptap/starter-kit": "3.32.0",

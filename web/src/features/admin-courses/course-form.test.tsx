@@ -80,6 +80,42 @@ beforeEach(() => {
 });
 
 describe("CourseForm", () => {
+  it("groups the fields into named sections", () => {
+    renderForm();
+
+    for (const title of ["Basics", "Content", "Schedule", "Pricing"]) {
+      expect(screen.getByRole("group", { name: title })).toBeInTheDocument();
+    }
+    expect(screen.getByRole("group", { name: "Pricing" })).toContainElement(
+      screen.getByLabelText("Price"),
+    );
+  });
+
+  it("explains the empty price start once for all price rows", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await user.click(screen.getByRole("button", { name: "Add price" }));
+
+    expect(screen.getAllByText(/Leave the date and time empty/)).toHaveLength(
+      1,
+    );
+  });
+
+  it("counts the name and summary, red past the limit", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    expect(screen.getByLabelText("Course name")).toHaveAccessibleDescription(
+      "0 / 100",
+    );
+    await user.type(screen.getByLabelText("Course name"), "abc");
+    expect(screen.getByText("3 / 100")).not.toHaveClass("text-destructive");
+
+    await user.click(screen.getByLabelText("Summary"));
+    await user.paste("x".repeat(301));
+    expect(screen.getByText("301 / 300")).toHaveClass("text-destructive");
+  });
+
   it("shows a message and marks the field invalid when an empty field loses focus", async () => {
     const user = userEvent.setup();
     renderForm();
@@ -89,7 +125,7 @@ describe("CourseForm", () => {
 
     const name = screen.getByLabelText("Course name");
     expect(name).toHaveAttribute("aria-invalid", "true");
-    expect(name).toHaveAccessibleDescription("Enter a course name.");
+    expect(name).toHaveAccessibleDescription("0 / 100 Enter a course name.");
   });
 
   it("clears the message as the admin fixes the field", async () => {
@@ -136,7 +172,7 @@ describe("CourseForm", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.click(screen.getByRole("button", { name: "Save course" }));
+    await user.click(screen.getByRole("button", { name: "Save as draft" }));
 
     await screen.findByRole("heading", { name: /^Fix \d+ problems/ });
     const summary = summaryWithHeading(/^Fix \d+ problems/);
@@ -150,7 +186,7 @@ describe("CourseForm", () => {
   it("focuses a field from its link in the list", async () => {
     const user = userEvent.setup();
     renderForm();
-    await user.click(screen.getByRole("button", { name: "Save course" }));
+    await user.click(screen.getByRole("button", { name: "Save as draft" }));
 
     await user.click(await screen.findByRole("button", { name: "Summary" }));
 
@@ -163,7 +199,7 @@ describe("CourseForm", () => {
     renderForm();
 
     await fillValidForm(user);
-    await user.click(screen.getByRole("button", { name: "Save course" }));
+    await user.click(screen.getByRole("button", { name: "Save as draft" }));
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/"));
     expect(action).toHaveBeenCalledOnce();
@@ -180,7 +216,7 @@ describe("CourseForm", () => {
     renderForm();
 
     await fillValidForm(user);
-    await user.click(screen.getByRole("button", { name: "Save course" }));
+    await user.click(screen.getByRole("button", { name: "Save as draft" }));
 
     const saving = await screen.findByRole("button", { name: "Saving…" });
     expect(saving).toBeDisabled();
@@ -208,7 +244,7 @@ describe("CourseForm", () => {
     renderForm();
 
     await fillValidForm(user);
-    await user.click(screen.getByRole("button", { name: "Save course" }));
+    await user.click(screen.getByRole("button", { name: "Save as draft" }));
 
     await screen.findByRole("heading", { name: "Validation failed" });
     const summary = summaryWithHeading("Validation failed");
@@ -218,7 +254,7 @@ describe("CourseForm", () => {
       "Too cheap.",
     );
     expect(screen.getByText(/Description problem: Links/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Save course" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Save as draft" })).toBeEnabled();
     expect(push).not.toHaveBeenCalled();
   });
 
@@ -238,7 +274,7 @@ describe("CourseForm", () => {
     renderForm();
 
     await fillValidForm(user);
-    await user.click(screen.getByRole("button", { name: "Save course" }));
+    await user.click(screen.getByRole("button", { name: "Save as draft" }));
 
     await screen.findByRole("heading", { name: "Internal server error" });
     expect(summaryWithHeading("Internal server error")).toHaveTextContent(
@@ -270,7 +306,7 @@ describe("CourseForm", () => {
     const user = userEvent.setup();
     renderForm();
     await user.click(screen.getByRole("button", { name: "Add price" }));
-    await user.click(screen.getByRole("button", { name: "Save course" }));
+    await user.click(screen.getByRole("button", { name: "Save as draft" }));
 
     await user.click(await screen.findByRole("button", { name: "Price 2" }));
 
@@ -298,7 +334,7 @@ describe("CourseForm", () => {
     await user.type(screen.getByLabelText("Price 2"), "50");
     await user.type(screen.getByLabelText("Price 2 start date"), "2099-02-01");
     await user.type(screen.getByLabelText("Price 2 start time"), "09:00");
-    await user.click(screen.getByRole("button", { name: "Save course" }));
+    await user.click(screen.getByRole("button", { name: "Save as draft" }));
 
     await screen.findByRole("heading", { name: "Validation failed" });
     expect(screen.getByLabelText("Price 2")).toHaveAccessibleDescription(

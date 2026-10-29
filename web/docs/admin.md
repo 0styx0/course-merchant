@@ -8,7 +8,8 @@ And a course summary of up to 300 chars, about 2-3 sentences
 And a course description of up to 5,000 characters of text, written in a visual editor (bold, italic, underline, strikethrough, headings, bulleted and numbered lists up to 3 levels, quotes, horizontal rules, links)
 And pasting from Google Docs keeps that formatting, and drops what the editor doesn't support
 And pasting from Google Docs doesn't keep: colours, fonts and spacing; the Title and headings 1 and 5-6 (they become paragraphs); images; table layout (each cell becomes a paragraph); blank lines may show as extra space
-And the admin sees how many characters they have used out of 5,000
+And the admin sees how many characters they have used out of 5,000, and likewise out of 100 for the title and 300 for the summary
+And the page has an intro and four titled sections (Basics, Content, Schedule, Pricing), and the button reads "Save as draft"
 And the course has a content link (https), which is never shown to the public
 And they can specify a future start time
 And they can specify a future end time greater than start time

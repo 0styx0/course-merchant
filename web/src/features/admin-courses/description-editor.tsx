@@ -1,18 +1,16 @@
 "use client";
 
 import type { Editor, JSONContent } from "@tiptap/core";
+import { CharacterCount as CharacterCountExtension } from "@tiptap/extensions";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { useCallback, useEffect } from "react";
 
+import { CharacterCount } from "@/components/form/character-count";
 import {
   FormField,
   type FormFieldInputProps,
 } from "@/components/form/form-field";
-import { cn } from "cn";
-import {
-  countDescriptionCharacters,
-  toCourseDescription,
-} from "@/features/courses/description-document";
+import { toCourseDescription } from "@/features/courses/description-document";
 import { descriptionExtensions } from "@/features/courses/description-extensions";
 
 import { COURSE_DESCRIPTION_MAX_TEXT_LENGTH } from "./course-form-limits";
@@ -29,15 +27,16 @@ type DescriptionEditorProps = {
   submitted: boolean;
 };
 
+// No `limit` option: the extension would block typing past it, and the form
+// shows the error instead.
+const editorExtensions = [...descriptionExtensions, CharacterCountExtension];
+
 const EDITABLE_AREA_CLASSES =
   "description-content min-h-40 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30";
 
 /**
  * The course description's rich-text field, with the label, formatting
- * toolbar, state icon, error message and a character counter around it. The
- * counter is a plain description, not a live region, so it isn't read out on
- * every keystroke. Typing past the limit is never blocked: the counter turns
- * red and the form shows the error.
+ * toolbar, state icon, error message and a character counter around it.
  */
 export function DescriptionEditor({
   value,
@@ -49,7 +48,7 @@ export function DescriptionEditor({
   submitted,
 }: DescriptionEditorProps) {
   const editor = useEditor({
-    extensions: descriptionExtensions,
+    extensions: editorExtensions,
     content: value,
     // Create the editor only in the browser, so the server's HTML can't differ
     immediatelyRender: false,
@@ -66,17 +65,17 @@ export function DescriptionEditor({
     return () => fieldRef(null);
   }, [focus, fieldRef]);
 
-  const count = countDescriptionCharacters(value);
-  const overLimit = count > COURSE_DESCRIPTION_MAX_TEXT_LENGTH;
+  // `value` changes on every edit, which re-renders and so refreshes the count.
+  const count = editor?.storage.characterCount.characters() ?? 0;
 
   return (
     <FormField
       label="Description"
       description={
-        <span className={cn(overLimit && "text-destructive")}>
-          {count.toLocaleString("en-US")} /{" "}
-          {COURSE_DESCRIPTION_MAX_TEXT_LENGTH.toLocaleString("en-US")}
-        </span>
+        <CharacterCount
+          count={count}
+          limit={COURSE_DESCRIPTION_MAX_TEXT_LENGTH}
+        />
       }
       error={error}
       touched={touched}

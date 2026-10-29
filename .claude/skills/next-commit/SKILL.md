@@ -57,8 +57,7 @@ From `api/` (or `web/`), run `yarn lint`, `yarn tsc --noEmit` (in `web/`, run `y
 Keep it short:
 - the files changed, as a table links | high level changes;
 - the verification results;
-- whether README, CONTRIBUTING or ARCHITECTURE needed changes (yes with what, or no);
-- a suggested conventional commit message (no `Co-Authored-By` trailer);
+- a suggested conventional commit message
 - the current context size, and a reminder to run `/clear` before the next commit.
 
 Then stop. The owner makes the commit. If this finished a whole step in the Status, run `/usage-review`.

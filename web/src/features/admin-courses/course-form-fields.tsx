@@ -3,11 +3,13 @@
 import type { ReactNode } from "react";
 import {
   get,
+  useWatch,
   type Path,
   type RegisterOptions,
   type UseFormReturn,
 } from "react-hook-form";
 
+import { CharacterCount } from "@/components/form/character-count";
 import {
   FormField,
   type FormFieldInputProps,
@@ -26,6 +28,22 @@ type FieldProps = {
   description?: string;
   registerOptions?: RegisterOptions<CourseFormValues>;
 };
+
+/** The field's help text, then its "n / limit" counter. */
+function FieldHelp({
+  form,
+  name,
+  description,
+  limit,
+}: Pick<FieldProps, "form" | "name" | "description"> & { limit: number }) {
+  const value = useWatch({ control: form.control, name });
+  return (
+    <>
+      {description && <span className="block">{description}</span>}
+      <CharacterCount count={String(value ?? "").length} limit={limit} />
+    </>
+  );
+}
 
 // `labelId` is for inputs that aren't labelable elements; these are.
 function ariaProps({
@@ -52,13 +70,36 @@ export function InputField({
   label,
   description,
   registerOptions,
+  placeholder,
+  limit,
   type = "text",
-}: FieldProps & { type?: "text" | "url" | "date" | "time" }) {
+}: FieldProps & {
+  type?: "text" | "url" | "date" | "time";
+  placeholder?: string;
+  /** Shows an "n / limit" counter. Typing past it is allowed. */
+  limit?: number;
+}) {
   return (
-    <FormField label={label} description={description} {...stateOf(form, name)}>
+    <FormField
+      label={label}
+      description={
+        limit === undefined ? (
+          description
+        ) : (
+          <FieldHelp
+            form={form}
+            name={name}
+            description={description}
+            limit={limit}
+          />
+        )
+      }
+      {...stateOf(form, name)}
+    >
       {(inputProps) => (
         <Input
           type={type}
+          placeholder={placeholder}
           {...ariaProps(inputProps)}
           {...form.register(name, registerOptions)}
         />

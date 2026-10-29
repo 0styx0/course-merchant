@@ -65,7 +65,7 @@ test("saves a new course and goes to the home page", async ({ page, msw }) => {
   await fillValidForm(page);
   await expect(page.getByText("Lasts 2 hours 30 minutes")).toBeVisible();
 
-  await page.getByRole("button", { name: "Save course" }).click();
+  await page.getByRole("button", { name: "Save as draft" }).click();
 
   await expect(page).toHaveURL("/");
   expect(consoleErrors).toEqual([]);
@@ -81,7 +81,7 @@ test("shows the API's refusal and lets the admin try again", async ({
   await page.goto("/admin/courses/new");
   await fillValidForm(page);
 
-  const save = page.getByRole("button", { name: "Save course" });
+  const save = page.getByRole("button", { name: "Save as draft" });
   await save.click();
 
   // Next's route announcer is also an alert, so find ours by its text

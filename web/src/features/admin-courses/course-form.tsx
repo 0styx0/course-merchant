@@ -12,9 +12,14 @@ import {
 } from "react-hook-form";
 
 import { ErrorSummary } from "@/components/form/error-summary";
+import { FormSection } from "@/components/form/form-section";
 import { Button } from "@/components/ui/button";
 
 import { InputField, SelectField } from "./course-form-fields";
+import {
+  COURSE_NAME_MAX_LENGTH,
+  COURSE_SUMMARY_MAX_LENGTH,
+} from "./course-form-limits";
 import { courseFormProblems } from "./course-form-problems";
 import {
   courseFormSchema,
@@ -105,7 +110,7 @@ export function CourseForm({ timeZones }: CourseFormProps) {
     <form
       noValidate
       onSubmit={form.handleSubmit(save, () => setServerProblem(undefined))}
-      className="flex flex-col gap-6"
+      className="flex flex-col gap-8"
     >
       <ErrorSummary
         ref={summaryRef}
@@ -114,33 +119,59 @@ export function CourseForm({ timeZones }: CourseFormProps) {
         onSelectField={(name) => form.setFocus(name as Path<CourseFormValues>)}
       />
 
-      <InputField form={form} name="name" label="Course name" />
-      <InputField form={form} name="summary" label="Summary" />
-      <Controller
-        control={form.control}
-        name="description"
-        render={({ field, fieldState }) => (
-          <DescriptionEditor
-            value={field.value}
-            onChange={field.onChange}
-            onBlur={field.onBlur}
-            fieldRef={field.ref}
-            error={fieldState.error?.message}
-            touched={fieldState.isTouched}
-            submitted={isSubmitted}
-          />
-        )}
-      />
-      <InputField
-        form={form}
-        name="contentUrl"
-        label="Content link"
-        type="url"
-        description="Where students find the course material. It is never shown to the public."
-      />
+      <FormSection
+        title="Basics"
+        description="What students see when they browse for the course."
+      >
+        <InputField
+          form={form}
+          name="name"
+          label="Course name"
+          placeholder="e.g. Introduction to Photography"
+          limit={COURSE_NAME_MAX_LENGTH}
+        />
+        <InputField
+          form={form}
+          name="summary"
+          label="Summary"
+          placeholder="One or two sentences shown in the course list"
+          limit={COURSE_SUMMARY_MAX_LENGTH}
+        />
+        <Controller
+          control={form.control}
+          name="description"
+          render={({ field, fieldState }) => (
+            <DescriptionEditor
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              fieldRef={field.ref}
+              error={fieldState.error?.message}
+              touched={fieldState.isTouched}
+              submitted={isSubmitted}
+            />
+          )}
+        />
+      </FormSection>
 
-      <fieldset className="grid gap-4 sm:grid-cols-2">
-        <legend className="mb-2 font-medium">Schedule</legend>
+      <FormSection
+        title="Content"
+        description="The material students get after they buy."
+      >
+        <InputField
+          form={form}
+          name="contentUrl"
+          label="Content link"
+          type="url"
+          description="Where students find the course material. It is never shown to the public."
+        />
+      </FormSection>
+
+      <FormSection
+        title="Schedule"
+        description="When the course runs."
+        className="grid gap-4 sm:grid-cols-2"
+      >
         <InputField
           form={form}
           name="schedule.startDate"
@@ -182,10 +213,13 @@ export function CourseForm({ timeZones }: CourseFormProps) {
           ))}
         </SelectField>
         {length && <p className="self-end text-sm">Lasts {length}</p>}
-      </fieldset>
+      </FormSection>
 
-      <fieldset className="flex flex-col gap-4">
-        <legend className="mb-2 font-medium">Price (USD)</legend>
+      <FormSection
+        title="Pricing"
+        description="What students pay, in US dollars, and when each price starts."
+        help="Leave the date and time empty to start when the course is published."
+      >
         {priceRows.fields.map((row, index) => (
           <PriceRow
             key={row.id}
@@ -207,10 +241,10 @@ export function CourseForm({ timeZones }: CourseFormProps) {
         >
           Add price
         </Button>
-      </fieldset>
+      </FormSection>
 
       <Button type="submit" disabled={isSubmitting} className="self-start">
-        {isSubmitting ? "Saving…" : "Save course"}
+        {isSubmitting ? "Saving…" : "Save as draft"}
       </Button>
     </form>
   );

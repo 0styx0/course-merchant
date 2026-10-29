@@ -1,10 +1,17 @@
-import type { JSONContent } from "@tiptap/core";
+import { getSchema, type JSONContent } from "@tiptap/core";
 
 import type { CourseDescriptionDocument } from "@/lib/types";
 
+import { descriptionExtensions } from "./description-extensions";
+
+const descriptionSchema = getSchema(descriptionExtensions);
+
 /**
- * Reduces the editor's JSON to the fields the API's contract knows, and drops
- * the empty paragraphs that Google Docs and the editor's trailing line leave.
+ * Drops the empty paragraphs that Google Docs and the editor's trailing line
+ * leave, and copies the rest into plain objects: the editor's attribute
+ * objects have no prototype, which a Server Action can't receive. Other
+ * attributes the editor adds (such as a link's `rel`) are sent as they are;
+ * the API keeps only the ones it knows.
  */
 export function toCourseDescription(
   editorJson: JSONContent,
@@ -13,12 +20,24 @@ export function toCourseDescription(
     (block) => !isEmptyParagraph(block),
   );
 
-  return { type: "doc", content: blocks.map(toContractNode) };
+  return {
+    type: "doc",
+    content: blocks.map((block) => ({
+      ...structuredClone(block),
+      type: block.type ?? "",
+    })),
+  };
 }
 
-/** Sum of the text lengths, counted with `.length` like the API. */
+/**
+ * The editor's character count (Tiptap's `CharacterCount` extension in its
+ * default mode, which reads the text the same way and counts a line break or a
+ * rule as one space), so the counter shown and the form's check always agree.
+ * The API counts only the text, so it never refuses what this accepts.
+ */
 export function countDescriptionCharacters(node: JSONContent): number {
-  return collectText(node).length;
+  const doc = descriptionSchema.nodeFromJSON(node);
+  return doc.textBetween(0, doc.content.size, undefined, " ").length;
 }
 
 /** False for spaces, non-breaking spaces or line breaks only, like the API. */
@@ -32,43 +51,4 @@ function isEmptyParagraph(node: JSONContent): boolean {
 
 function collectText(node: JSONContent): string {
   return (node.text ?? "") + (node.content ?? []).map(collectText).join("");
-}
-
-function toContractNode(node: JSONContent): JSONContent & { type: string } {
-  const type = node.type ?? "";
-  const attrs = pick(node.attrs, nodeAttributes[type]);
-
-  return {
-    type,
-    ...(node.text !== undefined && { text: node.text }),
-    ...(attrs && { attrs }),
-    ...(node.content && { content: node.content.map(toContractNode) }),
-    ...(node.marks && { marks: node.marks.map(toContractMark) }),
-  };
-}
-
-function toContractMark(
-  mark: NonNullable<JSONContent["marks"]>[number],
-): NonNullable<JSONContent["marks"]>[number] {
-  const attrs = pick(mark.attrs, markAttributes[mark.type]);
-  return { type: mark.type, ...(attrs && { attrs }) };
-}
-
-const nodeAttributes: Record<string, string[] | undefined> = {
-  heading: ["level"],
-  orderedList: ["start"],
-};
-const markAttributes: Record<string, string[] | undefined> = {
-  link: ["href"],
-};
-
-// Undefined when nothing is kept, so the node carries no empty `attrs`.
-function pick(
-  attrs: Record<string, unknown> | undefined,
-  keys: string[] | undefined,
-): Record<string, unknown> | undefined {
-  const kept = Object.entries(attrs ?? {}).filter(([key]) =>
-    keys?.includes(key),
-  );
-  return kept.length ? Object.fromEntries(kept) : undefined;
 }

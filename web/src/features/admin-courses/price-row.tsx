@@ -30,7 +30,6 @@ export function PriceRow({ form, index, rowCount, onRemove }: PriceRowProps) {
         name={`prices.${index}.effectiveDate`}
         label={labels.effectiveDate}
         type="date"
-        description="Leave the date and time empty to start when the course is published."
       />
       <InputField
         form={form}

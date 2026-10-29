@@ -132,7 +132,7 @@ describe("pasting HTML the Docs sample doesn't have", () => {
   it("keeps the number a pasted numbered list starts at", () => {
     const [list] = paste('<ol start="3"><li><p>Third</p></li></ol>');
 
-    expect(list.attrs).toEqual({ start: 3 });
+    expect(list.attrs).toMatchObject({ start: 3 });
   });
 
   it("drops an image", () => {

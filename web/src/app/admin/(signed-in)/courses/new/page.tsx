@@ -14,6 +14,10 @@ export default function NewCoursePage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
       <h1 className="text-3xl font-bold">New course</h1>
+      <p className="mt-2 text-muted-foreground">
+        Add the course details and its price. Saving creates a draft, and
+        nothing is public until you publish it.
+      </p>
       <div className="mt-8">
         <CourseForm timeZones={timeZones} />
       </div>
