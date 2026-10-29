@@ -14,7 +14,9 @@ Each milestone delivers one outcome. A milestone is split into one-line commits 
 - [x] **2. Unused-code check.** Add [knip](https://knip.dev) (finds unused files, exports and dependencies), clean up what it reports, then enforce it on pre-push and CI (details in *Step 2*). Two commits:
   - [x] **2a.** API: add knip (`api/knip.jsonc`, `api/package.json`), remove what it reports (unused exports, `pg`, `@eslint/eslintrc`, the value import of `express`), then run `yarn --cwd api knip` on pre-push and in CI's `api` job; update the hook table in [CONTRIBUTING.md](../CONTRIBUTING.md).
   - [x] **2b.** Web: the same for `web/` (`web/knip.jsonc`, about 5 files under `web/src`, the unused `strict-event-emitter` dev dependency), knip in pre-push and CI's `web` job, CONTRIBUTING, and tick this step.
-- [ ] **3. Behaviour pinned before refactors.** **Next** (not yet split into commits: run `/plan-create-implementation code-quality-guardrails`). Use the existing `@vitest/coverage-v8` (both packages already have it) to see which lines a refactor touches that no test runs. Add a step to the `next-commit` skill for refactors: check coverage of the touched code first, and add a test in its own commit if it is missing. Add the missing test for the order of the description error list, which the cleanup changed without a test failing.
+- [ ] **3. Behaviour pinned before refactors.** Use the existing `@vitest/coverage-v8` (both packages already have it) to see which lines a refactor touches that no test runs, and make the `next-commit` skill check it first (details in *Step 3*). Two commits:
+  - [ ] **3a.** **Next.** A `test:coverage` script in each package (`api/package.json`, `web/package.json`), replacing the API's `test:cov`, and the command in [api/CLAUDE.md](../api/CLAUDE.md) and [web/CLAUDE.md](../web/CLAUDE.md); each script run once to confirm it works.
+  - [ ] **3b.** A refactor step in the `next-commit` skill (`.claude/skills/next-commit/SKILL.md`): check coverage of the touched code first, and add a missing test in its own commit before the refactor.
 - [ ] **4. Naming and layout rules.** Short rules in CLAUDE.md for what lint can't check (see *Principles*), including 7 files per folder. Then fix the 11 folders that already break it (listed in *Numbers*), one layout commit per folder, each outlined with before/after file trees and needing the owner's OK.
 - [ ] **5. Short outlines for mechanical steps.** Change the `next-commit` skill and CLAUDE.md: moves, renames, splits, doc-only and lint-fix commits get a short outline and no wait for approval.
 - [ ] **6. Close the cleanup.** Cut [code-style-cleanup.md](code-style-cleanup.md) down to its decision rows (or delete it), remove it from the `next-commit` hint and the CLAUDE.md doc list, fix the saved next-commit memory, and add the cleanup row to the usage-reviews memory.
@@ -59,6 +61,7 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 | 7 files per folder is a guideline, not a test. | A test would block commits over a judgement call. | A tiny test that counts files. |
 | The 11 folders over 7 files are fixed now, in milestone 4. | A rule the code already breaks gets ignored. This is the same "fix first, then enforce" principle as the lint rules. | Applying the rule only to folders touched from now on. |
 | Spec files count toward the 7. | The reason is scanning a file tree, and a tree full of specs is as hard to scan as one full of source. | Counting only source files. |
+| Coverage before a refactor is checked with a `test:coverage` script per package (unit tests only in the API); the old API `test:cov` is removed. | One short command that both the guides and the skill can name. It needs no database, and there is only one coverage script per package. | The raw vitest command in the docs (long flags that are easy to get wrong); a whole-package report (noisy). |
 | knip runs on pre-push and in CI, not on commit. | It checks the whole project; a half-done refactor can leave an export briefly unused between commits. | Pre-commit (blocks valid in-between commits). |
 | One knip config per package; false positives go in its `entry`, `ignore` or `ignoreBinaries`, each with a reason. Generated files and `components/ui/` are ignored. | Matches the two independent yarn projects and the lint exemptions. | A root workspace config (they aren't yarn workspaces); `ignoreExportsUsedInFile` (hides exports that should just not be exported). |
 
@@ -86,6 +89,18 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 **Version.** Pin knip to `6.41.0`, the newest release older than two weeks.
 
 **Verification.** `yarn knip`, lint, type check, the package's unit tests; 2a also runs `yarn build`, the integration and e2e suites (removing `pg` must not break the database connection).
+
+## Step 3. Behaviour pinned before refactors
+
+**Scripts.** `test:coverage` in each package runs the unit tests with the text coverage report, no threshold. The API's script uses `vitest.unit.config.ts`, so it needs no database; the web's runs its whole suite (about 30 seconds). Limit the report to the files being refactored by appending `--coverage.include=<file>` (yarn passes extra arguments through).
+
+**Reading the report.** A refactored line is pinned if no row lists it as uncovered; uncovered branches count too. Web prints "No files with missing coverage" when the named files are fully covered.
+
+**Skill rule.** Applies to refactors that change no behaviour. Run the coverage check on the files the refactor touches before outlining. If a touched line or branch is uncovered, the missing test is its own commit first, and it must pass against the old code. Skipped for pure moves, renames and doc-only commits.
+
+**Already pinned.** The order of the description error list (all bad text, then all bad links) is pinned by "lists every bad text first, then every bad link" in [course-description-schema.spec.ts](../api/src/courses/test/unit/course-description-schema.spec.ts), so no new test is needed.
+
+**Flaky test.** One web test failed on the first coverage run and passed on the rerun, probably a timing flake under coverage load. Not identified yet; note it if it recurs.
 
 ## Open questions
 
