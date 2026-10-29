@@ -31,9 +31,9 @@ import {
   courseFormSchema,
   type CheckedCourseFormValues,
   type CourseFormValues,
-} from "./course-form-schema";
-import { priceSummary } from "./price-summary";
-import { scheduleSummary } from "./schedule-summary";
+} from "./validation/course-form-schema";
+import { priceSummary } from "./price/price-summary";
+import { scheduleSummary } from "./schedule/schedule-summary";
 
 /** Used until the browser's own zone is known, and when the list lacks it. */
 const DEFAULT_TIME_ZONE = "America/New_York";

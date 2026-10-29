@@ -10,10 +10,10 @@ import {
   FormField,
   type FormFieldInputProps,
 } from "@/components/form/form-field";
-import { toCourseDescription } from "@/features/courses/description-document";
-import { descriptionExtensions } from "@/features/courses/description-extensions";
+import { toCourseDescription } from "@/features/course-description/description-document";
+import { descriptionExtensions } from "@/features/course-description/description-extensions";
 
-import { COURSE_DESCRIPTION_MAX_TEXT_LENGTH } from "../course-form-limits";
+import { COURSE_DESCRIPTION_MAX_TEXT_LENGTH } from "../validation/course-form-limits";
 import { DescriptionToolbar } from "./description-toolbar";
 
 type DescriptionEditorProps = {

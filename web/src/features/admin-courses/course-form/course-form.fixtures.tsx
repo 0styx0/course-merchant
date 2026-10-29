@@ -3,7 +3,7 @@ import type userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 
 import { CourseForm } from "../course-form";
-import { createCourseAction } from "../create-course.action";
+import { createCourseAction } from "../save-course/create-course.action";
 
 export const action = vi.mocked(createCourseAction);
 

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { Editor } from "@tiptap/core";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { descriptionExtensions } from "@/features/courses/description-extensions";
+import { descriptionExtensions } from "@/features/course-description/description-extensions";
 
 import { DescriptionToolbar } from "./description-toolbar";
 

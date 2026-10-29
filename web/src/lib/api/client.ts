@@ -1,7 +1,7 @@
 import "server-only";
 
 import createClient from "openapi-fetch";
-import { API_TIMEOUT_MS, apiBaseUrl } from "./api-config";
+import { API_TIMEOUT_MS, apiBaseUrl } from "./config/api-config";
 import { fetchWithTimeout } from "./fetch-with-timeout";
 import type { paths } from "./generated";
 

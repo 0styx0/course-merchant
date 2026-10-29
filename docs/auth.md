@@ -12,7 +12,7 @@ Each step is one commit. Every step's tests are part of the step.
 - [x] **2. Login and logout:** `POST /v1/admin/sessions`, `DELETE /v1/admin/sessions/current`, the `AdminSession` and `AdminLoginAttempt` tables, the guard (applied only to logout), and the set-password command signing out sessions and lifting lockouts.
 - [x] **3. Protect every admin endpoint:** the guard is global, the public controllers are `@Public()`, authenticated responses carry `Cache-Control: no-store`, and a test checks every route against the OpenAPI file.
 - [x] **4. Cleanup job:** `auth/admin-session-cleanup.ts`, hourly `@Interval` on every server, deleting sessions past 7 days or idle over 24 hours and attempts older than 15 minutes. Integration tests only.
-- [x] **5. HTTPS check:** in production the web app refuses an `API_BASE_URL` that isn't `https://` or on the same machine (`web/src/lib/api/base-url.ts`). Today that means the build fails and every request fails, but the server process stays up; [web.md](web.md) step 1 makes it exit at boot too.
+- [x] **5. HTTPS check:** in production the web app refuses an `API_BASE_URL` that isn't `https://` or on the same machine (`web/src/lib/api/config/base-url.ts`). Today that means the build fails and every request fails, but the server process stays up; [web.md](web.md) step 1 makes it exit at boot too.
 - [ ] **Launch:** **Next** run `admin:set-password` on the production server, and point `API_BASE_URL` at the API's `https://` address (the web server now refuses anything else). Operations only; no code.
 
 ## Principles

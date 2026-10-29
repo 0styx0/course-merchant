@@ -1,6 +1,6 @@
 import type { Course } from "@/lib/types";
 import { formatPrice } from "@/lib/utils/formatters";
-import { CourseDescription } from "./course-description";
+import { CourseDescription } from "./description/course-description";
 import { CourseSchedule } from "./course-schedule";
 
 type CourseDetailsProps = {

@@ -3,7 +3,10 @@
 import type { ProblemDetails, Result } from "@/lib/types";
 
 import { createCourse } from "./admin-courses.api";
-import { courseFormSchema, type CourseFormValues } from "./course-form-schema";
+import {
+  courseFormSchema,
+  type CourseFormValues,
+} from "../validation/course-form-schema";
 import {
   fieldErrorsFromProblem,
   type FormFieldError,

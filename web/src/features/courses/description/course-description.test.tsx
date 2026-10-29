@@ -3,7 +3,7 @@ import { Editor, type JSONContent } from "@tiptap/core";
 import { describe, expect, it } from "vitest";
 
 import { CourseDescription } from "./course-description";
-import { descriptionExtensions } from "./description-extensions";
+import { descriptionExtensions } from "../../course-description/description-extensions";
 
 const text = (value: string, marks?: JSONContent["marks"]): JSONContent => ({
   type: "text",

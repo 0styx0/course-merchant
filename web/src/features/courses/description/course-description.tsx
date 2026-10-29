@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { JSONContent } from "@tiptap/core";
 import { renderToReactElement } from "@tiptap/static-renderer/pm/react";
-import { descriptionExtensions } from "./description-extensions";
+import { descriptionExtensions } from "../../course-description/description-extensions";
 
 const showChildren = ({ children }: { children?: ReactNode }) => (
   <>{children}</>

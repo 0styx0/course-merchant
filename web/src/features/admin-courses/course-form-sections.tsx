@@ -13,12 +13,12 @@ import { InputField, SelectField } from "./course-form-fields";
 import {
   COURSE_NAME_MAX_LENGTH,
   COURSE_SUMMARY_MAX_LENGTH,
-} from "./course-form-limits";
-import type { CourseFormValues } from "./course-form-schema";
+} from "./validation/course-form-limits";
+import type { CourseFormValues } from "./validation/course-form-schema";
 import { DescriptionEditor } from "./description-editor/description-editor";
-import type { priceSummary } from "./price-summary";
-import { PriceRow } from "./price-row";
-import { PriceSchedule } from "./price-schedule";
+import type { priceSummary } from "./price/price-summary";
+import { PriceRow } from "./price/price-row";
+import { PriceSchedule } from "./price/price-schedule";
 
 type CourseFormApi = UseFormReturn<CourseFormValues>;
 

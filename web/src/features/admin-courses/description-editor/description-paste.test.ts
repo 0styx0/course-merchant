@@ -10,8 +10,8 @@ import {
   vi,
 } from "vitest";
 
-import { toCourseDescription } from "@/features/courses/description-document";
-import { descriptionExtensions } from "@/features/courses/description-extensions";
+import { toCourseDescription } from "@/features/course-description/description-document";
+import { descriptionExtensions } from "@/features/course-description/description-extensions";
 
 const googleDocsPaste = readFileSync(
   "src/mocks/fixtures/google-docs-paste.html",

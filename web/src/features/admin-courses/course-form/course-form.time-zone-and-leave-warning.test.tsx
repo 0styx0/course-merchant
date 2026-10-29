@@ -9,7 +9,9 @@ vi.mock(
   "next/navigation",
   async () => (await import("./course-form.mocks")).navigationMock,
 );
-vi.mock("../create-course.action", () => ({ createCourseAction: vi.fn() }));
+vi.mock("../save-course/create-course.action", () => ({
+  createCourseAction: vi.fn(),
+}));
 vi.mock("../description-editor/description-editor", async () => ({
   DescriptionEditor: (await import("./course-form.mocks"))
     .MockDescriptionEditor,

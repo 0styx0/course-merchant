@@ -48,7 +48,7 @@ run_unit_tests() {
 # - api: its test config, and the copy of description-extensions.ts in web
 #   that a test compares against its own.
 # - web: the OpenAPI file that a test reads its limits from.
-API_TEST_INPUTS='^api/vitest\.unit\.config\.ts$|^web/src/features/courses/description-extensions\.ts$'
+API_TEST_INPUTS='^api/vitest\.unit\.config\.ts$|^web/src/features/course-description/description-extensions\.ts$'
 WEB_TEST_INPUTS='^api/openapi/'
 
 # The web's types are generated from the OpenAPI file too, so it affects both.

@@ -1,4 +1,4 @@
-import type { CourseFormValues } from "./course-form-schema";
+import type { CourseFormValues } from "../validation/course-form-schema";
 import { formatCourseLength } from "./format-course-length";
 import { formatMoment } from "./format-moment";
 import { toUtcMs } from "./wall-clock-time";

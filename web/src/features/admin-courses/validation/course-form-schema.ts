@@ -4,7 +4,7 @@ import { z } from "zod";
 import {
   countDescriptionCharacters,
   hasVisibleText,
-} from "@/features/courses/description-document";
+} from "@/features/course-description/description-document";
 
 import {
   COURSE_CONTENT_URL_MAX_LENGTH,

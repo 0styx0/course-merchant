@@ -19,7 +19,7 @@ import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 
-import { DescriptionLinkField } from "./description-link-field";
+import { DescriptionLinkField } from "./link/description-link-field";
 
 type Format = {
   label: string;

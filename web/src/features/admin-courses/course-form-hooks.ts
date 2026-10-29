@@ -6,8 +6,8 @@ import {
   browserTimeZone,
   type CheckedCourseFormValues,
   type CourseFormValues,
-} from "./course-form-schema";
-import { createCourseAction } from "./create-course.action";
+} from "./validation/course-form-schema";
+import { createCourseAction } from "./save-course/create-course.action";
 
 /** After each submit attempt, moves focus to the list of problems. */
 export function useFocusSummaryOnSubmit(

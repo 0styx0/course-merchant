@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Course } from "@/lib/types";
 import { formatPrice } from "@/lib/utils/formatters";
-import { CourseSchedule } from "./course-schedule";
+import { CourseSchedule } from "../course-schedule";
 
 export function CourseCard({ course }: { course: Course }) {
   return (

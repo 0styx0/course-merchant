@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { fieldErrorMessage } from "./course-form-problems";
-import type { CourseFormValues } from "./course-form-schema";
+import type { CourseFormValues } from "./validation/course-form-schema";
 
 type CourseForm = UseFormReturn<CourseFormValues>;
 

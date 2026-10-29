@@ -2,9 +2,9 @@ import {
   amountProblem,
   normalizeDollars,
   type CourseFormValues,
-} from "./course-form-schema";
-import { formatMoment } from "./format-moment";
-import { toUtcMs } from "./wall-clock-time";
+} from "../validation/course-form-schema";
+import { formatMoment } from "../schedule/format-moment";
+import { toUtcMs } from "../schedule/wall-clock-time";
 
 /** "$79.50", "$99" or "Free": the typed amount, with a comma read as the decimal mark. */
 function formatDollars(typed: string): string {

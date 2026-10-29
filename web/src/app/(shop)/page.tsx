@@ -1,5 +1,5 @@
-import { CourseListSection } from "@/features/courses/course-list-section";
-import { CourseListLoading } from "@/features/courses/course-list";
+import { CourseListSection } from "@/features/courses/list/course-list-section";
+import { CourseListLoading } from "@/features/courses/list/course-list";
 import { Suspense } from "react";
 
 // Whether a course shows, and at what price, depends on the clock, so render

@@ -1,12 +1,15 @@
-import { toCourseDescription } from "@/features/courses/description-document";
+import { toCourseDescription } from "@/features/course-description/description-document";
 import type { CreateCourseRequest, CreateCourseStatus } from "@/lib/types";
 
-import { COURSE_CURRENCY, MIN_PRICE_LEAD_MS } from "./course-form-limits";
+import {
+  COURSE_CURRENCY,
+  MIN_PRICE_LEAD_MS,
+} from "../validation/course-form-limits";
 import {
   normalizeDollars,
   type CheckedCourseFormValues,
-} from "./course-form-schema";
-import { wallClockToUtc } from "./wall-clock-time";
+} from "../validation/course-form-schema";
+import { wallClockToUtc } from "../schedule/wall-clock-time";
 
 type Schedule = CheckedCourseFormValues["schedule"];
 type Price = CheckedCourseFormValues["prices"][number];

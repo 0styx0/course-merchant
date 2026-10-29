@@ -150,7 +150,9 @@ describe("description-extensions.ts", () => {
       readFileSync(new URL(path, import.meta.url), "utf8");
 
     expect(read("../../validation/description-extensions.ts")).toBe(
-      read("../../../../../web/src/features/courses/description-extensions.ts"),
+      read(
+        "../../../../../web/src/features/course-description/description-extensions.ts",
+      ),
     );
   });
 });

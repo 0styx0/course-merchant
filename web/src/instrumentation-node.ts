@@ -13,7 +13,7 @@ export async function registerNode() {
  * fails, so a bad setting stops the server instead.
  */
 async function checkApiBaseUrl() {
-  const { apiBaseUrl } = await import("./lib/api/api-config");
+  const { apiBaseUrl } = await import("./lib/api/config/api-config");
   try {
     apiBaseUrl();
   } catch (error) {

@@ -1,6 +1,6 @@
 import { MIN_PRICE_LEAD_MS } from "./course-form-limits";
 import type { CourseFormValues } from "./course-form-schema";
-import { wallClockToUtc } from "./wall-clock-time";
+import { wallClockToUtc } from "../schedule/wall-clock-time";
 
 type FormIssue = { path: (string | number)[]; message: string };
 

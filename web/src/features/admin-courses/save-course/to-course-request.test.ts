@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { CheckedCourseFormValues } from "./course-form-schema";
+import type { CheckedCourseFormValues } from "../validation/course-form-schema";
 import { toCourseRequest } from "./to-course-request";
 
 const NOW = new Date("2026-06-01T12:00:00Z");
