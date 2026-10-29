@@ -19,11 +19,12 @@ type PriceRowProps = {
 export function PriceRow({ form, index, rowCount, onRemove }: PriceRowProps) {
   const labels = priceRowLabels(index, rowCount);
   return (
-    <div className="grid gap-4 sm:grid-cols-[1fr_1fr_1fr_auto]">
+    <div className="grid gap-4 sm:grid-cols-[1fr_1fr_1fr_5rem]">
       <InputField
         form={form}
         name={`prices.${index}.amountDollars`}
         label={labels.amountDollars}
+        prefix="$"
       />
       <InputField
         form={form}
@@ -37,16 +38,17 @@ export function PriceRow({ form, index, rowCount, onRemove }: PriceRowProps) {
         label={labels.effectiveTimeOfDay}
         type="time"
       />
-      <Button
-        type="button"
-        variant="outline"
-        disabled={rowCount === 1}
-        onClick={onRemove}
-        className="self-start sm:mt-6"
-        aria-label={`Remove ${labels.amountDollars.toLowerCase()}`}
-      >
-        Remove
-      </Button>
+      {rowCount > 1 && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onRemove}
+          className="self-start sm:mt-6"
+          aria-label={`Remove ${labels.amountDollars.toLowerCase()}`}
+        >
+          Remove
+        </Button>
+      )}
     </div>
   );
 }

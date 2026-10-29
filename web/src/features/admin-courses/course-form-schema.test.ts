@@ -144,18 +144,24 @@ describe("courseFormSchema", () => {
       });
     });
 
-    it.each(["0", "0.50", "50", "79.5", "1000.00"])("accepts %s", (amount) => {
-      expect(priceProblems(amount)).toEqual({});
-    });
+    it.each(["0", "0.50", "50", "79.5", "1000.00", "79,50"])(
+      "accepts %s",
+      (amount) => {
+        expect(priceProblems(amount)).toEqual({});
+      },
+    );
 
-    it.each(["", "abc", "-5", "1,5", "."])("refuses %j as not a price", (a) => {
+    it.each(["", "abc", "-5", "79,5,0", "."])(
+      "refuses %j as not a price",
+      (a) => {
+        expect(priceProblems(a)).toEqual({
+          "prices.0.amountDollars": ["Enter a price, like 79.50."],
+        });
+      },
+    );
+
+    it.each(["1.234", "1,000"])("allows at most two decimals: %s", (a) => {
       expect(priceProblems(a)).toEqual({
-        "prices.0.amountDollars": ["Enter a price, like 79.50."],
-      });
-    });
-
-    it("allows at most two decimals", () => {
-      expect(priceProblems("1.234")).toEqual({
         "prices.0.amountDollars": ["Use at most two decimal places."],
       });
     });

@@ -2,7 +2,10 @@ import { toCourseDescription } from "@/features/courses/description-document";
 import type { CreateCourseRequest, CreateCourseStatus } from "@/lib/types";
 
 import { COURSE_CURRENCY, MIN_PRICE_LEAD_MS } from "./course-form-limits";
-import type { CheckedCourseFormValues } from "./course-form-schema";
+import {
+  normalizeDollars,
+  type CheckedCourseFormValues,
+} from "./course-form-schema";
 import { wallClockToUtc } from "./wall-clock-time";
 
 type Schedule = CheckedCourseFormValues["schedule"];
@@ -51,7 +54,7 @@ function toSchedule(schedule: Schedule): CreateCourseRequest["schedule"] {
 
 /** Safe because the schema allows at most two decimals: rounding only absorbs float noise. */
 function toCents(dollars: string): number {
-  return Math.round(Number(dollars) * 100);
+  return Math.round(Number(normalizeDollars(dollars)) * 100);
 }
 
 function toScheduledPrice(

@@ -22,6 +22,7 @@ import {
 } from "./course-form-limits";
 import { courseFormProblems } from "./course-form-problems";
 import {
+  browserTimeZone,
   courseFormSchema,
   type CheckedCourseFormValues,
   type CourseFormValues,
@@ -31,6 +32,7 @@ import { DescriptionEditor } from "./description-editor";
 import { scheduleLength } from "./format-course-length";
 import { PriceRow } from "./price-row";
 
+/** Used until the browser's own zone is known, and when the list lacks it. */
 const DEFAULT_TIME_ZONE = "America/New_York";
 
 const emptyPrice = {
@@ -74,8 +76,10 @@ export function CourseForm({ timeZones }: CourseFormProps) {
     detail: string;
   }>();
   const summaryRef = useRef<HTMLDivElement>(null);
+  const [saved, setSaved] = useState(false);
 
-  const { errors, isSubmitted, isSubmitting, submitCount } = form.formState;
+  const { errors, isDirty, isSubmitted, isSubmitting, submitCount } =
+    form.formState;
   const problems = isSubmitted
     ? courseFormProblems(errors, priceRows.fields.length)
     : [];
@@ -88,6 +92,28 @@ export function CourseForm({ timeZones }: CourseFormProps) {
     summaryRef.current?.focus();
   }, [submitCount]);
 
+  // The browser's zone can't be read on the server, so it's set after the
+  // first render. Resetting (not setting) keeps the form clean.
+  const { reset } = form;
+  useEffect(() => {
+    const timeZone = browserTimeZone();
+    if (!timeZones.includes(timeZone)) return;
+    reset({
+      ...defaultValues,
+      schedule: { ...defaultValues.schedule, timeZone },
+    });
+  }, [reset, timeZones]);
+
+  // Ask the browser to confirm before reloading or closing with unsaved work.
+  useEffect(() => {
+    if (!isDirty || saved) return;
+    function warn(event: BeforeUnloadEvent) {
+      event.preventDefault();
+    }
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [isDirty, saved]);
+
   function recheckEnd() {
     return form.trigger(["schedule.endDate", "schedule.endTimeOfDay"]);
   }
@@ -96,6 +122,7 @@ export function CourseForm({ timeZones }: CourseFormProps) {
     setServerProblem(undefined);
     const result = await createCourseAction(values);
     if (result.state === "success") {
+      setSaved(true);
       router.push("/");
       return;
     }

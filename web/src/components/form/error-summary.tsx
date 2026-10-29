@@ -43,7 +43,7 @@ export function ErrorSummary({
       ref={ref}
       tabIndex={-1}
       role="alert"
-      className="rounded-lg border border-destructive p-4 text-sm outline-none focus-visible:ring-3 focus-visible:ring-destructive/40"
+      className="sticky top-0 z-10 max-h-48 overflow-y-auto rounded-lg border border-destructive bg-background p-4 text-sm outline-none focus-visible:ring-3 focus-visible:ring-destructive/40"
     >
       {serverProblem && (
         <>

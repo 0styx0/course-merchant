@@ -72,12 +72,15 @@ export function InputField({
   registerOptions,
   placeholder,
   limit,
+  prefix,
   type = "text",
 }: FieldProps & {
   type?: "text" | "url" | "date" | "time";
   placeholder?: string;
   /** Shows an "n / limit" counter. Typing past it is allowed. */
   limit?: number;
+  /** A symbol shown inside the box before the text, such as "$". */
+  prefix?: string;
 }) {
   return (
     <FormField
@@ -97,12 +100,23 @@ export function InputField({
       {...stateOf(form, name)}
     >
       {(inputProps) => (
-        <Input
-          type={type}
-          placeholder={placeholder}
-          {...ariaProps(inputProps)}
-          {...form.register(name, registerOptions)}
-        />
+        <div className="relative w-full">
+          {prefix && (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-sm text-muted-foreground"
+            >
+              {prefix}
+            </span>
+          )}
+          <Input
+            type={type}
+            placeholder={placeholder}
+            className={prefix ? "pl-6" : undefined}
+            {...ariaProps(inputProps)}
+            {...form.register(name, registerOptions)}
+          />
+        </div>
       )}
     </FormField>
   );

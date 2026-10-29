@@ -258,6 +258,11 @@ describe("CourseForm", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
+  it("puts a $ before the price", () => {
+    renderForm();
+    expect(screen.getByText("$")).toBeInTheDocument();
+  });
+
   it("shows a server problem that has no field errors", async () => {
     const user = userEvent.setup();
     action.mockResolvedValue({
@@ -285,7 +290,9 @@ describe("CourseForm", () => {
   it("adds and removes price rows, numbering them only when there are several", async () => {
     const user = userEvent.setup();
     renderForm();
-    expect(screen.getByRole("button", { name: "Remove price" })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: /Remove price/ }),
+    ).not.toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Price"), "10");
     await user.click(screen.getByRole("button", { name: "Add price" }));
@@ -299,7 +306,9 @@ describe("CourseForm", () => {
 
     expect(screen.getByLabelText("Price")).toHaveValue("20");
     expect(screen.queryByLabelText("Price 2")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Remove price" })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: /Remove price/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("lists a problem on a later price row with its number and focuses it", async () => {
@@ -344,5 +353,54 @@ describe("CourseForm", () => {
       "aria-invalid",
       "false",
     );
+  });
+  it("starts on the browser's time zone when the list has it", async () => {
+    vi.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions").mockReturnValue({
+      timeZone: "Europe/Paris",
+    } as Intl.ResolvedDateTimeFormatOptions);
+    renderForm();
+    await waitFor(() =>
+      expect(screen.getByLabelText("Time zone")).toHaveValue("Europe/Paris"),
+    );
+    vi.restoreAllMocks();
+  });
+
+  it("keeps the default time zone when the browser's isn't in the list", async () => {
+    vi.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions").mockReturnValue({
+      timeZone: "UTC",
+    } as Intl.ResolvedDateTimeFormatOptions);
+    renderForm();
+    expect(screen.getByLabelText("Time zone")).toHaveValue("America/New_York");
+    vi.restoreAllMocks();
+  });
+
+  describe("leave-page warning", () => {
+    function leaveEvent() {
+      const event = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(event);
+      return event;
+    }
+
+    it("is off while the form is untouched", () => {
+      renderForm();
+      expect(leaveEvent().defaultPrevented).toBe(false);
+    });
+
+    it("is on once the admin has typed something", async () => {
+      const user = userEvent.setup();
+      renderForm();
+      await user.type(screen.getByLabelText("Course name"), "A");
+      expect(leaveEvent().defaultPrevented).toBe(true);
+    });
+
+    it("is off after a successful save", async () => {
+      const user = userEvent.setup();
+      action.mockResolvedValue({ state: "success", data: { courseId: "c1" } });
+      renderForm();
+      await fillValidForm(user);
+      await user.click(screen.getByRole("button", { name: "Save as draft" }));
+      await waitFor(() => expect(push).toHaveBeenCalled());
+      expect(leaveEvent().defaultPrevented).toBe(false);
+    });
   });
 });

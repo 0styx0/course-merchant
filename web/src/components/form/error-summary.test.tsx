@@ -20,6 +20,16 @@ describe("ErrorSummary", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it("caps its height and scrolls, so the page doesn't jump as problems clear", () => {
+    render(
+      <ErrorSummary problems={problems.slice(0, 1)} onSelectField={vi.fn()} />,
+    );
+    expect(screen.getByRole("alert")).toHaveClass(
+      "max-h-48",
+      "overflow-y-auto",
+    );
+  });
+
   it("counts the problems in the heading", () => {
     render(<ErrorSummary problems={problems} onSelectField={vi.fn()} />);
 

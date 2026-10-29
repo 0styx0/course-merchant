@@ -76,7 +76,13 @@ function descriptionProblem(description: JSONContent): string | undefined {
   return undefined;
 }
 
-function amountProblem(dollars: string): string | undefined {
+/** Reads a comma as the decimal mark, so `79,50` is `79.50`. */
+export function normalizeDollars(dollars: string): string {
+  return dollars.replace(",", ".");
+}
+
+function amountProblem(typed: string): string | undefined {
+  const dollars = normalizeDollars(typed);
   if (!/^\d+(\.\d+)?$/.test(dollars)) return "Enter a price, like 79.50.";
   if (dollars.split(".")[1]?.length > 2) {
     return "Use at most two decimal places.";
