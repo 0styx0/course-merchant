@@ -1,0 +1,56 @@
+# Code style cleanup
+
+Read this before working on the cleanup. Run it with `/next-commit code-style-cleanup`. It brings existing code in line with the CLAUDE.md rules *Small composed functions*, *Simple ternaries only*, *Flat and immutable by default* and *Don't duplicate state*, and fixes the readability problems (file names, file contents, folder layout) found in an audit on 2026-10-29.
+
+Keep this file current **in the same commit as the work**: tick the step, mark the next one **Next**.
+
+## Status
+
+Each step is one commit, outlined in detail before it starts, and **changes no behaviour**: the existing tests must pass unchanged (a test may change only where it names a moved or renamed file or function). A step that would change behaviour, a public name, or the folder layout is marked **ask** and needs the owner's OK in the outline.
+
+- [x] **0a.** The ternary rule: `docs(claude): allow simple wrapped ternaries and rename the rule to "Simple ternaries only"` (CLAUDE.md, next-commit skill). Done.
+- [x] **0b.** `refactor: replace ternaries with multi-line branches by early returns and named helpers` (8 spots in `api/` and `web/`). Done.
+
+API, validation and errors:
+
+- [x] **1. Update rules as small rules.** Split `findUpdateRuleViolations` in [course-update-rules.ts](../api/src/courses/validation/course-update-rules.ts) into one function per rule (image before publishing, start and end not in the past, price not in the past, a price in effect), joined with `flatMap`, no `errors.push`. Done.
+- [ ] **2. Description problems as small checks.** Split `findProblems` in [course-description-schema.ts](../api/src/courses/validation/course-description-schema.ts) into bad text, bad links and total length, built with `flatMap`/`map` and no `let allText`. **Next**
+- [ ] **3. Error filter as small mappers.** [problem-details.filter.ts](../api/src/common/errors/problem-details.filter.ts): `catch` only sends what a `toProblem(exception)` returns, with one small mapper per exception kind. The error-to-text helper it shares with `errorStack` in [payment-sweeper.ts](../api/src/payments/payment-sweeper.ts) moves to one place under `common/errors/`.
+
+API, courses and enrollments:
+
+- [ ] **4. One mapping from request to stored course.** [admin-courses.service.ts](../api/src/courses/admin-courses.service.ts) writes the course fields and the price mapping twice (create and update); make them one small function each.
+- [ ] **5. Admin course repository as steps.** [admin-courses.repository.ts](../api/src/courses/courses.repository/admin-courses.repository.ts): `createCourse` and `updateCourse` share a "course fields" object and one "load it or throw" function; `updateCourse` becomes `replacePrices` + `appendStatus` + reload.
+- [ ] **6. Grant access as two steps.** `grantAccess` in [enrollments.repository.ts](../api/src/enrollments/enrollments.repository.ts) becomes `insertEnrollment` and `reactivateEnrollment`. Keep the comments about the concurrent update.
+- [ ] **7. Leftover long API functions.** `toAdminCourseResponse` ([courses.mapper.ts](../api/src/courses/courses.mapper.ts)), `createCheckoutSession` ([stripe.service.ts](../api/src/payments/stripe.service.ts)); split only if the outline shows a clear gain.
+
+Web:
+
+- [ ] **8. Cross-field checks get their own file.** Move `convert`, `scheduleIssues`, `priceTimeIssues` and `crossFieldIssues` out of [course-form-schema.ts](../web/src/features/admin-courses/course-form-schema.ts) into `course-form-cross-field-issues.ts`. Move only; the dollar parsing stays.
+- [ ] **9. Cross-field checks flat.** Rewrite the moved `priceTimeIssues` as one small function per case (half-filled row, too soon, same time as another row) with no `return void issues.push` and no mutable list; `scheduleIssues` the same.
+- [ ] **10. `try`/`let` pairs as small parsers.** [wall-clock-time.ts](../web/src/features/admin-courses/wall-clock-time.ts) and [base-url.ts](../web/src/lib/api/base-url.ts): each `try` moves into a function that returns a value or `undefined`, so the `let` goes. Add the missing "why a cache" comment to the lazy `let` in `course-form-schema.ts`.
+- [ ] **11. Form behaviours as hooks.** From `CourseForm` ([course-form.tsx](../web/src/features/admin-courses/course-form.tsx)) move the browser-time-zone reset, the leave warning and the focus-the-summary effect into three small hooks.
+- [ ] **12. Form sections as components.** `CourseForm` renders `BasicsSection`, `ContentSection`, `ScheduleSection` and `PricingSection`; the form itself keeps only state and submit. Target: no function over about 40 lines.
+- [ ] **13. Toolbar and link field as parts.** [description-toolbar.tsx](../web/src/features/admin-courses/description-toolbar.tsx): `LinkButton` and `RemoveLinkButton` components. [description-link-field.tsx](../web/src/features/admin-courses/description-link-field.tsx): the key handling becomes a named function.
+
+Names and layout (each is a rename or move; **ask**, and update every import, test and doc that names the old path):
+
+- [ ] **14. Summaries get honest file names.** [format-course-length.ts](../web/src/features/admin-courses/format-course-length.ts) also holds `scheduleSummary`, `priceSummary` and `formatMoment`. Split into `schedule-summary.ts` and `price-summary.ts`, keeping `formatCourseLength` where the outline settles. **ask** (names)
+- [ ] **15. Two `formatDate`s.** The web one returns a formatter, not a date: rename it (for example `dateTimeFormatter`). The API one is `Instant.toString()` with an empty doc comment: inline it or document it. Fold `web/src/lib/utils.ts` (only `cn`) into `web/src/lib/utils/`. **ask**
+- [ ] **16. Folder names.** Rename `api/src/courses/courses.repository/` to `repositories/` (matching `pipes/` and `validation/`). **ask**
+- [ ] **17. One place for tests.** Today unit specs sit beside the code in some modules, in `<module>/test/unit` in others, and e2e specs in `api/src/test/e2e`. The owner picks one rule, it goes into [.claude/rules/api-tests.md](../.claude/rules/api-tests.md), and the specs move. May be several commits (one per module). **ask**
+- [ ] **18. Stray doc.** Move [web/docs/admin.md](../web/docs/admin.md) next to the other docs, or link it from CLAUDE.md. **ask**
+- [ ] **19. Sub-folders in `admin-courses/`.** 30 flat files; group the description editor (editor, toolbar, link field, link, paste test) in `description-editor/`. **ask**
+- [ ] **20. `payments/` by job (optional, last).** 12 flat files; group into `stripe/`, `fulfillment/` and `sweeper/`. Largest move, touches many imports; skip if steps 1–19 left it readable. **ask**
+
+## Order
+
+Steps 1–7 (API) and 8–13 (web) are independent, so either side can go first; within a side they go in order (8 before 9, 11 before 12). Renames and moves (14–20) go last because they touch the most imports and would conflict with the rewrites above.
+
+## Per-step routine
+
+For each step, in a clean session: `/next-commit code-style-cleanup`. The outline lists the small functions the step will end up with, then waits for the go-ahead. After implementing: run `yarn --cwd api test:unit` (or the web equivalent), the type check, and the integration tests for any step that touches a repository (5, 6). Tick the step here and stop with a commit message.
+
+## Decisions
+
+None yet. Add a row for anything decided in an outline (the owner OKs the text first).

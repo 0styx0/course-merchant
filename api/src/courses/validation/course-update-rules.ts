@@ -73,72 +73,145 @@ function isPublishing(
   );
 }
 
-/**
- * Rules that depend on the stored course. Runs after the request has passed
- * `updateCourseRequestSchema`, and reports every violation at once.
- */
-export function findUpdateRuleViolations({
+function imageRequiredToPublish({
+  request,
+  stored,
+}: UpdateRuleContext): ValidationError[] {
+  if (!isPublishing(request, stored) || stored.image !== null) {
+    return [];
+  }
+
+  return [
+    {
+      field: toJsonPointer(["status"]),
+      code: FieldErrorCode.INVALID_VALUE,
+      detail: "Upload an image before publishing.",
+    },
+  ];
+}
+
+const MOMENT_LABELS = { startTime: "Start", endTime: "End" } as const;
+
+/** A changed schedule moment may not be moved into the past. */
+function changedMomentInPast(
+  field: "startTime" | "endTime",
+  requestValue: string,
+  storedValue: Temporal.Instant,
+  now: Temporal.Instant,
+): ValidationError[] {
+  if (
+    isSameInstant(requestValue, storedValue) ||
+    !isInPast(requestValue, now)
+  ) {
+    return [];
+  }
+
+  return [
+    {
+      field: toJsonPointer(["schedule", field]),
+      code: FieldErrorCode.IN_PAST,
+      detail: `${MOMENT_LABELS[field]} time cannot be in the past.`,
+    },
+  ];
+}
+
+function startNotInPast({
   request,
   stored,
   now,
 }: UpdateRuleContext): ValidationError[] {
-  const errors: ValidationError[] = [];
-  const { startTime, endTime } = request.schedule;
+  return changedMomentInPast(
+    "startTime",
+    request.schedule.startTime,
+    stored.startsAt,
+    now,
+  );
+}
 
-  if (isPublishing(request, stored) && stored.image === null) {
-    errors.push({
-      field: toJsonPointer(["status"]),
-      code: FieldErrorCode.INVALID_VALUE,
-      detail: "Upload an image before publishing.",
-    });
-  }
+function endNotInPast({
+  request,
+  stored,
+  now,
+}: UpdateRuleContext): ValidationError[] {
+  return changedMomentInPast(
+    "endTime",
+    request.schedule.endTime,
+    stored.endsAt,
+    now,
+  );
+}
 
-  if (!isSameInstant(startTime, stored.startsAt) && isInPast(startTime, now)) {
-    errors.push({
-      field: toJsonPointer(["schedule", "startTime"]),
-      code: FieldErrorCode.IN_PAST,
-      detail: "Start time cannot be in the past.",
-    });
-  }
+function isNewPriceInPast(
+  price: RequestPrice,
+  stored: StoredCourse,
+  now: Temporal.Instant,
+): boolean {
+  const isStored = stored.prices.some((storedPrice) =>
+    isSamePrice(price, storedPrice),
+  );
 
-  if (!isSameInstant(endTime, stored.endsAt) && isInPast(endTime, now)) {
-    errors.push({
-      field: toJsonPointer(["schedule", "endTime"]),
-      code: FieldErrorCode.IN_PAST,
-      detail: "End time cannot be in the past.",
-    });
-  }
+  return !isStored && isInPast(price.effectiveAt, now);
+}
 
-  request.prices.forEach((price, index) => {
-    const isStored = stored.prices.some((storedPrice) =>
-      isSamePrice(price, storedPrice),
-    );
-
-    if (isStored || !isInPast(price.effectiveAt, now)) {
-      return;
+function pricesNotInPast({
+  request,
+  stored,
+  now,
+}: UpdateRuleContext): ValidationError[] {
+  return request.prices.flatMap((price, index) => {
+    if (!isNewPriceInPast(price, stored, now)) {
+      return [];
     }
 
-    errors.push({
-      field: toJsonPointer(["prices", index, "effectiveAt"]),
-      code: FieldErrorCode.IN_PAST,
-      detail: "Price effective time cannot be in the past.",
-    });
+    return [
+      {
+        field: toJsonPointer(["prices", index, "effectiveAt"]),
+        code: FieldErrorCode.IN_PAST,
+        detail: "Price effective time cannot be in the past.",
+      },
+    ];
   });
+}
 
+function priceInEffectRequired({
+  request,
+  stored,
+  now,
+}: UpdateRuleContext): ValidationError[] {
   const hasPriceInEffect = stored.prices.some((price) =>
     isInEffect(price, now),
   );
 
-  if (!hasPriceInEffect && request.prices.length === 0) {
-    errors.push({
+  if (hasPriceInEffect || request.prices.length > 0) {
+    return [];
+  }
+
+  return [
+    {
       field: toJsonPointer(["prices"]),
       code: FieldErrorCode.TOO_SHORT,
       detail:
         "Prices must contain at least one entry when no price is in effect.",
-    });
-  }
+    },
+  ];
+}
 
-  return errors;
+const UPDATE_RULES = [
+  imageRequiredToPublish,
+  startNotInPast,
+  endNotInPast,
+  pricesNotInPast,
+  priceInEffectRequired,
+];
+
+/**
+ * Rules that depend on the stored course. Runs after the request has passed
+ * `updateCourseRequestSchema`, and reports every violation at once.
+ */
+export function findUpdateRuleViolations(
+  context: UpdateRuleContext,
+): ValidationError[] {
+  return UPDATE_RULES.flatMap((rule) => rule(context));
 }
 
 /**

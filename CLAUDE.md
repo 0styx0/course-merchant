@@ -24,6 +24,7 @@ Each doc has a status checklist (what's next), principles and decisions with rej
 - [docs/course-creation.md](docs/course-creation.md) — the admin "create course" page and its rich-text (Tiptap) description. Run with `/next-commit course-creation`.
 - [docs/auth.md](docs/auth.md) — admin login, logout, sessions, the auth guard, the command that creates admins.
 - [docs/web.md](docs/web.md) — the web app: folder layout, API calls, caching, errors, forms, admin login cookie.
+- [docs/code-style-cleanup.md](docs/code-style-cleanup.md) — bringing existing code in line with the style rules, one small step per commit. Run with `/next-commit code-style-cleanup`.
 
 The docs record decisions made with the information available at the time; they are not absolute. When new information (a library's real behaviour, a bug, a constraint found while coding, a better option) undermines a documented decision, say so before building on it: state what changed, why the decision may no longer hold, and recommend a revised approach. The owner decides, then the doc is updated.
 
