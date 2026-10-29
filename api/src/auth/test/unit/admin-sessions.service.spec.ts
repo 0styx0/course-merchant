@@ -1,5 +1,13 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { AdminLoginAttemptsRepository } from "@/auth/admin-login-attempts.repository.js";
 import {
@@ -71,6 +79,10 @@ describe("AdminSessionsService", () => {
   >;
   let service: AdminSessionsService;
   let fake: ReturnType<typeof fakePrisma>;
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
   beforeEach(() => {
     calls = [];
@@ -179,16 +191,16 @@ describe("AdminSessionsService", () => {
     });
 
     it("counts only the last 15 minutes", async () => {
-      const before = Temporal.Now.instant();
+      const now = instant("2026-10-26T12:00:00Z");
+      vi.spyOn(Temporal.Now, "instant").mockReturnValue(now);
 
       await service.logIn({ email: EMAIL, password: PASSWORD });
 
-      const since = attempts.countSince.mock.calls[0]?.[2];
-
-      expect(since).toBeDefined();
-      expect(
-        Temporal.Instant.compare(since, before.subtract({ minutes: 15 })),
-      ).toBeGreaterThanOrEqual(0);
+      expect(attempts.countSince).toHaveBeenCalledWith(
+        fake.db,
+        EMAIL,
+        now.subtract({ minutes: 15 }),
+      );
     });
 
     it("answers a wrong password and an unknown email the same way", async () => {
