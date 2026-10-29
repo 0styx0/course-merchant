@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { emailSchema } from "./email.schema.js";
+import { emailSchema } from "@/common/validation/email.schema.js";
 
 // 64 + "@" + 63 + "." + 63 + "." + a last label of 61 or 62 characters
 function emailOfLength(length: 254 | 255) {

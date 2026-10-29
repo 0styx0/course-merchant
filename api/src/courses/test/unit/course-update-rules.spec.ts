@@ -6,7 +6,7 @@ import {
   findPriceChanges,
   findUpdateRuleViolations,
   isSameInstant,
-} from "./course-update-rules.js";
+} from "@/courses/validation/course-update-rules.js";
 import { descriptionDoc } from "@/test/course-fixtures.js";
 
 const now = Temporal.Instant.from("2026-10-21T12:00:00Z");

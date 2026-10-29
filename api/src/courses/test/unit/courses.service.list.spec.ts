@@ -6,8 +6,8 @@ import { CoursesService } from "../../courses.service.js";
 import {
   CourseRepositoryModelPublic,
   CoursesRepository,
-} from "../../courses.repository/courses.repository.js";
-import { CourseImagesRepository } from "../../courses.repository/course-images.repository.js";
+} from "../../repositories/courses.repository.js";
+import { CourseImagesRepository } from "../../repositories/course-images.repository.js";
 import { fakePrisma, instant } from "../../../test/test-helpers.js";
 import { descriptionDoc } from "@/test/course-fixtures.js";
 

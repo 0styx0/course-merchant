@@ -3,7 +3,7 @@ import { NestFactory } from "@nestjs/core";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { AppModule } from "./app.module.js";
 import { configureApp } from "./configure-app.js";
-import { loadPort } from "./port-config.js";
+import { loadPort } from "./config/port-config.js";
 
 async function bootstrap() {
   // keeps the exact request bytes on `req.rawBody`, which Stripe's webhook

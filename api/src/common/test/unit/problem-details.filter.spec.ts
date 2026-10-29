@@ -7,10 +7,14 @@ import {
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiException } from "./api.exception.js";
-import { ERROR_DEFINITIONS, ErrorCode, FieldErrorCode } from "./error-codes.js";
-import { ProblemDetailsFilter } from "./problem-details.filter.js";
-import { ValidationException } from "./validation.exception.js";
+import { ApiException } from "@/common/errors/api.exception.js";
+import {
+  ERROR_DEFINITIONS,
+  ErrorCode,
+  FieldErrorCode,
+} from "@/common/errors/error-codes.js";
+import { ProblemDetailsFilter } from "@/common/errors/problem-details.filter.js";
+import { ValidationException } from "@/common/errors/validation.exception.js";
 
 function run(exception: unknown) {
   const res = {

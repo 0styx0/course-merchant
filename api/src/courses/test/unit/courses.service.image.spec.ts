@@ -7,8 +7,8 @@ import {
   instant,
   type MockMethods,
 } from "../../../test/test-helpers.js";
-import type { CourseImagesRepository } from "../../courses.repository/course-images.repository.js";
-import type { CoursesRepository } from "../../courses.repository/courses.repository.js";
+import type { CourseImagesRepository } from "../../repositories/course-images.repository.js";
+import type { CoursesRepository } from "../../repositories/courses.repository.js";
 import { CoursesService } from "../../courses.service.js";
 
 const NOW = instant("2026-09-29T14:00:00Z");

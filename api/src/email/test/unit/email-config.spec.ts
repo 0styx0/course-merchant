@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { loadEmailConfig } from "./email-config.js";
+import { loadEmailConfig } from "@/email/email-config.js";
 
 const validEnv = {
   SMTP_URL: "smtps://user:secret@smtp.example.com",

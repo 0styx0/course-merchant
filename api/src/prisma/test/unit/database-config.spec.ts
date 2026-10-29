@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadDatabaseUrl } from "./database-config.js";
+import { loadDatabaseUrl } from "@/prisma/database-config.js";
 
 describe("loadDatabaseUrl", () => {
   it("returns a postgres URL", () => {

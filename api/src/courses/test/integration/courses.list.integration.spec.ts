@@ -11,7 +11,7 @@ import {
 
 import { Temporal } from "@js-temporal/polyfill";
 
-import { CoursesRepository } from "../../courses.repository/courses.repository.js";
+import { CoursesRepository } from "../../repositories/courses.repository.js";
 import {
   createCourse,
   createCoursePrice,
@@ -20,7 +20,7 @@ import {
   createEnrollment,
   descriptionDoc,
 } from "../../../test/course-fixtures.js";
-import { CourseImagesRepository } from "../../courses.repository/course-images.repository.js";
+import { CourseImagesRepository } from "../../repositories/course-images.repository.js";
 import { CoursesService } from "../../courses.service.js";
 import { instant } from "../../../test/test-helpers.js";
 import { PrismaModule } from "../../../prisma/prisma.module.js";

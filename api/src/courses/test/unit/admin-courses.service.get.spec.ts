@@ -11,7 +11,7 @@ import { toAdminCourseResponse } from "@/courses/courses.mapper.js";
 import {
   AdminCoursesRepository,
   CourseRepositoryModelAdmin,
-} from "@/courses/courses.repository/admin-courses.repository.js";
+} from "@/courses/repositories/admin-courses.repository.js";
 import { descriptionDoc } from "@/test/course-fixtures.js";
 
 const COURSE_ID = "crs_01HZX3";

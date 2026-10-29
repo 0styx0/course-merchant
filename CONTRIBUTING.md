@@ -62,7 +62,7 @@ The OpenAPI spec is the source of truth, so a change starts there:
 
 | Kind | Where | How |
 |---|---|---|
-| Unit | `test/unit/` in the module, or beside the file | Build mocks with `MockMethods` and pass them in with `asDependency` from [test-helpers.ts](api/src/test/test-helpers.ts), never a bare `as unknown as`. Type mocks as `vi.fn<Class["method"]>()` so canned values are checked against the real return type. `fakePrisma()` stands in for the database and records when transactions run. |
+| Unit | `<module>/test/unit/` | Build mocks with `MockMethods` and pass them in with `asDependency` from [test-helpers.ts](api/src/test/test-helpers.ts), never a bare `as unknown as`. Type mocks as `vi.fn<Class["method"]>()` so canned values are checked against the real return type. `fakePrisma()` stands in for the database and records when transactions run. |
 | Integration | `<module>/test/integration/` | Runs against the test PostgreSQL. Tests run one at a time, and [integration.setup.ts](api/src/test/integration.setup.ts) empties every table before each test. **Add any new table there**, in foreign-key order. |
 | End-to-end | [src/test/e2e/](api/src/test/e2e/) | Build the real app with `createE2eApp(overrides)` and call it with Supertest. `httpServer(app)` and `TypedResponse<Schema>` from [e2e-helpers.ts](api/src/test/e2e/e2e-helpers.ts) keep the response body typed. Use `useStripeMock` or `useUnreachableStripe` from [stripe-mock.ts](api/src/test/e2e/stripe-mock.ts). Shared test data is in [course-fixtures.ts](api/src/test/course-fixtures.ts). |
 

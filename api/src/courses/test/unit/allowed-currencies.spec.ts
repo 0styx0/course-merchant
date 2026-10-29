@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseAllowedCurrencies } from "./allowed-currencies.js";
+import { parseAllowedCurrencies } from "@/courses/allowed-currencies.js";
 
 describe("parseAllowedCurrencies", () => {
   it("parses a single currency", () => {

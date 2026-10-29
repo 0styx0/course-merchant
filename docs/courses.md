@@ -1,6 +1,6 @@
 # Courses
 
-Read this before working on creating, editing or browsing courses. It records progress, behaviour that spans several files, and why each choice was made. Shapes live elsewhere and aren't repeated here: the schema is in [contract.prisma](../api/src/prisma/contract.prisma), endpoints are in [openapi-v1.yaml](../api/openapi/openapi-v1.yaml), and admin UI behaviour is in [web/docs/admin.md](../web/docs/admin.md).
+Read this before working on creating, editing or browsing courses. It records progress, behaviour that spans several files, and why each choice was made. Shapes live elsewhere and aren't repeated here: the schema is in [contract.prisma](../api/src/prisma/contract.prisma), endpoints are in [openapi-v1.yaml](../api/openapi/openapi-v1.yaml).
 
 Keep this file current **in the same commit as the work**.
 
@@ -10,11 +10,11 @@ Keep this file current **in the same commit as the work**.
 - [x] API, admin: list, get, create (`POST`) and update (`PUT`).
 - [x] Web: home page with the course list, and the course page.
 - [x] Admin authentication: every admin route requires a login (see [auth.md](auth.md)).
-- [ ] Web admin pages (spec in [web/docs/admin.md](../web/docs/admin.md)). The create form page is built, without image, publish or login yet (steps 4 and 5 in [course-creation.md](course-creation.md) add the description toolbar, image and publish); the course list and edit pages come after.
+- [ ] Web admin pages. The create form page is built, without image, publish or login yet (steps 4 and 5 in [course-creation.md](course-creation.md) add the description toolbar, image and publish); the course list and edit pages come after.
 - [ ] Estimated payout under the admin price field (payments step 7).
 - [ ] **Course images** (design in *Course images* below):
   - [x] **1. API: check and convert an uploaded image** ([course-image.ts](../api/src/courses/course-image.ts)). Nothing calls it yet.
-  - [x] **2a. API: store a course's image** ([course-images.repository.ts](../api/src/courses/courses.repository/course-images.repository.ts)). Admin course responses carry `image: { updatedAt, version } | null`, always `null` until 2b.
+  - [x] **2a. API: store a course's image** ([course-images.repository.ts](../api/src/courses/repositories/course-images.repository.ts)). Admin course responses carry `image: { updatedAt, version } | null`, always `null` until 2b.
   - [x] **2b. API: upload and read back the image (admin).** `PUT /v1/admin/courses/{courseId}/image` (multipart, one `image` file, 204) and admin `GET /v1/admin/courses/{courseId}/image`. Code: [admin-course-images.controller.ts](../api/src/courses/admin-course-images.controller.ts), [course-image-upload.interceptor.ts](../api/src/courses/course-image-upload.interceptor.ts).
   - [x] **3. API: don't allow publishing a course without an image.** Create accepts only `drafted` and `archived`; an update to `published` needs an image ([course-update-rules.ts](../api/src/courses/validation/course-update-rules.ts)).
   - [x] **4. API: serve the image publicly.** Public course responses (list and get) carry `image: { version }`; `GET /v1/courses/{courseId}/image/{version}` ([courses.controller.ts](../api/src/courses/courses.controller.ts)), visible courses only.
@@ -26,9 +26,9 @@ Keep this file current **in the same commit as the work**.
 
 | Viewer | Which courses | Rule lives in |
 |---|---|---|
-| Public list | Visible and not yet ended, ordered by start time | [courses.repository.ts](../api/src/courses/courses.repository/courses.repository.ts) |
+| Public list | Visible and not yet ended, ordered by start time | [courses.repository.ts](../api/src/courses/repositories/courses.repository.ts) |
 | Public get by id | Visible, **including ended courses**, so old links keep working. Checkout refuses an ended course with 409 | same |
-| Admin list | Every course whose latest status isn't `deleted` | [admin-courses.repository.ts](../api/src/courses/courses.repository/admin-courses.repository.ts) |
+| Admin list | Every course whose latest status isn't `deleted` | [admin-courses.repository.ts](../api/src/courses/repositories/admin-courses.repository.ts) |
 | Admin get by id | Any course | same |
 
 "Visible" means the latest status is `published` and some price has taken effect. The current price is the latest one in effect. This rule is shared with checkout through [course-visibility.ts](../api/src/courses/course-visibility.ts), which also exports `latestStatusIs` and `latestStatusIsNot` for any query on a course's latest status (the admin list uses the latter). Reuse them rather than deriving it again.

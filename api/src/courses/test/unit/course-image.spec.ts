@@ -7,7 +7,7 @@ import {
   COURSE_IMAGE_WIDTH,
   MAX_IMAGE_BYTES,
   convertCourseImage,
-} from "./course-image.js";
+} from "@/courses/course-image.js";
 
 function blank(width: number, height: number, background = "#3366cc") {
   return sharp({

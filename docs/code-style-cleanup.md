@@ -20,7 +20,7 @@ API, validation and errors:
 API, courses and enrollments:
 
 - [x] **4. One mapping from request to stored course.** [admin-courses.service.ts](../api/src/courses/admin-courses.service.ts) writes the course fields and the price mapping twice (create and update); make them one small function each.
-- [x] **5. Admin course repository as steps.** [admin-courses.repository.ts](../api/src/courses/courses.repository/admin-courses.repository.ts): `createCourse` and `updateCourse` share a "course fields" object and one "load it or throw" function; `updateCourse` becomes `replacePrices` + `appendStatus` + reload. Done.
+- [x] **5. Admin course repository as steps.** [admin-courses.repository.ts](../api/src/courses/repositories/admin-courses.repository.ts): `createCourse` and `updateCourse` share a "course fields" object and one "load it or throw" function; `updateCourse` becomes `replacePrices` + `appendStatus` + reload. Done.
 - [x] **6. Grant access as two steps.** `grantAccess` in [enrollments.repository.ts](../api/src/enrollments/enrollments.repository.ts) becomes `insertEnrollment` and `reactivateEnrollment`. Keep the comments about the concurrent update. Done.
 - [x] **7. Leftover long API functions.** `toAdminCourseResponse` ([courses.mapper.ts](../api/src/courses/courses.mapper.ts)), `createCheckoutSession` ([stripe.service.ts](../api/src/payments/stripe.service.ts)); split only if the outline shows a clear gain. Done: the admin response got a mapper per price and per enrollment; the checkout call got `checkoutSessionParams`, `requireSessionUrl` and one `throwProviderError` shared by checkout, retrieve and refund.
 
@@ -37,10 +37,10 @@ Names and layout (each is a rename or move; **ask**, and update every import, te
 
 - [x] **14. Summaries get honest file names.** [format-course-length.ts](../web/src/features/admin-courses/format-course-length.ts) also holds `scheduleSummary`, `priceSummary` and `formatMoment`. Split into `schedule-summary.ts` and `price-summary.ts`, keeping `formatCourseLength` where the outline settles. **ask** (names) Done: `format-course-length.ts` keeps only `formatCourseLength`; the two summaries have their own files; `formatMoment` is in `format-moment.ts` and `toUtcMs` in [wall-clock-time.ts](../web/src/features/admin-courses/wall-clock-time.ts), since both summaries use them.
 - [x] **15. Two `formatDate`s.** The web one returns a formatter, not a date: rename it (for example `dateTimeFormatter`). The API one is `Instant.toString()` with an empty doc comment: inline it or document it. Fold `web/src/lib/utils.ts` (only `cn`) into `web/src/lib/utils/`. **ask** Done: the web one is `dateTimeFormatter`; the API helper is gone (callers use `.toString()`); `cn` is in `web/src/lib/utils/cn.ts` and the `components.json` alias points at it.
-- [ ] **16. Folder names. (Next)** Rename `api/src/courses/courses.repository/` to `repositories/` (matching `pipes/` and `validation/`). **ask**
-- [ ] **17. One place for tests.** Today unit specs sit beside the code in some modules, in `<module>/test/unit` in others, and e2e specs in `api/src/test/e2e`. The owner picks one rule, it goes into [.claude/rules/api-tests.md](../.claude/rules/api-tests.md), and the specs move. May be several commits (one per module). **ask**
-- [ ] **18. Stray doc.** Move [web/docs/admin.md](../web/docs/admin.md) next to the other docs, or link it from CLAUDE.md. **ask**
-- [ ] **19. Sub-folders in `admin-courses/`.** 30 flat files; group the description editor (editor, toolbar, link field, link, paste test) in `description-editor/`. **ask**
+- [x] **16. Folder names.** Renamed `api/src/courses/courses.repository/` to `repositories/` (matching `pipes/` and `validation/`). Done.
+- [x] **17. One place for tests.** Every unit spec now lives in `<module>/test/unit/` (rule in [api-tests.md](../.claude/rules/api-tests.md)). Done: the `common/`, `courses/validation/`, email, payments and prisma specs moved, and `port-config.ts` with its spec moved into a new `src/config/`.
+- [x] **18. Stray doc.** Done: `web/docs/admin.md` (the admin page's Given/When/Then spec) was deleted at the owner's request and the links to it removed.
+- [ ] **19. Sub-folders in `admin-courses/`. (Next)** 30 flat files; group the description editor (editor, toolbar, link field, link, paste test) in `description-editor/`. **ask**
 - [ ] **20. `payments/` by job (optional, last).** 12 flat files; group into `stripe/`, `fulfillment/` and `sweeper/`. Largest move, touches many imports; skip if steps 1–19 left it readable. **ask**
 
 ## Order
@@ -53,4 +53,8 @@ For each step, in a clean session: `/next-commit code-style-cleanup`. The outlin
 
 ## Decisions
 
-None yet. Add a row for anything decided in an outline (the owner OKs the text first).
+| Decision | Why | Rejected |
+|---|---|---|
+| Unit specs live in `<module>/test/unit/`, never beside the code. | One place to look; 7 modules already did it, and integration and e2e specs are already in their own folders. | Colocating everything: it would move the ~30 specs already in `test/unit`. |
+
+Add a row for anything else decided in an outline (the owner OKs the text first).

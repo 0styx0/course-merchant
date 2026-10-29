@@ -7,7 +7,7 @@ import { toAdminCourseResponse } from "@/courses/courses.mapper.js";
 import {
   AdminCoursesRepository,
   CourseRepositoryModelAdmin,
-} from "@/courses/courses.repository/admin-courses.repository.js";
+} from "@/courses/repositories/admin-courses.repository.js";
 import {
   asDependency,
   fakePrisma,

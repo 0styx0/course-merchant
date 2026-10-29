@@ -10,12 +10,12 @@ import {
   StripeService,
   type CreateCheckoutSessionInput,
   type RefundPaymentInput,
-} from "./stripe.service.js";
+} from "@/payments/stripe.service.js";
 import {
   completedCheckoutFromEvent,
   expiredCheckoutFromEvent,
   retrievedCheckoutFromSession,
-} from "./stripe-events.js";
+} from "@/payments/stripe-events.js";
 
 const config: PaymentsConfig = {
   stripeSecretKey: "sk_test_unit",

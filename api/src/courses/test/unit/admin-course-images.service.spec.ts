@@ -2,8 +2,8 @@ import sharp from "sharp";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AdminCourseImagesService } from "@/courses/admin-course-images.service.js";
-import { AdminCoursesRepository } from "@/courses/courses.repository/admin-courses.repository.js";
-import { CourseImagesRepository } from "@/courses/courses.repository/course-images.repository.js";
+import { AdminCoursesRepository } from "@/courses/repositories/admin-courses.repository.js";
+import { CourseImagesRepository } from "@/courses/repositories/course-images.repository.js";
 import {
   instant,
   asDependency,

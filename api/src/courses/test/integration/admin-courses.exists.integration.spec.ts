@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { AdminCoursesRepository } from "@/courses/courses.repository/admin-courses.repository.js";
+import { AdminCoursesRepository } from "@/courses/repositories/admin-courses.repository.js";
 import { db } from "@/prisma/db.js";
 import { createCourse, descriptionDoc } from "@/test/course-fixtures.js";
 import { instant } from "@/test/test-helpers.js";

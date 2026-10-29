@@ -3,12 +3,12 @@ import { GetCourseResponse, ListCoursesResponse } from "types.js";
 import {
   CourseRepositoryModelPublic,
   CoursesRepository,
-} from "./courses.repository/courses.repository.js";
+} from "./repositories/courses.repository.js";
 import { Temporal } from "@js-temporal/polyfill";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import { courseNotFound } from "./course-errors.js";
 import { imageVersion, toPublicCourseResponse } from "./courses.mapper.js";
-import { CourseImagesRepository } from "./courses.repository/course-images.repository.js";
+import { CourseImagesRepository } from "./repositories/course-images.repository.js";
 
 @Injectable()
 export class CoursesService {

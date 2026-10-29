@@ -19,7 +19,7 @@ import {
   createStatusSchema,
   scheduledPriceFieldsSchema,
   updateStatusSchema,
-} from "./course-field-schemas.js";
+} from "@/courses/validation/course-field-schemas.js";
 
 describe("courseNameSchema", () => {
   it("accepts a valid name", () => {

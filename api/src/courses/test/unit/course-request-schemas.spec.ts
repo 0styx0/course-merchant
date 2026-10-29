@@ -5,7 +5,7 @@ import { descriptionDoc } from "@/test/course-fixtures.js";
 import {
   createCourseRequestSchema,
   updateCourseRequestSchema,
-} from "./course-request-schemas.js";
+} from "@/courses/validation/course-request-schemas.js";
 
 type CourseRequestInput = {
   name: string;

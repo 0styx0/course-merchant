@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadPort } from "./port-config.js";
+import { loadPort } from "@/config/port-config.js";
 
 describe("loadPort", () => {
   it("defaults to 3000", () => {

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { ValidationException } from "@/common/errors/validation.exception.js";
 import { ZodValidationPipe } from "@/common/validation/zod-validation.pipe.js";
-import { descriptionDocumentSchema } from "./course-description-schema.js";
+import { descriptionDocumentSchema } from "@/courses/validation/course-description-schema.js";
 
 type Node = Record<string, unknown>;
 
@@ -149,8 +149,8 @@ describe("description-extensions.ts", () => {
     const read = (path: string) =>
       readFileSync(new URL(path, import.meta.url), "utf8");
 
-    expect(read("./description-extensions.ts")).toBe(
-      read("../../../../web/src/features/courses/description-extensions.ts"),
+    expect(read("../../validation/description-extensions.ts")).toBe(
+      read("../../../../../web/src/features/courses/description-extensions.ts"),
     );
   });
 });

@@ -24,7 +24,7 @@ import {
 } from "@/test/course-fixtures.js";
 import { instant } from "@/test/test-helpers.js";
 import { AdminCoursesService } from "@/courses/admin-courses.service.js";
-import { AdminCoursesRepository } from "@/courses/courses.repository/admin-courses.repository.js";
+import { AdminCoursesRepository } from "@/courses/repositories/admin-courses.repository.js";
 
 const NOW = instant("2026-09-29T14:00:00Z");
 

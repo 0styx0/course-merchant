@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { toPublicCourseResponse } from "@/courses/courses.mapper.js";
 import { instant } from "../../../test/test-helpers.js";
-import type { CourseRepositoryModelPublic } from "../../courses.repository/courses.repository.js";
+import type { CourseRepositoryModelPublic } from "../../repositories/courses.repository.js";
 import { descriptionDoc } from "@/test/course-fixtures.js";
 
 const COURSE_ID = "crs_01HZX3";

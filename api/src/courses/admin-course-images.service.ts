@@ -4,8 +4,8 @@ import { ValidationException } from "@/common/errors/validation.exception.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import { courseImageNotFound, courseNotFound } from "./course-errors.js";
 import { convertCourseImage } from "./course-image.js";
-import { AdminCoursesRepository } from "./courses.repository/admin-courses.repository.js";
-import { CourseImagesRepository } from "./courses.repository/course-images.repository.js";
+import { AdminCoursesRepository } from "./repositories/admin-courses.repository.js";
+import { CourseImagesRepository } from "./repositories/course-images.repository.js";
 
 @Injectable()
 export class AdminCourseImagesService {

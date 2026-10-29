@@ -31,7 +31,7 @@ Repeat the brief back in 5 lines or fewer. A must-have found after the map is wr
 
 ## 2. Research only what decides the shape
 
-- Read `docs/` Status sections and the docs this area touches, any spec for it (e.g. `web/docs/*.md`), and the relevant part of [openapi-v1.yaml](../../../api/openapi/openapi-v1.yaml) (grep, don't read it whole).
+- Read `docs/` Status sections and the docs this area touches, any spec for it (e.g. a "Behaviour" section in the area's doc), and the relevant part of [openapi-v1.yaml](../../../api/openapi/openapi-v1.yaml) (grep, don't read it whole).
 - Look at the code only to answer "what already exists that a milestone can build on?". Search for specific things; no open-ended surveys.
 - For each must-have, find out whether it forces a choice of library or approach. Check the library's real behaviour in its docs or in `node_modules`, not from memory, and say how sure you are.
 

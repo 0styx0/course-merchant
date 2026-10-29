@@ -6,7 +6,7 @@ paths:
 
 # API tests
 
-Unit tests sit in `test/unit/` or beside the file; integration tests in `<module>/test/integration/`; e2e in `src/test/e2e/`.
+Unit tests sit in `<module>/test/unit/`, never beside the file; integration tests in `<module>/test/integration/`; e2e in `src/test/e2e/`.
 
 - Unit tests build mocks with `MockMethods` and hand them over with `asDependency` (from `src/test/test-helpers.ts`), never a bare `as unknown as`; `fakePrisma({ onBegin, onCommit, onSettle })` stands in for `PrismaService` and records when transactions run. Use `vi.fn<Class["method"]>()` so canned values are checked against the real return type.
 - Integration/e2e run serially and share `src/test/integration.setup.ts`, which wipes every table before each test in FK order — **add new tables there**.

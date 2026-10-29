@@ -18,7 +18,7 @@ import {
   AdminCoursesRepository,
   CourseRepositoryCreateInput,
   CourseRepositoryModelAdmin,
-} from "./courses.repository/admin-courses.repository.js";
+} from "./repositories/admin-courses.repository.js";
 import {
   findPriceChanges,
   findUpdateRuleViolations,

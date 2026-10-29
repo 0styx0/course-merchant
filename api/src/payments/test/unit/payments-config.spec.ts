@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { loadPaymentsConfig } from "./payments-config.js";
+import { loadPaymentsConfig } from "@/payments/payments-config.js";
 
 const validEnv = {
   STRIPE_SECRET_KEY: "rk_test_abc123",

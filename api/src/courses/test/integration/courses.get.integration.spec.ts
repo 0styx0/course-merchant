@@ -11,8 +11,8 @@ import {
 } from "vitest";
 
 import { instant } from "../../../test/test-helpers.js";
-import { CourseImagesRepository } from "../../courses.repository/course-images.repository.js";
-import { CoursesRepository } from "../../courses.repository/courses.repository.js";
+import { CourseImagesRepository } from "../../repositories/course-images.repository.js";
+import { CoursesRepository } from "../../repositories/courses.repository.js";
 import { CoursesService } from "../../courses.service.js";
 import { PrismaModule } from "../../../prisma/prisma.module.js";
 import {

@@ -7,11 +7,11 @@ import {
   instant,
   type MockMethods,
 } from "../../../test/test-helpers.js";
-import type { CourseImagesRepository } from "../../courses.repository/course-images.repository.js";
+import type { CourseImagesRepository } from "../../repositories/course-images.repository.js";
 import type {
   CourseRepositoryModelPublic,
   CoursesRepository,
-} from "../../courses.repository/courses.repository.js";
+} from "../../repositories/courses.repository.js";
 import { CoursesService } from "../../courses.service.js";
 import { toPublicCourseResponse } from "@/courses/courses.mapper.js";
 import { descriptionDoc } from "@/test/course-fixtures.js";

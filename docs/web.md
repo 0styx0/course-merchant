@@ -1,6 +1,6 @@
 # Web app
 
-Read this before changing how `web/` is structured, how it calls the API, or how its pages handle errors, caching and admin login. It records what the code can't tell you: progress, design intent, and why each choice was made. Endpoints and error codes are in [openapi-v1.yaml](../api/openapi/openapi-v1.yaml); behaviour specs for pages are in [web/docs/](../web/docs/).
+Read this before changing how `web/` is structured, how it calls the API, or how its pages handle errors, caching and admin login. It records what the code can't tell you: progress, design intent, and why each choice was made. Endpoints and error codes are in [openapi-v1.yaml](../api/openapi/openapi-v1.yaml).
 
 Keep this file current **in the same commit as the work**. Tick off status, add a decision row when something is decided, and when a step ships, cut its notes down to decision rows.
 

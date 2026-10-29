@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { ZodValidationPipe } from "./zod-validation.pipe.js";
+import { ZodValidationPipe } from "@/common/validation/zod-validation.pipe.js";
 import { ValidationException } from "@/common/errors/validation.exception.js";
 import { FieldErrorCode } from "@/common/errors/error-codes.js";
 

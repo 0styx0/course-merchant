@@ -1,6 +1,6 @@
 # Course creation (admin web page)
 
-Read this before working on the admin "create course" page and the rich-text description it needs. Run it with `/next-commit course-creation`. It records progress, the design of each step, and why each choice was made. Page behaviour is specified in [web/docs/admin.md](../web/docs/admin.md) (*Creating courses*); endpoints and shapes are in [openapi-v1.yaml](../api/openapi/openapi-v1.yaml); how courses behave is in [courses.md](courses.md); how the web app is built is in [web.md](web.md).
+Read this before working on the admin "create course" page and the rich-text description it needs. Run it with `/next-commit course-creation`. It records progress, the design of each step, and why each choice was made. Page behaviour is described in the steps below; endpoints and shapes are in [openapi-v1.yaml](../api/openapi/openapi-v1.yaml); how courses behave is in [courses.md](courses.md); how the web app is built is in [web.md](web.md).
 
 Keep this file current **in the same commit as the work**. Tick the step, mark the next one **Next**, add a decision row for anything decided, and when a step ships, cut its notes down to decision rows.
 
@@ -192,7 +192,6 @@ The submit button is disabled and reads "Saving…" while `isSubmitting`, and is
 
 **Docs:**
 
-- [web/docs/admin.md](../web/docs/admin.md): the description editor and what pasting keeps (see step 4), re-checking with `onTouched`, daylight-saving refusals, redirect to the home page, needs JavaScript, the fee preview left to payments step 7.
 - [courses.md](courses.md) *Status* and the README *Status*.
 - [web.md](web.md): link to this file for the admin form decisions.
 

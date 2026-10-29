@@ -44,7 +44,7 @@ Keep these files current **in the same commit as the work**. Tick off status her
   - no cancel page: Stripe's cancel URL is the course page ([stripe-redirect.service.ts](../api/src/checkout/stripe-redirect.service.ts));
   - MSW handlers.
 
-  Write the Given/When/Then specs in `web/docs/` first.
+  Write the Given/When/Then specs first, in the step text here.
 - [ ] **7. Refunds, disputes and the owner alert** (see [refunds.md](payments/refunds.md)):
   - `OWNER_EMAIL` setting (the recipient of `dispute_alert`), scoped to the email module's config;
   - `charge.refunded`;

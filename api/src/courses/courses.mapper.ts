@@ -6,11 +6,11 @@ import {
   GetCourseAdminResponse,
   GetCourseResponse,
 } from "types.js";
-import type { CourseRepositoryModelPublic } from "./courses.repository/courses.repository.js";
+import type { CourseRepositoryModelPublic } from "./repositories/courses.repository.js";
 import {
   CourseRepositoryCreateInput,
   CourseRepositoryModelAdmin,
-} from "./courses.repository/admin-courses.repository.js";
+} from "./repositories/admin-courses.repository.js";
 
 /**
  * The image's version: its `updatedAt` as epoch milliseconds, in decimal. The

@@ -1,8 +1,8 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CourseImagesRepository } from "@/courses/courses.repository/course-images.repository.js";
-import { AdminCoursesRepository } from "@/courses/courses.repository/admin-courses.repository.js";
+import { CourseImagesRepository } from "@/courses/repositories/course-images.repository.js";
+import { AdminCoursesRepository } from "@/courses/repositories/admin-courses.repository.js";
 import { db } from "@/prisma/db.js";
 import {
   createCourse,

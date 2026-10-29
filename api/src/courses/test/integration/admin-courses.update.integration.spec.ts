@@ -8,7 +8,7 @@ import { AdminCoursesService } from "@/courses/admin-courses.service.js";
 import {
   AdminCoursesRepository,
   CourseRepositoryModelAdmin,
-} from "@/courses/courses.repository/admin-courses.repository.js";
+} from "@/courses/repositories/admin-courses.repository.js";
 import {
   createCourse,
   createCoursePrice,
