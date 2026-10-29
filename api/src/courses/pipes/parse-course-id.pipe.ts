@@ -1,5 +1,5 @@
 import { ApiException } from "@/common/errors/api.exception.js";
-import { ErrorCode } from "@/common/errors/error-codes.js";
+import { ErrorCodeCourse } from "@/common/errors/error-codes.js";
 import { Injectable, PipeTransform } from "@nestjs/common";
 import { z } from "zod";
 
@@ -13,7 +13,7 @@ export class ParseCourseIdPipe implements PipeTransform<string, string> {
       return value;
     }
 
-    throw new ApiException(ErrorCode.INVALID_COURSE_ID, {
+    throw new ApiException(ErrorCodeCourse.INVALID_COURSE_ID, {
       detail: `'${value}' is not a valid course identifier.`,
     });
   }

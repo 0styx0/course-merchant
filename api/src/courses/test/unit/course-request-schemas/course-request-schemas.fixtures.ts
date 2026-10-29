@@ -76,7 +76,7 @@ export function getIssues(input: unknown) {
   return result.error.issues;
 }
 
-export function hasPath(
+function hasPath(
   actualPath: PropertyKey[],
   expectedPath: readonly (string | number)[],
 ): boolean {

@@ -6,7 +6,7 @@ import {
   HttpException,
   Logger,
 } from "@nestjs/common";
-import { Response } from "express";
+import type { Response } from "express";
 import { ApiException } from "./api.exception.js";
 import { ERROR_DEFINITIONS, ErrorCode } from "./error-codes.js";
 import { errorMessage } from "./error-text.js";

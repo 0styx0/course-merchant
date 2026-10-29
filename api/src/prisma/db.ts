@@ -4,7 +4,7 @@ import { loadDatabaseUrl } from "./database-config.js";
 import type { Contract } from "./contract.d.js";
 import contractJson from "./contract.json" with { type: "json" };
 
-export const contract = contractFromJson<Contract>(contractJson);
+const contract = contractFromJson<Contract>(contractJson);
 
 export const db = postgres({
   contract,

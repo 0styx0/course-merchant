@@ -4,7 +4,7 @@ import { z } from "zod";
 // course's current details (such as an updated content link) when it's sent.
 // refundIssued: the payment that triggered the email was refunded (a second
 // payment for the same course, or a payment while access is suspended)
-export const payloadSchemas = {
+const payloadSchemas = {
   access_granted: z.object({ courseId: z.string(), customerId: z.string() }),
   already_owned: z.object({
     courseId: z.string(),

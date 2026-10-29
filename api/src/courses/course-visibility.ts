@@ -37,7 +37,7 @@ function latestStatusMatches(matchName: StatusFilter): CourseFilter {
     );
 }
 
-export function latestStatusIs(name: CourseStatusName): CourseFilter {
+function latestStatusIs(name: CourseStatusName): CourseFilter {
   return latestStatusMatches((status) => status.name.eq(name));
 }
 

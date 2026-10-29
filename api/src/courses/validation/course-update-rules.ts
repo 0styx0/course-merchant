@@ -30,9 +30,7 @@ export type PriceChanges = {
  * Postgres stores microseconds, so a request value is compared at that
  * precision to avoid treating a stored value as changed.
  */
-export function toDatabasePrecision(
-  instant: Temporal.Instant,
-): Temporal.Instant {
+function toDatabasePrecision(instant: Temporal.Instant): Temporal.Instant {
   return instant.round({ smallestUnit: "microseconds" });
 }
 
@@ -45,7 +43,7 @@ export function isSameInstant(
   return Temporal.Instant.compare(instant, storedValue) === 0;
 }
 
-export function isSamePrice(
+function isSamePrice(
   requestPrice: RequestPrice,
   storedPrice: StoredPrice,
 ): boolean {

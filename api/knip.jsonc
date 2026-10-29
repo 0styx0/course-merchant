@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/knip@6.41.0/schema.json",
+  // main.ts is listed because setting `entry` replaces knip's defaults. Prisma runs migrations by path, and the admin CLI is run by `admin:set-password`
+  // through its compiled file, so nothing imports them.
+  "entry": [
+    "src/main.ts",
+    "migrations/**/migration.ts",
+    "src/auth/cli/set-admin-password.ts",
+  ],
+  // The Prisma contract that `prisma contract emit` reads.
+  "ignore": ["src/prisma/contract.prisma"],
+  // `dotenv run` in package.json scripts is a dotenv subcommand, not a binary.
+  "ignoreBinaries": ["run"],
+}

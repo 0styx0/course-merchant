@@ -8,7 +8,7 @@ import { EmailViewsRepository } from "./email-views.repository.js";
 import type { RenderedEmail } from "./templates/email-content.js";
 import { renderEmail } from "./templates/render-email.js";
 
-export class EmailSourceMissingError extends Error {
+class EmailSourceMissingError extends Error {
   constructor(what: string) {
     super(`Can't compose the email: the ${what} no longer exists.`);
     this.name = "EmailSourceMissingError";

@@ -6,7 +6,7 @@ import type { PaymentsConfig } from "@/payments/payments-config.js";
 
 export const COURSE_ID = "8b0e1f5c-0000-4000-8000-000000000001";
 export const CUSTOMER_ID = "8b0e1f5c-0000-4000-8000-000000000002";
-export const PRICE_ID = "8b0e1f5c-0000-4000-8000-000000000003";
+const PRICE_ID = "8b0e1f5c-0000-4000-8000-000000000003";
 export const PAYMENT_ID = "8b0e1f5c-0000-4000-8000-000000000004";
 export const GRANTED_ENROLLMENT_ID = "8b0e1f5c-0000-4000-8000-000000000005";
 

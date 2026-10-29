@@ -1,6 +1,6 @@
 import type { EmailContent } from "./email-content.js";
 
-export function escapeHtml(value: string): string {
+function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")

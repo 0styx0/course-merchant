@@ -39,6 +39,7 @@ jobs:
           git diff --exit-code -- src/generated
       - run: yarn tsc --noEmit
       - run: yarn lint
+      - run: yarn knip
       - run: yarn format:check
       - run: yarn build
 

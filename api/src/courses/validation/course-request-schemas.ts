@@ -102,14 +102,16 @@ function validateFutureScheduleTime(
 
 // Past-time checks for updates depend on the stored course, so they run in
 // the service instead (see course-update-rules.ts).
-export const updateCourseScheduleSchema =
-  courseScheduleFieldsSchema.superRefine(validateScheduleRange, {
+const updateCourseScheduleSchema = courseScheduleFieldsSchema.superRefine(
+  validateScheduleRange,
+  {
     when(payload) {
       return scheduleRangeInputSchema.safeParse(payload.value).success;
     },
-  });
+  },
+);
 
-export const createCourseScheduleSchema = updateCourseScheduleSchema
+const createCourseScheduleSchema = updateCourseScheduleSchema
   .superRefine(
     (schedule, ctx) => {
       validateFutureScheduleTime(schedule, ctx, "startTime");
@@ -150,12 +152,14 @@ function validateFuturePriceEffectiveTime(
   });
 }
 
-export const createScheduledPriceSchema =
-  scheduledPriceFieldsSchema.superRefine(validateFuturePriceEffectiveTime, {
+const createScheduledPriceSchema = scheduledPriceFieldsSchema.superRefine(
+  validateFuturePriceEffectiveTime,
+  {
     when(payload) {
       return priceEffectiveAtInputSchema.safeParse(payload.value).success;
     },
-  });
+  },
+);
 
 function validateUniquePriceEffectiveTimes(
   prices: ScheduledPrice[],
@@ -181,7 +185,7 @@ function validateUniquePriceEffectiveTimes(
   });
 }
 
-export const createScheduledPricesSchema = z
+const createScheduledPricesSchema = z
   .array(createScheduledPriceSchema)
   .min(1)
   .superRefine(validateUniquePriceEffectiveTimes, {
@@ -202,7 +206,7 @@ export const createCourseRequestSchema = createCourseRequestBaseSchema;
 
 // Prices may be empty and in the past here: whether that is allowed depends
 // on the stored prices, which the service checks.
-export const updateScheduledPricesSchema = z
+const updateScheduledPricesSchema = z
   .array(scheduledPriceFieldsSchema)
   .superRefine(validateUniquePriceEffectiveTimes, {
     when(payload) {

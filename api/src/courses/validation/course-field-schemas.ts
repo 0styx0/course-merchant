@@ -27,8 +27,11 @@ export const updateStatusSchema = z.enum([
 
 export const courseDateTimeSchema = z.iso.datetime();
 
+/** @alias courseDateTimeSchema */
 export const courseStartTimeSchema = courseDateTimeSchema;
+/** @alias courseDateTimeSchema */
 export const courseEndTimeSchema = courseDateTimeSchema;
+/** @alias courseDateTimeSchema */
 export const coursePriceEffectiveAtSchema = courseDateTimeSchema;
 
 export const courseTimeZoneSchema = requiredString.refine(

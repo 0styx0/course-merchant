@@ -29,7 +29,7 @@ export function storedDescription(
 
 // the document is JSON as parsed from the request, which the generated type
 // can't say, as it has an index signature
-export function toStoredDescription(
+function toStoredDescription(
   description: CourseDescription,
 ): CourseRepositoryModelPublic["description"] {
   return description as CourseRepositoryModelPublic["description"];

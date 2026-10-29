@@ -10,7 +10,7 @@ const CONNECTION_TIMEOUT_MS = 30_000;
 const GREETING_TIMEOUT_MS = 30_000;
 const SOCKET_INACTIVITY_TIMEOUT_MS = 60_000;
 
-export const EMAIL_TRANSPORT = Symbol("EMAIL_TRANSPORT");
+const EMAIL_TRANSPORT = Symbol("EMAIL_TRANSPORT");
 
 export const emailTransportProvider = {
   provide: EMAIL_TRANSPORT,

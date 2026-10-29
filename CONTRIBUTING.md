@@ -50,11 +50,11 @@ The OpenAPI spec is the source of truth, so a change starts there:
 | Hook | Runs |
 |---|---|
 | `pre-commit` | ESLint and Prettier on staged files. Then only for the projects the staged files can affect: regenerates the API types when the OpenAPI file is staged, type-checks (the web also when the OpenAPI file changes, since its types come from it), and runs only the unit tests that import a staged file. A deleted file, or a staged file that isn't TypeScript (config, lockfile, `.env.test`), runs that project's whole unit suite instead. |
-| `pre-push` | Prettier's check on both projects (as CI does), the full unit suites for both projects, then integration tests for the API, browser tests for the web app, then the API's end-to-end tests. Needs Docker running. |
+| `pre-push` | Prettier's check on both projects (as CI does), knip (finds unused files, exports and dependencies) on the API, the full unit suites for both projects, then integration tests for the API, browser tests for the web app, then the API's end-to-end tests. Needs Docker running. |
 
 ## What CI runs
 
-[ci.yml](.github/workflows/ci.yml) runs on every pull request and every push to `main`. It repeats everything the hooks run, on a clean machine, plus ESLint, the API build, and a check that the generated API types are committed and up to date. The `api`, `web` and `web-playwright` jobs run in parallel; the Playwright tests have their own job so their browser install overlaps with the web checks. If CI fails but your hooks passed, run the failing command from the workflow locally. The usual causes are a forgotten `yarn generate:api-types` or a file that was never committed. CI uses no secrets: tests run against the fake values in `api/.env.test`.
+[ci.yml](.github/workflows/ci.yml) runs on every pull request and every push to `main`. It repeats everything the hooks run, on a clean machine, plus ESLint, knip, the API build, and a check that the generated API types are committed and up to date. The `api`, `web` and `web-playwright` jobs run in parallel; the Playwright tests have their own job so their browser install overlaps with the web checks. If CI fails but your hooks passed, run the failing command from the workflow locally. The usual causes are a forgotten `yarn generate:api-types` or a file that was never committed. CI uses no secrets: tests run against the fake values in `api/.env.test`.
 
 ## Writing tests
 

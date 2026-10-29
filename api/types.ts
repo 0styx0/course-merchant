@@ -7,8 +7,6 @@ import type { PrismaService } from "src/prisma/prisma.service.js";
  */
 export type DbScope = Pick<PrismaService["db"], "orm">;
 
-export type CourseResponse = components["schemas"]["Course"];
-
 export type ListCoursesResponse = components["schemas"]["ListCoursesResponse"];
 
 export type GetCourseResponse = components["schemas"]["Course"];
@@ -36,5 +34,3 @@ export type ProblemDetails = components["schemas"]["ProblemDetails"];
 
 export type ValidationProblemDetails =
   components["schemas"]["ValidationProblemDetails"];
-
-export type FieldError = components["schemas"]["FieldError"];
