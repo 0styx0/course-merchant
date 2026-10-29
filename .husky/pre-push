@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
 
+# Same Prettier check as CI; lint-staged only formats some file types
+yarn --cwd api format:check
+yarn --cwd web format:check
+
 yarn --cwd api test:integration
 yarn --cwd web test:browser
 

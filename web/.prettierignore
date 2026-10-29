@@ -6,3 +6,5 @@ playwright-report
 public
 *.md
 yarn.lock
+# Raw clipboard HTML pasted byte-for-byte by the paste tests; reformatting changes what they test
+src/mocks/fixtures/google-docs-paste.html
