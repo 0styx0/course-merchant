@@ -40,8 +40,8 @@ Names and layout (each is a rename or move; **ask**, and update every import, te
 - [x] **16. Folder names.** Renamed `api/src/courses/courses.repository/` to `repositories/` (matching `pipes/` and `validation/`). Done.
 - [x] **17. One place for tests.** Every unit spec now lives in `<module>/test/unit/` (rule in [api-tests.md](../.claude/rules/api-tests.md)). Done: the `common/`, `courses/validation/`, email, payments and prisma specs moved, and `port-config.ts` with its spec moved into a new `src/config/`.
 - [x] **18. Stray doc.** Done: `web/docs/admin.md` (the admin page's Given/When/Then spec) was deleted at the owner's request and the links to it removed.
-- [ ] **19. Sub-folders in `admin-courses/`. (Next)** 30 flat files; group the description editor (editor, toolbar, link field, link, paste test) in `description-editor/`. **ask**
-- [ ] **20. `payments/` by job (optional, last).** 12 flat files; group into `stripe/`, `fulfillment/` and `sweeper/`. Largest move, touches many imports; skip if steps 1–19 left it readable. **ask**
+- [x] **19. Sub-folders in `admin-courses/`.** 30 flat files; group the description editor (editor, toolbar, link field, link, paste test) in `description-editor/`. **ask** Done: the 8 `description-*` files (with their specs) moved into [description-editor/](../web/src/features/admin-courses/description-editor/), names unchanged.
+- [ ] **20. `payments/` by job (optional, last). (Next)** 12 flat files; group into `stripe/`, `fulfillment/` and `sweeper/`. Largest move, touches many imports; skip if steps 1–19 left it readable. **ask**
 
 ## Order
 

@@ -15,7 +15,7 @@ import {
   COURSE_SUMMARY_MAX_LENGTH,
 } from "./course-form-limits";
 import type { CourseFormValues } from "./course-form-schema";
-import { DescriptionEditor } from "./description-editor";
+import { DescriptionEditor } from "./description-editor/description-editor";
 import type { priceSummary } from "./price-summary";
 import { PriceRow } from "./price-row";
 import { PriceSchedule } from "./price-schedule";

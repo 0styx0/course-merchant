@@ -15,14 +15,14 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 - [x] **3. The create form page**, in six commits (design in *Step 3* below):
   - [x] **3a.** Form libraries (react-hook-form, resolvers, user-event), shadcn `field`/`input`/`label`, and `FormField` (message, red X, green check).
   - [x] **3b.** `error-summary.tsx`, the error list at the top with a link per problem and focus on a refused submit.
-  - [x] **3c.** `description-editor.tsx`, first version with no toolbar (adds `@tiptap/react`). It renders its own `FormField` (label, state icon, error, counter); `FormField` gained `labelId` and `onLabelClick`.
+  - [x] **3c.** `description-editor/description-editor.tsx`, first version with no toolbar (adds `@tiptap/react`). It renders its own `FormField` (label, state icon, error, counter); `FormField` gained `labelId` and `onLabelClick`.
   - [x] **3d-i.** `course-form.tsx` with the text fields, description editor, schedule, `formatCourseLength`, one price row, error list and submit handling; `page.tsx` at `app/admin/(signed-in)/courses/new/` (no layout until the login lands); component tests.
   - [x] **3d-ii.** Price rows: `useFieldArray` in `course-form.tsx`, `price-row.tsx` (add and remove, at least one row, new rows start empty), error-list entries per row (`courseFormProblems` takes the row count; labels are numbered only with several rows), and tests. The empty-time help text now says "when the course is published" (wording only: an empty time is still set to now + 1 minute when saved).
   - [x] **3e.** Playwright browser test (`tests/browser/admin-courses/create-course.spec.ts`: save and land on `/`, an API refusal, no console errors); admin.md, courses.md, web.md and README updates.
 - [x] **4. Description toolbar and Google Docs paste tests**, in three commits (design in *Step 4* below; browser tests go in the same spec file as 3e):
-  - [x] **4a.** Formatting toolbar (`description-toolbar.tsx`, shadcn `toggle`): Bold, Italic, Heading, Subheading, Bulleted list, Numbered list.
-  - [x] **4b.** Link and Remove link buttons after the six format toggles (`description-link-field.tsx`, `description-link.ts`).
-  - [x] **4c.** Google Docs paste fixture and tests (`src/mocks/fixtures/google-docs-paste.html`, `description-paste.test.ts`), the browser paste test, and the admin.md list of what pasting doesn't keep.
+  - [x] **4a.** Formatting toolbar (`description-editor/description-toolbar.tsx`, shadcn `toggle`): Bold, Italic, Heading, Subheading, Bulleted list, Numbered list.
+  - [x] **4b.** Link and Remove link buttons after the six format toggles (`description-editor/description-link-field.tsx`, `description-editor/description-link.ts`).
+  - [x] **4c.** Google Docs paste fixture and tests (`src/mocks/fixtures/google-docs-paste.html`, `description-editor/description-paste.test.ts`), the browser paste test, and the admin.md list of what pasting doesn't keep.
 - [ ] **UX pass on the create form**, after step 4 and before step 5, from a UX review of the page (design in *UX pass* below). Grouped by complexity; each group is one commit, outlined and approved first as usual:
   - [x] **U1. Copy and small layout fixes** (wording and markup only). Also: a shared `CharacterCount` (name and summary counters), and the editor's counter now comes from Tiptap's `CharacterCount` extension (`@tiptap/extensions`, a direct dependency).
   - [x] **U2. Field and component behaviour** (price input, remove button, error summary height, time zone default, leave warning).
@@ -156,7 +156,7 @@ Shipped in six commits (2a–2f). Limits and the currency constant live in the `
 - Changing the start time re-checks the end time.
 - Below the times: a summary sentence ("Runs … to … (zone). Lasts 2 hours 30 minutes.") once both are valid, from `scheduleSummary` and the small `formatCourseLength` helper. TypeScript has no types for `Intl.DurationFormat` yet.
 
-**Description editor, first version** (`description-editor.tsx`, no toolbar yet):
+**Description editor, first version** (`description-editor/description-editor.tsx`, no toolbar yet):
 
 - `useEditor` with the shared extension list and `immediatelyRender: false` (Tiptap's setting for server-rendered React, avoiding a server/browser mismatch).
 - Connected through react-hook-form's `Controller`: `onUpdate` sets the value through `toCourseDescription`, the editor's blur calls `onBlur`.
@@ -207,7 +207,7 @@ The submit button is disabled and reads "Saving…" while `isSubmitting`, and is
 - adding and removing price rows;
 - course length shown.
 
-Typing into the editor is unreliable in jsdom (it relies on `contenteditable`). Form component tests replace the `description-editor` module with a simple stub (`vi.mock`), so they test the form, not Tiptap; editor typing is covered by the browser test.
+Typing into the editor is unreliable in jsdom (it relies on `contenteditable`). Form component tests replace the `description-editor/description-editor` module with a simple stub (`vi.mock`), so they test the form, not Tiptap; editor typing is covered by the browser test.
 
 Browser test (`yarn --cwd web test:browser`):
 
@@ -217,15 +217,15 @@ Browser test (`yarn --cwd web test:browser`):
 
 ## Step 4. Description toolbar and Google Docs paste tests
 
-**Toolbar** (4a, done: `description-toolbar.tsx`, above the editable area): Base UI's Toolbar (`role="toolbar"`, arrow keys move between buttons) with shadcn `toggle` buttons; `aria-pressed` comes from `useEditorState`. Icon buttons named by `aria-label` and `title`. Heading and Subheading are levels 2 and 3; level 4 exists for pasted content. Buttons are disabled until the editor exists in the browser. Underline, strike, quote and rule have no button (shortcuts and paste still work).
+**Toolbar** (4a, done: `description-editor/description-toolbar.tsx`, above the editable area): Base UI's Toolbar (`role="toolbar"`, arrow keys move between buttons) with shadcn `toggle` buttons; `aria-pressed` comes from `useEditorState`. Icon buttons named by `aria-label` and `title`. Heading and Subheading are levels 2 and 3; level 4 exists for pasted content. Buttons are disabled until the editor exists in the browser. Underline, strike, quote and rule have no button (shortcuts and paste still work).
 
-- Link (4b, done): a Link button (enabled with text selected or the cursor on a link) opens an inline field under the toolbar (`description-link-field.tsx`; Enter applies, Escape cancels, prefilled and changing the whole link when on one). The address is checked by `isAllowedDescriptionLink` (the API's rules), with a message. A separate "Remove link" button is enabled on a link.
+- Link (4b, done): a Link button (enabled with text selected or the cursor on a link) opens an inline field under the toolbar (`description-editor/description-link-field.tsx`; Enter applies, Escape cancels, prefilled and changing the whole link when on one). The address is checked by `isAllowedDescriptionLink` (the API's rules), with a message. A separate "Remove link" button is enabled on a link.
 
 Each button calls Tiptap's chain commands (`toggleBold`, `toggleHeading`, `setLink`, …), so undo keeps working.
 
 **Paste** (4c, done): see the decision row on Google Docs paste. The captured sample is `src/mocks/fixtures/google-docs-paste.html`; Docs puts a nested list beside its item, but Tiptap reads it correctly. A pasted `<ol start>` keeps its number.
 
-**Tests** (done): paste tests in `description-paste.test.ts` and one browser test; toolbar button and refused-link tests were added with 4a and 4b.
+**Tests** (done): paste tests in `description-editor/description-paste.test.ts` and one browser test; toolbar button and refused-link tests were added with 4a and 4b.
 
 ## Step 5. Image and publish in the create form
 

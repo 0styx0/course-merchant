@@ -13,7 +13,7 @@ vi.mock("./create-course.action", () => ({ createCourseAction: vi.fn() }));
 
 // Typing into Tiptap is unreliable in jsdom (the browser test covers it), so
 // the editor is a button that fills in a description.
-vi.mock("./description-editor", () => ({
+vi.mock("./description-editor/description-editor", () => ({
   DescriptionEditor: ({
     onChange,
     fieldRef,

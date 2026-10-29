@@ -13,7 +13,7 @@ import {
 import { toCourseDescription } from "@/features/courses/description-document";
 import { descriptionExtensions } from "@/features/courses/description-extensions";
 
-import { COURSE_DESCRIPTION_MAX_TEXT_LENGTH } from "./course-form-limits";
+import { COURSE_DESCRIPTION_MAX_TEXT_LENGTH } from "../course-form-limits";
 import { DescriptionToolbar } from "./description-toolbar";
 
 type DescriptionEditorProps = {
