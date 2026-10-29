@@ -153,43 +153,17 @@ export class AdminCoursesRepository {
     input: CourseRepositoryCreateInput,
   ): Promise<CourseRepositoryModelAdmin> {
     const course = await scope.orm.public.Course.create({
-      title: input.title,
-      summary: input.summary,
-      description: input.description,
-      contentUrl: input.contentUrl,
-      startsAt: input.startsAt,
-      endsAt: input.endsAt,
-      timeZone: input.timeZone,
+      ...courseFields(input),
 
       statuses: (statuses) =>
         statuses.create({
           name: input.initialStatus,
         }),
 
-      prices: (prices) =>
-        prices.create(
-          input.prices.map((price) => ({
-            amount: price.amount,
-            currency: price.currency,
-            effectiveAt: price.effectiveAt,
-          })),
-        ),
+      prices: (prices) => prices.create(input.prices.map(priceFields)),
     });
 
-    const createdCourse = await this.adminCourseDetailsQuery(
-      scope.orm.public.Course,
-    )
-      .where((candidate) => candidate.id.eq(course.id))
-      .first();
-
-    if (!createdCourse) {
-      // throwing rolls back the caller's transaction
-      throw new Error(
-        `Created course ${course.title} (${course.id}) could not be loaded.`,
-      );
-    }
-
-    return createdCourse;
+    return this.loadCourseOrThrow(scope, course.id);
   }
 
   /**
@@ -203,60 +177,107 @@ export class AdminCoursesRepository {
   ): Promise<CourseRepositoryModelAdmin | null> {
     const course = await scope.orm.public.Course.where((candidate) =>
       candidate.id.eq(courseId),
-    ).update({
-      title: input.title,
-      summary: input.summary,
-      description: input.description,
-      contentUrl: input.contentUrl,
-      startsAt: input.startsAt,
-      endsAt: input.endsAt,
-      timeZone: input.timeZone,
-    });
+    ).update(courseFields(input));
 
     if (!course) {
       return null;
     }
 
-    // delete before inserting, so a replaced price can reuse its effectiveAt
-    if (input.deletePriceIds.length > 0) {
-      await scope.orm.public.CoursePrice.where((price) =>
-        and(
-          price.courseId.eq(courseId),
-          price.id.in(input.deletePriceIds),
-          price.effectiveAt.gt(input.now),
-        ),
-      ).deleteAndCount();
-    }
+    await this.replacePrices(scope, courseId, input);
+    await this.appendStatus(scope, courseId, input.nextStatus);
 
-    if (input.newPrices.length > 0) {
-      await scope.orm.public.CoursePrice.createAndCount(
-        input.newPrices.map((price) => ({
-          courseId,
-          amount: price.amount,
-          currency: price.currency,
-          effectiveAt: price.effectiveAt,
-        })),
-      );
-    }
-
-    if (input.nextStatus) {
-      await scope.orm.public.CourseStatus.create({
-        courseId,
-        name: input.nextStatus,
-      });
-    }
-
-    const updatedCourse = await this.adminCourseDetailsQuery(
-      scope.orm.public.Course,
-    )
-      .where((candidate) => candidate.id.eq(courseId))
-      .first();
-
-    if (!updatedCourse) {
-      // throwing rolls back the caller's transaction
-      throw new Error(`Updated course ${courseId} could not be loaded.`);
-    }
-
-    return updatedCourse;
+    return this.loadCourseOrThrow(scope, courseId);
   }
+
+  // delete before inserting, so a replaced price can reuse its effectiveAt
+  private async replacePrices(
+    scope: DbScope,
+    courseId: string,
+    input: CourseRepositoryUpdateInput,
+  ) {
+    await this.deleteFuturePrices(scope, courseId, input);
+    await this.insertPrices(scope, courseId, input.newPrices);
+  }
+
+  private async deleteFuturePrices(
+    scope: DbScope,
+    courseId: string,
+    input: CourseRepositoryUpdateInput,
+  ) {
+    if (input.deletePriceIds.length === 0) {
+      return;
+    }
+
+    await scope.orm.public.CoursePrice.where((price) =>
+      and(
+        price.courseId.eq(courseId),
+        price.id.in(input.deletePriceIds),
+        price.effectiveAt.gt(input.now),
+      ),
+    ).deleteAndCount();
+  }
+
+  private async insertPrices(
+    scope: DbScope,
+    courseId: string,
+    prices: CourseRepositoryUpdateInput["newPrices"],
+  ) {
+    if (prices.length === 0) {
+      return;
+    }
+
+    await scope.orm.public.CoursePrice.createAndCount(
+      prices.map((price) => ({ courseId, ...priceFields(price) })),
+    );
+  }
+
+  private async appendStatus(
+    scope: DbScope,
+    courseId: string,
+    name: CourseRepositoryUpdateInput["nextStatus"],
+  ) {
+    if (!name) {
+      return;
+    }
+
+    await scope.orm.public.CourseStatus.create({ courseId, name });
+  }
+
+  private async loadCourseOrThrow(
+    scope: DbScope,
+    courseId: string,
+  ): Promise<CourseRepositoryModelAdmin> {
+    const course = await this.findCourseDetailsByIdAdmin(scope, courseId);
+
+    if (!course) {
+      // throwing rolls back the caller's transaction
+      throw new Error(`Course ${courseId} could not be loaded.`);
+    }
+
+    return course;
+  }
+}
+
+// the price columns that create and update both write
+function priceFields(price: CourseRepositoryCreateInput["prices"][number]) {
+  return {
+    amount: price.amount,
+    currency: price.currency,
+    effectiveAt: price.effectiveAt,
+  };
+}
+
+// the columns that create and update both write on the course row
+function courseFields(
+  input: CourseRepositoryCreateInput | CourseRepositoryUpdateInput,
+) {
+  return {
+    title: input.title,
+    summary: input.summary,
+    description: input.description,
+    contentUrl: input.contentUrl,
+    startsAt: input.startsAt,
+    endsAt: input.endsAt,
+    timeZone: input.timeZone,
+  };
 }

@@ -20,8 +20,8 @@ API, validation and errors:
 API, courses and enrollments:
 
 - [x] **4. One mapping from request to stored course.** [admin-courses.service.ts](../api/src/courses/admin-courses.service.ts) writes the course fields and the price mapping twice (create and update); make them one small function each.
-- [ ] **5. Admin course repository as steps.** [admin-courses.repository.ts](../api/src/courses/courses.repository/admin-courses.repository.ts): `createCourse` and `updateCourse` share a "course fields" object and one "load it or throw" function; `updateCourse` becomes `replacePrices` + `appendStatus` + reload.
-- [ ] **6. Grant access as two steps.** `grantAccess` in [enrollments.repository.ts](../api/src/enrollments/enrollments.repository.ts) becomes `insertEnrollment` and `reactivateEnrollment`. Keep the comments about the concurrent update.
+- [x] **5. Admin course repository as steps.** [admin-courses.repository.ts](../api/src/courses/courses.repository/admin-courses.repository.ts): `createCourse` and `updateCourse` share a "course fields" object and one "load it or throw" function; `updateCourse` becomes `replacePrices` + `appendStatus` + reload. Done.
+- [ ] **6. Grant access as two steps. (Next)** `grantAccess` in [enrollments.repository.ts](../api/src/enrollments/enrollments.repository.ts) becomes `insertEnrollment` and `reactivateEnrollment`. Keep the comments about the concurrent update.
 - [ ] **7. Leftover long API functions.** `toAdminCourseResponse` ([courses.mapper.ts](../api/src/courses/courses.mapper.ts)), `createCheckoutSession` ([stripe.service.ts](../api/src/payments/stripe.service.ts)); split only if the outline shows a clear gain.
 
 Web:
