@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import {
   CreateCourseRequest,
+  DbScope,
   GetCourseAdminResponse,
   ListCoursesAdminResponse,
   UpdateCourseRequest,
@@ -10,17 +11,42 @@ import { courseNotFound } from "./course-errors.js";
 import { ValidationException } from "../common/errors/validation.exception.js";
 import {
   toAdminCourseResponse,
-  toStoredDescription,
+  toStoredCourseFields,
+  toStoredPrices,
 } from "./courses.mapper.js";
 import {
   AdminCoursesRepository,
   CourseRepositoryCreateInput,
+  CourseRepositoryModelAdmin,
 } from "./courses.repository/admin-courses.repository.js";
 import {
   findPriceChanges,
   findUpdateRuleViolations,
+  UpdateRuleContext,
 } from "./validation/course-update-rules.js";
 import { Temporal } from "@js-temporal/polyfill";
+
+function assertUpdateAllowed(context: UpdateRuleContext): void {
+  const errors = findUpdateRuleViolations(context);
+
+  if (errors.length > 0) {
+    throw new ValidationException(errors);
+  }
+}
+
+// only set when the status changed, so the log records real transitions
+function nextStatusOf(
+  request: UpdateCourseRequest,
+  stored: CourseRepositoryModelAdmin,
+) {
+  const currentStatus = stored.statuses[0].name;
+
+  if (request.status === currentStatus) {
+    return null;
+  }
+
+  return request.status;
+}
 
 @Injectable()
 export class AdminCoursesService {
@@ -35,19 +61,9 @@ export class AdminCoursesService {
     request: CreateCourseRequest,
   ): Promise<GetCourseAdminResponse> {
     const input: CourseRepositoryCreateInput = {
-      title: request.name,
-      summary: request.summary,
-      description: toStoredDescription(request.description),
-      contentUrl: request.contentUrl,
-      startsAt: Temporal.Instant.from(request.schedule.startTime),
-      endsAt: Temporal.Instant.from(request.schedule.endTime),
-      timeZone: request.schedule.timeZone,
+      ...toStoredCourseFields(request),
       initialStatus: request.status,
-      prices: request.prices.map((price) => ({
-        amount: price.amount,
-        currency: price.currency,
-        effectiveAt: Temporal.Instant.from(price.effectiveAt),
-      })),
+      prices: toStoredPrices(request.prices),
     };
 
     const course = await this.prisma.db.transaction((tx) =>
@@ -65,39 +81,17 @@ export class AdminCoursesService {
     // read, validate and write in one transaction, so the rules are checked
     // against the course as it is when the change is applied
     const course = await this.prisma.db.transaction(async (tx) => {
-      const stored = await this.coursesRepository.findCourseDetailsByIdAdmin(
-        tx,
-        courseId,
-      );
-
-      if (!stored) {
-        throw courseNotFound(courseId);
-      }
-
+      const stored = await this.loadStoredOrThrow(tx, courseId);
       const context = { request, stored, now };
-      const errors = findUpdateRuleViolations(context);
 
-      if (errors.length > 0) {
-        throw new ValidationException(errors);
-      }
+      assertUpdateAllowed(context);
 
       const { newPrices, deletePriceIds } = findPriceChanges(context);
-      const currentStatus = stored.statuses[0].name;
 
       return this.coursesRepository.updateCourse(tx, courseId, {
-        title: request.name,
-        summary: request.summary,
-        description: toStoredDescription(request.description),
-        contentUrl: request.contentUrl,
-        startsAt: Temporal.Instant.from(request.schedule.startTime),
-        endsAt: Temporal.Instant.from(request.schedule.endTime),
-        timeZone: request.schedule.timeZone,
-        nextStatus: request.status === currentStatus ? null : request.status,
-        newPrices: newPrices.map((price) => ({
-          amount: price.amount,
-          currency: price.currency,
-          effectiveAt: Temporal.Instant.from(price.effectiveAt),
-        })),
+        ...toStoredCourseFields(request),
+        nextStatus: nextStatusOf(request, stored),
+        newPrices: toStoredPrices(newPrices),
         deletePriceIds,
         now,
       });
@@ -108,6 +102,19 @@ export class AdminCoursesService {
     }
 
     return toAdminCourseResponse(course);
+  }
+
+  private async loadStoredOrThrow(tx: DbScope, courseId: string) {
+    const stored = await this.coursesRepository.findCourseDetailsByIdAdmin(
+      tx,
+      courseId,
+    );
+
+    if (!stored) {
+      throw courseNotFound(courseId);
+    }
+
+    return stored;
   }
 
   async findByIdAdmin(courseId: string): Promise<GetCourseAdminResponse> {

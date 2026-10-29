@@ -15,7 +15,7 @@ type StoredPrice = StoredCourse["prices"][number];
 
 type RequestPrice = UpdateCourseRequest["prices"][number];
 
-type UpdateRuleContext = {
+export type UpdateRuleContext = {
   request: UpdateCourseRequest;
   stored: StoredCourse;
   now: Temporal.Instant;

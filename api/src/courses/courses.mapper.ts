@@ -3,11 +3,15 @@ import { Temporal } from "@js-temporal/polyfill";
 import { formatDate } from "@/utils/formatters.js";
 import {
   CourseDescription,
+  CreateCourseRequest,
   GetCourseAdminResponse,
   GetCourseResponse,
 } from "types.js";
 import type { CourseRepositoryModelPublic } from "./courses.repository/courses.repository.js";
-import { CourseRepositoryModelAdmin } from "./courses.repository/admin-courses.repository.js";
+import {
+  CourseRepositoryCreateInput,
+  CourseRepositoryModelAdmin,
+} from "./courses.repository/admin-courses.repository.js";
 
 /**
  * The image's version: its `updatedAt` as epoch milliseconds, in decimal. The
@@ -30,6 +34,45 @@ export function toStoredDescription(
   description: CourseDescription,
 ): CourseRepositoryModelPublic["description"] {
   return description as CourseRepositoryModelPublic["description"];
+}
+
+type StoredCourseFields = Pick<
+  CourseRepositoryCreateInput,
+  | "title"
+  | "summary"
+  | "description"
+  | "contentUrl"
+  | "startsAt"
+  | "endsAt"
+  | "timeZone"
+>;
+
+// the course fields that create and update both write
+export function toStoredCourseFields(
+  request: Pick<
+    CreateCourseRequest,
+    "name" | "summary" | "description" | "contentUrl" | "schedule"
+  >,
+): StoredCourseFields {
+  return {
+    title: request.name,
+    summary: request.summary,
+    description: toStoredDescription(request.description),
+    contentUrl: request.contentUrl,
+    startsAt: Temporal.Instant.from(request.schedule.startTime),
+    endsAt: Temporal.Instant.from(request.schedule.endTime),
+    timeZone: request.schedule.timeZone,
+  };
+}
+
+export function toStoredPrices(
+  prices: CreateCourseRequest["prices"],
+): CourseRepositoryCreateInput["prices"] {
+  return prices.map((price) => ({
+    amount: price.amount,
+    currency: price.currency,
+    effectiveAt: Temporal.Instant.from(price.effectiveAt),
+  }));
 }
 
 // publishing requires an image and images are never removed
