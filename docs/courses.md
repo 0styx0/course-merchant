@@ -13,9 +13,9 @@ Keep this file current **in the same commit as the work**.
 - [ ] Web admin pages. The create form page is built, without image, publish or login yet (steps 4 and 5 in [course-creation.md](course-creation.md) add the description toolbar, image and publish); the course list and edit pages come after.
 - [ ] Estimated payout under the admin price field (payments step 7).
 - [ ] **Course images** (design in *Course images* below):
-  - [x] **1. API: check and convert an uploaded image** ([course-image.ts](../api/src/courses/course-image.ts)). Nothing calls it yet.
+  - [x] **1. API: check and convert an uploaded image** ([course-image.ts](../api/src/courses/images/course-image.ts)). Nothing calls it yet.
   - [x] **2a. API: store a course's image** ([course-images.repository.ts](../api/src/courses/repositories/course-images.repository.ts)). Admin course responses carry `image: { updatedAt, version } | null`, always `null` until 2b.
-  - [x] **2b. API: upload and read back the image (admin).** `PUT /v1/admin/courses/{courseId}/image` (multipart, one `image` file, 204) and admin `GET /v1/admin/courses/{courseId}/image`. Code: [admin-course-images.controller.ts](../api/src/courses/admin-course-images.controller.ts), [course-image-upload.interceptor.ts](../api/src/courses/course-image-upload.interceptor.ts).
+  - [x] **2b. API: upload and read back the image (admin).** `PUT /v1/admin/courses/{courseId}/image` (multipart, one `image` file, 204) and admin `GET /v1/admin/courses/{courseId}/image`. Code: [admin-course-images.controller.ts](../api/src/courses/images/admin-course-images.controller.ts), [course-image-upload.interceptor.ts](../api/src/courses/images/course-image-upload.interceptor.ts).
   - [x] **3. API: don't allow publishing a course without an image.** Create accepts only `drafted` and `archived`; an update to `published` needs an image ([course-update-rules.ts](../api/src/courses/validation/course-update-rules.ts)).
   - [x] **4. API: serve the image publicly.** Public course responses (list and get) carry `image: { version }`; `GET /v1/courses/{courseId}/image/{version}` ([courses.controller.ts](../api/src/courses/courses.controller.ts)), visible courses only.
   - [ ] **5. Web: show the image on the home page and the course page.** Starts after [web.md](web.md) steps 1–5, which move the paths below. Same-origin route that forwards to `GET /v1/courses/{courseId}/image/{version}` (200 `image/webp`, `Cache-Control: public, max-age=31536000, immutable`, 404 otherwise), plus `next/image`; details in *Course images → Showing it*. The mock course literals already carry `image: { version }`.
@@ -63,7 +63,7 @@ Keep this file current **in the same commit as the work**.
 
 Every course has exactly one image, shown on every public page. It is uploaded separately from the course, stored in Postgres, always 16:9, and a course can't be published without one.
 
-- **Checking and converting (step 1).** [course-image.ts](../api/src/courses/course-image.ts) returns `converted` (a 1600×900 WebP) or `rejected` (one error on `/image`). The file name and the client's `Content-Type` are never trusted; sharp decides the format from the bytes.
+- **Checking and converting (step 1).** [course-image.ts](../api/src/courses/images/course-image.ts) returns `converted` (a 1600×900 WebP) or `rejected` (one error on `/image`). The file name and the client's `Content-Type` are never trusted; sharp decides the format from the bytes.
   - Loaders for SVG, HEIF, PDF, GIF and TIFF are blocked with `sharp.block()`. A misspelt operation name is silently ignored, so each blocked format has a refusal test.
   - Order: missing file, over 5 MB (before parsing), unreadable or not JPEG/PNG/WebP, over the pixel limit (from the header, so the error is ours and not sharp's), under 800×450. `limitInputPixels` stays on the conversion as a backstop.
   - The minimum is judged on `metadata().autoOrient` (the size after the orientation flag), so a rotated 800×450 photo is judged as it will look.

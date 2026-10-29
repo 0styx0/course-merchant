@@ -1,9 +1,9 @@
 import { Module } from "@nestjs/common";
 
 import { PrismaModule } from "@/prisma/prisma.module.js";
-import { AdminLoginAttemptsRepository } from "../admin-login-attempts.repository.js";
-import { AdminPasswordsService } from "../admin-passwords.service.js";
-import { AdminSessionsRepository } from "../admin-sessions.repository.js";
+import { AdminLoginAttemptsRepository } from "../login/admin-login-attempts.repository.js";
+import { AdminPasswordsService } from "../login/admin-passwords.service.js";
+import { AdminSessionsRepository } from "../sessions/admin-sessions.repository.js";
 import { AdminsRepository } from "../admins.repository.js";
 
 /**

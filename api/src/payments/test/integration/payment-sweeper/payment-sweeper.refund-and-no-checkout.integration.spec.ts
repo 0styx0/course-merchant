@@ -2,7 +2,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import { Logger } from "@nestjs/common";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
+import { EmailOutboxRepository } from "@/email/outbox/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import type { CompletedCheckout } from "@/payments/stripe/checkout-events.js";
 import { FulfillmentService } from "@/payments/fulfillment/fulfillment.service.js";

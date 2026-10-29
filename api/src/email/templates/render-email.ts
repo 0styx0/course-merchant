@@ -1,4 +1,4 @@
-import type { EmailKind } from "../email-outbox.repository.js";
+import type { EmailKind } from "../outbox/email-outbox.repository.js";
 import type { EmailContent, RenderedEmail } from "./email-content.js";
 import {
   accessGranted,

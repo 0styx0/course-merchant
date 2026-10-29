@@ -14,7 +14,7 @@ import { ZodValidationPipe } from "@/common/validation/zod-validation.pipe.js";
 import {
   AdminSessionsService,
   type CurrentAdminSession,
-} from "./admin-sessions.service.js";
+} from "./sessions/admin-sessions.service.js";
 import { CurrentSession } from "./current-admin-session.decorator.js";
 import { Public } from "./public.decorator.js";
 import { createAdminSessionRequestSchema } from "./validation/create-admin-session-request.schema.js";

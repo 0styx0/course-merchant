@@ -2,11 +2,14 @@ import { Module } from "@nestjs/common";
 
 import { PrismaModule } from "@/prisma/prisma.module.js";
 import { EMAIL_CONFIG, loadEmailConfig } from "@/email/email-config.js";
-import { emailTransportProvider, EmailSender } from "./email-sender.js";
+import {
+  emailTransportProvider,
+  EmailSender,
+} from "./delivery/email-sender.js";
 import { EmailComposer } from "./email-composer.js";
-import { EmailOutboxRepository } from "./email-outbox.repository.js";
-import { EmailViewsRepository } from "./email-views.repository.js";
-import { EmailWorker } from "./email-worker.js";
+import { EmailOutboxRepository } from "./outbox/email-outbox.repository.js";
+import { EmailViewsRepository } from "./outbox/email-views.repository.js";
+import { EmailWorker } from "./delivery/email-worker.js";
 
 @Module({
   imports: [PrismaModule],

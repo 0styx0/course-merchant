@@ -80,6 +80,6 @@ How the owner wants Claude to work on this repo.
 
 **Writing**
 - **Plain language** in chat, outlines, docs and code comments. Define every specialized term (for example "tick", "sweeper", "outbox"): what it means in the current context, why use it, and the alternatives. Don't assume a term means its usual meaning elsewhere.
-- **Diagram file moves.** When a refactor moves or splits files, show easy-to-read ASCII before/after trees (or `old -> new` arrows for splits) in the outline and again in the hand-off.
+- **Diagram file moves.** When a refactor moves or splits files, show one diagram per folder in the outline and again in the hand-off. Put a heading line first, e.g. "`api/src/auth` (16 files → 6 in the folder, plus 2 new sub-folders)", then one code block with the old layout (`BEFORE`) on the left and the new one (`AFTER`) on the right, side by side, files of a new sub-folder listed in the same tree format. Unchanged folders are written as `(unchanged)`. Use `old -> new` arrows only when a single file splits.
 - **Link files.** Any list of files is markdown links relative to the repo root, e.g. `[types.ts](api/types.ts)`.
 - **Search for specific things**; skip wide, open-ended surveys of the codebase. Read a sibling file by line range when you only need a pattern.

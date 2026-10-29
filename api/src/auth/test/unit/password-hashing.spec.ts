@@ -5,7 +5,7 @@ import {
   hashPassword,
   newPasswordProblem,
   verifyPassword,
-} from "@/auth/password-hashing.js";
+} from "@/auth/login/password-hashing.js";
 
 const password = "correct horse battery staple";
 

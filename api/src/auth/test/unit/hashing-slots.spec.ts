@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { HashingSlots } from "@/auth/hashing-slots.js";
+import { HashingSlots } from "@/auth/login/hashing-slots.js";
 
 describe("HashingSlots", () => {
   it("refuses a caller once every slot is taken", () => {

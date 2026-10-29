@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_SEND_ATTEMPTS,
   nextAttemptAfterFailure,
-} from "@/email/retry-policy.js";
+} from "@/email/delivery/retry-policy.js";
 
 describe("nextAttemptAfterFailure", () => {
   const now = Temporal.Instant.from("2026-01-01T00:00:00Z");

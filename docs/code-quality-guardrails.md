@@ -19,9 +19,11 @@ Each milestone delivers one outcome. A milestone is split into one-line commits 
   - [x] **3b.** A step in the `next-commit` skill (`.claude/skills/next-commit/SKILL.md`): check coverage of the touched code first, and add a missing test in its own commit before the refactor.
 - [ ] **4. Naming and layout rules.** Fix the 9 folders over 7 files first, one commit per package, then write the rules (details in *Step 4*). Three commits:
   - [x] **4a.** Web layout: `admin-courses` split into `price/`, `schedule/`, `validation/` and `save-course/`; its `description-editor/link/`; `courses/description/` and `courses/list/`; the shared description format moved to `features/course-description/`; `lib/api/config/`.
-  - [ ] **4b.** **Next.** API layout: `api/src/auth` (16), `api/src/courses` (13), `api/src/courses/test/unit` (11, grouped by topic), `api/src/email` (9) and `api/src/prisma` (8). Same outline rules.
-  - [ ] **4c.** The naming and layout rules in CLAUDE.md (see *Principles*), plus the one-line amendment in [api-tests.md](../.claude/rules/api-tests.md) allowing topic sub-folders under `test/unit/`. Docs only; review with the owner again before starting.
+  - [x] **4b.** API layout: `api/src/auth` into `sessions/` and `login/`; `api/src/courses` into `admin/` and `images/` (plus `allowed-currencies.ts` into `validation/`); `api/src/courses/test/unit` into `services/`, `images/` and `schemas/`; `api/src/email` into `outbox/` and `delivery/`. `api/src/prisma` is left as is: its 8 entries include the generated `contract.d.ts` and `contract.json`, which are not counted, leaving 6.
+  - [ ] **4c.** **Next.** The naming and layout rules in CLAUDE.md (see *Principles*), plus the one-line amendment in [api-tests.md](../.claude/rules/api-tests.md) allowing topic sub-folders under `test/unit/`. Docs only; review with the owner again before starting.
   Goal: Claude should output high quality and correct code. Check if the file splits affect quality (claude might not know to check in the smaller more modular files or navigate efficiently)
+  Also review sessions/commits since creating this file to have claude operate with at least the quality level those sessions ask for
+  Push back on quality decisions you disagree with
 - [ ] **5. Short outlines for mechanical steps.** Change the `next-commit` skill and CLAUDE.md: moves, renames, splits, doc-only and lint-fix commits get a short outline and no wait for approval.
 - [ ] **6. Close the cleanup.** Cut [code-style-cleanup.md](code-style-cleanup.md) down to its decision rows (or delete it), remove it from the `next-commit` hint and the CLAUDE.md doc list, fix the saved next-commit memory, and add the cleanup row to the usage-reviews memory.
 

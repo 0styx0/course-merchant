@@ -4,7 +4,7 @@ import { CheckoutEmailQueue } from "@/checkout/checkout-email-queue.js";
 import { CheckoutRepository } from "@/checkout/checkout.repository.js";
 import { CheckoutService } from "@/checkout/checkout.service.js";
 import { StripeRedirectService } from "@/checkout/stripe-redirect.service.js";
-import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
+import { EmailOutboxRepository } from "@/email/outbox/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
 import { StripeService } from "@/payments/stripe/stripe.service.js";

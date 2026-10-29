@@ -9,10 +9,10 @@ import type { Response } from "express";
 
 import { ApiException } from "@/common/errors/api.exception.js";
 import { ErrorCodeAuth } from "@/common/errors/error-codes.js";
-import { AdminSessionsService } from "./admin-sessions.service.js";
+import { AdminSessionsService } from "./sessions/admin-sessions.service.js";
 import type { AdminSessionRequest } from "./current-admin-session.decorator.js";
 import { IS_PUBLIC } from "./public.decorator.js";
-import { isWellFormedSessionToken } from "./session-token.js";
+import { isWellFormedSessionToken } from "./sessions/session-token.js";
 
 // the scheme name is case-insensitive (RFC 7235)
 const BEARER_HEADER = /^bearer +(\S+)$/i;

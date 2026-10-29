@@ -1,11 +1,11 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { AdminLoginAttemptsRepository } from "@/auth/admin-login-attempts.repository.js";
-import { AdminSessionsRepository } from "@/auth/admin-sessions.repository.js";
-import { AdminSessionsService } from "@/auth/admin-sessions.service.js";
+import { AdminLoginAttemptsRepository } from "@/auth/login/admin-login-attempts.repository.js";
+import { AdminSessionsRepository } from "@/auth/sessions/admin-sessions.repository.js";
+import { AdminSessionsService } from "@/auth/sessions/admin-sessions.service.js";
 import { AdminsRepository } from "@/auth/admins.repository.js";
-import { HashingSlots } from "@/auth/hashing-slots.js";
-import { hashPassword } from "@/auth/password-hashing.js";
+import { HashingSlots } from "@/auth/login/hashing-slots.js";
+import { hashPassword } from "@/auth/login/password-hashing.js";
 import { ApiException } from "@/common/errors/api.exception.js";
 import { db } from "@/prisma/db.js";
 import { PrismaService } from "@/prisma/prisma.service.js";

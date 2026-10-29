@@ -14,7 +14,7 @@ import {
 import { PrismaModule } from "@/prisma/prisma.module.js";
 import { createPricedCourse, descriptionDoc } from "@/test/course-fixtures.js";
 import { instant } from "@/test/test-helpers.js";
-import { AdminCoursesService } from "@/courses/admin-courses.service.js";
+import { AdminCoursesService } from "@/courses/admin/admin-courses.service.js";
 import { AdminCoursesRepository } from "@/courses/repositories/admin-courses.repository.js";
 
 const NOW = instant("2026-09-29T14:00:00Z");

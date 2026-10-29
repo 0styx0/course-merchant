@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { describe, expect, it, vi } from "vitest";
 
-import { EmailWorker } from "@/email/email-worker.js";
+import { EmailWorker } from "@/email/delivery/email-worker.js";
 
 describe("EmailWorker", () => {
   const clock = {

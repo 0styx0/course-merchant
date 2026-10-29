@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { FieldErrorCode } from "@/common/errors/error-codes.js";
-import { ALLOWED_CURRENCIES } from "@/courses/allowed-currencies.js";
+import { ALLOWED_CURRENCIES } from "@/courses/validation/allowed-currencies.js";
 import { descriptionDocumentSchema } from "./course-description-schema.js";
 
 const requiredString = z.string();

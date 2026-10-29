@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service.js";
-import { AdminCoursesService } from "@/courses/admin-courses.service.js";
+import { AdminCoursesService } from "@/courses/admin/admin-courses.service.js";
 import { AdminCoursesRepository } from "@/courses/repositories/admin-courses.repository.js";
 import { CreateCourseRequest } from "types.js";
 import { toDatabasePrecision } from "@/test/test-helpers.js";

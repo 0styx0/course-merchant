@@ -5,7 +5,7 @@ import type { DbScope } from "types.js";
 import {
   EmailOutboxRepository,
   type QueuedEmail,
-} from "@/email/email-outbox.repository.js";
+} from "@/email/outbox/email-outbox.repository.js";
 
 // Anyone can start a checkout for any address, so cap how many emails one
 // inbox receives. Over the cap the response is unchanged; nothing is queued.

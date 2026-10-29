@@ -4,7 +4,7 @@ import {
   createSessionToken,
   hashSessionToken,
   isWellFormedSessionToken,
-} from "@/auth/session-token.js";
+} from "@/auth/sessions/session-token.js";
 
 describe("session tokens", () => {
   it("makes a different well-formed token each time", () => {

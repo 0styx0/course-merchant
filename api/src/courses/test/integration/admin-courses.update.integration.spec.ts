@@ -4,7 +4,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service.js";
-import { AdminCoursesService } from "@/courses/admin-courses.service.js";
+import { AdminCoursesService } from "@/courses/admin/admin-courses.service.js";
 import {
   AdminCoursesRepository,
   CourseRepositoryModelAdmin,

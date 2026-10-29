@@ -30,7 +30,7 @@ Give the outline and wait for the go-ahead. In plan mode, present it with ExitPl
 - **Heading:** a plain-language sentence saying what the commit does (for example "Send queued emails automatically"), not a class or file name. Clear communication comes first.
 - **Terms:** define every specialized term or unit of work the outline uses (for example "tick", "sweeper", "outbox"): what it means here, why use it, and the alternatives. Don't assume a term means its usual meaning elsewhere.
 - **What:** each file to add or change, as links, with what changes in it. For each new function longer than about 15 lines, list the small named functions it will be composed of (see *Small composed functions* and *Simple ternaries only* in CLAUDE.md), so the split is reviewed before any code exists.
-If any file moves, splits or is renamed, include the old -> new list or before/after trees here.
+If any file moves, splits or is renamed, include one diagram per folder in the format from CLAUDE.md's *Diagram file moves* (heading with file counts, then BEFORE and AFTER side by side in one code block).
 - **Why:** the reason this is the next step, and how it fits the design doc.
 - **Trade-offs:** the alternatives you considered and why you didn't pick them.
 - **Config:** keep module-specific settings (constants or env vars) inside that module, not in global config. If that would add real complexity, tell the owner before doing it.
@@ -58,7 +58,7 @@ From `api/` (or `web/`), run `yarn lint`, `yarn tsc --noEmit` (in `web/`, run `y
 ## 5. Hand off
 
 Keep it short:
-- the files changed, as a table links | high level changes;
+- the files changed, as a table links | high level changes (for moves, the same per-folder BEFORE/AFTER diagrams as in the outline);
 - the verification results;
 - a suggested conventional commit message, as a single-line inline code span alone on its own line (one pair of backticks, no body (unless the message requires one to be clear), no bullet or label on that line) so the owner can double-click it to select all of it, e.g. `` `refactor(web): split the course form into sections` ``;
 - the current context size, and a reminder to run `/clear` before the next commit.

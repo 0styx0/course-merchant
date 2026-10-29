@@ -2,7 +2,7 @@ import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import request from "supertest";
 
-import { AdminPasswordsService } from "@/auth/admin-passwords.service.js";
+import { AdminPasswordsService } from "@/auth/login/admin-passwords.service.js";
 import { AdminCliModule } from "@/auth/cli/admin-cli.module.js";
 import type { AdminSessionResponse } from "types.js";
 import { httpServer, type TypedResponse } from "./e2e/e2e-helpers.js";

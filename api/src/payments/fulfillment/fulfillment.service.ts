@@ -4,7 +4,7 @@ import type { DbScope } from "types.js";
 import {
   EmailOutboxRepository,
   type QueuedEmail,
-} from "@/email/email-outbox.repository.js";
+} from "@/email/outbox/email-outbox.repository.js";
 import {
   EnrollmentAccess,
   enrollmentAccess,

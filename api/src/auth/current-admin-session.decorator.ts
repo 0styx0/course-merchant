@@ -1,7 +1,7 @@
 import { createParamDecorator, type ExecutionContext } from "@nestjs/common";
 import type { Request } from "express";
 
-import type { CurrentAdminSession } from "./admin-sessions.service.js";
+import type { CurrentAdminSession } from "./sessions/admin-sessions.service.js";
 
 export type AdminSessionRequest = Request & {
   adminSession?: CurrentAdminSession;

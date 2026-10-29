@@ -4,7 +4,7 @@ import {
   absoluteExpiresAt,
   activeSessionCutoffs,
   touchCutoff,
-} from "@/auth/session-lifetime.js";
+} from "@/auth/sessions/session-lifetime.js";
 import { instant } from "@/test/test-helpers.js";
 
 const now = instant("2026-10-26T12:00:00Z");

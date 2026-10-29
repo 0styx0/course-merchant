@@ -17,7 +17,7 @@ import {
   descriptionDoc,
 } from "../../../../test/course-fixtures.js";
 import { PrismaModule } from "../../../../prisma/prisma.module.js";
-import { AdminCoursesService } from "@/courses/admin-courses.service.js";
+import { AdminCoursesService } from "@/courses/admin/admin-courses.service.js";
 import { AdminCoursesRepository } from "@/courses/repositories/admin-courses.repository.js";
 import { CourseImagesRepository } from "@/courses/repositories/course-images.repository.js";
 import { db } from "@/prisma/db.js";

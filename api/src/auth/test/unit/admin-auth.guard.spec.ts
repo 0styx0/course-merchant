@@ -3,9 +3,9 @@ import { Reflector } from "@nestjs/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AdminAuthGuard } from "@/auth/admin-auth.guard.js";
-import { AdminSessionsService } from "@/auth/admin-sessions.service.js";
+import { AdminSessionsService } from "@/auth/sessions/admin-sessions.service.js";
 import { Public } from "@/auth/public.decorator.js";
-import { createSessionToken } from "@/auth/session-token.js";
+import { createSessionToken } from "@/auth/sessions/session-token.js";
 import { ApiException } from "@/common/errors/api.exception.js";
 import { asDependency, type MockMethods } from "@/test/test-helpers.js";
 

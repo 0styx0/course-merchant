@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { describe, expect, it } from "vitest";
 
-import { AdminLoginAttemptsRepository } from "@/auth/admin-login-attempts.repository.js";
+import { AdminLoginAttemptsRepository } from "@/auth/login/admin-login-attempts.repository.js";
 import { db } from "@/prisma/db.js";
 
 describe("AdminLoginAttemptsRepository (integration)", () => {

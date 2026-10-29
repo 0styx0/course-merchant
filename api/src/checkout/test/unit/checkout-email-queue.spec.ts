@@ -5,7 +5,7 @@ import { CheckoutEmailQueue } from "@/checkout/checkout-email-queue.js";
 import {
   EmailOutboxRepository,
   type QueuedEmail,
-} from "@/email/email-outbox.repository.js";
+} from "@/email/outbox/email-outbox.repository.js";
 import {
   asDependency,
   fakePrisma,

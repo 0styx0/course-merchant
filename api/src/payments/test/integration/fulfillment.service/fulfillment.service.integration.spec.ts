@@ -1,6 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { beforeEach, describe, expect, it } from "vitest";
-import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
+import { EmailOutboxRepository } from "@/email/outbox/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import type { CompletedCheckout } from "@/payments/stripe/checkout-events.js";
 import { FulfillmentService } from "@/payments/fulfillment/fulfillment.service.js";

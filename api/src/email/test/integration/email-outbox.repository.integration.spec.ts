@@ -1,8 +1,8 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { describe, expect, it } from "vitest";
 
-import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
-import { MAX_SEND_ATTEMPTS } from "@/email/retry-policy.js";
+import { EmailOutboxRepository } from "@/email/outbox/email-outbox.repository.js";
+import { MAX_SEND_ATTEMPTS } from "@/email/delivery/retry-policy.js";
 import { DatabaseClock } from "@/prisma/database-clock.js";
 import { db } from "@/prisma/db.js";
 import {

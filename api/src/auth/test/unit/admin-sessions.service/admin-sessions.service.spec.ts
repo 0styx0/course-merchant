@@ -9,13 +9,13 @@ import {
   vi,
 } from "vitest";
 
-import { AdminLoginAttemptsRepository } from "@/auth/admin-login-attempts.repository.js";
-import { AdminSessionsRepository } from "@/auth/admin-sessions.repository.js";
-import { AdminSessionsService } from "@/auth/admin-sessions.service.js";
+import { AdminLoginAttemptsRepository } from "@/auth/login/admin-login-attempts.repository.js";
+import { AdminSessionsRepository } from "@/auth/sessions/admin-sessions.repository.js";
+import { AdminSessionsService } from "@/auth/sessions/admin-sessions.service.js";
 import { AdminsRepository, type Admin } from "@/auth/admins.repository.js";
-import { HashingSlots } from "@/auth/hashing-slots.js";
-import { hashPassword } from "@/auth/password-hashing.js";
-import { isWellFormedSessionToken } from "@/auth/session-token.js";
+import { HashingSlots } from "@/auth/login/hashing-slots.js";
+import { hashPassword } from "@/auth/login/password-hashing.js";
+import { isWellFormedSessionToken } from "@/auth/sessions/session-token.js";
 import {
   ADMIN_EMAIL as EMAIL,
   ADMIN_PASSWORD as PASSWORD,

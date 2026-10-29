@@ -3,13 +3,13 @@ import { APP_GUARD } from "@nestjs/core";
 
 import { PrismaModule } from "@/prisma/prisma.module.js";
 import { AdminAuthGuard } from "./admin-auth.guard.js";
-import { AdminLoginAttemptsRepository } from "./admin-login-attempts.repository.js";
-import { AdminSessionCleanup } from "./admin-session-cleanup.js";
+import { AdminLoginAttemptsRepository } from "./login/admin-login-attempts.repository.js";
+import { AdminSessionCleanup } from "./sessions/admin-session-cleanup.js";
 import { AdminSessionsController } from "./admin-sessions.controller.js";
-import { AdminSessionsRepository } from "./admin-sessions.repository.js";
-import { AdminSessionsService } from "./admin-sessions.service.js";
+import { AdminSessionsRepository } from "./sessions/admin-sessions.repository.js";
+import { AdminSessionsService } from "./sessions/admin-sessions.service.js";
 import { AdminsRepository } from "./admins.repository.js";
-import { HashingSlots } from "./hashing-slots.js";
+import { HashingSlots } from "./login/hashing-slots.js";
 
 // password hashes one server runs at once; more logins are refused
 const MAX_PARALLEL_HASHES = 2;

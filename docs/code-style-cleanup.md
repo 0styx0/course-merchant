@@ -19,7 +19,7 @@ API, validation and errors:
 
 API, courses and enrollments:
 
-- [x] **4. One mapping from request to stored course.** [admin-courses.service.ts](../api/src/courses/admin-courses.service.ts) writes the course fields and the price mapping twice (create and update); make them one small function each.
+- [x] **4. One mapping from request to stored course.** [admin-courses.service.ts](../api/src/courses/admin/admin-courses.service.ts) writes the course fields and the price mapping twice (create and update); make them one small function each.
 - [x] **5. Admin course repository as steps.** [admin-courses.repository.ts](../api/src/courses/repositories/admin-courses.repository.ts): `createCourse` and `updateCourse` share a "course fields" object and one "load it or throw" function; `updateCourse` becomes `replacePrices` + `appendStatus` + reload. Done.
 - [x] **6. Grant access as two steps.** `grantAccess` in [enrollments.repository.ts](../api/src/enrollments/enrollments.repository.ts) becomes `insertEnrollment` and `reactivateEnrollment`. Keep the comments about the concurrent update. Done.
 - [x] **7. Leftover long API functions.** `toAdminCourseResponse` ([courses.mapper.ts](../api/src/courses/courses.mapper.ts)), `createCheckoutSession` ([stripe.service.ts](../api/src/payments/stripe/stripe.service.ts)); split only if the outline shows a clear gain. Done: the admin response got a mapper per price and per enrollment; the checkout call got `checkoutSessionParams`, `requireSessionUrl` and one `throwProviderError` shared by checkout, retrieve and refund.

@@ -1,9 +1,12 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { AdminSessionsRepository } from "@/auth/admin-sessions.repository.js";
+import { AdminSessionsRepository } from "@/auth/sessions/admin-sessions.repository.js";
 import { AdminsRepository } from "@/auth/admins.repository.js";
-import { activeSessionCutoffs, touchCutoff } from "@/auth/session-lifetime.js";
+import {
+  activeSessionCutoffs,
+  touchCutoff,
+} from "@/auth/sessions/session-lifetime.js";
 import { db } from "@/prisma/db.js";
 import { toDatabasePrecision } from "@/test/test-helpers.js";
 

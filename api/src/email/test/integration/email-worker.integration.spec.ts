@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { EmailComposer } from "@/email/email-composer.js";
-import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
-import { EmailSender } from "@/email/email-sender.js";
-import { EmailViewsRepository } from "@/email/email-views.repository.js";
-import { EmailWorker } from "@/email/email-worker.js";
+import { EmailOutboxRepository } from "@/email/outbox/email-outbox.repository.js";
+import { EmailSender } from "@/email/delivery/email-sender.js";
+import { EmailViewsRepository } from "@/email/outbox/email-views.repository.js";
+import { EmailWorker } from "@/email/delivery/email-worker.js";
 import { DatabaseClock } from "@/prisma/database-clock.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import {

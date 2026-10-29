@@ -1,9 +1,9 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { AdminLoginAttemptsRepository } from "@/auth/admin-login-attempts.repository.js";
-import { AdminSessionCleanup } from "@/auth/admin-session-cleanup.js";
-import { AdminSessionsRepository } from "@/auth/admin-sessions.repository.js";
+import { AdminLoginAttemptsRepository } from "@/auth/login/admin-login-attempts.repository.js";
+import { AdminSessionCleanup } from "@/auth/sessions/admin-session-cleanup.js";
+import { AdminSessionsRepository } from "@/auth/sessions/admin-sessions.repository.js";
 import { AdminsRepository } from "@/auth/admins.repository.js";
 import { db } from "@/prisma/db.js";
 import { PrismaService } from "@/prisma/prisma.service.js";

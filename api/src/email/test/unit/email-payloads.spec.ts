@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   EmailPayloadInvalidError,
   parsePayload,
-} from "@/email/email-payloads.js";
+} from "@/email/outbox/email-payloads.js";
 
 describe("parsePayload", () => {
   it("accepts a valid payload for each kind", () => {

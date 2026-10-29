@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { EmailComposer } from "@/email/email-composer.js";
-import type { OutboxEmail } from "@/email/email-outbox.repository.js";
-import { EmailViewsRepository } from "@/email/email-views.repository.js";
+import type { OutboxEmail } from "@/email/outbox/email-outbox.repository.js";
+import { EmailViewsRepository } from "@/email/outbox/email-views.repository.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import {
   createCustomer,

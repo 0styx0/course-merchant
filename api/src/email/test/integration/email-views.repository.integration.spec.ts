@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { EmailViewsRepository } from "@/email/email-views.repository.js";
+import { EmailViewsRepository } from "@/email/outbox/email-views.repository.js";
 import { db } from "@/prisma/db.js";
 import {
   createCustomer,

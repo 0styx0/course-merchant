@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { EmailDeliveryError, EmailSender } from "@/email/email-sender.js";
+import {
+  EmailDeliveryError,
+  EmailSender,
+} from "@/email/delivery/email-sender.js";
 
 const config = {
   smtpUrl: "smtp://localhost",

@@ -30,7 +30,7 @@ Keep these files current **in the same commit as the work**. Tick off status her
 
   The manual `stripe listen` check is deferred to the *Launch* checklist, to run through the web checkout once step 6 exists.
 - [x] **4. Email delivery:**
-  - [x] `EmailOutboxRepository.findDue`, `markSent` and `markFailedAttempt`, with the backoff in `retry-policy.ts`.
+  - [x] `EmailOutboxRepository.findDue`, `markSent` and `markFailedAttempt`, with the backoff in `email/delivery/retry-policy.ts`.
   - [x] Templates for each `EmailKind` and `EmailSender` over SMTP.
   - [x] `EmailWorker` on a `@nestjs/schedule` interval, with `EmailComposer` loading each email's course, customer or payment (via `EmailViewsRepository`) and rendering it.
   - [x] Admin course view shows each enrollment's `emailStatus`, the only alert for a failed email.

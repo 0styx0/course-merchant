@@ -2,7 +2,7 @@ import { INestApplication } from "@nestjs/common";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { isWellFormedSessionToken } from "@/auth/session-token.js";
+import { isWellFormedSessionToken } from "@/auth/sessions/session-token.js";
 import type { AdminSessionResponse, ProblemDetails } from "types.js";
 import {
   ADMIN_EMAIL,

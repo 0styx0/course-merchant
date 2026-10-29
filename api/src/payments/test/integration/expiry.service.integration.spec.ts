@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
+import { EmailOutboxRepository } from "@/email/outbox/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import type { ExpiredCheckout } from "@/payments/stripe/checkout-events.js";
 import { ExpiryService } from "@/payments/fulfillment/expiry.service.js";

@@ -1,5 +1,5 @@
 import { expect } from "vitest";
-import { type AdminSession } from "@/auth/admin-sessions.repository.js";
+import { type AdminSession } from "@/auth/sessions/admin-sessions.repository.js";
 import { ApiException } from "@/common/errors/api.exception.js";
 import { instant } from "@/test/test-helpers.js";
 

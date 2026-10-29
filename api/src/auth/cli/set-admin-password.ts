@@ -5,8 +5,8 @@ import password from "@inquirer/password";
 import { NestFactory } from "@nestjs/core";
 
 import { emailSchema } from "@/common/validation/email.schema.js";
-import { AdminPasswordsService } from "../admin-passwords.service.js";
-import { newPasswordProblem } from "../password-hashing.js";
+import { AdminPasswordsService } from "../login/admin-passwords.service.js";
+import { newPasswordProblem } from "../login/password-hashing.js";
 import { AdminCliModule } from "./admin-cli.module.js";
 
 const USAGE = "Usage: yarn admin:set-password <email>";
