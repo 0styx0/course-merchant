@@ -38,10 +38,9 @@ function isAllowedLink(href: string) {
   }
 }
 
-function* textNodes(
-  node: JSONContent,
-  path: Path,
-): Generator<{ node: JSONContent; path: Path }> {
+type TextNode = { node: JSONContent; path: Path };
+
+function* textNodes(node: JSONContent, path: Path): Generator<TextNode> {
   if (node.type === "text") {
     yield { node, path };
   }
@@ -51,54 +50,85 @@ function* textNodes(
   }
 }
 
-function findProblems(doc: JSONContent): Problem[] {
-  const problems: Problem[] = [];
-  let allText = "";
+type Mark = NonNullable<JSONContent["marks"]>[number];
 
-  for (const { node, path } of textNodes(doc, [])) {
-    const text = node.text ?? "";
-    allText += text;
-
-    if (!isStorableText(text)) {
-      problems.push({
-        path: [...path, "text"],
-        message: "Text must not contain null or malformed characters.",
-        code: FieldErrorCode.INVALID_VALUE,
-      });
-    }
-
-    for (const [index, mark] of (node.marks ?? []).entries()) {
-      const href: unknown = mark.attrs?.href;
-
-      if (
-        mark.type === "link" &&
-        !(typeof href === "string" && isAllowedLink(href))
-      ) {
-        problems.push({
-          path: [...path, "marks", index, "attrs", "href"],
-          message:
-            "Links must start with https://, http://, mailto: or tel: and be at most 2048 characters.",
-          code: FieldErrorCode.INVALID_VALUE,
-        });
-      }
-    }
+function badTextProblems({ node, path }: TextNode): Problem[] {
+  if (isStorableText(node.text ?? "")) {
+    return [];
   }
 
+  return [
+    {
+      path: [...path, "text"],
+      message: "Text must not contain null or malformed characters.",
+      code: FieldErrorCode.INVALID_VALUE,
+    },
+  ];
+}
+
+function isDisallowedLink(mark: Mark): boolean {
+  const href: unknown = mark.attrs?.href;
+
+  return (
+    mark.type === "link" && !(typeof href === "string" && isAllowedLink(href))
+  );
+}
+
+function linkProblem(mark: Mark, index: number, path: Path): Problem[] {
+  if (!isDisallowedLink(mark)) {
+    return [];
+  }
+
+  return [
+    {
+      path: [...path, "marks", index, "attrs", "href"],
+      message:
+        "Links must start with https://, http://, mailto: or tel: and be at most 2048 characters.",
+      code: FieldErrorCode.INVALID_VALUE,
+    },
+  ];
+}
+
+function badLinkProblems({ node, path }: TextNode): Problem[] {
+  return (node.marks ?? []).flatMap((mark, index) =>
+    linkProblem(mark, index, path),
+  );
+}
+
+function totalLengthProblems(nodes: TextNode[]): Problem[] {
+  const allText = nodes.map(({ node }) => node.text ?? "").join("");
+
   if (!/\S/u.test(allText)) {
-    problems.push({
-      path: [],
-      message: "Description must contain some text.",
-      code: FieldErrorCode.TOO_SHORT,
-    });
-  } else if (allText.length > MAX_TEXT_LENGTH) {
-    problems.push({
+    return [
+      {
+        path: [],
+        message: "Description must contain some text.",
+        code: FieldErrorCode.TOO_SHORT,
+      },
+    ];
+  }
+
+  if (allText.length <= MAX_TEXT_LENGTH) {
+    return [];
+  }
+
+  return [
+    {
       path: [],
       message: `Description text must be at most ${MAX_TEXT_LENGTH} characters.`,
       code: FieldErrorCode.TOO_LONG,
-    });
-  }
+    },
+  ];
+}
 
-  return problems;
+function findProblems(doc: JSONContent): Problem[] {
+  const nodes = [...textNodes(doc, [])];
+
+  return [
+    ...nodes.flatMap(badTextProblems),
+    ...nodes.flatMap(badLinkProblems),
+    ...totalLengthProblems(nodes),
+  ];
 }
 
 const NOT_A_DOCUMENT: Problem = {

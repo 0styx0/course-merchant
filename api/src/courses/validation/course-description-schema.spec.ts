@@ -102,6 +102,22 @@ describe("descriptionDocumentSchema", () => {
     ]);
   });
 
+  it("lists every bad text first, then every bad link", () => {
+    const value = doc(
+      paragraph(text("a", [link("/relative")]), text("b\0")),
+      paragraph(text("c\0")),
+    );
+
+    expect(issuesFor(value)).toEqual([
+      { field: "/content/0/content/1/text", code: "INVALID_VALUE" },
+      { field: "/content/1/content/0/text", code: "INVALID_VALUE" },
+      {
+        field: "/content/0/content/0/marks/0/attrs/href",
+        code: "INVALID_VALUE",
+      },
+    ]);
+  });
+
   it.each([
     ["only spaces", "   "],
     ["only non-breaking spaces", "  "],

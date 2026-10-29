@@ -14,8 +14,8 @@ Each step is one commit, outlined in detail before it starts, and **changes no b
 API, validation and errors:
 
 - [x] **1. Update rules as small rules.** Split `findUpdateRuleViolations` in [course-update-rules.ts](../api/src/courses/validation/course-update-rules.ts) into one function per rule (image before publishing, start and end not in the past, price not in the past, a price in effect), joined with `flatMap`, no `errors.push`. Done.
-- [ ] **2. Description problems as small checks.** Split `findProblems` in [course-description-schema.ts](../api/src/courses/validation/course-description-schema.ts) into bad text, bad links and total length, built with `flatMap`/`map` and no `let allText`. **Next**
-- [ ] **3. Error filter as small mappers.** [problem-details.filter.ts](../api/src/common/errors/problem-details.filter.ts): `catch` only sends what a `toProblem(exception)` returns, with one small mapper per exception kind. The error-to-text helper it shares with `errorStack` in [payment-sweeper.ts](../api/src/payments/payment-sweeper.ts) moves to one place under `common/errors/`.
+- [x] **2. Description problems as small checks.** Split `findProblems` in [course-description-schema.ts](../api/src/courses/validation/course-description-schema.ts) into bad text, bad links and total length, built with `flatMap`/`map` and no `let allText`. Done. The error list is now grouped (all bad text, then all bad links, then the length problem).
+- [ ] **3. Error filter as small mappers.** [problem-details.filter.ts](../api/src/common/errors/problem-details.filter.ts): `catch` only sends what a `toProblem(exception)` returns, with one small mapper per exception kind. The error-to-text helper it shares with `errorStack` in [payment-sweeper.ts](../api/src/payments/payment-sweeper.ts) moves to one place under `common/errors/`. **Next**
 
 API, courses and enrollments:
 
