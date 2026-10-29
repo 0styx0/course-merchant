@@ -17,7 +17,10 @@ Each milestone delivers one outcome. A milestone is split into one-line commits 
 - [x] **3. Behaviour pinned before refactors.** Use the existing `@vitest/coverage-v8` (both packages already have it) to see which lines a refactor touches that no test runs, and make the `next-commit` skill check it first (details in *Step 3*). Two commits:
   - [x] **3a.** A `test:coverage` script in each package (`api/package.json`, `web/package.json`), replacing the API's `test:cov`, and the command in [api/CLAUDE.md](../api/CLAUDE.md) and [web/CLAUDE.md](../web/CLAUDE.md); each script run once to confirm it works.
   - [x] **3b.** A step in the `next-commit` skill (`.claude/skills/next-commit/SKILL.md`): check coverage of the touched code first, and add a missing test in its own commit before the refactor.
-- [ ] **4. Naming and layout rules.** **Next**, not yet split into commits: run `/plan-create-implementation code-quality-guardrails` first. Short rules in CLAUDE.md for what lint can't check (see *Principles*), including 7 files per folder. Then fix the 11 folders that already break it (listed in *Numbers*), one layout commit per folder, each outlined with before/after file trees and needing the owner's OK.
+- [ ] **4. Naming and layout rules.** Fix the 9 folders over 7 files first, one commit per package, then write the rules (details in *Step 4*). Three commits:
+  - [ ] **4a.** **Next.** Web layout: `web/src/features/admin-courses` (28 files), then its `description-editor` (8), `web/src/features/courses` (16) and `web/src/lib/api` (9, not counting `generated.ts`). Outlined with before/after trees and needing the owner's OK.
+  - [ ] **4b.** API layout: `api/src/auth` (16), `api/src/courses` (13), `api/src/courses/test/unit` (11, grouped by topic), `api/src/email` (9) and `api/src/prisma` (8). Same outline rules.
+  - [ ] **4c.** The naming and layout rules in CLAUDE.md (see *Principles*), plus the one-line amendment in [api-tests.md](../.claude/rules/api-tests.md) allowing topic sub-folders under `test/unit/`. Docs only; review with the owner again before starting.
 - [ ] **5. Short outlines for mechanical steps.** Change the `next-commit` skill and CLAUDE.md: moves, renames, splits, doc-only and lint-fix commits get a short outline and no wait for approval.
 - [ ] **6. Close the cleanup.** Cut [code-style-cleanup.md](code-style-cleanup.md) down to its decision rows (or delete it), remove it from the `next-commit` hint and the CLAUDE.md doc list, fix the saved next-commit memory, and add the cleanup row to the usage-reviews memory.
 
@@ -42,7 +45,7 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 | Complexity (`complexity`) | 10 | McCabe's 1976 paper proposed 10 as the limit. ESLint's rule counts the same thing (independent paths through a function). | 3 over (API 1, web 2). |
 | File length (`max-lines`) | 250 | No principled source. Chosen just above the largest hand-written file, so it stops growth without forcing rewrites. | 0 over in hand-written `src`; only a generated file exceeds it. |
 | Nested ternary (`no-nested-ternary`) | error | Backs the *Simple ternaries only* rule. | 1 in API tests (fixed in 1a), 0 elsewhere in `src`. |
-| Files per folder | 7 | The owner's choice. The cleanup split `admin-courses/` (30 files) and `payments/`; 7 is about one screen of a file tree. | 11 folders over today: `web/src/features/admin-courses` 30, `web/src/features/courses` 16, `api/src/auth` 16, `api/src/courses/test/unit` 16, `api/src/courses` 13, `web/src/lib/api` 10, `api/src/email` 9, then 8 each in `description-editor`, `api/src/test/e2e/courses`, `api/src/prisma` and `api/src/courses/test/integration`. |
+| Files per folder | 7 | The owner's choice. The cleanup split `admin-courses/` (30 files) and `payments/`; 7 is about one screen of a file tree. | 9 folders over today (recounted before milestone 4; step 1's test splits fixed `test/e2e/courses` and `test/integration`): `web/src/features/admin-courses` 28, `web/src/features/courses` 16, `api/src/auth` 16, `api/src/courses` 13, `api/src/courses/test/unit` 11, `web/src/lib/api` 10 (9 without `generated.ts`), `api/src/email` 9, then 8 each in `description-editor` and `api/src/prisma`. |
 | Coverage threshold | none | The owner chose not to set one: a threshold invites tests written to hit the number. Coverage is used as a check before a refactor only. | Not measured yet. |
 | Short outline | about 5 lines | Enough to name the files and the check, short enough that "go" is a quick read. | n/a |
 
@@ -59,11 +62,15 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 | Mechanical steps get a short outline: moves, renames, splits, doc-only and lint-fix commits. | None of them change runtime behaviour; about 15 "go" turns in the cleanup were only approval. | Full outlines for everything. |
 | No coverage threshold. | See *Numbers*. | A percentage gate. |
 | 7 files per folder is a guideline, not a test. | A test would block commits over a judgement call. | A tiny test that counts files. |
-| The 11 folders over 7 files are fixed now, in milestone 4. | A rule the code already breaks gets ignored. This is the same "fix first, then enforce" principle as the lint rules. | Applying the rule only to folders touched from now on. |
+| The 9 folders over 7 files are fixed now, in milestone 4. | A rule the code already breaks gets ignored. This is the same "fix first, then enforce" principle as the lint rules. | Applying the rule only to folders touched from now on. |
 | Spec files count toward the 7. | The reason is scanning a file tree, and a tree full of specs is as hard to scan as one full of source. | Counting only source files. |
 | Coverage before a refactor is checked with a `test:coverage` script per package (unit tests only in the API); the old API `test:cov` is removed. | One short command that both the guides and the skill can name. It needs no database, and there is only one coverage script per package. | The raw vitest command in the docs (long flags that are easy to get wrong); a whole-package report (noisy). |
 | knip runs on pre-push and in CI, not on commit. | It checks the whole project; a half-done refactor can leave an export briefly unused between commits. | Pre-commit (blocks valid in-between commits). |
 | One knip config per package; false positives go in its `entry`, `ignore` or `ignoreBinaries`, each with a reason. Generated files and `components/ui/` are ignored. | Matches the two independent yarn projects and the lint exemptions. | A root workspace config (they aren't yarn workspaces); `ignoreExportsUsedInFile` (hides exports that should just not be exported). |
+| Layout fixes are one commit per package (4a web, 4b api), not one per folder. | The owner chose it: fewer "go" turns, and each commit is a pure move. The cost is a large diff and no revert of a single folder. | One commit per folder (9 commits); one commit for everything (mixes `api/` and `web/`). |
+| Parent folders move before their children (`admin-courses` before `description-editor`, `courses` before `courses/test/unit`). | A child's contents depend on where its parent's files go. | Children first (they would move twice). |
+| Specs under `test/unit/` may be grouped into topic sub-folders. | `courses/test/unit` has 11 entries. Topic folders keep the "unit specs live in `<module>/test/unit/`" rule and the 7-file limit together. | Mirroring the source sub-folders (ties the test layout to the source layout); exempting `test/` folders (contradicts "spec files count"). |
+| The rules are written last (4c), after the folders obey them. | "Fix first, then enforce". | Writing the rules first. |
 
 ## Step 1. Style rules enforced by lint
 
@@ -98,9 +105,17 @@ The commands are in [api/CLAUDE.md](../api/CLAUDE.md) and [web/CLAUDE.md](../web
 
 **Flaky test.** One web test failed on the first coverage run and passed on the rerun, probably a timing flake under coverage load. Not identified yet; note it if it recurs.
 
+## Step 4. Naming and layout rules
+
+**Layout commits (4a, 4b).** Pure moves: `git mv`, then `yarn tsc --noEmit` lists the broken imports, then fix doc paths (`docs/`, ARCHITECTURE.md, README). No content changes. Each folder is grouped by job, with a folder name that says the job (as `stripe/`, `fulfillment/`), never `utils/` or `misc/`. Folders are outlined with before/after trees and need the owner's OK. Generated and vendored code (`generated.ts`, `migrations/`, `components/ui/`) is not counted. The test count before and after must match; the hand-off reports it.
+
+**Test specs.** A spec split by topic keeps its sub-folder named after the original spec; in `courses/test/unit/` those sub-folders are grouped further by topic (for example service, schemas, image).
+
+**Rules (4c).** Short rules in CLAUDE.md for what lint can't check: a file name states everything the file exports; a function name states what it returns; at most 7 files per folder, spec files included; group by job.
+
 ## Open questions
 
-- **Milestone 4:** how to group each folder (by job, as `payments/` was); settled folder by folder in each outline. `api/src/courses/test/unit` (16 specs) may need to mirror the source sub-folders, which conflicts with the "unit specs live in `<module>/test/unit/`" rule in [api-tests.md](../.claude/rules/api-tests.md); raise it in that outline.
+- **Milestone 4:** how to group each folder is settled folder by folder in each outline.
 
 ## Out of scope
 
