@@ -19,6 +19,7 @@ Module: `$module` — one of `payments`, `courses`, `auth`, `web`, `course-creat
 - Before outlining, look for existing patterns and helpers:
   - read one existing sibling of each kind of file you'll add (for example an existing repository and its integration spec) and follow its conventions;
   - for each helper you think you need, grep for an existing one in `src/common/`, `src/test/` and the modules involved, and reuse it.
+- For a refactor that changes no behaviour, check what the tests pin first: run `test:coverage` on the files you'll touch (commands in [api/CLAUDE.md](../../../api/CLAUDE.md) and [web/CLAUDE.md](../../../web/CLAUDE.md)). If a touched line or branch is uncovered, the missing test is its own commit first and must pass against the old code; say so in the outline. Skip this for pure moves, renames and doc-only commits.
 - Search for specific things; skip wide, open-ended surveys of the codebase. Read a sibling by line range when you only need a pattern. Never read generated files whole (see CLAUDE.md).
 - Run `git status --short`. Leave uncommitted changes from other work alone, and mention them if they touch the same files.
 
@@ -34,7 +35,7 @@ If any file moves, splits or is renamed, include the old -> new list or before/a
 - **Trade-offs:** the alternatives you considered and why you didn't pick them.
 - **Config:** keep module-specific settings (constants or env vars) inside that module, not in global config. If that would add real complexity, tell the owner before doing it.
 - **Questions:** any design or behaviour change not already decided in the doc, asked as a question with your recommendation.
-- **Tests:** which unit, integration or e2e tests you'll add.
+- **Tests:** which unit, integration or e2e tests you'll add; for a refactor, the coverage result.
 - **Doc update:** what changes in `docs/<area>.md`. Write out the exact text of any new decision row, so the owner can approve it with the outline.
 
 If the owner replies with questions or objections, discuss them first: answer, give your recommendation, and ask follow-ups if needed. Don't edit the outline or write code while the discussion is open. Once the owner agrees on the answers, present the updated outline and wait for the go-ahead again.
@@ -63,3 +64,6 @@ Keep it short:
 - the current context size, and a reminder to run `/clear` before the next commit.
 
 Then stop. The owner makes the commit. If this finished a whole step in the Status, run `/usage-review`.
+
+If the current work is part of a sequence, write the command to move on the next item. Example:
+`/next-commit <module-name>`

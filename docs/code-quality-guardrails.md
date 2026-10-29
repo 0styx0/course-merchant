@@ -14,10 +14,10 @@ Each milestone delivers one outcome. A milestone is split into one-line commits 
 - [x] **2. Unused-code check.** Add [knip](https://knip.dev) (finds unused files, exports and dependencies), clean up what it reports, then enforce it on pre-push and CI (details in *Step 2*). Two commits:
   - [x] **2a.** API: add knip (`api/knip.jsonc`, `api/package.json`), remove what it reports (unused exports, `pg`, `@eslint/eslintrc`, the value import of `express`), then run `yarn --cwd api knip` on pre-push and in CI's `api` job; update the hook table in [CONTRIBUTING.md](../CONTRIBUTING.md).
   - [x] **2b.** Web: the same for `web/` (`web/knip.jsonc`, about 5 files under `web/src`, the unused `strict-event-emitter` dev dependency), knip in pre-push and CI's `web` job, CONTRIBUTING, and tick this step.
-- [ ] **3. Behaviour pinned before refactors.** Use the existing `@vitest/coverage-v8` (both packages already have it) to see which lines a refactor touches that no test runs, and make the `next-commit` skill check it first (details in *Step 3*). Two commits:
+- [x] **3. Behaviour pinned before refactors.** Use the existing `@vitest/coverage-v8` (both packages already have it) to see which lines a refactor touches that no test runs, and make the `next-commit` skill check it first (details in *Step 3*). Two commits:
   - [x] **3a.** A `test:coverage` script in each package (`api/package.json`, `web/package.json`), replacing the API's `test:cov`, and the command in [api/CLAUDE.md](../api/CLAUDE.md) and [web/CLAUDE.md](../web/CLAUDE.md); each script run once to confirm it works.
-  - [ ] **3b.** **Next.** A step in the `next-commit` skill (`.claude/skills/next-commit/SKILL.md`): check coverage of the touched code first, and add a missing test in its own commit before the refactor.
-- [ ] **4. Naming and layout rules.** Short rules in CLAUDE.md for what lint can't check (see *Principles*), including 7 files per folder. Then fix the 11 folders that already break it (listed in *Numbers*), one layout commit per folder, each outlined with before/after file trees and needing the owner's OK.
+  - [x] **3b.** A step in the `next-commit` skill (`.claude/skills/next-commit/SKILL.md`): check coverage of the touched code first, and add a missing test in its own commit before the refactor.
+- [ ] **4. Naming and layout rules.** **Next**, not yet split into commits: run `/plan-create-implementation code-quality-guardrails` first. Short rules in CLAUDE.md for what lint can't check (see *Principles*), including 7 files per folder. Then fix the 11 folders that already break it (listed in *Numbers*), one layout commit per folder, each outlined with before/after file trees and needing the owner's OK.
 - [ ] **5. Short outlines for mechanical steps.** Change the `next-commit` skill and CLAUDE.md: moves, renames, splits, doc-only and lint-fix commits get a short outline and no wait for approval.
 - [ ] **6. Close the cleanup.** Cut [code-style-cleanup.md](code-style-cleanup.md) down to its decision rows (or delete it), remove it from the `next-commit` hint and the CLAUDE.md doc list, fix the saved next-commit memory, and add the cleanup row to the usage-reviews memory.
 
@@ -92,11 +92,7 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 
 ## Step 3. Behaviour pinned before refactors
 
-**Scripts.** `test:coverage` in each package runs the unit tests with the text coverage report, no threshold. The API's script uses `vitest.unit.config.ts`, so it needs no database; the web's runs its whole suite (about 30 seconds). Limit the report to the files being refactored by appending `--coverage.include=<file>` (yarn passes extra arguments through).
-
-**Reading the report.** A refactored line is pinned if no row lists it as uncovered; uncovered branches count too. Web prints "No files with missing coverage" when the named files are fully covered.
-
-**Skill rule.** Applies to refactors that change no behaviour. Run the coverage check on the files the refactor touches before outlining. If a touched line or branch is uncovered, the missing test is its own commit first, and it must pass against the old code. Skipped for pure moves, renames and doc-only commits.
+The commands are in [api/CLAUDE.md](../api/CLAUDE.md) and [web/CLAUDE.md](../web/CLAUDE.md); the rule is in step 1 of the `next-commit` skill.
 
 **Already pinned.** The order of the description error list (all bad text, then all bad links) is pinned by "lists every bad text first, then every bad link" in [course-description-schema.spec.ts](../api/src/courses/test/unit/course-description-schema.spec.ts), so no new test is needed.
 
