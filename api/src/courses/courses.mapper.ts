@@ -108,12 +108,44 @@ export function toPublicCourseResponse(
   };
 }
 
+type AdminPrice = CourseRepositoryModelAdmin["prices"][number];
+type AdminEnrollment = CourseRepositoryModelAdmin["enrollments"][number];
+
+function formatOptionalDate(time: Temporal.Instant | null) {
+  return time === null ? null : formatDate(time);
+}
+
+function toAdminPriceResponse(price: AdminPrice) {
+  return {
+    id: price.id,
+    amount: price.amount,
+    currency: price.currency,
+    effectiveAt: formatDate(price.effectiveAt),
+  };
+}
+
+function toAdminEnrollmentResponse(enrollment: AdminEnrollment) {
+  return {
+    revokedAt: formatOptionalDate(enrollment.revokedAt),
+    suspendedAt: formatOptionalDate(enrollment.suspendedAt),
+    // no email at all reads as failed, so the owner follows up
+    emailStatus: enrollment.emails[0]?.email?.status ?? "failed",
+    customer: {
+      id: enrollment.customer.id,
+      name: enrollment.customer.name,
+      email: enrollment.customer.email,
+    },
+    payment: enrollment.payment && {
+      status: enrollment.payment.status,
+      amount: enrollment.payment.amount,
+      paidAt: formatOptionalDate(enrollment.payment.paidAt),
+    },
+  };
+}
+
 export function toAdminCourseResponse(
   course: CourseRepositoryModelAdmin,
 ): GetCourseAdminResponse {
-  const formatOptionalDate = (time: Temporal.Instant | null) =>
-    time === null ? null : formatDate(time);
-
   return {
     id: course.id,
     name: course.title,
@@ -133,27 +165,7 @@ export function toAdminCourseResponse(
       updatedAt: formatDate(course.image.updatedAt),
       version: imageVersion(course.image.updatedAt),
     },
-    prices: course.prices.map((price) => ({
-      id: price.id,
-      amount: price.amount,
-      currency: price.currency,
-      effectiveAt: formatDate(price.effectiveAt),
-    })),
-    enrollments: course.enrollments.map((enrollment) => ({
-      revokedAt: formatOptionalDate(enrollment.revokedAt),
-      suspendedAt: formatOptionalDate(enrollment.suspendedAt),
-      // no email at all reads as failed, so the owner follows up
-      emailStatus: enrollment.emails[0]?.email?.status ?? "failed",
-      customer: {
-        id: enrollment.customer.id,
-        name: enrollment.customer.name,
-        email: enrollment.customer.email,
-      },
-      payment: enrollment.payment && {
-        status: enrollment.payment.status,
-        amount: enrollment.payment.amount,
-        paidAt: formatOptionalDate(enrollment.payment.paidAt),
-      },
-    })),
+    prices: course.prices.map(toAdminPriceResponse),
+    enrollments: course.enrollments.map(toAdminEnrollmentResponse),
   };
 }

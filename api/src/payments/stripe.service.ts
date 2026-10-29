@@ -133,46 +133,12 @@ export class StripeService {
     input: CreateCheckoutSessionInput,
   ): Promise<CreatedCheckoutSession> {
     const session = await this.stripe.checkout.sessions
-      .create(
-        {
-          mode: "payment",
-          // cards only: payment is confirmed instantly, so there is never a
-          // delayed "processing" state to deliver against
-          allowed_payment_method_types: ["card"],
-          line_items: [
-            {
-              quantity: 1,
-              price_data: {
-                currency: input.currency.toLowerCase(),
-                unit_amount: input.amount,
-                product_data: { name: input.courseName },
-              },
-            },
-          ],
-          customer_email: input.customerEmail,
-          client_reference_id: input.paymentId,
-          metadata: { paymentId: input.paymentId },
-          success_url: withCheckoutId(input.successUrl),
-          cancel_url: input.cancelUrl,
-          expires_at: Math.floor(input.expiresAt.epochMilliseconds / 1000),
-        },
-        { idempotencyKey: `checkout-${input.paymentId}` },
-      )
-      .catch((error: unknown) => {
-        if (isStripeOutage(error)) {
-          throw new PaymentProviderUnavailableError({ cause: error });
-        }
+      .create(checkoutSessionParams(input), {
+        idempotencyKey: `checkout-${input.paymentId}`,
+      })
+      .catch(throwProviderError);
 
-        throw error;
-      });
-
-    if (!session.url) {
-      throw new Error(
-        `Stripe returned Checkout Session ${session.id} without a URL.`,
-      );
-    }
-
-    return { id: session.id, url: session.url };
+    return { id: session.id, url: requireSessionUrl(session) };
   }
 
   /**
@@ -188,13 +154,7 @@ export class StripeService {
       .retrieve(providerCheckoutId, {
         expand: ["payment_intent.latest_charge"],
       })
-      .catch((error: unknown) => {
-        if (isStripeOutage(error)) {
-          throw new PaymentProviderUnavailableError({ cause: error });
-        }
-
-        throw error;
-      });
+      .catch(throwProviderError);
 
     return retrievedCheckoutFromSession(session);
   }
@@ -223,13 +183,56 @@ export class StripeService {
           return;
         }
 
-        if (isStripeOutage(error)) {
-          throw new PaymentProviderUnavailableError({ cause: error });
-        }
-
-        throw error;
+        throwProviderError(error);
       });
   }
+}
+
+function checkoutSessionParams(
+  input: CreateCheckoutSessionInput,
+): Stripe.Checkout.SessionCreateParams {
+  return {
+    mode: "payment",
+    // cards only: payment is confirmed instantly, so there is never a
+    // delayed "processing" state to deliver against
+    allowed_payment_method_types: ["card"],
+    line_items: [
+      {
+        quantity: 1,
+        price_data: {
+          currency: input.currency.toLowerCase(),
+          unit_amount: input.amount,
+          product_data: { name: input.courseName },
+        },
+      },
+    ],
+    customer_email: input.customerEmail,
+    client_reference_id: input.paymentId,
+    metadata: { paymentId: input.paymentId },
+    success_url: withCheckoutId(input.successUrl),
+    cancel_url: input.cancelUrl,
+    expires_at: Math.floor(input.expiresAt.epochMilliseconds / 1000),
+  };
+}
+
+function requireSessionUrl(session: Stripe.Checkout.Session): string {
+  if (!session.url) {
+    throw new Error(
+      `Stripe returned Checkout Session ${session.id} without a URL.`,
+    );
+  }
+
+  return session.url;
+}
+
+// a Stripe outage becomes our own error so callers can retry; anything else
+// is a bug and passes through unchanged
+function throwProviderError(error: unknown): never {
+  if (isStripeOutage(error)) {
+    throw new PaymentProviderUnavailableError({ cause: error });
+  }
+
+  throw error;
 }
 
 // Stripe replaces the literal {CHECKOUT_SESSION_ID} with the session id, so the

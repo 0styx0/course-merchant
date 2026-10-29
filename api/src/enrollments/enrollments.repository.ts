@@ -10,6 +10,13 @@ export type EnrollmentRecord = {
   suspendedAt: Temporal.Instant | null;
 };
 
+type EnrollmentAccess = {
+  courseId: string;
+  customerId: string;
+  paymentId: string | null;
+  now: Temporal.Instant;
+};
+
 /**
  * Grants and reactivates enrollments, shared by checkout (free courses) and
  * fulfillment (paid ones), so the two can't drift apart. Which access an
@@ -40,12 +47,21 @@ export class EnrollmentsRepository {
    */
   async grantAccess(
     scope: DbScope,
-    access: {
-      courseId: string;
-      customerId: string;
-      paymentId: string | null;
-      now: Temporal.Instant;
-    },
+    access: EnrollmentAccess,
+  ): Promise<string | null> {
+    const insertedId = await this.insertEnrollment(scope, access);
+
+    if (insertedId) {
+      return insertedId;
+    }
+
+    return this.reactivateEnrollment(scope, access);
+  }
+
+  /** Returns the new enrollment's id, or null when the customer already has one. */
+  private async insertEnrollment(
+    scope: DbScope,
+    access: EnrollmentAccess,
   ): Promise<string | null> {
     const { courseId, customerId, paymentId, now } = access;
     const newEnrollmentId = crypto.randomUUID();
@@ -69,9 +85,15 @@ export class EnrollmentsRepository {
 
     const isNewEnrollment = insertedEnrollments === 1;
 
-    if (isNewEnrollment) {
-      return newEnrollmentId;
-    }
+    return isNewEnrollment ? newEnrollmentId : null;
+  }
+
+  /** Returns the enrollment's id, or null when it can't be reactivated. */
+  private async reactivateEnrollment(
+    scope: DbScope,
+    access: EnrollmentAccess,
+  ): Promise<string | null> {
+    const { courseId, customerId, paymentId, now } = access;
 
     // only a revoked, unsuspended enrollment can be reactivated. The
     // condition is part of the UPDATE itself, so of two concurrent requests
