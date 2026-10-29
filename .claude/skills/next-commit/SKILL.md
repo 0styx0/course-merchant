@@ -1,14 +1,14 @@
 ---
 name: next-commit
-description: Outline the next commit from a design doc's Status, wait for approval, then implement, verify and update the doc. Use when the owner says "next", "next commit", or names a status item to work on.
+description: Outline the next commit from a design doc's Status, wait for approval (unless the commit is mechanical), then implement, verify and update the doc. Use when the owner says "next", "next commit", or names a status item to work on.
 disable-model-invocation: false
-argument-hint: "[module: payments|courses|auth|web|course-creation|code-style-cleanup|code-quality-guardrails] [task]"
+argument-hint: "[module: payments|courses|auth|web|course-creation|code-quality-guardrails] [task]"
 arguments: [module]
 ---
 
 # Next commit
 
-Module: `$module` — one of `payments`, `courses`, `auth`, `web`, `course-creation`, `code-style-cleanup`, `code-quality-guardrails` (the matching `docs/<module>.md`). Anything typed after it is a free-text task: `$ARGUMENTS`. Both are optional; with no module, reuse the one saved in memory (see step 1). Follow CLAUDE.md's working agreements (especially *When to stop and ask* and *Writing*) throughout; this skill is only the order of work.
+Module: `$module` — one of `payments`, `courses`, `auth`, `web`, `course-creation`, `code-quality-guardrails` (the matching `docs/<module>.md`). Anything typed after it is a free-text task: `$ARGUMENTS`. Both are optional; with no module, reuse the one saved in memory (see step 1). Follow CLAUDE.md's working agreements (especially *When to stop and ask* and *Writing*) throughout; this skill is only the order of work.
 
 ## 1. Find the work
 
@@ -21,11 +21,17 @@ Module: `$module` — one of `payments`, `courses`, `auth`, `web`, `course-creat
   - for each helper you think you need, grep for an existing one in `src/common/`, `src/test/` and the modules involved, and reuse it.
 - For a refactor that changes no behaviour, check what the tests pin first: run `test:coverage` on the files you'll touch (commands in [api/CLAUDE.md](../../../api/CLAUDE.md) and [web/CLAUDE.md](../../../web/CLAUDE.md)). If a touched line or branch is uncovered, the missing test is its own commit first and must pass against the old code; say so in the outline. Skip this for pure moves, renames and doc-only commits.
 - Search for specific things; skip wide, open-ended surveys of the codebase. Read a sibling by line range when you only need a pattern. Never read generated files whole (see CLAUDE.md).
+- Decide whether the commit is **mechanical** (see step 2) now that you have read the code. The plan's label is only a hint; this check is the one that counts.
 - Run `git status --short`. Leave uncommitted changes from other work alone, and mention them if they touch the same files.
 
 ## 2. Outline, then stop
 
-Give the outline and wait for the go-ahead. In plan mode, present it with ExitPlanMode; otherwise end your reply with it. Write no code before approval.
+**Mechanical path.** A commit is mechanical when it changes no runtime behaviour and no design: file moves, renames, splits of a file with the same content, doc-only changes, and fixes that make existing code pass a lint rule. For these, give a **short outline** of about 5 lines and do not wait: go straight to step 3 in the same reply.
+- The short outline has: the heading sentence; the files as links (with the per-folder BEFORE/AFTER diagram for moves); the check that proves nothing changed (type check, test count before and after); the doc tick. Leave out *Terms*, *Trade-offs*, *Config*, *Questions* and *Tests* unless one applies.
+- Use the full outline below, and wait, if the commit has any of: new logic; a changed lint rule; a new decision row; a question for the owner; code the tests don't pin.
+- If a commit labelled mechanical turns out to change behaviour or design while you work, stop and give the full outline.
+
+**Full outline.** Give the outline and wait for the go-ahead. In plan mode, present it with ExitPlanMode; otherwise end your reply with it. Write no code before approval.
 
 - **Heading:** a plain-language sentence saying what the commit does (for example "Send queued emails automatically"), not a class or file name. Clear communication comes first.
 - **Terms:** define every specialized term or unit of work the outline uses (for example "tick", "sweeper", "outbox"): what it means here, why use it, and the alternatives. Don't assume a term means its usual meaning elsewhere.
@@ -42,7 +48,7 @@ If the owner replies with questions or objections, discuss them first: answer, g
 
 ## 3. Implement, after approval
 
-- Build exactly what was approved. If something comes up that would change design or behaviour, stop and ask.
+- Build exactly what was approved (on the mechanical path, what the short outline said). If something comes up that would change design or behaviour, stop and ask.
 - In the same change, update the design doc:
   - tick the item;
   - mark the following item **Next**, with enough detail to start on it;

@@ -1,6 +1,6 @@
 # Code quality guardrails
 
-Read this before changing lint rules, the pre-commit or pre-push hooks, or the rules in CLAUDE.md about code style, names and layout. It follows [code-style-cleanup.md](code-style-cleanup.md): that cleanup rewrote about 18 commits of code to match style rules that were written after the code. This area makes tools enforce those rules so no second cleanup is needed. Run it with `/plan-create-implementation code-quality-guardrails`, then `/next-commit code-quality-guardrails`.
+Read this before changing lint rules, the pre-commit or pre-push hooks, or the rules in CLAUDE.md about code style, names and layout. It follows the code-style cleanup (20 steps, since deleted): that cleanup rewrote about 18 commits of code to match style rules that were written after the code. This area makes tools enforce those rules so no second cleanup is needed. Run it with `/plan-create-implementation code-quality-guardrails`, then `/next-commit code-quality-guardrails`.
 
 Keep this file current **in the same commit as the work**: tick the step, mark the next one **Next**.
 
@@ -17,15 +17,15 @@ Each milestone delivers one outcome. A milestone is split into one-line commits 
 - [x] **3. Behaviour pinned before refactors.** Use the existing `@vitest/coverage-v8` (both packages already have it) to see which lines a refactor touches that no test runs, and make the `next-commit` skill check it first (details in *Step 3*). Two commits:
   - [x] **3a.** A `test:coverage` script in each package (`api/package.json`, `web/package.json`), replacing the API's `test:cov`, and the command in [api/CLAUDE.md](../api/CLAUDE.md) and [web/CLAUDE.md](../web/CLAUDE.md); each script run once to confirm it works.
   - [x] **3b.** A step in the `next-commit` skill (`.claude/skills/next-commit/SKILL.md`): check coverage of the touched code first, and add a missing test in its own commit before the refactor.
-- [ ] **4. Naming and layout rules.** Fix the 9 folders over 7 files first, one commit per package, then write the rules (details in *Step 4*). Three commits:
+- [x] **4. Naming and layout rules.** Fix the 9 folders over 7 files first, one commit per package, then write the rules (details in *Step 4*). Three commits:
   - [x] **4a.** Web layout: `admin-courses` split into `price/`, `schedule/`, `validation/` and `save-course/`; its `description-editor/link/`; `courses/description/` and `courses/list/`; the shared description format moved to `features/course-description/`; `lib/api/config/`.
   - [x] **4b.** API layout: `api/src/auth` into `sessions/` and `login/`; `api/src/courses` into `admin/` and `images/` (plus `allowed-currencies.ts` into `validation/`); `api/src/courses/test/unit` into `services/`, `images/` and `schemas/`; `api/src/email` into `outbox/` and `delivery/`. `api/src/prisma` is left as is: its 8 entries include the generated `contract.d.ts` and `contract.json`, which are not counted, leaving 6.
-  - [ ] **4c.** **Next.** The naming and layout rules in CLAUDE.md (see *Principles*), plus the one-line amendment in [api-tests.md](../.claude/rules/api-tests.md) allowing topic sub-folders under `test/unit/`. Docs only; review with the owner again before starting.
-  Goal: Claude should output high quality and correct code. Check if the file splits affect quality (claude might not know to check in the smaller more modular files or navigate efficiently)
-  Also review sessions/commits since creating this file to have claude operate with at least the quality level those sessions ask for
-  Push back on quality decisions you disagree with
-- [ ] **5. Short outlines for mechanical steps.** Change the `next-commit` skill and CLAUDE.md: moves, renames, splits, doc-only and lint-fix commits get a short outline and no wait for approval.
-- [ ] **6. Close the cleanup.** Cut [code-style-cleanup.md](code-style-cleanup.md) down to its decision rows (or delete it), remove it from the `next-commit` hint and the CLAUDE.md doc list, fix the saved next-commit memory, and add the cleanup row to the usage-reviews memory.
+  - [x] **4c.** The naming and layout rules in CLAUDE.md *Conventions*, plus the line in [api-tests.md](../.claude/rules/api-tests.md) allowing topic sub-folders under `test/unit/`. Doc paths checked for stale links: none. Still to do: run `/usage-review` over the sessions since this doc was created and move findings into step 5.
+- [x] **5. Short outlines for mechanical steps.** Change the `next-commit` skill and CLAUDE.md: moves, renames, splits, doc-only and lint-fix commits get a short outline and no wait for approval. Two commits:
+  - [x] **5a.** The mechanical path in the skill (`.claude/skills/next-commit/SKILL.md`): which commits count, the short outline, no wait, and when to fall back to the full outline.
+  - [x] **5b.** The same rule in CLAUDE.md *Working agreements* (the "One commit at a time" and "Ask before any design or behaviour change" bullets); tick this step and mark step 6 **Next**.
+- [x] **6. Close the cleanup.** Delete the finished cleanup doc and every reference to it (details in *Step 6*). One commit:
+  - [x] **6a.** Deleted `docs/code-style-cleanup.md` and its references (`CLAUDE.md` doc list, `next-commit` skill hint and module list, the intro of this doc), moved its decision row into *Decisions*, ticked this step. All six milestones are done.
 
 ## Principles
 
@@ -63,6 +63,7 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 | Function length 40. | See *Numbers*. | 30 (flags code the cleanup left alone); 60 (catches only real outliers). |
 | New dev dependencies are allowed when small and official (`@vitest/coverage-v8`, knip). | They replace manual checks. | No new dependencies. |
 | Mechanical steps get a short outline: moves, renames, splits, doc-only and lint-fix commits. | None of them change runtime behaviour; about 15 "go" turns in the cleanup were only approval. | Full outlines for everything. |
+| If a "mechanical" commit turns out to change behaviour or design, Claude stops and gives the full outline. | The no-wait rule is only safe while the commit really is mechanical. | Trusting the label from the plan. |
 | No coverage threshold. | See *Numbers*. | A percentage gate. |
 | 7 files per folder is a guideline, not a test. | A test would block commits over a judgement call. | A tiny test that counts files. |
 | The 9 folders over 7 files are fixed now, in milestone 4. | A rule the code already breaks gets ignored. This is the same "fix first, then enforce" principle as the lint rules. | Applying the rule only to folders touched from now on. |
@@ -72,8 +73,11 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 | One knip config per package; false positives go in its `entry`, `ignore` or `ignoreBinaries`, each with a reason. Generated files and `components/ui/` are ignored. | Matches the two independent yarn projects and the lint exemptions. | A root workspace config (they aren't yarn workspaces); `ignoreExportsUsedInFile` (hides exports that should just not be exported). |
 | Layout fixes are one commit per package (4a web, 4b api), not one per folder. | The owner chose it: fewer "go" turns, and each commit is a pure move. The cost is a large diff and no revert of a single folder. | One commit per folder (9 commits); one commit for everything (mixes `api/` and `web/`). |
 | Parent folders move before their children (`admin-courses` before `description-editor`, `courses` before `courses/test/unit`). | A child's contents depend on where its parent's files go. | Children first (they would move twice). |
+| Unit specs live in `<module>/test/unit/`, never beside the code. | One place to look; 7 modules already did it, and integration and e2e specs are already in their own folders. | Colocating everything: it would move the ~30 specs already in `test/unit`. |
 | Specs under `test/unit/` may be grouped into topic sub-folders. | `courses/test/unit` has 11 entries. Topic folders keep the "unit specs live in `<module>/test/unit/`" rule and the 7-file limit together. | Mirroring the source sub-folders (ties the test layout to the source layout); exempting `test/` folders (contradicts "spec files count"). |
 | The rules are written last (4c), after the folders obey them. | "Fix first, then enforce". | Writing the rules first. |
+| Unit specs live in `<module>/test/unit/`, never beside the code. (Moved from the cleanup doc.) | One place to look; 7 modules already did it, and integration and e2e specs are already in their own folders. | Colocating everything: it would move the ~30 specs already in `test/unit`. |
+| The finished cleanup doc is deleted, not kept as history. | Its steps are in git, its one decision is here, and a doc with no **Next** item misleads the `next-commit` hint and the doc list. | Keeping it with a "finished" note; cutting it to one row. |
 
 ## Step 1. Style rules enforced by lint
 
@@ -114,7 +118,7 @@ The commands are in [api/CLAUDE.md](../api/CLAUDE.md) and [web/CLAUDE.md](../web
 
 **Test specs.** A spec split by topic keeps its sub-folder named after the original spec; in `courses/test/unit/` those sub-folders are grouped further by topic (for example service, schemas, image).
 
-**Rules (4c).** Short rules in CLAUDE.md for what lint can't check: a file name states everything the file exports; a function name states what it returns; at most 7 files per folder, spec files included; group by job.
+**Rules (4c, done).** Short rules in CLAUDE.md for what lint can't check: a file name states everything the file exports; a function name states what it returns; at most 7 files per folder, spec files included; group by job.
 
 ## Open questions
 
@@ -126,3 +130,23 @@ The commands are in [api/CLAUDE.md](../api/CLAUDE.md) and [web/CLAUDE.md](../web
 - A coverage percentage gate.
 - A tool that checks folder size.
 - Folders over 7 files that appear in generated or vendored code (`migrations/`, `components/ui/`, generated types).
+
+## Step 5. Short outlines for mechanical steps
+
+**What counts as mechanical.** A commit that changes no runtime behaviour and no design: file moves, renames, splits of a file with the same content, doc-only changes, and fixes that make existing code pass a lint rule. The planning pass labels such commits, and `/next-commit` re-checks the label once it has read the code.
+
+**Short outline.** About 5 lines: the heading sentence, the files as links (with the BEFORE/AFTER diagram for moves), the check that proves nothing changed (type check, test count before and after) and the doc tick. *Terms*, *Trade-offs* and *Config* are left out unless they apply.
+
+**No wait.** After the short outline the skill implements straight away, then verifies, hands off with a commit message, and leaves the commit to the owner. Pure moves and renames still skip `/simplify` and the coverage check.
+
+**Not changed.** Anything with new logic, a changed lint rule or a new decision row keeps the full outline and the wait.
+
+## Step 6. Close the cleanup
+
+**What goes.** `docs/code-style-cleanup.md` (20 steps, all done). Its history stays in git and its one decision is now in *Decisions*.
+
+**References to remove.** The CLAUDE.md doc list entry, the `code-style-cleanup` name in the `next-commit` skill's `argument-hint` and module list, and the link in this doc's intro (becomes plain text). A grep afterwards must find none.
+
+**Memory.** `project-next-commit-module.md` already names this module. `usage-reviews.md` gets one line saying the cleanup is closed.
+
+**Mechanical.** Doc-only, so a short outline and no wait. Commit step 5's edits first, since CLAUDE.md, the skill and this doc are already modified.

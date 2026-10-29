@@ -24,7 +24,6 @@ Each doc has a status checklist (what's next), principles and decisions with rej
 - [docs/course-creation.md](docs/course-creation.md) — the admin "create course" page and its rich-text (Tiptap) description. Run with `/next-commit course-creation`.
 - [docs/auth.md](docs/auth.md) — admin login, logout, sessions, the auth guard, the command that creates admins.
 - [docs/web.md](docs/web.md) — the web app: folder layout, API calls, caching, errors, forms, admin login cookie.
-- [docs/code-style-cleanup.md](docs/code-style-cleanup.md) — bringing existing code in line with the style rules, one small step per commit. Run with `/next-commit code-style-cleanup`.
 - [docs/code-quality-guardrails.md](docs/code-quality-guardrails.md) — making lint, hooks and rules enforce the style, naming and layout rules so the cleanup isn't needed again; the numbers behind each limit. Run with `/plan-create-implementation code-quality-guardrails`, then `/next-commit code-quality-guardrails`.
 
 The docs record decisions made with the information available at the time; they are not absolute. When new information (a library's real behaviour, a bug, a constraint found while coding, a better option) undermines a documented decision, say so before building on it: state what changed, why the decision may no longer hold, and recommend a revised approach. The owner decides, then the doc is updated.
@@ -50,19 +49,23 @@ Never hand-edit generated files, and never read them whole (they're large): grep
 
 - Conventional commit messages with scopes, e.g. `feat(checkout): …`, `refactor(e2e): …`, `test(fixtures): …`. No `Co-Authored-By` trailer.
 - `ignore.md` at the root is a gitignored scratch file, not documentation.
+- **File names state everything the file exports.** Rename or split the file when its exports outgrow its name.
+- **A function name states what it returns.** A function that returns a formatter is `makeDateFormatter`, not `formatDate`.
+- **At most 7 files per folder**, not counting sub-folders; spec files count. Generated and vendored code (`generated.ts`, `migrations/`, `components/ui/`) doesn't. No tool checks this, so when you add the 8th file, group the files by job in the same commit. Name the folder for its job (`stripe/`, `fulfillment/`), never `utils/` or `misc/`.
+- To move files, move parent folders before their children; steps are in [api/CLAUDE.md](api/CLAUDE.md#moving-and-renaming-files).
 
 ## Working agreements
 
 How the owner wants Claude to work on this repo.
 
 **Workflow**
-- **One commit at a time.** Before coding a commit, give a detailed, easy-to-read outline (what, why, trade-offs) and wait for the go-ahead. Then implement, verify (type check and the relevant tests), and stop with a suggested conventional commit message. The owner makes the commits. Finish one commit's changes before starting the next: interactive `git add -p` isn't available, so mixed hunks can't be split. `/next-commit` ([skill](.claude/skills/next-commit/SKILL.md)) runs this routine from the **Next** item in `docs/`.
+- **One commit at a time.** Before coding a commit, give a detailed, easy-to-read outline (what, why, trade-offs) and wait for the go-ahead. The exception is a **mechanical** commit (file moves, renames, splits with the same content, doc-only changes, fixes that make existing code pass a lint rule): give a short outline of about 5 lines and go straight on without waiting. Then implement, verify (type check and the relevant tests), and stop with a suggested conventional commit message. The owner makes the commits. Finish one commit's changes before starting the next: interactive `git add -p` isn't available, so mixed hunks can't be split. `/next-commit` ([skill](.claude/skills/next-commit/SKILL.md)) runs this routine from the **Next** item in `docs/`.
 - **Planning a new area.** `/plan-create-overview` ([skill](.claude/skills/plan-create-overview/SKILL.md)) writes a one-page map of milestones; when a milestone is **Next**, `/plan-create-implementation` ([skill](.claude/skills/plan-create-implementation/SKILL.md)) designs it and splits it into commits; `/next-commit` builds each commit.
 - **Usage reviews.** At a natural pause (a step in a design doc's Status just finished, nothing complex in flight), run `/usage-review`.
 - **Keep the design docs current** in the same commit (see *Design docs*).
 
 **When to stop and ask**
-- **Ask before any design or behaviour change**, however small, even inside an approved refactor. Mentioning it afterwards isn't enough.
+- **Ask before any design or behaviour change**, however small, even inside an approved refactor. Mentioning it afterwards isn't enough. If a commit planned as mechanical turns out to change behaviour or design, stop and give the full outline.
 - **Push back as information comes in.** Past decisions (in docs, plans or earlier in the session) aren't binding when new facts contradict them. Raise the conflict in chat with a recommendation instead of complying or working around it quietly.
 - **Decision rows in `docs/`:** propose the row text in chat and wait for an OK before editing. Status ticks and plan text can be updated without asking.
 - **Questions aren't instructions.** Answer them and stop; offer any resulting change as an option.
