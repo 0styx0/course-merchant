@@ -55,6 +55,7 @@ How the owner wants Claude to work on this repo.
 
 **Workflow**
 - **One commit at a time.** Before coding a commit, give a detailed, easy-to-read outline (what, why, trade-offs) and wait for the go-ahead. Then implement, verify (type check and the relevant tests), and stop with a suggested conventional commit message. The owner makes the commits. Finish one commit's changes before starting the next: interactive `git add -p` isn't available, so mixed hunks can't be split. `/next-commit` ([skill](.claude/skills/next-commit/SKILL.md)) runs this routine from the **Next** item in `docs/`.
+- **Planning a new area.** `/plan-create-overview` ([skill](.claude/skills/plan-create-overview/SKILL.md)) writes a one-page map of milestones; when a milestone is **Next**, `/plan-create-implementation` ([skill](.claude/skills/plan-create-implementation/SKILL.md)) designs it and splits it into commits; `/next-commit` builds each commit.
 - **Usage reviews.** At a natural pause (a step in a design doc's Status just finished, nothing complex in flight), run `/usage-review`.
 - **Keep the design docs current** in the same commit (see *Design docs*).
 
