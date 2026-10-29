@@ -1,7 +1,7 @@
 import type { TestingModuleBuilder } from "@nestjs/testing";
 import Stripe from "stripe";
 
-import { STRIPE_CLIENT } from "@/payments/stripe.service.js";
+import { STRIPE_CLIENT } from "@/payments/stripe/stripe.service.js";
 
 /**
  * A Stripe client that talks to stripe-mock. Only its address differs from

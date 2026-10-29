@@ -50,7 +50,7 @@ Stripe is the record of money: the app stores only what it needs to decide who h
 |---|---|
 | [courses/](api/src/courses/) | Public browsing and admin create/edit. [course-visibility.ts](api/src/courses/course-visibility.ts) holds the one definition of "publicly visible", shared with checkout. [course-image.ts](api/src/courses/course-image.ts) checks uploaded images and converts them with `sharp`. [course-images.repository.ts](api/src/courses/repositories/course-images.repository.ts) stores each course's image in Postgres (`CourseImage`). [course-image-upload.interceptor.ts](api/src/courses/course-image-upload.interceptor.ts) reads the admin's multipart upload with `multer`, and [admin-course-images.controller.ts](api/src/courses/admin-course-images.controller.ts) uploads and downloads it. [courses.controller.ts](api/src/courses/courses.controller.ts) also serves it publicly, for visible courses, at a URL that changes whenever the image does, so it is cached for a year. |
 | [checkout/](api/src/checkout/) | Starting a checkout: decide what the buyer gets, record it, then hand off to Stripe. Also the status endpoint. |
-| [payments/](api/src/payments/) | `Payment` records, the Stripe wrapper ([stripe.service.ts](api/src/payments/stripe.service.ts)), fulfillment of completed checkouts, expiry, refunds, and the sweeper ([payment-sweeper.ts](api/src/payments/payment-sweeper.ts)) that puts right what a webhook couldn't. |
+| [payments/](api/src/payments/) | `Payment` records, the Stripe wrapper ([stripe.service.ts](api/src/payments/stripe/stripe.service.ts)), fulfillment of completed checkouts, expiry, refunds, and the sweeper ([payment-sweeper.ts](api/src/payments/sweeper/payment-sweeper.ts)) that puts right what a webhook couldn't. |
 | [webhooks/](api/src/webhooks/) | The Stripe webhook endpoint: verify the signature, then hand each event type to its service. |
 | [enrollments/](api/src/enrollments/) | Granting and reactivating access, shared by checkout and fulfillment. |
 | [auth/](api/src/auth/) | Admin accounts and password hashing, login and logout (sessions kept in Postgres, a limit on login tries per email, an hourly job that deletes expired ones), the guard that checks a session token on every route not marked `@Public()`, and the command that creates an admin ([set-admin-password.ts](api/src/auth/cli/set-admin-password.ts)). |
@@ -166,7 +166,7 @@ An **enrollment** is active while both `revokedAt` (set by a refund) and `suspen
 
 ## The sweeper
 
-The webhook can't fix everything. A refund can fail after the database changes were saved, and a webhook can be lost. So [PaymentSweeper](api/src/payments/payment-sweeper.ts) runs every 10 minutes and does three checks, each moving a payment forward with the same conditional updates and the same fulfillment code as the webhook:
+The webhook can't fix everything. A refund can fail after the database changes were saved, and a webhook can be lost. So [PaymentSweeper](api/src/payments/sweeper/payment-sweeper.ts) runs every 10 minutes and does three checks, each moving a payment forward with the same conditional updates and the same fulfillment code as the webhook:
 
 1. **Refund** paid payments that no enrollment points to (a double purchase, a suspended buyer, or two payments fulfilled at once) and whose refund failed.
 2. **Ask Stripe** about pending payments whose webhook is over an hour late, and fulfill or expire them.

@@ -1,6 +1,6 @@
 import type { Temporal } from "@js-temporal/polyfill";
 
-import type { ProviderEvent } from "./payments.repository.js";
+import type { ProviderEvent } from "../payments.repository.js";
 
 /**
  * What a completed checkout says about its payment, however we learned of it:

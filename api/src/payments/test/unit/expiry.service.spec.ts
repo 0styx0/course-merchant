@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { ExpiredCheckout } from "@/payments/checkout-events.js";
-import { ExpiryService } from "@/payments/expiry.service.js";
+import type { ExpiredCheckout } from "@/payments/stripe/checkout-events.js";
+import { ExpiryService } from "@/payments/fulfillment/expiry.service.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
 import {
   asDependency,

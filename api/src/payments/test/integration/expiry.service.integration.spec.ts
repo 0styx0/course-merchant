@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
-import type { ExpiredCheckout } from "@/payments/checkout-events.js";
-import { ExpiryService } from "@/payments/expiry.service.js";
-import { FulfillmentService } from "@/payments/fulfillment.service.js";
+import type { ExpiredCheckout } from "@/payments/stripe/checkout-events.js";
+import { ExpiryService } from "@/payments/fulfillment/expiry.service.js";
+import { FulfillmentService } from "@/payments/fulfillment/fulfillment.service.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
 import { PaymentRefunds } from "@/payments/payment-refunds.js";
 import { db } from "@/prisma/db.js";

@@ -10,7 +10,7 @@ import { PaymentsRepository } from "@/payments/payments.repository.js";
 import {
   PaymentProviderUnavailableError,
   StripeService,
-} from "@/payments/stripe.service.js";
+} from "@/payments/stripe/stripe.service.js";
 import {
   asDependency,
   fakePrisma,

@@ -7,7 +7,7 @@ import { PaymentsRepository } from "@/payments/payments.repository.js";
 import {
   StripeService,
   type RefundPaymentInput,
-} from "@/payments/stripe.service.js";
+} from "@/payments/stripe/stripe.service.js";
 import {
   asDependency,
   fakePrisma,

@@ -12,7 +12,7 @@ Read this before working on `charge.refunded`, `charge.dispute.created`, revokin
   A partial refund changes nothing.
 - `charge.dispute.created` sets `suspendedAt` and queues an alert to the owner. The owner settles the dispute in Stripe and restores access by hand. We don't subscribe to `dispute.closed`, and the payment status is left alone.
 
-**Sweeper (step 5, built).** [payment-sweeper.ts](../../api/src/payments/payment-sweeper.ts) runs every 10 minutes on every API server, with three independent checks: refund orphan payments, recheck overdue pending payments, expire payments that never got a checkout. The rules and numbers are in the decision rows below.
+**Sweeper (step 5, built).** [payment-sweeper.ts](../../api/src/payments/sweeper/payment-sweeper.ts) runs every 10 minutes on every API server, with three independent checks: refund orphan payments, recheck overdue pending payments, expire payments that never got a checkout. The rules and numbers are in the decision rows below.
 
 ## Decisions
 

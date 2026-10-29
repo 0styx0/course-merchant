@@ -7,14 +7,14 @@ import {
   type QueuedEmail,
 } from "@/email/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
-import type { CompletedCheckout } from "@/payments/checkout-events.js";
-import { FulfillmentService } from "@/payments/fulfillment.service.js";
+import type { CompletedCheckout } from "@/payments/stripe/checkout-events.js";
+import { FulfillmentService } from "@/payments/fulfillment/fulfillment.service.js";
 import { PaymentRefunds } from "@/payments/payment-refunds.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
 import {
   StripeService,
   type RefundPaymentInput,
-} from "@/payments/stripe.service.js";
+} from "@/payments/stripe/stripe.service.js";
 import { db } from "@/prisma/db.js";
 import { DatabaseClock } from "@/prisma/database-clock.js";
 import { PrismaService } from "@/prisma/prisma.service.js";

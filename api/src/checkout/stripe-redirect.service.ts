@@ -15,7 +15,7 @@ import {
 import {
   PaymentProviderUnavailableError,
   StripeService,
-} from "@/payments/stripe.service.js";
+} from "@/payments/stripe/stripe.service.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import type {
   CheckoutCourse,

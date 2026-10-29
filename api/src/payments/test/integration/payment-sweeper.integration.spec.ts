@@ -7,15 +7,15 @@ import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import type {
   CompletedCheckout,
   RetrievedCheckout,
-} from "@/payments/checkout-events.js";
-import { FulfillmentService } from "@/payments/fulfillment.service.js";
+} from "@/payments/stripe/checkout-events.js";
+import { FulfillmentService } from "@/payments/fulfillment/fulfillment.service.js";
 import { PaymentRefunds } from "@/payments/payment-refunds.js";
-import { PaymentSweeper } from "@/payments/payment-sweeper.js";
+import { PaymentSweeper } from "@/payments/sweeper/payment-sweeper.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
 import {
   StripeService,
   type RefundPaymentInput,
-} from "@/payments/stripe.service.js";
+} from "@/payments/stripe/stripe.service.js";
 import { DatabaseClock } from "@/prisma/database-clock.js";
 import { db } from "@/prisma/db.js";
 import { PrismaService } from "@/prisma/prisma.service.js";

@@ -4,7 +4,7 @@ import type { NestExpressApplication } from "@nestjs/platform-express";
 import { AppModule } from "@/app.module.js";
 import { AdminSessionCleanup } from "@/auth/admin-session-cleanup.js";
 import { EmailWorker } from "@/email/email-worker.js";
-import { PaymentSweeper } from "@/payments/payment-sweeper.js";
+import { PaymentSweeper } from "@/payments/sweeper/payment-sweeper.js";
 import { configureApp } from "@/configure-app.js";
 import type { Response } from "supertest";
 import type { Server } from "node:http";

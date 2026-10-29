@@ -14,15 +14,15 @@ import { errorStack } from "@/common/errors/error-text.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import { DatabaseClock } from "@/prisma/database-clock.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
-import type { RetrievedCheckout } from "./checkout-events.js";
-import { FulfillmentService } from "./fulfillment.service.js";
-import { PaymentRefunds } from "./payment-refunds.js";
+import type { RetrievedCheckout } from "../stripe/checkout-events.js";
+import { FulfillmentService } from "../fulfillment/fulfillment.service.js";
+import { PaymentRefunds } from "../payment-refunds.js";
 import {
   PaymentsRepository,
   type OrphanPayment,
   type StalePendingPayment,
-} from "./payments.repository.js";
-import { StripeService, type RefundCause } from "./stripe.service.js";
+} from "../payments.repository.js";
+import { StripeService, type RefundCause } from "../stripe/stripe.service.js";
 
 // how often the sweeper runs, and how many payments each check takes per run
 const SWEEP_INTERVAL_MS = 10 * 60 * 1000;

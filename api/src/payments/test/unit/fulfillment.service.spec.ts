@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
-import type { CompletedCheckout } from "@/payments/checkout-events.js";
-import { FulfillmentService } from "@/payments/fulfillment.service.js";
+import type { CompletedCheckout } from "@/payments/stripe/checkout-events.js";
+import { FulfillmentService } from "@/payments/fulfillment/fulfillment.service.js";
 import { PaymentRefunds } from "@/payments/payment-refunds.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
 import {

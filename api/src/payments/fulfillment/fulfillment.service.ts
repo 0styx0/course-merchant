@@ -14,17 +14,17 @@ import {
   type EnrollmentRecord,
 } from "@/enrollments/enrollments.repository.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
-import { isOurPaymentId } from "./payment-id.js";
+import { isOurPaymentId } from "../payment-id.js";
 import {
   PaymentsRepository,
   type FulfillmentPayment,
-} from "./payments.repository.js";
+} from "../payments.repository.js";
 import type {
   CheckoutCompletion,
   CompletedCheckout,
-} from "./checkout-events.js";
-import { PaymentRefunds } from "./payment-refunds.js";
-import type { RefundCause } from "./stripe.service.js";
+} from "../stripe/checkout-events.js";
+import { PaymentRefunds } from "../payment-refunds.js";
+import type { RefundCause } from "../stripe/stripe.service.js";
 
 type ProviderPayment = NonNullable<CheckoutCompletion["providerPayment"]>;
 

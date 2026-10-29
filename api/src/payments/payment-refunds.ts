@@ -3,7 +3,10 @@ import { Inject, Injectable } from "@nestjs/common";
 import { DatabaseClock } from "@/prisma/database-clock.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import { PaymentsRepository } from "./payments.repository.js";
-import { StripeService, type RefundPaymentInput } from "./stripe.service.js";
+import {
+  StripeService,
+  type RefundPaymentInput,
+} from "./stripe/stripe.service.js";
 
 /**
  * Refunds a payment and records that it was refunded, so the sweeper stops

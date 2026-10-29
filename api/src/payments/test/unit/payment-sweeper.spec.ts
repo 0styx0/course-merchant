@@ -3,15 +3,15 @@ import { Logger } from "@nestjs/common";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
-import { FulfillmentService } from "@/payments/fulfillment.service.js";
+import { FulfillmentService } from "@/payments/fulfillment/fulfillment.service.js";
 import { PaymentRefunds } from "@/payments/payment-refunds.js";
-import { PaymentSweeper } from "@/payments/payment-sweeper.js";
+import { PaymentSweeper } from "@/payments/sweeper/payment-sweeper.js";
 import {
   PaymentsRepository,
   type OrphanPayment,
   type StalePendingPayment,
 } from "@/payments/payments.repository.js";
-import { StripeService } from "@/payments/stripe.service.js";
+import { StripeService } from "@/payments/stripe/stripe.service.js";
 import { DatabaseClock } from "@/prisma/database-clock.js";
 import {
   asDependency,

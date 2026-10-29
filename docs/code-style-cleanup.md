@@ -15,14 +15,14 @@ API, validation and errors:
 
 - [x] **1. Update rules as small rules.** Split `findUpdateRuleViolations` in [course-update-rules.ts](../api/src/courses/validation/course-update-rules.ts) into one function per rule (image before publishing, start and end not in the past, price not in the past, a price in effect), joined with `flatMap`, no `errors.push`. Done.
 - [x] **2. Description problems as small checks.** Split `findProblems` in [course-description-schema.ts](../api/src/courses/validation/course-description-schema.ts) into bad text, bad links and total length, built with `flatMap`/`map` and no `let allText`. Done. The error list is now grouped (all bad text, then all bad links, then the length problem).
-- [x] **3. Error filter as small mappers.** [problem-details.filter.ts](../api/src/common/errors/problem-details.filter.ts): `catch` only sends what a `toProblem(exception)` returns, with one small mapper per exception kind. The error-to-text helper it shares with `errorStack` in [payment-sweeper.ts](../api/src/payments/payment-sweeper.ts) moves to one place under `common/errors/`. Done.
+- [x] **3. Error filter as small mappers.** [problem-details.filter.ts](../api/src/common/errors/problem-details.filter.ts): `catch` only sends what a `toProblem(exception)` returns, with one small mapper per exception kind. The error-to-text helper it shares with `errorStack` in [payment-sweeper.ts](../api/src/payments/sweeper/payment-sweeper.ts) moves to one place under `common/errors/`. Done.
 
 API, courses and enrollments:
 
 - [x] **4. One mapping from request to stored course.** [admin-courses.service.ts](../api/src/courses/admin-courses.service.ts) writes the course fields and the price mapping twice (create and update); make them one small function each.
 - [x] **5. Admin course repository as steps.** [admin-courses.repository.ts](../api/src/courses/repositories/admin-courses.repository.ts): `createCourse` and `updateCourse` share a "course fields" object and one "load it or throw" function; `updateCourse` becomes `replacePrices` + `appendStatus` + reload. Done.
 - [x] **6. Grant access as two steps.** `grantAccess` in [enrollments.repository.ts](../api/src/enrollments/enrollments.repository.ts) becomes `insertEnrollment` and `reactivateEnrollment`. Keep the comments about the concurrent update. Done.
-- [x] **7. Leftover long API functions.** `toAdminCourseResponse` ([courses.mapper.ts](../api/src/courses/courses.mapper.ts)), `createCheckoutSession` ([stripe.service.ts](../api/src/payments/stripe.service.ts)); split only if the outline shows a clear gain. Done: the admin response got a mapper per price and per enrollment; the checkout call got `checkoutSessionParams`, `requireSessionUrl` and one `throwProviderError` shared by checkout, retrieve and refund.
+- [x] **7. Leftover long API functions.** `toAdminCourseResponse` ([courses.mapper.ts](../api/src/courses/courses.mapper.ts)), `createCheckoutSession` ([stripe.service.ts](../api/src/payments/stripe/stripe.service.ts)); split only if the outline shows a clear gain. Done: the admin response got a mapper per price and per enrollment; the checkout call got `checkoutSessionParams`, `requireSessionUrl` and one `throwProviderError` shared by checkout, retrieve and refund.
 
 Web:
 
@@ -41,7 +41,7 @@ Names and layout (each is a rename or move; **ask**, and update every import, te
 - [x] **17. One place for tests.** Every unit spec now lives in `<module>/test/unit/` (rule in [api-tests.md](../.claude/rules/api-tests.md)). Done: the `common/`, `courses/validation/`, email, payments and prisma specs moved, and `port-config.ts` with its spec moved into a new `src/config/`.
 - [x] **18. Stray doc.** Done: `web/docs/admin.md` (the admin page's Given/When/Then spec) was deleted at the owner's request and the links to it removed.
 - [x] **19. Sub-folders in `admin-courses/`.** 30 flat files; group the description editor (editor, toolbar, link field, link, paste test) in `description-editor/`. **ask** Done: the 8 `description-*` files (with their specs) moved into [description-editor/](../web/src/features/admin-courses/description-editor/), names unchanged.
-- [ ] **20. `payments/` by job (optional, last). (Next)** 12 flat files; group into `stripe/`, `fulfillment/` and `sweeper/`. Largest move, touches many imports; skip if steps 1–19 left it readable. **ask**
+- [x] **20. `payments/` by job.** **ask** Done: [stripe/](../api/src/payments/stripe/) (service, event mapping, checkout types), [fulfillment/](../api/src/payments/fulfillment/) (fulfillment and expiry) and [sweeper/](../api/src/payments/sweeper/); the files several jobs share (module, repository, `payment-id`, `payment-refunds`, config) stay at the top. Specs stay in `payments/test/`. This was the last step: the cleanup is complete.
 
 ## Order
 

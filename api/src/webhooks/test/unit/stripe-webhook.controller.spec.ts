@@ -4,12 +4,12 @@ import type Stripe from "stripe";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiException } from "@/common/errors/api.exception.js";
-import { ExpiryService } from "@/payments/expiry.service.js";
-import { FulfillmentService } from "@/payments/fulfillment.service.js";
+import { ExpiryService } from "@/payments/fulfillment/expiry.service.js";
+import { FulfillmentService } from "@/payments/fulfillment/fulfillment.service.js";
 import {
   InvalidWebhookSignatureError,
   StripeService,
-} from "@/payments/stripe.service.js";
+} from "@/payments/stripe/stripe.service.js";
 import { asDependency, type MockMethods } from "@/test/test-helpers.js";
 import { StripeWebhookController } from "@/webhooks/stripe-webhook.controller.js";
 

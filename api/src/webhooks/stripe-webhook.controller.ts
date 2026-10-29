@@ -14,16 +14,16 @@ import type Stripe from "stripe";
 import { Public } from "@/auth/public.decorator.js";
 import { ApiException } from "@/common/errors/api.exception.js";
 import { ErrorCode } from "@/common/errors/error-codes.js";
-import { ExpiryService } from "@/payments/expiry.service.js";
-import { FulfillmentService } from "@/payments/fulfillment.service.js";
+import { ExpiryService } from "@/payments/fulfillment/expiry.service.js";
+import { FulfillmentService } from "@/payments/fulfillment/fulfillment.service.js";
 import {
   completedCheckoutFromEvent,
   expiredCheckoutFromEvent,
-} from "@/payments/stripe-events.js";
+} from "@/payments/stripe/stripe-events.js";
 import {
   InvalidWebhookSignatureError,
   StripeService,
-} from "@/payments/stripe.service.js";
+} from "@/payments/stripe/stripe.service.js";
 
 // the Stripe signature, not a login, proves who is calling
 @Public()

@@ -18,7 +18,7 @@ import { EmailOutboxRepository } from "@/email/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import type { PaymentsConfig } from "@/payments/payments-config.js";
 import { PaymentsRepository } from "@/payments/payments.repository.js";
-import { StripeService } from "@/payments/stripe.service.js";
+import { StripeService } from "@/payments/stripe/stripe.service.js";
 import {
   asDependency,
   fakePrisma,
