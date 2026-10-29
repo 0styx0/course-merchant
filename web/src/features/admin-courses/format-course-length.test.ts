@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatCourseLength, scheduleLength } from "./format-course-length";
+import { formatCourseLength, scheduleSummary } from "./format-course-length";
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
@@ -23,7 +23,7 @@ describe("formatCourseLength", () => {
   });
 });
 
-describe("scheduleLength", () => {
+describe("scheduleSummary", () => {
   const complete = {
     startDate: "2030-01-10",
     startTimeOfDay: "09:00",
@@ -32,36 +32,38 @@ describe("scheduleLength", () => {
     timeZone: "America/New_York",
   };
 
-  it("gives the length of a complete schedule", () => {
-    expect(scheduleLength(complete)).toBe("2 hours 30 minutes");
+  it("describes a complete schedule in the chosen zone", () => {
+    expect(scheduleSummary(complete)).toBe(
+      "Runs Jan 10, 2030, 9:00 AM to Jan 10, 2030, 11:30 AM (America/New_York). Lasts 2 hours 30 minutes.",
+    );
   });
 
   it("is empty while a box is empty", () => {
-    expect(scheduleLength({ ...complete, endTimeOfDay: "" })).toBeUndefined();
+    expect(scheduleSummary({ ...complete, endTimeOfDay: "" })).toBeUndefined();
   });
 
   it("is empty when the end is not after the start", () => {
     expect(
-      scheduleLength({ ...complete, endTimeOfDay: "09:00" }),
+      scheduleSummary({ ...complete, endTimeOfDay: "09:00" }),
     ).toBeUndefined();
   });
 
   it("is empty for an unknown time zone", () => {
     expect(
-      scheduleLength({ ...complete, timeZone: "Mars/Base" }),
+      scheduleSummary({ ...complete, timeZone: "Mars/Base" }),
     ).toBeUndefined();
   });
 
   it("counts a daylight-saving day by real elapsed time", () => {
     // Clocks in New York jump from 02:00 to 03:00 on 2030-03-10.
     expect(
-      scheduleLength({
+      scheduleSummary({
         ...complete,
         startDate: "2030-03-10",
         startTimeOfDay: "00:00",
         endDate: "2030-03-10",
         endTimeOfDay: "06:00",
       }),
-    ).toBe("5 hours");
+    ).toContain("Lasts 5 hours.");
   });
 });

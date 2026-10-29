@@ -165,7 +165,7 @@ describe("CourseForm", () => {
     await user.type(screen.getByLabelText("End date"), "2099-01-10");
     await user.type(screen.getByLabelText("End time"), "11:30");
 
-    expect(screen.getByText("Lasts 2 hours 30 minutes")).toBeInTheDocument();
+    expect(screen.getByText(/Lasts 2 hours 30 minutes\./)).toBeInTheDocument();
   });
 
   it("lists every problem and focuses the list when submitted invalid", async () => {

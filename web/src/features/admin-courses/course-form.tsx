@@ -29,7 +29,7 @@ import {
 } from "./course-form-schema";
 import { createCourseAction } from "./create-course.action";
 import { DescriptionEditor } from "./description-editor";
-import { scheduleLength } from "./format-course-length";
+import { scheduleSummary } from "./format-course-length";
 import { PriceRow } from "./price-row";
 
 /** Used until the browser's own zone is known, and when the list lacks it. */
@@ -83,7 +83,7 @@ export function CourseForm({ timeZones }: CourseFormProps) {
   const problems = isSubmitted
     ? courseFormProblems(errors, priceRows.fields.length)
     : [];
-  const length = scheduleLength(
+  const scheduleText = scheduleSummary(
     useWatch({ control: form.control, name: "schedule" }),
   );
 
@@ -239,7 +239,9 @@ export function CourseForm({ timeZones }: CourseFormProps) {
             </option>
           ))}
         </SelectField>
-        {length && <p className="self-end text-sm">Lasts {length}</p>}
+        <p aria-live="polite" className="text-sm sm:col-span-2">
+          {scheduleText}
+        </p>
       </FormSection>
 
       <FormSection

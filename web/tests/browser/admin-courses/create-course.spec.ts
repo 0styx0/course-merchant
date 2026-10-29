@@ -63,7 +63,7 @@ test("saves a new course and goes to the home page", async ({ page, msw }) => {
 
   await page.goto("/admin/courses/new");
   await fillValidForm(page);
-  await expect(page.getByText("Lasts 2 hours 30 minutes")).toBeVisible();
+  await expect(page.getByText(/Lasts 2 hours 30 minutes\./)).toBeVisible();
 
   await page.getByRole("button", { name: "Save as draft" }).click();
 

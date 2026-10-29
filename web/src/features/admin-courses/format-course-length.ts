@@ -29,13 +29,8 @@ function toUtcMs(date: string, timeOfDay: string, timeZone: string) {
   return result.state === "success" ? Date.parse(result.data) : undefined;
 }
 
-/**
- * "2 hours 30 minutes" for the typed start and end, or nothing until both are
- * complete, convertible and in order. The form's own checks report the rest.
- */
-export function scheduleLength(
-  schedule: CourseFormValues["schedule"],
-): string | undefined {
+/** The start and end as UTC times, or nothing until both are complete, convertible and in order. */
+function scheduleBounds(schedule: CourseFormValues["schedule"]) {
   const { startDate, startTimeOfDay, endDate, endTimeOfDay, timeZone } =
     schedule;
   if (!startDate || !startTimeOfDay || !endDate || !endTimeOfDay) {
@@ -46,5 +41,34 @@ export function scheduleLength(
   if (startMs === undefined || endMs === undefined || endMs <= startMs) {
     return undefined;
   }
-  return formatCourseLength(endMs - startMs);
+  return { startMs, endMs };
+}
+
+/** "Jan 3, 2027, 9:00 AM": a moment as wall-clock time in the zone, in US style. */
+export function formatMoment(ms: number, timeZone: string): string {
+  return (
+    new Intl.DateTimeFormat("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone,
+    })
+      .format(ms)
+      // Newer ICU puts a narrow no-break space before AM/PM.
+      .replace(/\u202f/g, " ")
+  );
+}
+
+/**
+ * "Runs Jan 3, 2027, 9:00 AM to Jan 3, 2027, 11:30 AM (America/New_York).
+ * Lasts 2 hours 30 minutes.", or nothing until both ends are complete,
+ * convertible and in order. The form's own checks report the rest.
+ */
+export function scheduleSummary(
+  schedule: CourseFormValues["schedule"],
+): string | undefined {
+  const bounds = scheduleBounds(schedule);
+  if (!bounds) return undefined;
+  const { startMs, endMs } = bounds;
+  const { timeZone } = schedule;
+  return `Runs ${formatMoment(startMs, timeZone)} to ${formatMoment(endMs, timeZone)} (${timeZone}). Lasts ${formatCourseLength(endMs - startMs)}.`;
 }
