@@ -29,8 +29,9 @@ import {
 } from "./course-form-schema";
 import { createCourseAction } from "./create-course.action";
 import { DescriptionEditor } from "./description-editor";
-import { scheduleSummary } from "./format-course-length";
+import { priceSummary, scheduleSummary } from "./format-course-length";
 import { PriceRow } from "./price-row";
+import { PriceSchedule } from "./price-schedule";
 
 /** Used until the browser's own zone is known, and when the list lacks it. */
 const DEFAULT_TIME_ZONE = "America/New_York";
@@ -83,8 +84,11 @@ export function CourseForm({ timeZones }: CourseFormProps) {
   const problems = isSubmitted
     ? courseFormProblems(errors, priceRows.fields.length)
     : [];
-  const scheduleText = scheduleSummary(
-    useWatch({ control: form.control, name: "schedule" }),
+  const schedule = useWatch({ control: form.control, name: "schedule" });
+  const scheduleText = scheduleSummary(schedule);
+  const prices = priceSummary(
+    useWatch({ control: form.control, name: "prices" }),
+    schedule.timeZone,
   );
 
   // After each submit attempt, read out every problem.
@@ -270,6 +274,7 @@ export function CourseForm({ timeZones }: CourseFormProps) {
         >
           Add price
         </Button>
+        <PriceSchedule summary={prices} />
       </FormSection>
 
       <Button type="submit" disabled={isSubmitting} className="self-start">

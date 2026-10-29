@@ -168,6 +168,25 @@ describe("CourseForm", () => {
     expect(screen.getByText(/Lasts 2 hours 30 minutes\./)).toBeInTheDocument();
   });
 
+  it("lists the price schedule, with Error in place of what is wrong", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    expect(screen.getByText(/^Price schedule \(/)).toBeInTheDocument();
+    expect(screen.queryByText("Error")).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Price"), "abc");
+    expect(screen.getByText("Error")).toHaveClass("text-destructive");
+
+    await user.clear(screen.getByLabelText("Price"));
+    await user.type(screen.getByLabelText("Price"), "79,5");
+
+    expect(screen.queryByText("Error")).not.toBeInTheDocument();
+    expect(screen.getByRole("listitem")).toHaveTextContent(
+      "$79.50 from when the course is published",
+    );
+  });
+
   it("lists every problem and focuses the list when submitted invalid", async () => {
     const user = userEvent.setup();
     renderForm();

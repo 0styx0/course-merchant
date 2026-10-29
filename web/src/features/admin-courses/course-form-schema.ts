@@ -81,7 +81,7 @@ export function normalizeDollars(dollars: string): string {
   return dollars.replace(",", ".");
 }
 
-function amountProblem(typed: string): string | undefined {
+export function amountProblem(typed: string): string | undefined {
   const dollars = normalizeDollars(typed);
   if (!/^\d+(\.\d+)?$/.test(dollars)) return "Enter a price, like 79.50.";
   if (dollars.split(".")[1]?.length > 2) {

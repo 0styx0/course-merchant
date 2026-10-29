@@ -28,8 +28,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **U2. Field and component behaviour** (price input, remove button, error summary height, time zone default, leave warning).
   - [ ] **U3. Live summaries and the time zone picker** (new components), in three commits (see *UX pass* below):
     - [x] **U3a.** Schedule summary sentence.
-    - [ ] **U3b.** Price summary sentence. **Next**
-    - [ ] **U3c.** Searchable time zone picker.
+    - [x] **U3b.** Price schedule list.
+    - [ ] **U3c.** Searchable time zone picker. **Next**
 - [ ] **5. Image and publish in the create form.**
 
 Not part of this work: admin login and logout, the admin course page and list, editing a course (loading a stored document into the editor is `setContent`, no conversion), the payout estimate under the price (payments step 7), a Playwright test comparing the image preview with the saved image, and plain-text or email versions of the description (the static renderer can produce Markdown later).
@@ -304,7 +304,7 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
 **U3. Live summaries and the time zone picker** (new components), built as U3a (item 11), U3b (item 12) and U3c (item 13).
 
 11. **U3a, done.** A plain-sentence summary of the schedule, e.g. "Runs Jan 3, 2027, 9:00 AM to Feb 28, 2027, 5:00 PM (America/New_York). Lasts 56 days." It replaced the "Lasts X" line. Dates are US style with a fixed `en-US` locale (owner's choice: prices are US dollars), so the text is the same in every browser.
-12. A plain-sentence summary of the price schedule ("$99 from publish, $79 from 1 Feb").
+12. **U3b, done.** A summary of the price schedule under the rows: a lead line with the time zone, then a Roman-numeral ordered list with one line per price in start order, e.g. "I. $99 from when the course is published", "II. $79 from Feb 1, 2027, 9:00 AM". A list, not one sentence, so seven prices stay readable. It always shows. Only the broken piece reads "Error", in red: "$79 from Error" for an incomplete, impossible or repeated start, "$Error from Feb 1, 2027, 9:00 AM" for an invalid amount. A price not typed yet is an empty item. Lines with an "Error" start go after the dated ones; `0` reads "Free".
 13. A searchable time zone picker or a short list of common zones, instead of the native select.
 
 **Out of scope here:** where the form goes after saving, and any "saved" confirmation. The owner will change the redirect later; add the confirmation with it.
