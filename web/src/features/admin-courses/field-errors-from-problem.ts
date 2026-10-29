@@ -5,28 +5,33 @@ export type FormFieldError = { path: string; message: string };
 
 const SAME_NAME_FIELDS = new Set(["name", "summary", "contentUrl"]);
 
+// The date and time of day are two boxes for one value; the time box takes the message.
+const SCHEDULE_PATHS: Record<string, string> = {
+  startTime: "schedule.startTimeOfDay",
+  endTime: "schedule.endTimeOfDay",
+  timeZone: "schedule.timeZone",
+};
+
+const PRICE_PATHS: Record<string, string> = {
+  amount: "amountDollars",
+  effectiveAt: "effectiveTimeOfDay",
+};
+
+function priceFormPath(pointer: string): string | undefined {
+  const [, , index, field] = pointer.split("/");
+  if (!/^\d+$/.test(index ?? "")) return undefined;
+  const formField = PRICE_PATHS[field];
+  return formField && `prices.${index}.${formField}`;
+}
+
 /** Where the form shows an error for a part of the request body. */
 function toFormPath(pointer: string): string | undefined {
   const [, first, second] = pointer.split("/");
 
   if (first === "description") return "description";
   if (SAME_NAME_FIELDS.has(first) && second === undefined) return first;
-
-  if (first === "schedule") {
-    // The date and time of day are two boxes for one value; the time box takes the message.
-    if (second === "startTime") return "schedule.startTimeOfDay";
-    if (second === "endTime") return "schedule.endTimeOfDay";
-    if (second === "timeZone") return "schedule.timeZone";
-    return undefined;
-  }
-
-  if (first === "prices") {
-    const [, , index, field] = pointer.split("/");
-    if (!/^\d+$/.test(index ?? "")) return undefined;
-    if (field === "amount") return `prices.${index}.amountDollars`;
-    if (field === "effectiveAt") return `prices.${index}.effectiveTimeOfDay`;
-  }
-
+  if (first === "schedule") return SCHEDULE_PATHS[second];
+  if (first === "prices") return priceFormPath(pointer);
   return undefined;
 }
 

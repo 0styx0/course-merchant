@@ -76,6 +76,18 @@ function stateOf(form: CourseForm, name: Path<CourseFormValues>) {
   };
 }
 
+function InputPrefix({ prefix }: { prefix?: string }) {
+  if (!prefix) return null;
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-sm text-muted-foreground"
+    >
+      {prefix}
+    </span>
+  );
+}
+
 /** A text, date or time box wired to the form and to `FormField`'s states. */
 export function InputField({
   form,
@@ -103,14 +115,7 @@ export function InputField({
     >
       {(inputProps) => (
         <div className="relative w-full">
-          {prefix && (
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-sm text-muted-foreground"
-            >
-              {prefix}
-            </span>
-          )}
+          <InputPrefix prefix={prefix} />
           <Input
             type={type}
             placeholder={placeholder}

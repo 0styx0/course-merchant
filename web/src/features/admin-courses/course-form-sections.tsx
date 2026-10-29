@@ -29,6 +29,32 @@ export const emptyPrice = {
   effectiveTimeOfDay: "",
 };
 
+function DescriptionField({
+  form,
+  isSubmitted,
+}: {
+  form: CourseFormApi;
+  isSubmitted: boolean;
+}) {
+  return (
+    <Controller
+      control={form.control}
+      name="description"
+      render={({ field, fieldState }) => (
+        <DescriptionEditor
+          value={field.value}
+          onChange={field.onChange}
+          onBlur={field.onBlur}
+          fieldRef={field.ref}
+          error={fieldState.error?.message}
+          touched={fieldState.isTouched}
+          submitted={isSubmitted}
+        />
+      )}
+    />
+  );
+}
+
 /** The course name, summary and description. */
 export function BasicsSection({
   form,
@@ -56,21 +82,7 @@ export function BasicsSection({
         placeholder="One or two sentences shown in the course list"
         limit={COURSE_SUMMARY_MAX_LENGTH}
       />
-      <Controller
-        control={form.control}
-        name="description"
-        render={({ field, fieldState }) => (
-          <DescriptionEditor
-            value={field.value}
-            onChange={field.onChange}
-            onBlur={field.onBlur}
-            fieldRef={field.ref}
-            error={fieldState.error?.message}
-            touched={fieldState.isTouched}
-            submitted={isSubmitted}
-          />
-        )}
-      />
+      <DescriptionField form={form} isSubmitted={isSubmitted} />
     </FormSection>
   );
 }
@@ -101,6 +113,52 @@ function TimeZoneOptions({ timeZones }: { timeZones: string[] }) {
   ));
 }
 
+/** The start date and time; changing either re-checks the end. */
+function StartFields({ form }: { form: CourseFormApi }) {
+  const registerOptions = {
+    onChange: () => form.trigger(["schedule.endDate", "schedule.endTimeOfDay"]),
+  };
+  return (
+    <>
+      <InputField
+        form={form}
+        name="schedule.startDate"
+        label="Start date"
+        type="date"
+        registerOptions={registerOptions}
+      />
+      <InputField
+        form={form}
+        name="schedule.startTimeOfDay"
+        label="Start time"
+        type="time"
+        registerOptions={registerOptions}
+      />
+    </>
+  );
+}
+
+function TimeZoneField({
+  form,
+  timeZones,
+}: {
+  form: CourseFormApi;
+  timeZones: string[];
+}) {
+  return (
+    <SelectField
+      form={form}
+      name="schedule.timeZone"
+      label="Time zone"
+      registerOptions={{
+        onChange: () => form.trigger(["schedule", "prices"]),
+      }}
+    >
+      <TimeZoneOptions timeZones={timeZones} />
+    </SelectField>
+  );
+}
+
 /** When the course starts and ends, and the zone those times are in. */
 export function ScheduleSection({
   form,
@@ -111,30 +169,13 @@ export function ScheduleSection({
   timeZones: string[];
   scheduleText: string | undefined;
 }) {
-  function recheckEnd() {
-    return form.trigger(["schedule.endDate", "schedule.endTimeOfDay"]);
-  }
-
   return (
     <FormSection
       title="Schedule"
       description="When the course runs."
       className="grid gap-4 sm:grid-cols-2"
     >
-      <InputField
-        form={form}
-        name="schedule.startDate"
-        label="Start date"
-        type="date"
-        registerOptions={{ onChange: () => recheckEnd() }}
-      />
-      <InputField
-        form={form}
-        name="schedule.startTimeOfDay"
-        label="Start time"
-        type="time"
-        registerOptions={{ onChange: () => recheckEnd() }}
-      />
+      <StartFields form={form} />
       <InputField
         form={form}
         name="schedule.endDate"
@@ -147,16 +188,7 @@ export function ScheduleSection({
         label="End time"
         type="time"
       />
-      <SelectField
-        form={form}
-        name="schedule.timeZone"
-        label="Time zone"
-        registerOptions={{
-          onChange: () => form.trigger(["schedule", "prices"]),
-        }}
-      >
-        <TimeZoneOptions timeZones={timeZones} />
-      </SelectField>
+      <TimeZoneField form={form} timeZones={timeZones} />
       <p aria-live="polite" className="text-sm sm:col-span-2">
         {scheduleText}
       </p>

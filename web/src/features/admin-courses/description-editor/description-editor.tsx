@@ -34,19 +34,12 @@ const editorExtensions = [...descriptionExtensions, CharacterCountExtension];
 const EDITABLE_AREA_CLASSES =
   "description-content min-h-40 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30";
 
-/**
- * The course description's rich-text field, with the label, formatting
- * toolbar, state icon, error message and a character counter around it.
- */
-export function DescriptionEditor({
+function useDescriptionEditor({
   value,
   onChange,
   onBlur,
   fieldRef,
-  error,
-  touched,
-  submitted,
-}: DescriptionEditorProps) {
+}: Pick<DescriptionEditorProps, "value" | "onChange" | "onBlur" | "fieldRef">) {
   const editor = useEditor({
     extensions: editorExtensions,
     content: value,
@@ -64,6 +57,29 @@ export function DescriptionEditor({
     fieldRef({ focus });
     return () => fieldRef(null);
   }, [focus, fieldRef]);
+
+  return { editor, focus };
+}
+
+/**
+ * The course description's rich-text field, with the label, formatting
+ * toolbar, state icon, error message and a character counter around it.
+ */
+export function DescriptionEditor({
+  value,
+  onChange,
+  onBlur,
+  fieldRef,
+  error,
+  touched,
+  submitted,
+}: DescriptionEditorProps) {
+  const { editor, focus } = useDescriptionEditor({
+    value,
+    onChange,
+    onBlur,
+    fieldRef,
+  });
 
   // `value` changes on every edit, which re-renders and so refreshes the count.
   const count = editor?.storage.characterCount.characters() ?? 0;

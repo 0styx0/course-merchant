@@ -32,6 +32,27 @@ type FormFieldProps = {
   children: (inputProps: FormFieldInputProps) => ReactNode;
 };
 
+function describedByIds(...ids: (string | undefined)[]) {
+  return ids.filter(Boolean).join(" ") || undefined;
+}
+
+/** The mark beside an input: a cross when it has a problem, a tick when it is valid. */
+function StatusIcon({
+  showsError,
+  showsValid,
+}: {
+  showsError: boolean;
+  showsValid: boolean;
+}) {
+  if (showsError) {
+    return <X aria-hidden className="size-4 shrink-0 text-destructive" />;
+  }
+  if (showsValid) {
+    return <Check aria-hidden className="size-4 shrink-0 text-green-600" />;
+  }
+  return null;
+}
+
 /**
  * A label, an input and its state. A problem shows only once the field has
  * been touched or the form submitted, so a re-check started by another field
@@ -53,13 +74,6 @@ export function FormField({
 
   const showsError = Boolean(error) && (touched || submitted);
   const showsValid = !error && touched;
-  const describedBy = [
-    description ? descriptionId : undefined,
-    showsError ? errorId : undefined,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   return (
     <Field data-invalid={showsError}>
       <FieldLabel id={labelId} htmlFor={id} onClick={onLabelClick}>
@@ -70,14 +84,12 @@ export function FormField({
           id,
           labelId,
           "aria-invalid": showsError,
-          "aria-describedby": describedBy || undefined,
+          "aria-describedby": describedByIds(
+            description ? descriptionId : undefined,
+            showsError ? errorId : undefined,
+          ),
         })}
-        {showsError && (
-          <X aria-hidden className="size-4 shrink-0 text-destructive" />
-        )}
-        {showsValid && (
-          <Check aria-hidden className="size-4 shrink-0 text-green-600" />
-        )}
+        <StatusIcon showsError={showsError} showsValid={showsValid} />
       </div>
       {description && (
         <FieldDescription id={descriptionId}>{description}</FieldDescription>

@@ -24,6 +24,42 @@ function headingFor(count: number): string {
   return `Fix ${count} ${count === 1 ? "problem" : "problems"} before saving`;
 }
 
+function ServerProblem({ title, detail }: { title: string; detail: string }) {
+  return (
+    <>
+      <h2 className="font-medium text-destructive">{title}</h2>
+      <p>{detail}</p>
+    </>
+  );
+}
+
+function ProblemList({
+  problems,
+  onSelectField,
+}: Pick<ErrorSummaryProps, "problems" | "onSelectField">) {
+  return (
+    <>
+      <h2 className="font-medium text-destructive">
+        {headingFor(problems.length)}
+      </h2>
+      <ul className="mt-2 list-disc pl-5">
+        {problems.map(({ fieldName, label, message }) => (
+          <li key={fieldName}>
+            <Button
+              variant="link"
+              className="h-auto p-0 whitespace-normal"
+              onClick={() => onSelectField(fieldName)}
+            >
+              {label}
+            </Button>
+            : {message}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
 /**
  * Every problem in the form in one place, so a screen reader reads them all at
  * once. Each entry is a button styled as a link: the field's id lives inside
@@ -45,34 +81,9 @@ export function ErrorSummary({
       role="alert"
       className="sticky top-0 z-10 max-h-48 overflow-y-auto rounded-lg border border-destructive bg-background p-4 text-sm outline-none focus-visible:ring-3 focus-visible:ring-destructive/40"
     >
-      {serverProblem && (
-        <>
-          <h2 className="font-medium text-destructive">
-            {serverProblem.title}
-          </h2>
-          <p>{serverProblem.detail}</p>
-        </>
-      )}
+      {serverProblem && <ServerProblem {...serverProblem} />}
       {problems.length > 0 && (
-        <>
-          <h2 className="font-medium text-destructive">
-            {headingFor(problems.length)}
-          </h2>
-          <ul className="mt-2 list-disc pl-5">
-            {problems.map(({ fieldName, label, message }) => (
-              <li key={fieldName}>
-                <Button
-                  variant="link"
-                  className="h-auto p-0 whitespace-normal"
-                  onClick={() => onSelectField(fieldName)}
-                >
-                  {label}
-                </Button>
-                : {message}
-              </li>
-            ))}
-          </ul>
-        </>
+        <ProblemList problems={problems} onSelectField={onSelectField} />
       )}
     </div>
   );

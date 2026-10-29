@@ -1,9 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
-import { useFieldArray, useForm, useWatch, type Path } from "react-hook-form";
+import { useRef } from "react";
+import {
+  useFieldArray,
+  useForm,
+  useWatch,
+  type Control,
+  type Path,
+} from "react-hook-form";
 
 import { ErrorSummary } from "@/components/form/error-summary";
 import { Button } from "@/components/ui/button";
@@ -12,6 +17,7 @@ import {
   useBrowserTimeZone,
   useFocusSummaryOnSubmit,
   useLeaveWarning,
+  useSaveCourse,
 } from "./course-form-hooks";
 import { courseFormProblems } from "./course-form-problems";
 import {
@@ -26,7 +32,6 @@ import {
   type CheckedCourseFormValues,
   type CourseFormValues,
 } from "./course-form-schema";
-import { createCourseAction } from "./create-course.action";
 import { priceSummary } from "./price-summary";
 import { scheduleSummary } from "./schedule-summary";
 
@@ -48,14 +53,7 @@ const defaultValues: CourseFormValues = {
   prices: [emptyPrice],
 };
 
-type CourseFormProps = {
-  /** Built on the server so the server and browser list the same zones. */
-  timeZones: string[];
-};
-
-/** The "create course" form. It saves a draft and goes to the home page. */
-export function CourseForm({ timeZones }: CourseFormProps) {
-  const router = useRouter();
+function useCourseFormState() {
   const form = useForm<CourseFormValues, unknown, CheckedCourseFormValues>({
     resolver: zodResolver(courseFormSchema),
     defaultValues,
@@ -63,48 +61,47 @@ export function CourseForm({ timeZones }: CourseFormProps) {
     shouldFocusError: false,
   });
   const priceRows = useFieldArray({ control: form.control, name: "prices" });
-  const [serverProblem, setServerProblem] = useState<{
-    title: string;
-    detail: string;
-  }>();
-  const summaryRef = useRef<HTMLDivElement>(null);
-  const [saved, setSaved] = useState(false);
+  return { form, priceRows };
+}
 
+/** The schedule's and the price list's summary lines, kept in step with the inputs. */
+function useScheduleAndPriceText(
+  control: Control<CourseFormValues, unknown, CheckedCourseFormValues>,
+) {
+  const schedule = useWatch({ control, name: "schedule" });
+  const prices = priceSummary(
+    useWatch({ control, name: "prices" }),
+    schedule.timeZone,
+  );
+  return { scheduleText: scheduleSummary(schedule), prices };
+}
+
+type CourseFormProps = {
+  /** Built on the server so the server and browser list the same zones. */
+  timeZones: string[];
+};
+
+/** The "create course" form. It saves a draft and goes to the home page. */
+export function CourseForm({ timeZones }: CourseFormProps) {
+  const { form, priceRows } = useCourseFormState();
+  const summaryRef = useRef<HTMLDivElement>(null);
+  const { save, saved, serverProblem, clearServerProblem } =
+    useSaveCourse(form);
   const { errors, isDirty, isSubmitted, isSubmitting, submitCount } =
     form.formState;
   const problems = isSubmitted
     ? courseFormProblems(errors, priceRows.fields.length)
     : [];
-  const schedule = useWatch({ control: form.control, name: "schedule" });
-  const scheduleText = scheduleSummary(schedule);
-  const prices = priceSummary(
-    useWatch({ control: form.control, name: "prices" }),
-    schedule.timeZone,
-  );
+  const { scheduleText, prices } = useScheduleAndPriceText(form.control);
 
   useFocusSummaryOnSubmit(summaryRef, submitCount);
   useBrowserTimeZone(form.reset, timeZones, defaultValues);
   useLeaveWarning(isDirty && !saved);
 
-  async function save(values: CheckedCourseFormValues) {
-    setServerProblem(undefined);
-    const result = await createCourseAction(values);
-    if (result.state === "success") {
-      setSaved(true);
-      router.push("/");
-      return;
-    }
-    const { problem, fieldErrors } = result.error;
-    setServerProblem({ title: problem.title, detail: problem.detail });
-    for (const { path, message } of fieldErrors) {
-      form.setError(path as Path<CourseFormValues>, { message });
-    }
-  }
-
   return (
     <form
       noValidate
-      onSubmit={form.handleSubmit(save, () => setServerProblem(undefined))}
+      onSubmit={form.handleSubmit(save, clearServerProblem)}
       className="flex flex-col gap-8"
     >
       <ErrorSummary

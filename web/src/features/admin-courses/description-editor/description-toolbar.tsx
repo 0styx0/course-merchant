@@ -164,6 +164,36 @@ function RemoveLinkButton({ editor, disabled }: RemoveLinkButtonProps) {
   );
 }
 
+function useToolbarState(editor: Editor | null) {
+  return useEditorState({
+    editor,
+    selector: ({ editor }) => ({
+      active: FORMATS.map((format) =>
+        editor ? format.isActive(editor) : false,
+      ),
+      onLink: editor?.isActive("link") ?? false,
+      hasSelection: editor ? !editor.state.selection.empty : false,
+    }),
+  });
+}
+
+function FormatButtons({
+  editor,
+  active,
+}: {
+  editor: Editor | null;
+  active: boolean[] | undefined;
+}) {
+  return FORMATS.map((format, index) => (
+    <FormatButton
+      key={format.label}
+      editor={editor}
+      format={format}
+      pressed={active?.[index] ?? false}
+    />
+  ));
+}
+
 type DescriptionToolbarProps = {
   /** Null until the editor exists, which is only in the browser. */
   editor: Editor | null;
@@ -182,16 +212,7 @@ export function DescriptionToolbar({
 }: DescriptionToolbarProps) {
   const linkFieldId = useId();
   const [linkFieldOpen, setLinkFieldOpen] = useState(false);
-  const state = useEditorState({
-    editor,
-    selector: ({ editor }) => ({
-      active: FORMATS.map((format) =>
-        editor ? format.isActive(editor) : false,
-      ),
-      onLink: editor?.isActive("link") ?? false,
-      hasSelection: editor ? !editor.state.selection.empty : false,
-    }),
-  });
+  const state = useToolbarState(editor);
 
   return (
     <div className="flex flex-col gap-1">
@@ -200,14 +221,7 @@ export function DescriptionToolbar({
         aria-controls={controlsId}
         className="flex flex-wrap gap-1"
       >
-        {FORMATS.map((format, index) => (
-          <FormatButton
-            key={format.label}
-            editor={editor}
-            format={format}
-            pressed={state?.active[index] ?? false}
-          />
-        ))}
+        <FormatButtons editor={editor} active={state?.active} />
         <LinkButton
           editor={editor}
           state={state}
