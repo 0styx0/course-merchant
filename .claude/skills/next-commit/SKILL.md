@@ -29,6 +29,7 @@ Give the outline and wait for the go-ahead. In plan mode, present it with ExitPl
 - **Heading:** a plain-language sentence saying what the commit does (for example "Send queued emails automatically"), not a class or file name. Clear communication comes first.
 - **Terms:** define every specialized term or unit of work the outline uses (for example "tick", "sweeper", "outbox"): what it means here, why use it, and the alternatives. Don't assume a term means its usual meaning elsewhere.
 - **What:** each file to add or change, as links, with what changes in it. For each new function longer than about 15 lines, list the small named functions it will be composed of (see *Small composed functions* and *Simple ternaries only* in CLAUDE.md), so the split is reviewed before any code exists.
+If any file moves, splits or is renamed, include the old -> new list or before/after trees here.
 - **Why:** the reason this is the next step, and how it fits the design doc.
 - **Trade-offs:** the alternatives you considered and why you didn't pick them.
 - **Config:** keep module-specific settings (constants or env vars) inside that module, not in global config. If that would add real complexity, tell the owner before doing it.

@@ -35,13 +35,17 @@ describe("AdminSessionsService.logIn (integration)", () => {
   async function outcomes(promises: Promise<unknown>[]) {
     const settled = await Promise.allSettled(promises);
 
-    return settled.map((result) =>
-      result.status === "fulfilled"
-        ? "logged in"
-        : result.reason instanceof ApiException
-          ? String(result.reason.code)
-          : "crashed",
-    );
+    return settled.map(outcomeOf);
+  }
+
+  function outcomeOf(result: PromiseSettledResult<unknown>) {
+    if (result.status === "fulfilled") {
+      return "logged in";
+    }
+
+    return result.reason instanceof ApiException
+      ? String(result.reason.code)
+      : "crashed";
   }
 
   it("stores a session and clears the attempts after a good login", async () => {

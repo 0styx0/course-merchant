@@ -42,6 +42,28 @@ export default tseslint.config(
     },
   },
   {
+    // style limits for hand-written code, tests included; each number and
+    // where it comes from is in docs/code-quality-guardrails.md (Numbers)
+    rules: {
+      "max-lines": [
+        "error",
+        { max: 250, skipBlankLines: true, skipComments: true },
+      ],
+      "max-lines-per-function": [
+        "error",
+        { max: 40, skipBlankLines: true, skipComments: true },
+      ],
+      "max-depth": ["error", 3],
+      complexity: ["error", 10],
+      "no-nested-ternary": "error",
+    },
+  },
+  {
+    // describe callbacks are long by design, so tests skip the function limit
+    files: ["**/*.spec.ts", "src/test/**", "**/test/**"],
+    rules: { "max-lines-per-function": "off" },
+  },
+  {
     // vitest's asymmetric matchers (expect.any, expect.objectContaining, ...)
     // are typed `any`, so every use inside an expected object would be flagged
     files: ["**/*.spec.ts"],

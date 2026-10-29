@@ -9,8 +9,8 @@ Keep this file current **in the same commit as the work**: tick the step, mark t
 Each milestone delivers one outcome. A milestone is split into one-line commits by `/plan-create-implementation` when it becomes **Next**.
 
 - [ ] **1. Style rules enforced by lint.** Turn on the rules in *Numbers* as errors, after fixing the code that breaks them (details in *Step 1*). Lint already runs on commit through lint-staged, so a violation blocks the commit. Two commits:
-  - [ ] **1a.** **Next.** API: flatten `toFieldErrorCode` (`zod-validation.pipe.ts`, complexity 11), split the 21 spec files over 250 lines by topic (10 unit, 7 integration, 4 e2e), then turn the API rules on (`api/eslint.config.mjs`).
-  - [ ] **1b.** Web: flatten `toFormPath` (`field-errors-from-problem.ts`, complexity 13), split `FormField` and `ErrorSummary` (`components/form/`), `CourseForm`, `InputField`, `BasicsSection`, `ScheduleSection`, `DescriptionEditor`, `DescriptionLinkField` and `DescriptionToolbar`, split `course-form.test.tsx` and `course-form-schema.test.ts` by topic, then turn the web rules on (`web/eslint.config.mjs`) and tick this step.
+  - [x] **1a.** API: flatten `toFieldErrorCode` (`zod-validation.pipe.ts`, complexity 11), split the 21 spec files over 250 lines by topic (10 unit, 7 integration, 4 e2e), then turn the API rules on (`api/eslint.config.mjs`).
+  - [ ] **1b.** **Next.** Web: flatten `toFormPath` (`field-errors-from-problem.ts`, complexity 13), split `FormField` and `ErrorSummary` (`components/form/`), `CourseForm`, `InputField`, `BasicsSection`, `ScheduleSection`, `DescriptionEditor`, `DescriptionLinkField` and `DescriptionToolbar`, split `course-form.test.tsx` and `course-form-schema.test.ts` by topic, then turn the web rules on (`web/eslint.config.mjs`) and tick this step.
 - [ ] **2. Unused-code check.** Add [knip](https://knip.dev) (finds unused files, exports and dependencies). Report first, clean up, then enforce on pre-push and CI. Riskiest unknown: false positives from Nest decorators and Next's file-based routes, so it goes early.
 - [ ] **3. Behaviour pinned before refactors.** Use the existing `@vitest/coverage-v8` (both packages already have it) to see which lines a refactor touches that no test runs. Add a step to the `next-commit` skill for refactors: check coverage of the touched code first, and add a test in its own commit if it is missing. Add the missing test for the order of the description error list, which the cleanup changed without a test failing.
 - [ ] **4. Naming and layout rules.** Short rules in CLAUDE.md for what lint can't check (see *Principles*), including 7 files per folder. Then fix the 11 folders that already break it (listed in *Numbers*), one layout commit per folder, each outlined with before/after file trees and needing the owner's OK.
@@ -35,9 +35,9 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 |---|---|---|---|
 | Function length (`max-lines-per-function`) | 40 | The target in the cleanup doc (step 12): a function that fits one editor screen needs no scrolling. | API `src`: 0 over. Web `src`: 10 over; several are JSX components, some are vendored `components/ui/`. |
 | Nesting depth (`max-depth`) | 3 | The *Flat and immutable* rule: one loop, one `if` and one body. | 0 over. |
-| Complexity (`complexity`) | 10 | McCabe's 1976 paper proposed 10 as the limit. ESLint's rule counts the same thing (independent paths through a function). | 3 over. |
+| Complexity (`complexity`) | 10 | McCabe's 1976 paper proposed 10 as the limit. ESLint's rule counts the same thing (independent paths through a function). | 3 over (API 1, web 2). |
 | File length (`max-lines`) | 250 | No principled source. Chosen just above the largest hand-written file, so it stops growth without forcing rewrites. | 0 over in hand-written `src`; only a generated file exceeds it. |
-| Nested ternary (`no-nested-ternary`) | off | Backs the *Simple ternaries only* rule. | 0 in `src`. |
+| Nested ternary (`no-nested-ternary`) | error | Backs the *Simple ternaries only* rule. | 1 in API tests (fixed in 1a), 0 elsewhere in `src`. |
 | Files per folder | 7 | The owner's choice. The cleanup split `admin-courses/` (30 files) and `payments/`; 7 is about one screen of a file tree. | 11 folders over today: `web/src/features/admin-courses` 30, `web/src/features/courses` 16, `api/src/auth` 16, `api/src/courses/test/unit` 16, `api/src/courses` 13, `web/src/lib/api` 10, `api/src/email` 9, then 8 each in `description-editor`, `api/src/test/e2e/courses`, `api/src/prisma` and `api/src/courses/test/integration`. |
 | Coverage threshold | none | The owner chose not to set one: a threshold invites tests written to hit the number. Coverage is used as a check before a refactor only. | Not measured yet. |
 | Short outline | about 5 lines | Enough to name the files and the check, short enough that "go" is a quick read. | n/a |
@@ -64,7 +64,7 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 
 **Order inside a commit.** Fix the code, then turn the rules on last, so lint is never red.
 
-**Test splits.** Split by topic into sibling files, with no change to what is tested. The test count before and after must match; the hand-off reports it. This pushes `api/src/courses/test/unit` from 16 to about 22 files, which milestone 4 groups.
+**Test splits.** Split by topic into sibling files, with no change to what is tested. The files from one split (the specs, plus a `<name>.fixtures.ts` for shared helpers) go together in a sub-folder named after the original spec, e.g. `courses/test/unit/course-request-schemas/`. This keeps the parent folder under the 7-file guideline and shows at a glance which specs belong together. The test count before and after must match; the hand-off reports it.
 
 **Left unchecked.** 21 API `it` bodies are over 40 lines; the function limit skips tests, so they stay.
 

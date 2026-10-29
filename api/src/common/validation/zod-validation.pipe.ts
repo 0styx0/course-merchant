@@ -47,17 +47,11 @@ function toValidationErrors(issue: z.core.$ZodIssue): ValidationError[] {
 function toFieldErrorCode(issue: z.core.$ZodIssue): FieldErrorCode {
   switch (issue.code) {
     case "invalid_type":
-      return issue.input === undefined || issue.input === null
-        ? FieldErrorCode.REQUIRED
-        : FieldErrorCode.INVALID_TYPE;
+      return toInvalidTypeCode(issue);
     case "too_small":
-      return isNumeric(issue.origin)
-        ? FieldErrorCode.BELOW_MINIMUM
-        : FieldErrorCode.TOO_SHORT;
+      return toTooSmallCode(issue.origin);
     case "too_big":
-      return isNumeric(issue.origin)
-        ? FieldErrorCode.ABOVE_MAXIMUM
-        : FieldErrorCode.TOO_LONG;
+      return toTooBigCode(issue.origin);
     case "invalid_format":
       return FieldErrorCode.INVALID_FORMAT;
     case "custom":
@@ -65,6 +59,24 @@ function toFieldErrorCode(issue: z.core.$ZodIssue): FieldErrorCode {
     default:
       return FieldErrorCode.INVALID_VALUE;
   }
+}
+
+function toInvalidTypeCode(issue: z.core.$ZodIssueInvalidType): FieldErrorCode {
+  const isMissing = issue.input === undefined || issue.input === null;
+
+  return isMissing ? FieldErrorCode.REQUIRED : FieldErrorCode.INVALID_TYPE;
+}
+
+function toTooSmallCode(origin: string): FieldErrorCode {
+  return isNumeric(origin)
+    ? FieldErrorCode.BELOW_MINIMUM
+    : FieldErrorCode.TOO_SHORT;
+}
+
+function toTooBigCode(origin: string): FieldErrorCode {
+  return isNumeric(origin)
+    ? FieldErrorCode.ABOVE_MAXIMUM
+    : FieldErrorCode.TOO_LONG;
 }
 
 function isNumeric(origin: string): boolean {
