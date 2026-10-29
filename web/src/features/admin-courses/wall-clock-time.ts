@@ -2,7 +2,7 @@ import { Temporal } from "temporal-polyfill";
 
 import type { Result } from "@/lib/types";
 
-export type WallClockFailureReason =
+type WallClockFailureReason =
   "invalid-time" | "unknown-zone" | "daylight-saving";
 
 export type WallClockToUtcResult = Result<string, WallClockFailureReason>;

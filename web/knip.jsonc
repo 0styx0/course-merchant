@@ -1,0 +1,5 @@
+{
+  "$schema": "https://unpkg.com/knip@6.41.0/schema.json",
+  // Vendored shadcn components (re-added by `shadcn add`) and the generated API types are not hand-written, so unused exports there are not ours to fix.
+  "ignore": ["src/components/ui/**", "src/lib/api/generated.ts"],
+}

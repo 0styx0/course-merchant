@@ -5,7 +5,7 @@ import type { ErrorSummaryProblem } from "@/components/form/error-summary";
 import type { CourseFormValues } from "./course-form-schema";
 
 /** The form's fields in page order, with the label the error list shows. */
-export const COURSE_FORM_FIELD_LABELS = [
+const COURSE_FORM_FIELD_LABELS = [
   ["name", "Course name"],
   ["summary", "Summary"],
   ["description", "Description"],

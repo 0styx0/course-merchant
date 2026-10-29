@@ -16,7 +16,7 @@ type CourseNotFoundResponse =
 type InternalServerErrorResponse =
   operations["getCourse"]["responses"][500]["content"]["application/problem+json"];
 
-export const courseByIdUrl = `${MOCK_API_BASE_URL}/v1/courses/:courseId`;
+const courseByIdUrl = `${MOCK_API_BASE_URL}/v1/courses/:courseId`;
 
 const courseResponse: GetCourseResponse = reactCourse;
 
@@ -54,7 +54,7 @@ export const courseByIdError = http.get(courseByIdUrl, () => {
   return problemResponse(500, body);
 });
 
-export const courseByIdSlow = http.get(courseByIdUrl, async () => {
+const courseByIdSlow = http.get(courseByIdUrl, async () => {
   await delay(1000);
   return HttpResponse.json(courseResponse);
 });

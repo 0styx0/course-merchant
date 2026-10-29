@@ -18,7 +18,7 @@ export const coursesSuccess = http.get(coursesUrl, () => {
   return HttpResponse.json(coursesResponse);
 });
 
-export const coursesEmpty = http.get(coursesUrl, () => {
+const coursesEmpty = http.get(coursesUrl, () => {
   return HttpResponse.json({
     courses: [],
   } satisfies CoursesResponse);

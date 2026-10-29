@@ -6,6 +6,7 @@ yarn --cwd web format:check
 
 # Unused files, exports and dependencies (whole-project, so not on commit)
 yarn --cwd api knip
+yarn --cwd web knip
 
 # The commit hook only runs the unit tests related to what it staged
 yarn --cwd api test:unit

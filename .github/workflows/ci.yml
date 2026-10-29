@@ -72,6 +72,7 @@ jobs:
       - run: yarn next typegen
       - run: yarn tsc --noEmit
       - run: yarn lint
+      - run: yarn knip
       - run: yarn format:check
 
       - run: yarn test:unit
