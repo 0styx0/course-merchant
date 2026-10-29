@@ -37,6 +37,8 @@ function tooLong(label: string, max: number): string {
   return `The ${label} must be ${max.toLocaleString("en-US")} characters or fewer.`;
 }
 
+// `Intl.supportedValuesOf` returns hundreds of names, and this check runs on
+// every validation, so build the set once on first use and keep it.
 let knownTimeZones: Set<string> | undefined;
 
 function isKnownTimeZone(timeZone: string): boolean {
@@ -44,17 +46,21 @@ function isKnownTimeZone(timeZone: string): boolean {
   return knownTimeZones.has(timeZone);
 }
 
+function isWebUrl(url: string): boolean {
+  try {
+    const { protocol } = new URL(url);
+    return protocol === "https:" || protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 function contentUrlProblem(url: string): string | undefined {
   if (!url) return "Enter the link to the course material.";
   if (url.length > COURSE_CONTENT_URL_MAX_LENGTH) {
     return tooLong("link", COURSE_CONTENT_URL_MAX_LENGTH);
   }
-  try {
-    const { protocol } = new URL(url);
-    if (protocol === "https:" || protocol === "http:") return undefined;
-  } catch {
-    // falls through to the message below
-  }
+  if (isWebUrl(url)) return undefined;
   return "Enter a link starting with https:// or http://.";
 }
 

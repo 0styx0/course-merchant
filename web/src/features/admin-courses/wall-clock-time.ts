@@ -14,6 +14,41 @@ function failure(error: WallClockFailureReason): WallClockToUtcResult {
   return { state: "failure", error };
 }
 
+function parseDateTime(wallClock: string): Temporal.PlainDateTime | undefined {
+  try {
+    return Temporal.PlainDateTime.from(wallClock, { overflow: "reject" });
+  } catch {
+    return undefined;
+  }
+}
+
+function isKnownTimeZone(
+  dateTime: Temporal.PlainDateTime,
+  timeZone: string,
+): boolean {
+  try {
+    dateTime.toZonedDateTime(timeZone);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// `undefined` when the time is skipped or repeated by a daylight-saving change.
+function toUtcInstant(
+  dateTime: Temporal.PlainDateTime,
+  timeZone: string,
+): string | undefined {
+  try {
+    return dateTime
+      .toZonedDateTime(timeZone, { disambiguation: "reject" })
+      .toInstant()
+      .toString();
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * Turns a `datetime-local` value ("2026-11-01T01:30") and an IANA time zone
  * into a UTC ISO string ending in `Z`. A time the zone skips or repeats because
@@ -25,25 +60,11 @@ export function wallClockToUtc(
 ): WallClockToUtcResult {
   if (!WALL_CLOCK_FORMAT.test(wallClock)) return failure("invalid-time");
 
-  let dateTime: Temporal.PlainDateTime;
-  try {
-    dateTime = Temporal.PlainDateTime.from(wallClock, { overflow: "reject" });
-  } catch {
-    return failure("invalid-time");
-  }
+  const dateTime = parseDateTime(wallClock);
+  if (!dateTime) return failure("invalid-time");
+  if (!isKnownTimeZone(dateTime, timeZone)) return failure("unknown-zone");
 
-  try {
-    dateTime.toZonedDateTime(timeZone);
-  } catch {
-    return failure("unknown-zone");
-  }
-
-  try {
-    const zoned = dateTime.toZonedDateTime(timeZone, {
-      disambiguation: "reject",
-    });
-    return { state: "success", data: zoned.toInstant().toString() };
-  } catch {
-    return failure("daylight-saving");
-  }
+  const instant = toUtcInstant(dateTime, timeZone);
+  if (!instant) return failure("daylight-saving");
+  return { state: "success", data: instant };
 }
