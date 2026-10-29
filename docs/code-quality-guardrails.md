@@ -8,7 +8,9 @@ Keep this file current **in the same commit as the work**: tick the step, mark t
 
 Each milestone delivers one outcome. A milestone is split into one-line commits by `/plan-create-implementation` when it becomes **Next**.
 
-- [ ] **1. Style rules enforced by lint.** **Next.** Turn on the rules in *Numbers* below as errors, after fixing the code that breaks them (about 10 web functions, 3 functions over the complexity limit, none in API `src` for length). Lint already runs on commit through lint-staged, so a violation blocks the commit.
+- [ ] **1. Style rules enforced by lint.** Turn on the rules in *Numbers* as errors, after fixing the code that breaks them (details in *Step 1*). Lint already runs on commit through lint-staged, so a violation blocks the commit. Two commits:
+  - [ ] **1a.** **Next.** API: flatten `toFieldErrorCode` (`zod-validation.pipe.ts`, complexity 11), split the 21 spec files over 250 lines by topic (10 unit, 7 integration, 4 e2e), then turn the API rules on (`api/eslint.config.mjs`).
+  - [ ] **1b.** Web: flatten `toFormPath` (`field-errors-from-problem.ts`, complexity 13), split `FormField` and `ErrorSummary` (`components/form/`), `CourseForm`, `InputField`, `BasicsSection`, `ScheduleSection`, `DescriptionEditor`, `DescriptionLinkField` and `DescriptionToolbar`, split `course-form.test.tsx` and `course-form-schema.test.ts` by topic, then turn the web rules on (`web/eslint.config.mjs`) and tick this step.
 - [ ] **2. Unused-code check.** Add [knip](https://knip.dev) (finds unused files, exports and dependencies). Report first, clean up, then enforce on pre-push and CI. Riskiest unknown: false positives from Nest decorators and Next's file-based routes, so it goes early.
 - [ ] **3. Behaviour pinned before refactors.** Use the existing `@vitest/coverage-v8` (both packages already have it) to see which lines a refactor touches that no test runs. Add a step to the `next-commit` skill for refactors: check coverage of the touched code first, and add a test in its own commit if it is missing. Add the missing test for the order of the description error list, which the cleanup changed without a test failing.
 - [ ] **4. Naming and layout rules.** Short rules in CLAUDE.md for what lint can't check (see *Principles*), including 7 files per folder. Then fix the 11 folders that already break it (listed in *Numbers*), one layout commit per folder, each outlined with before/after file trees and needing the owner's OK.
@@ -19,7 +21,7 @@ Each milestone delivers one outcome. A milestone is split into one-line commits 
 
 - **A tool beats a sentence.** A rule goes into ESLint when a tool can check it; CLAUDE.md keeps only what a tool can't check (names, layout, design).
 - **Fix first, then enforce.** A rule goes on as an error only after the code passes it. A warning nobody reads is no rule.
-- **Rules apply to hand-written code.** Tests, generated files and vendored `components/ui/` (shadcn) are exempt from the length rules.
+- **Rules apply to hand-written code, tests included.** Generated files and vendored `components/ui/` (shadcn) are exempt. The one rule tests skip is the 40-line function limit (see *Decisions*).
 - **No number without a reason.** Every limit has a row in *Numbers* saying where it came from and what was measured, and a comment beside it in the config.
 - **Names say what they hold.** A file name states everything the file exports. A function name states what it returns (the old `formatDate` returned a formatter, not a date).
 - **At most 7 files in a folder**, not counting sub-folders. Past that, group the files by job (as `payments/` was split into `stripe/`, `fulfillment/` and `sweeper/`). A guideline, not checked by a tool.
@@ -45,7 +47,9 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 | Decision | Why | Rejected |
 |---|---|---|
 | Rules go on as errors, after the code is fixed. | A warning nobody reads is the same as no rule. | Warn-only; a baseline file of known violations (an extra tool and file to maintain). |
-| Length rules skip tests, generated files and `components/ui/`. | A `describe` callback is naturally long (140 hits in API tests alone); the other two aren't hand-written. | Counting tests. |
+| Tests follow the file-length (250), nesting and complexity limits, but not the 40-line function limit. Generated files and `components/ui/` skip the length rules. | Tests should meet the same bar as source. ESLint's rule can't exempt `describe` callbacks, which are long by design (119 of 140 hits in API tests). The other two aren't hand-written. | Exempting tests entirely; a custom rule for `it` bodies (21 hits, not worth the rule code). |
+| Test files over 250 lines are split by topic, with the same tests before and after. | Keeps the change a move, not a rewrite. | Trimming tests to fit. |
+| Each package turns its rules on in its last commit, and the work is one commit per package. | Lint is never red between commits; about 40 files in one diff can't be reviewed. | Warnings first; one commit for everything. |
 | Function length 40. | See *Numbers*. | 30 (flags code the cleanup left alone); 60 (catches only real outliers). |
 | New dev dependencies are allowed when small and official (`@vitest/coverage-v8`, knip). | They replace manual checks. | No new dependencies. |
 | Mechanical steps get a short outline: moves, renames, splits, doc-only and lint-fix commits. | None of them change runtime behaviour; about 15 "go" turns in the cleanup were only approval. | Full outlines for everything. |
@@ -54,9 +58,18 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 | The 11 folders over 7 files are fixed now, in milestone 4. | A rule the code already breaks gets ignored. This is the same "fix first, then enforce" principle as the lint rules. | Applying the rule only to folders touched from now on. |
 | Spec files count toward the 7. | The reason is scanning a file tree, and a tree full of specs is as hard to scan as one full of source. | Counting only source files. |
 
+## Step 1. Style rules enforced by lint
+
+**Rules.** Each package gets `max-lines` 250, `max-depth` 3, `complexity` 10 and `no-nested-ternary`, for source and tests. `max-lines-per-function` 40 applies to source only. Blank lines and comments are not counted. Generated files and `components/ui/` skip the length rules. Each limit has a comment citing *Numbers*.
+
+**Order inside a commit.** Fix the code, then turn the rules on last, so lint is never red.
+
+**Test splits.** Split by topic into sibling files, with no change to what is tested. The test count before and after must match; the hand-off reports it. This pushes `api/src/courses/test/unit` from 16 to about 22 files, which milestone 4 groups.
+
+**Left unchecked.** 21 API `it` bodies are over 40 lines; the function limit skips tests, so they stay.
+
 ## Open questions
 
-- **Milestone 1:** which of the web functions over 40 lines are really components that should be split, and which are vendored (exempt)? Settle in the outline.
 - **Milestone 4:** how to group each folder (by job, as `payments/` was); settled folder by folder in each outline. `api/src/courses/test/unit` (16 specs) may need to mirror the source sub-folders, which conflicts with the "unit specs live in `<module>/test/unit/`" rule in [api-tests.md](../.claude/rules/api-tests.md); raise it in that outline.
 
 ## Out of scope
