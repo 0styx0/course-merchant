@@ -27,7 +27,8 @@ import {
   type CourseFormValues,
 } from "./course-form-schema";
 import { createCourseAction } from "./create-course.action";
-import { priceSummary, scheduleSummary } from "./format-course-length";
+import { priceSummary } from "./price-summary";
+import { scheduleSummary } from "./schedule-summary";
 
 /** Used until the browser's own zone is known, and when the list lacks it. */
 const DEFAULT_TIME_ZONE = "America/New_York";

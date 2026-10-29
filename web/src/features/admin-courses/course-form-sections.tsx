@@ -16,7 +16,7 @@ import {
 } from "./course-form-limits";
 import type { CourseFormValues } from "./course-form-schema";
 import { DescriptionEditor } from "./description-editor";
-import type { priceSummary } from "./format-course-length";
+import type { priceSummary } from "./price-summary";
 import { PriceRow } from "./price-row";
 import { PriceSchedule } from "./price-schedule";
 

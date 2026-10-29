@@ -1,6 +1,6 @@
 import { cn } from "cn";
 
-import type { priceSummary } from "./format-course-length";
+import type { priceSummary } from "./price-summary";
 
 type PriceScheduleProps = {
   summary: ReturnType<typeof priceSummary>;

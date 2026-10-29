@@ -68,3 +68,9 @@ export function wallClockToUtc(
   if (!instant) return failure("daylight-saving");
   return { state: "success", data: instant };
 }
+
+/** The UTC time in milliseconds, or nothing if the time or zone can't be converted. */
+export function toUtcMs(date: string, timeOfDay: string, timeZone: string) {
+  const result = wallClockToUtc(`${date}T${timeOfDay}`, timeZone);
+  return result.state === "success" ? Date.parse(result.data) : undefined;
+}
