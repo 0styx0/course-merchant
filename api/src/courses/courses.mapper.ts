@@ -1,6 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
 
-import { formatDate } from "@/utils/formatters.js";
 import {
   CourseDescription,
   CreateCourseRequest,
@@ -101,8 +100,8 @@ export function toPublicCourseResponse(
       currency: price.currency,
     },
     schedule: {
-      startTime: formatDate(course.startsAt),
-      endTime: formatDate(course.endsAt),
+      startTime: course.startsAt.toString(),
+      endTime: course.endsAt.toString(),
       timeZone: course.timeZone,
     },
   };
@@ -112,7 +111,7 @@ type AdminPrice = CourseRepositoryModelAdmin["prices"][number];
 type AdminEnrollment = CourseRepositoryModelAdmin["enrollments"][number];
 
 function formatOptionalDate(time: Temporal.Instant | null) {
-  return time === null ? null : formatDate(time);
+  return time === null ? null : time.toString();
 }
 
 function toAdminPriceResponse(price: AdminPrice) {
@@ -120,7 +119,7 @@ function toAdminPriceResponse(price: AdminPrice) {
     id: price.id,
     amount: price.amount,
     currency: price.currency,
-    effectiveAt: formatDate(price.effectiveAt),
+    effectiveAt: price.effectiveAt.toString(),
   };
 }
 
@@ -153,16 +152,16 @@ export function toAdminCourseResponse(
     description: storedDescription(course.description),
     contentUrl: course.contentUrl,
     schedule: {
-      startTime: formatDate(course.startsAt),
-      endTime: formatDate(course.endsAt),
+      startTime: course.startsAt.toString(),
+      endTime: course.endsAt.toString(),
       timeZone: course.timeZone,
     },
     status: {
       name: course.statuses[0].name,
-      changedAt: formatDate(course.statuses[0].changedAt),
+      changedAt: course.statuses[0].changedAt.toString(),
     },
     image: course.image && {
-      updatedAt: formatDate(course.image.updatedAt),
+      updatedAt: course.image.updatedAt.toString(),
       version: imageVersion(course.image.updatedAt),
     },
     prices: course.prices.map(toAdminPriceResponse),

@@ -5,7 +5,7 @@ export function formatPrice(amount: number, currency: string) {
   }).format(amount / 100);
 }
 
-export function formatDate(timeZone: string) {
+export function dateTimeFormatter(timeZone: string) {
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: "short",

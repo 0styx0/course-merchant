@@ -1,5 +1,5 @@
 import type { Course } from "@/lib/types";
-import { formatDate } from "@/lib/utils/formatters";
+import { dateTimeFormatter } from "@/lib/utils/formatters";
 
 type CourseScheduleProps = {
   schedule: Course["schedule"];
@@ -7,7 +7,7 @@ type CourseScheduleProps = {
 
 /** Start and end times in the course's own time zone, and the zone's name. */
 export function CourseSchedule({ schedule }: CourseScheduleProps) {
-  const dateFormatter = formatDate(schedule.timeZone);
+  const dateFormatter = dateTimeFormatter(schedule.timeZone);
 
   return (
     <div>
