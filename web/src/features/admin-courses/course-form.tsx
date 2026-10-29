@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   Controller,
   useFieldArray,
@@ -17,12 +17,16 @@ import { Button } from "@/components/ui/button";
 
 import { InputField, SelectField } from "./course-form-fields";
 import {
+  useBrowserTimeZone,
+  useFocusSummaryOnSubmit,
+  useLeaveWarning,
+} from "./course-form-hooks";
+import {
   COURSE_NAME_MAX_LENGTH,
   COURSE_SUMMARY_MAX_LENGTH,
 } from "./course-form-limits";
 import { courseFormProblems } from "./course-form-problems";
 import {
-  browserTimeZone,
   courseFormSchema,
   type CheckedCourseFormValues,
   type CourseFormValues,
@@ -91,32 +95,9 @@ export function CourseForm({ timeZones }: CourseFormProps) {
     schedule.timeZone,
   );
 
-  // After each submit attempt, read out every problem.
-  useEffect(() => {
-    summaryRef.current?.focus();
-  }, [submitCount]);
-
-  // The browser's zone can't be read on the server, so it's set after the
-  // first render. Resetting (not setting) keeps the form clean.
-  const { reset } = form;
-  useEffect(() => {
-    const timeZone = browserTimeZone();
-    if (!timeZones.includes(timeZone)) return;
-    reset({
-      ...defaultValues,
-      schedule: { ...defaultValues.schedule, timeZone },
-    });
-  }, [reset, timeZones]);
-
-  // Ask the browser to confirm before reloading or closing with unsaved work.
-  useEffect(() => {
-    if (!isDirty || saved) return;
-    function warn(event: BeforeUnloadEvent) {
-      event.preventDefault();
-    }
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [isDirty, saved]);
+  useFocusSummaryOnSubmit(summaryRef, submitCount);
+  useBrowserTimeZone(form.reset, timeZones, defaultValues);
+  useLeaveWarning(isDirty && !saved);
 
   function recheckEnd() {
     return form.trigger(["schedule.endDate", "schedule.endTimeOfDay"]);
