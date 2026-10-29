@@ -49,8 +49,8 @@ The OpenAPI spec is the source of truth, so a change starts there:
 
 | Hook | Runs |
 |---|---|
-| `pre-commit` | ESLint and Prettier on staged files. Regenerates the API types (and Next's route types) and type-checks both projects. Runs unit tests for whichever project changed. |
-| `pre-push` | Prettier's check on both projects (as CI does), then integration tests for the API, browser tests for the web app, then the API's end-to-end tests. Needs Docker running. |
+| `pre-commit` | ESLint and Prettier on staged files. Then only for the projects the staged files can affect: regenerates the API types when the OpenAPI file is staged, type-checks (the web also when the OpenAPI file changes, since its types come from it), and runs only the unit tests that import a staged file. A deleted file, or a staged file that isn't TypeScript (config, lockfile, `.env.test`), runs that project's whole unit suite instead. |
+| `pre-push` | Prettier's check on both projects (as CI does), the full unit suites for both projects, then integration tests for the API, browser tests for the web app, then the API's end-to-end tests. Needs Docker running. |
 
 ## What CI runs
 

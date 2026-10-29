@@ -4,6 +4,10 @@
 yarn --cwd api format:check
 yarn --cwd web format:check
 
+# The commit hook only runs the unit tests related to what it staged
+yarn --cwd api test:unit
+yarn --cwd web test:unit
+
 yarn --cwd api test:integration
 yarn --cwd web test:browser
 

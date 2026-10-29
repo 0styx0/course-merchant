@@ -26,6 +26,7 @@
     "contract:emit": "prisma contract emit",
     "test:unit": "vitest run --config vitest.unit.config.ts",
     "test:unit:watch": "yarn test:unit --watch",
+    "test:unit:related": "vitest related --run --passWithNoTests --config vitest.unit.config.ts",
     "test:integration": "yarn db:test:up && yarn db:test:migrate && vitest run --config vitest.integration.config.ts",
     "test:e2e": "yarn db:test:up && yarn db:test:migrate && vitest run --config vitest.e2e.config.ts",
     "format:check": "prettier --check ."

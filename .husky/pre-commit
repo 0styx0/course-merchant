@@ -3,36 +3,80 @@
 # format staged files (re-staged automatically)
 yarn lint-staged
 
-# run type checking for both modules
-yarn --cwd api generate:api-types
-yarn --cwd web generate:api-types
-yarn --cwd api tsc --noEmit
-# Next's global PageProps/LayoutProps types live in .next/, which a fresh clone lacks
-yarn --cwd web next typegen
-yarn --cwd web tsc --noEmit
+# Everything below looks at the staged files (after lint-staged has rewritten
+# them). --no-renames lists a renamed file as a delete plus an add.
+# Paths are passed on by word splitting, which is fine: the repo has no spaces
+# in its paths.
+STAGED=$(git diff --cached --name-only --no-renames)
+DELETED=$(git diff --cached --name-only --no-renames --diff-filter=D)
 
-# Runs unit tests for whichever module changed since the last commit
+# Is any staged path matched by this regular expression?
+staged_matches() {
+  printf '%s\n' "$STAGED" | grep -Eq "$1"
+}
 
-api_changed=false
-web_changed=false
+# Staged paths inside a package, written relative to it.
+staged_in() {
+  printf '%s\n' "$STAGED" | sed -n "s|^$1/||p"
+}
 
-while IFS= read -r file; do
-  case "$file" in
-    api/*)
-      api_changed=true
-      ;;
-    web/*)
-      web_changed=true
-      ;;
-  esac
-done <<EOF
-$(git diff --cached --name-only --diff-filter=ACMRT)
-EOF
+# Related-test mode only sees TypeScript files. Anything else staged in the
+# package (config, lockfile, .env.test, fixtures) or any deleted file could
+# affect tests it can't trace, so those commits run the whole suite.
+needs_full_suite() {
+  package=$1
+  extra_regex=$2
+  printf '%s\n' "$DELETED" | grep -q "^$package/" && return 0
+  staged_in "$package" | grep -Eqv '\.tsx?$' && return 0
+  staged_matches "$extra_regex"
+}
 
-if [ "$api_changed" = true ]; then
-    yarn --cwd api test:unit
+# Full suite when needs_full_suite says so, otherwise only the tests that
+# import a staged file. The full suites also run again before every push.
+run_unit_tests() {
+  package=$1
+  extra_regex=$2
+  if needs_full_suite "$package" "$extra_regex"; then
+    yarn --cwd "$package" test:unit
+  else
+    yarn --cwd "$package" test:unit:related $(staged_in "$package")
+  fi
+}
+
+# Files outside a package that its unit tests read from disk, so `related`
+# can't see them through imports.
+# - api: its test config, and the copy of description-extensions.ts in web
+#   that a test compares against its own.
+# - web: the OpenAPI file that a test reads its limits from.
+API_TEST_INPUTS='^api/vitest\.unit\.config\.ts$|^web/src/features/courses/description-extensions\.ts$'
+WEB_TEST_INPUTS='^api/openapi/'
+
+# The web's types are generated from the OpenAPI file too, so it affects both.
+api_touched=false
+web_touched=false
+staged_matches '^api/' && api_touched=true
+staged_matches '^web/|^api/openapi/' && web_touched=true
+
+# Regenerate the types only when the contract changed
+if staged_matches '^api/openapi/'; then
+  yarn --cwd api generate:api-types
+  yarn --cwd web generate:api-types
 fi
 
-if [ "$web_changed" = true ]; then
-    yarn --cwd web test:unit
+if [ "$api_touched" = true ]; then
+  yarn --cwd api tsc --noEmit
+fi
+
+if [ "$web_touched" = true ]; then
+  # Next's global PageProps/LayoutProps types live in .next/, which a fresh clone lacks
+  yarn --cwd web next typegen
+  yarn --cwd web tsc --noEmit
+fi
+
+if [ "$api_touched" = true ] || staged_matches "$API_TEST_INPUTS"; then
+  run_unit_tests api "$API_TEST_INPUTS"
+fi
+
+if [ "$web_touched" = true ] || staged_matches "$WEB_TEST_INPUTS"; then
+  run_unit_tests web "$WEB_TEST_INPUTS"
 fi
