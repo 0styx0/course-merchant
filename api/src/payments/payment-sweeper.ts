@@ -10,6 +10,7 @@ import {
   EnrollmentAccess,
   enrollmentAccess,
 } from "@/enrollments/enrollment-access.js";
+import { errorStack } from "@/common/errors/error-text.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import { DatabaseClock } from "@/prisma/database-clock.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
@@ -235,10 +236,4 @@ export class PaymentSweeper implements OnApplicationShutdown {
       this.logger.log(`Expired ${expired} payments that had no checkout.`);
     }
   }
-}
-
-function errorStack(error: unknown): string {
-  return error instanceof Error
-    ? (error.stack ?? error.message)
-    : String(error);
 }
