@@ -19,7 +19,7 @@
     "admin:set-password": "node dist/src/auth/cli/set-admin-password.js",
     "knip": "knip",
     "lint": "eslint \"{src,test}/**/*.ts\"",
-    "test:cov": "vitest run --coverage",
+    "test:coverage": "vitest run --config vitest.unit.config.ts --coverage --coverage.reporter=text",
     "db:test:up": "docker compose -f docker-compose.test.yaml up -d --wait",
     "db:dev:migrate": "dotenv run --override --file .env -- yarn prisma db migrate --advance-ref db",
     "db:test:migrate": "dotenv run --override --file .env.test -- yarn prisma db migrate --advance-ref db",

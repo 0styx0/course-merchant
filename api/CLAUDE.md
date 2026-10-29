@@ -34,6 +34,8 @@ Run one spec from `api/` (`yarn test:integration` / `test:e2e` start the test da
 - `yarn -s vitest run --config vitest.integration.config.ts <path>`
 - `yarn -s vitest run --config vitest.e2e.config.ts <path>`
 
+Before a refactor, check which lines no unit test runs (no database needed): `yarn test:coverage '--coverage.include=<glob>'`, e.g. `'--coverage.include=src/common/**/*.ts'`. Quote the glob so the shell doesn't expand it.
+
 ## Moving and renaming files
 
 Use `git mv`, then let `yarn tsc --noEmit` list the broken imports and fix those; don't `sed` across globs.

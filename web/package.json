@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start",
     "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage --coverage.reporter=text",
     "test:unit:watch": "vitest",
     "test:unit:related": "vitest related --run --passWithNoTests",
     "test:browser": "yarn playwright test",

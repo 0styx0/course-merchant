@@ -8,6 +8,8 @@ This Next version differs from training data; its docs live in `node_modules/nex
 
 Before `yarn tsc --noEmit`, run `yarn next typegen` (Next's `PageProps`/`LayoutProps` types live in `.next/`, which can be stale or missing and cause false type errors).
 
+Before a refactor, check which lines no test runs (whole suite, about 30 seconds): `yarn test:coverage --coverage.include=<file>`. "No files with missing coverage" means the file is fully covered.
+
 ## Web architecture
 
 - Layout and remaining steps are in [docs/web.md](../docs/web.md): `app/` holds routes only, `src/features/<feature>/` holds API wrappers (`<feature>.api.ts`), async `…Section` components and plain-data components.
