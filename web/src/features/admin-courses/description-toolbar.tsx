@@ -70,6 +70,100 @@ const FORMATS: Format[] = [
   },
 ];
 
+type EditorState = { onLink: boolean; hasSelection: boolean } | null;
+
+// A mouse press on a button would blur the editor, losing the selection
+const preventBlur = (event: React.MouseEvent) => event.preventDefault();
+
+function removeLink(editor: Editor | null) {
+  editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+}
+
+type FormatButtonProps = {
+  editor: Editor | null;
+  format: Format;
+  pressed: boolean;
+};
+
+function FormatButton({ editor, format, pressed }: FormatButtonProps) {
+  return (
+    <Toolbar.Button
+      disabled={!editor}
+      onMouseDown={preventBlur}
+      render={
+        <Toggle
+          aria-label={format.label}
+          title={format.label}
+          pressed={pressed}
+          onPressedChange={() => editor && format.toggle(editor)}
+        />
+      }
+    >
+      <format.Icon aria-hidden />
+    </Toolbar.Button>
+  );
+}
+
+type LinkButtonProps = {
+  editor: Editor | null;
+  state: EditorState;
+  open: boolean;
+  panelId: string;
+  onToggle: () => void;
+};
+
+function LinkButton({
+  editor,
+  state,
+  open,
+  panelId,
+  onToggle,
+}: LinkButtonProps) {
+  return (
+    <Toolbar.Button
+      disabled={!editor || !(state?.onLink || state?.hasSelection)}
+      onMouseDown={preventBlur}
+      render={
+        <Toggle
+          aria-label="Link"
+          title="Link (select text first)"
+          aria-expanded={open}
+          aria-controls={open ? panelId : undefined}
+          pressed={open || (state?.onLink ?? false)}
+          onPressedChange={onToggle}
+        />
+      }
+    >
+      <Link aria-hidden />
+    </Toolbar.Button>
+  );
+}
+
+type RemoveLinkButtonProps = {
+  editor: Editor | null;
+  disabled: boolean;
+};
+
+function RemoveLinkButton({ editor, disabled }: RemoveLinkButtonProps) {
+  return (
+    <Toolbar.Button
+      disabled={disabled}
+      onMouseDown={preventBlur}
+      render={
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Remove link"
+          title="Remove link"
+          onClick={() => removeLink(editor)}
+        />
+      }
+    >
+      <Unlink aria-hidden />
+    </Toolbar.Button>
+  );
+}
+
 type DescriptionToolbarProps = {
   /** Null until the editor exists, which is only in the browser. */
   editor: Editor | null;
@@ -98,7 +192,6 @@ export function DescriptionToolbar({
       hasSelection: editor ? !editor.state.selection.empty : false,
     }),
   });
-  const preventBlur = (event: React.MouseEvent) => event.preventDefault();
 
   return (
     <div className="flex flex-col gap-1">
@@ -108,60 +201,24 @@ export function DescriptionToolbar({
         className="flex flex-wrap gap-1"
       >
         {FORMATS.map((format, index) => (
-          <Toolbar.Button
+          <FormatButton
             key={format.label}
-            disabled={!editor}
-            onMouseDown={preventBlur}
-            render={
-              <Toggle
-                aria-label={format.label}
-                title={format.label}
-                pressed={state?.active[index] ?? false}
-                onPressedChange={() => editor && format.toggle(editor)}
-              />
-            }
-          >
-            <format.Icon aria-hidden />
-          </Toolbar.Button>
+            editor={editor}
+            format={format}
+            pressed={state?.active[index] ?? false}
+          />
         ))}
-        <Toolbar.Button
-          disabled={!editor || !(state?.onLink || state?.hasSelection)}
-          onMouseDown={preventBlur}
-          render={
-            <Toggle
-              aria-label="Link"
-              title="Link (select text first)"
-              aria-expanded={linkFieldOpen}
-              aria-controls={linkFieldOpen ? linkFieldId : undefined}
-              pressed={linkFieldOpen || (state?.onLink ?? false)}
-              onPressedChange={() => setLinkFieldOpen((open) => !open)}
-            />
-          }
-        >
-          <Link aria-hidden />
-        </Toolbar.Button>
-        <Toolbar.Button
+        <LinkButton
+          editor={editor}
+          state={state}
+          open={linkFieldOpen}
+          panelId={linkFieldId}
+          onToggle={() => setLinkFieldOpen((open) => !open)}
+        />
+        <RemoveLinkButton
+          editor={editor}
           disabled={!editor || !state?.onLink}
-          onMouseDown={preventBlur}
-          render={
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Remove link"
-              title="Remove link"
-              onClick={() =>
-                editor
-                  ?.chain()
-                  .focus()
-                  .extendMarkRange("link")
-                  .unsetLink()
-                  .run()
-              }
-            />
-          }
-        >
-          <Unlink aria-hidden />
-        </Toolbar.Button>
+        />
       </Toolbar.Root>
       {editor && linkFieldOpen && (
         <DescriptionLinkField

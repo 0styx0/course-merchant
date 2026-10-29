@@ -56,6 +56,18 @@ export function DescriptionLinkField({
     onClose();
   }
 
+  function handleKey(event: React.KeyboardEvent) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      apply();
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      close();
+    }
+  }
+
   return (
     <div id={id} className="flex flex-col gap-1">
       <div className="flex flex-wrap gap-2">
@@ -70,15 +82,7 @@ export function DescriptionLinkField({
             setAddress(event.target.value);
             setError(undefined);
           }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              apply();
-            } else if (event.key === "Escape") {
-              event.preventDefault();
-              close();
-            }
-          }}
+          onKeyDown={handleKey}
         />
         <Button type="button" onClick={apply}>
           Apply

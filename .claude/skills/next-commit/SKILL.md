@@ -58,7 +58,7 @@ From `api/` (or `web/`), run `yarn lint`, `yarn tsc --noEmit` (in `web/`, run `y
 Keep it short:
 - the files changed, as a table links | high level changes;
 - the verification results;
-- a suggested conventional commit message
+- a suggested conventional commit message, as a single-line inline code span alone on its own line (one pair of backticks, no body (unless the message requires one to be clear), no bullet or label on that line) so the owner can double-click it to select all of it, e.g. `` `refactor(web): split the course form into sections` ``;
 - the current context size, and a reminder to run `/clear` before the next commit.
 
 Then stop. The owner makes the commit. If this finished a whole step in the Status, run `/usage-review`.
