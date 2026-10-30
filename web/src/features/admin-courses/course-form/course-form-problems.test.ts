@@ -19,20 +19,37 @@ describe("courseFormProblems", () => {
 
     expect(problems).toEqual([
       {
-        fieldName: "name",
-        label: "Course name",
-        message: "Enter a course name.",
-      },
-      {
         fieldName: "image",
         label: "Image",
         message: "Choose an image.",
+      },
+      {
+        fieldName: "name",
+        label: "Course name",
+        message: "Enter a course name.",
       },
       {
         fieldName: "schedule.endTimeOfDay",
         label: "End time",
         message: "Too early.",
       },
+    ]);
+  });
+
+  it("lists the time zone before the start date", () => {
+    const problems = courseFormProblems(
+      {
+        schedule: {
+          startDate: { type: "custom", message: "Enter a date." },
+          timeZone: { type: "custom", message: "Choose a time zone." },
+        },
+      },
+      1,
+    );
+
+    expect(problems.map((problem) => problem.fieldName)).toEqual([
+      "schedule.timeZone",
+      "schedule.startDate",
     ]);
   });
 

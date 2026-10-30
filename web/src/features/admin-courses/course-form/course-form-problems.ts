@@ -6,16 +6,16 @@ import type { CourseFormWithImageValues } from "../validation/course-form-schema
 
 /** The form's fields in page order, with the label the error list shows. */
 const COURSE_FORM_FIELD_LABELS = [
+  ["image", "Image"],
   ["name", "Course name"],
   ["summary", "Summary"],
   ["description", "Description"],
-  ["image", "Image"],
   ["contentUrl", "Content link"],
+  ["schedule.timeZone", "Time zone"],
   ["schedule.startDate", "Start date"],
   ["schedule.startTimeOfDay", "Start time"],
   ["schedule.endDate", "End date"],
   ["schedule.endTimeOfDay", "End time"],
-  ["schedule.timeZone", "Time zone"],
 ] as const;
 
 /**

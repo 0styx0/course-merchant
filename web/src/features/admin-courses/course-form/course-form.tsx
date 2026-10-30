@@ -22,9 +22,8 @@ import {
 import { courseFormProblems } from "./course-form-problems";
 import {
   BasicsSection,
-  ContentSection,
+  CourseMaterialSection,
   emptyPrice,
-  ImageSection,
   PricingSection,
   ScheduleSection,
 } from "./course-form-sections";
@@ -143,8 +142,7 @@ export function CourseForm({ timeZones }: CourseFormProps) {
       />
 
       <BasicsSection form={form} isSubmitted={isSubmitted} />
-      <ImageSection form={form} isSubmitted={isSubmitted} />
-      <ContentSection form={form} />
+      <CourseMaterialSection form={form} />
       <ScheduleSection
         form={form}
         timeZones={timeZones}

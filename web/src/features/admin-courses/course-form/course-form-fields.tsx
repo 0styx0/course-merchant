@@ -168,26 +168,28 @@ export function TimeZoneField({
   timeZones: string[];
 }) {
   return (
-    <Controller
-      control={form.control}
-      name="schedule.timeZone"
-      render={({ field }) => (
-        <ValidatedField label="Time zone" {...stateOf(form, field.name)}>
-          {(inputProps) => (
-            <TimeZonePicker
-              timeZones={timeZones}
-              value={field.value}
-              onChange={(timeZone) => {
-                field.onChange(timeZone);
-                void form.trigger(["schedule", "prices"]);
-              }}
-              onBlur={field.onBlur}
-              inputRef={field.ref}
-              {...ariaProps(inputProps)}
-            />
-          )}
-        </ValidatedField>
-      )}
-    />
+    <div className="sm:col-span-2">
+      <Controller
+        control={form.control}
+        name="schedule.timeZone"
+        render={({ field }) => (
+          <ValidatedField label="Time zone" {...stateOf(form, field.name)}>
+            {(inputProps) => (
+              <TimeZonePicker
+                timeZones={timeZones}
+                value={field.value}
+                onChange={(timeZone) => {
+                  field.onChange(timeZone);
+                  void form.trigger(["schedule", "prices"]);
+                }}
+                onBlur={field.onBlur}
+                inputRef={field.ref}
+                {...ariaProps(inputProps)}
+              />
+            )}
+          </ValidatedField>
+        )}
+      />
+    </div>
   );
 }

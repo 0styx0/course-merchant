@@ -44,24 +44,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **6d.** `StatusIcon` always renders a fixed `size-4` slot, so the X and the check no longer shift the input.
 - [ ] **7. Layout and wording**, in three commits (design in *Step 7* below):
   - [x] **7a.** `priceSummary` returns nothing until any price input has text; `PriceSchedule` keeps its empty `aria-live` box (`empty:-mt-4` cancels the section gap); the Pricing text says "Enter 0 for a free course."
-  - [ ] **7b.** New field order and section names: Basics (Image, Course name, Summary, Description), Course material, Schedule (Time zone first), Pricing. **Next**
-    - *Files*:
-      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/course-form-sections.tsx) (the image field moves into `BasicsSection` first; `ImageSection` removed; `ContentSection` becomes `CourseMaterialSection` titled "Course material"; `TimeZoneField` first in `ScheduleSection`)
-      - [course-form-fields.tsx](../web/src/features/admin-courses/course-form/course-form-fields.tsx) (`TimeZoneField` takes a full row in the schedule's two-column grid, `sm:col-span-2`)
-      - [course-form.tsx](../web/src/features/admin-courses/course-form/course-form.tsx) (section list)
-      - [course-form-problems.ts](../web/src/features/admin-courses/course-form/course-form-problems.ts) (`COURSE_FORM_FIELD_LABELS` in the new page order)
-      - [course-form-problems.test.ts](../web/src/features/admin-courses/course-form/course-form-problems.test.ts)
-      - [course-form.fields.test.tsx](../web/src/features/admin-courses/course-form/tests/course-form.fields.test.tsx)
-    - *Behaviours*:
-      - Groups are named Basics, Course material, Schedule, Pricing, in that order.
-      - Basics contains the Image input, before Course name.
-      - Time zone comes before Start date in Schedule.
-      - Submitting an empty form lists problems in the new page order (Image first; Time zone before Start date when both fail).
-      - Schedule-wide messages still show under the Schedule heading, above the time zone.
-    - *Settled*: the decision row on field order.
-    - *Can wait*: renaming the "Content link" label to match "Course material" (the label is written in `ContentSection` and in `COURSE_FORM_FIELD_LABELS`, both in this commit).
-    - *Done when*: unit and browser tests pass.
-  - [ ] **7c.** Each form section is a card.
+  - [x] **7b.** New field order and section names: Basics (Image, Course name, Summary, Description), Course material, Schedule (Time zone first, in a full-width row), Pricing. The "Content link" label is unchanged.
+  - [ ] **7c.** Each form section is a card. **Next**
     - *Files*:
       - [form-section.tsx](../web/src/components/form/form-section.tsx) (card classes per the card decision row)
       - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/course-form-sections.tsx) (only if the schedule grid needs a change inside the card)

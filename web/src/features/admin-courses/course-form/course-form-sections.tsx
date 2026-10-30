@@ -58,7 +58,33 @@ function DescriptionField({
   );
 }
 
-/** The course name, summary and description. */
+function ImageInput({
+  form,
+  isSubmitted,
+}: {
+  form: CourseFormApi;
+  isSubmitted: boolean;
+}) {
+  return (
+    <Controller
+      control={form.control}
+      name="image"
+      render={({ field, fieldState }) => (
+        <ImageField
+          value={field.value}
+          onChange={field.onChange}
+          onBlur={field.onBlur}
+          fieldRef={field.ref}
+          error={fieldState.error?.message}
+          touched={fieldState.isTouched}
+          submitted={isSubmitted}
+        />
+      )}
+    />
+  );
+}
+
+/** The course image, name, summary and description. */
 export function BasicsSection({
   form,
   isSubmitted,
@@ -71,6 +97,7 @@ export function BasicsSection({
       title="Basics"
       description="What students see when they browse for the course."
     >
+      <ImageInput form={form} isSubmitted={isSubmitted} />
       <InputField
         form={form}
         name="name"
@@ -90,43 +117,11 @@ export function BasicsSection({
   );
 }
 
-/** The picture shown on the course's pages. */
-export function ImageSection({
-  form,
-  isSubmitted,
-}: {
-  form: CourseFormApi;
-  isSubmitted: boolean;
-}) {
-  return (
-    <FormSection
-      title="Image"
-      description="The picture shown with the course in the list and on its page."
-    >
-      <Controller
-        control={form.control}
-        name="image"
-        render={({ field, fieldState }) => (
-          <ImageField
-            value={field.value}
-            onChange={field.onChange}
-            onBlur={field.onBlur}
-            fieldRef={field.ref}
-            error={fieldState.error?.message}
-            touched={fieldState.isTouched}
-            submitted={isSubmitted}
-          />
-        )}
-      />
-    </FormSection>
-  );
-}
-
 /** The link to the course material. */
-export function ContentSection({ form }: { form: CourseFormApi }) {
+export function CourseMaterialSection({ form }: { form: CourseFormApi }) {
   return (
     <FormSection
-      title="Content"
+      title="Course material"
       description="The material students get after they buy."
     >
       <InputField
@@ -157,8 +152,8 @@ export function ScheduleSection({
       className="grid gap-4 sm:grid-cols-2"
     >
       <ScheduleProblems form={form} />
-      <ScheduleDateTimeFields form={form} />
       <TimeZoneField form={form} timeZones={timeZones} />
+      <ScheduleDateTimeFields form={form} />
       <p aria-live="polite" className="text-sm sm:col-span-2">
         {scheduleText}
       </p>

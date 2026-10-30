@@ -26,16 +26,51 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
+function isBefore(first: Node, second: Node) {
+  return Boolean(
+    first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING,
+  );
+}
+
 describe("CourseForm", () => {
-  it("groups the fields into named sections", () => {
+  it("groups the fields into named sections, in page order", () => {
     renderForm();
 
-    for (const title of ["Basics", "Content", "Schedule", "Pricing"]) {
-      expect(screen.getByRole("group", { name: title })).toBeInTheDocument();
-    }
+    const titles = screen
+      .getAllByRole("group")
+      .map((group) => group.querySelector(":scope > legend")?.textContent)
+      .filter(Boolean);
+    expect(titles.slice(0, 4)).toEqual([
+      "Basics",
+      "Course material",
+      "Schedule",
+      "Pricing",
+    ]);
+    expect(screen.queryByRole("group", { name: "Content" })).toBeNull();
+    expect(screen.queryByRole("group", { name: "Image" })).toBeNull();
     expect(screen.getByRole("group", { name: "Pricing" })).toContainElement(
       screen.getByLabelText("Price"),
     );
+  });
+
+  it("puts the image first in Basics, before the course name", () => {
+    renderForm();
+    const basics = screen.getByRole("group", { name: "Basics" });
+    const image = screen.getByLabelText("Image");
+
+    expect(basics).toContainElement(image);
+    expect(isBefore(image, screen.getByLabelText("Course name"))).toBe(true);
+  });
+
+  it("puts the time zone first in Schedule, under the schedule-wide message", () => {
+    renderForm();
+    const zone = screen.getByText("Time zone");
+
+    expect(isBefore(zone, screen.getByLabelText("Start date"))).toBe(true);
+    expect(isBefore(document.getElementById("schedule-problems")!, zone)).toBe(
+      true,
+    );
+    expect(zone.closest(".sm\\:col-span-2")).not.toBeNull();
   });
 
   it("explains the empty price start once for all price rows", async () => {
