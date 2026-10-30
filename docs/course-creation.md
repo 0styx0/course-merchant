@@ -37,6 +37,9 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **5d.** The form requires an image and uploads it after creating the draft (`use-save-course.ts`); a failed upload keeps the draft id, and the retry updates then uploads. The form types are `CourseFormWithImageValues` and `CheckedCourseFormWithImageValues`; `CourseFormValues` stays the saved fields the actions check.
   - [x] **5e.** Browser tests with a real image (`src/mocks/fixtures/course-image.png`, 800 × 450): save with an image and land on `/`; a failed upload keeps the draft and the retry updates it, then uploads; no console errors.
 
+- [ ] **6. Form behaviour fixes** (schedule validation timing and messages, end date picker, steady input width; design in *Step 6* below). **Next**
+- [ ] **7. Layout and wording** (price outline, field order, section names and cards; design in *Step 7* below).
+
 Not part of this work: publishing from the form (a "Publish after saving" box and the update to `published`; it belongs to the later edit-a-course work, where the status is chosen), admin login and logout, the admin course page and list, editing a course (loading a stored document into the editor is `setContent`, no conversion), the payout estimate under the price (payments step 7), a Playwright test comparing the image preview with the saved image, and plain-text or email versions of the description (the static renderer can produce Markdown later).
 
 ## Principles
@@ -87,6 +90,10 @@ Not part of this work: publishing from the form (a "Publish after saving" box an
 | Toolbar buttons keep focus in the editor on a mouse click (`preventDefault` on mouse down) | A click would otherwise blur the editor, mark it touched and show "Enter a description" on an empty field; the selection stays where the admin made it | Letting focus move to the button and refocusing with `.focus()` only |
 | Pasted Google Docs content is kept as the editor reads it, with no paste-cleaning code | Tiptap's own paste handling already puts a Docs nested list inside its item, keeps links (including Docs' own table-of-contents links) and turns the Title and Heading 1 into paragraphs. The admin sees what they expect, so a `transformPastedHTML` hook would add code for nothing. Links with other schemes are left to the API's error on save; blank lines from Docs stay as line-break paragraphs | A `transformPastedHTML` nested-list fix; dropping same-document and non-API-scheme links on paste; stripping line-break-only paragraphs |
 | Prices accept a comma as the decimal mark (`79,50`), through one `normalizeDollars` used by the form check and the cents conversion. The leave-page warning uses `beforeunload` only | Admins in comma-decimal locales type it naturally, and `1,000` still fails instead of being misread. The App Router can't intercept in-app links, and the page has none | Thousands separators; a custom link-interception layer |
+| Each form section is a card: thin border, rounded corners, a faint `bg-muted/30` tint in light and dark mode, `p-5` to `p-6`, heading inside. Inputs stay `bg-background`, so they read as white on grey | A box is the strongest cue that fields belong together. A tint of the page's own neutral colour leaves red errors and green checks as the only strong colours, so state never competes with decoration | A different colour per section (clashes with red and green, busy); divider lines only (still a flat column on a long form); numbered steps (suggest an order or wizard the form isn't) |
+| Cross-field schedule messages keep their field path, so the error list link and focus still work. A line under the Schedule heading shows them, and the time field keeps its red border | One source of truth: the form state, so list and message can't disagree | A new "schedule" field path (the list link needs a target and the API error mapping changes); showing the message in both places (the page jumps, as the UX pass found) |
+| The status icon has a fixed slot beside every input, empty until the field shows an X or a check | The input keeps its width while errors come and go, and every kind of field works the same way | An icon inside the input (clashes with the date and time inputs' own icons and the time zone chevron); dropping the X (one less error signal, but the check would still shift the input); dropping both (loses the only "this field is fine" signal) |
+| The end date input's `min` is the start date | The picker opens near the start date and greys out earlier days, without filling in a value the admin didn't choose | Copying the start date into an empty end date (always works, but it writes a value the admin may not notice) |
 
 ## Libraries to add (web only)
 
@@ -279,6 +286,34 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
 **Out of scope here:** where the form goes after saving, and any "saved" confirmation. The owner will change the redirect later; add the confirmation with it.
 
 **Tests:** update the component tests and `tests/browser/admin-courses/create-course.spec.ts` for changed labels and behaviour; each new component gets its own test; no hydration warnings.
+
+## Step 6. Form behaviour fixes
+
+- Why here: the owner used the page after step 5 and found validation and input-width problems. Behaviour fixes come before layout, so the layout commits land on stable code.
+- Needs: none.
+- Builds on: [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx) (the schedule fields), [course-form-cross-field-issues.ts](../web/src/features/admin-courses/validation/course-form-cross-field-issues.ts) (schedule messages), [validated-field.tsx](../web/src/components/form/validated-field.tsx) (the status icon). `mode: "onTouched"` is in the *Principles*.
+- Size: 4 commits.
+  - **6a.** Schedule validation runs when a date or time changes, so picker-only use updates errors, and a corrected value clears "The start time must be in the future." at once. Re-check a field only if it is touched or already shows an error, plus the cross-field checks, so "End date required" doesn't appear while the admin is still on the start date.
+  - **6b.** Schedule-wide messages (future start, end after start, daylight-saving gap, valid date) show under the Schedule heading, with the field path kept (see the decision row). Field-specific ones ("required") stay on their field.
+  - **6c.** The end date picker opens at the start date: the end input's `min` is the start date. Check in Chrome (`dev:mock`) first that the picker opens at the start month. If it doesn't, the fallback is copying the start date into an empty end date; that changes behaviour, so ask first.
+  - **6d.** The status icon no longer shifts the input: `StatusIcon` always renders a `size-4 shrink-0` slot, empty when there is nothing to show. The X and the check both stay. Test: the slot is there before and after an error appears. Update the Step 3 text ("red X icon beside the input").
+- Risk: Chrome may ignore `min` when choosing which month the picker opens at (6c); triggering all schedule fields on change would show premature "required" errors (6a handles it).
+- Done when: unit and browser tests pass; in `yarn --cwd web dev:mock`, using only the pickers, an invalid date shows its error at once and clears when corrected; the end date picker opens at the start month; inputs keep their width when an error appears or clears.
+- Can wait: how the schedule-wide messages are told apart from "required" ones (by message source in the cross-field file, not by text).
+- Re-measure: `yarn --cwd web test:unit`, `yarn --cwd web test:browser`.
+
+## Step 7. Layout and wording
+
+- Why here: layout and wording touch the same files as step 6, so they come after the behaviour is fixed.
+- Needs: 6.
+- Builds on: [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx), [course-form-problems.ts](../web/src/features/admin-courses/course-form-problems.ts) (field order), [form-section.tsx](../web/src/components/form/form-section.tsx), the U3b price list in `price/price-schedule.tsx`.
+- Size: 3 commits.
+  - **7a.** The price outline (Roman-numeral list) shows only once any price input has text, and hides again when all are empty (derived from the values, no stored state). The Pricing help text adds "Enter 0 for a free course."
+  - **7b.** Field order and names: the image field moves into Basics as its first part (`ImageSection` goes); the time zone field moves first in Schedule; `ContentSection` is retitled "Course material" (order: Basics, Course material, Schedule, Pricing). `COURSE_FORM_FIELD_LABELS` and the error list order follow.
+  - **7c.** Section cards (see the decision row), checked at about 400 px and with the keyboard.
+- Done when: unit and browser tests pass; the page shows the new order, names and cards at about 400 px.
+- Can wait: whether the field label "Content link" is renamed to match "Course material".
+- Re-measure: `yarn --cwd web test:unit`, `yarn --cwd web test:browser`.
 
 ## Verification (each step)
 
