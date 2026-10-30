@@ -2,6 +2,7 @@
 
 Used in step 5 of [SKILL.md](SKILL.md). Keep it short, and write every summary by the *Bullets, not blocks* rule in CLAUDE.md (one short sentence per bullet, joined steps as sub-bullets, never a paragraph). The items:
 
+- Open with two plain lines that name no code: what the app can now do, and why the commit is shaped this way. The subagent or tool output you relay is restated in your own words.
 - The files changed, as a table: links | high-level changes.
   - Each link points at the first changed function in that file, as `[file.ts](path/file.ts#L42)`.
   - The visible text is the file name only, with no line number. The line is only in the link target.
@@ -26,6 +27,7 @@ Used in step 5 of [SKILL.md](SKILL.md). Keep it short, and write every summary b
 - A suggested conventional commit message.
   - No body unless it needs one.
   - Written as a copyable command (see CLAUDE.md *Writing*), e.g. `` `refactor(web): split the course form into sections` ``.
+- After a rename or move, the result of grepping for the old name in file names and code.
 - A reminder to run `/clear` before the next commit.
 
 Then stop. The owner makes the commit.

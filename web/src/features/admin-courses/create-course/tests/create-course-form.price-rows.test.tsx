@@ -2,23 +2,23 @@ import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { renderForm } from "./course-form.fixtures";
+import { renderForm } from "./create-course-form.fixtures";
 
 vi.mock(
   "next/navigation",
-  async () => (await import("./course-form.mocks")).navigationMock,
+  async () => (await import("./create-course-form.mocks")).navigationMock,
 );
-vi.mock("../../save-course/create-course.action", () => ({
+vi.mock("../../save-course/create/create-course.action", () => ({
   createCourseAction: vi.fn(),
 }));
-vi.mock("../../save-course/update-course.action", () => ({
-  updateCourseAction: vi.fn(),
+vi.mock("../../save-course/create/retry-draft-save.action", () => ({
+  retryDraftSaveAction: vi.fn(),
 }));
 vi.mock("../../save-course/upload-image/upload-course-image.action", () => ({
   uploadCourseImageAction: vi.fn(),
 }));
 vi.mock("../../description-editor/description-editor", async () => ({
-  DescriptionEditor: (await import("./course-form.mocks"))
+  DescriptionEditor: (await import("./create-course-form.mocks"))
     .MockDescriptionEditor,
 }));
 

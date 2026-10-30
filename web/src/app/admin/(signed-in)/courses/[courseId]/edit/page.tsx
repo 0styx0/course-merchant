@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { ProblemAlert } from "@/components/problem-alert";
 import { EditCourseForm } from "@/features/admin-courses/edit-course/edit-course-form";
-import { toEditCourseStart } from "@/features/admin-courses/edit-course/edit-course-start";
+import { toEditFormPrefill } from "@/features/admin-courses/edit-course/edit-form-prefill";
 import { getCourseAsAdmin } from "@/features/admin-courses/save-course/admin-courses.api";
 
 export const metadata: Metadata = {
@@ -53,7 +53,7 @@ export default async function EditCoursePage({ params }: EditCoursePageProps) {
     <EditCoursePageLayout>
       <EditCourseForm
         courseId={courseId}
-        start={toEditCourseStart(result.data)}
+        prefill={toEditFormPrefill(result.data)}
         // The list is built here so the server and the browser render the same one.
         timeZones={Intl.supportedValuesOf("timeZone")}
       />

@@ -5,14 +5,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
 
 import type { CourseActionResult } from "../../save-course/course-action-result";
-import { updateCourseDetailsAction } from "../../save-course/edit/update-course-details.action";
+import { saveEditedDetailsAction } from "../../save-course/edit/save-edited-details.action";
 import { EditCourseForm } from "../edit-course-form";
-import { toEditCourseStart } from "../edit-course-start";
+import { toEditFormPrefill } from "../edit-form-prefill";
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
-vi.mock("../../save-course/edit/update-course-details.action", () => ({
-  updateCourseDetailsAction: vi.fn(),
+vi.mock("../../save-course/edit/save-edited-details.action", () => ({
+  saveEditedDetailsAction: vi.fn(),
 }));
 // Typing into Tiptap is unreliable in jsdom (the browser test covers it), so
 // the editor is a plain stand-in.
@@ -20,15 +20,15 @@ vi.mock("../../description-editor/description-editor", () => ({
   DescriptionEditor: () => <div>Description editor</div>,
 }));
 
-const saveAction = vi.mocked(updateCourseDetailsAction);
-const start = toEditCourseStart(draftedAdminCourse);
+const saveAction = vi.mocked(saveEditedDetailsAction);
+const prefill = toEditFormPrefill(draftedAdminCourse);
 const timeZones = ["America/New_York", "Europe/Paris"];
 
-function renderForm(startOverride = start) {
+function renderForm(prefillOverride = prefill) {
   return render(
     <EditCourseForm
       courseId={draftedAdminCourse.id}
-      start={startOverride}
+      prefill={prefillOverride}
       timeZones={timeZones}
     />,
   );
@@ -107,7 +107,7 @@ describe("EditCourseForm", () => {
     expect(saveAction.mock.calls[0][0]).toBe(draftedAdminCourse.id);
     expect(saveAction.mock.calls[0][1].schedule.timeZone).toBe("Europe/Paris");
     expect(saveAction.mock.calls[0][2].schedule).toEqual(
-      start.keptParts.schedule,
+      prefill.fieldsSentBackUnchanged.schedule,
     );
   });
 
@@ -125,8 +125,8 @@ describe("EditCourseForm", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith("/"));
     expect(saveAction).toHaveBeenCalledWith(
       draftedAdminCourse.id,
-      { ...start.values, name: "Renamed" },
-      start.keptParts,
+      { ...prefill.values, name: "Renamed" },
+      prefill.fieldsSentBackUnchanged,
     );
   });
 
@@ -242,8 +242,8 @@ describe("EditCourseForm", () => {
   it("asks for a time zone when the stored one is not a real zone", async () => {
     const user = userEvent.setup();
     renderForm({
-      ...start,
-      values: { ...start.values, schedule: { timeZone: "Not/AZone" } },
+      ...prefill,
+      values: { ...prefill.values, schedule: { timeZone: "Not/AZone" } },
     });
 
     await clickSave(user);

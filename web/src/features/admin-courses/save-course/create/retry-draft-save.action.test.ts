@@ -10,8 +10,8 @@ import {
 } from "@/mocks/handlers/update-course";
 import { server } from "@/mocks/node";
 
-import { updateCourseAction } from "./update-course.action";
-import type { CourseFormValues } from "../validation/course-form-schema";
+import { retryDraftSaveAction } from "./retry-draft-save.action";
+import type { CourseFormValues } from "../../validation/course-form-schema";
 
 // Its default export throws outside a React Server Component build
 vi.mock("server-only", () => ({}));
@@ -51,7 +51,7 @@ function failOnAnyCall() {
   return calls;
 }
 
-describe("updateCourseAction", () => {
+describe("retryDraftSaveAction", () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(NOW);
@@ -61,7 +61,7 @@ describe("updateCourseAction", () => {
   it("returns the course's id", async () => {
     server.use(updateCourseSuccess);
 
-    await expect(updateCourseAction(courseId, validValues)).resolves.toEqual({
+    await expect(retryDraftSaveAction(courseId, validValues)).resolves.toEqual({
       state: "success",
       data: { courseId: draftedAdminCourse.id },
     });
@@ -78,7 +78,7 @@ describe("updateCourseAction", () => {
       }),
     );
 
-    await updateCourseAction(courseId, validValues);
+    await retryDraftSaveAction(courseId, validValues);
 
     expect(sentId).toBe(courseId);
     expect(body).toMatchObject({
@@ -90,7 +90,7 @@ describe("updateCourseAction", () => {
   it("refuses an invalid course id without calling the API", async () => {
     const calls = failOnAnyCall();
 
-    const result = await updateCourseAction("not-a-uuid", validValues);
+    const result = await retryDraftSaveAction("not-a-uuid", validValues);
 
     expect(calls.count).toBe(0);
     expect(result).toMatchObject({
@@ -102,7 +102,7 @@ describe("updateCourseAction", () => {
   it("refuses invalid values without calling the API", async () => {
     const calls = failOnAnyCall();
 
-    const result = await updateCourseAction(courseId, {
+    const result = await retryDraftSaveAction(courseId, {
       ...validValues,
       name: "  ",
     });
@@ -120,7 +120,7 @@ describe("updateCourseAction", () => {
     server.use(updateCourseValidationFailed);
 
     await expect(
-      updateCourseAction(courseId, validValues),
+      retryDraftSaveAction(courseId, validValues),
     ).resolves.toMatchObject({
       state: "failure",
       error: {
@@ -139,7 +139,7 @@ describe("updateCourseAction", () => {
     server.use(updateCourseError);
 
     await expect(
-      updateCourseAction(courseId, validValues),
+      retryDraftSaveAction(courseId, validValues),
     ).resolves.toMatchObject({
       state: "failure",
       error: {

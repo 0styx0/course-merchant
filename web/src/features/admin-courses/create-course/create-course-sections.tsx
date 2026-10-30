@@ -15,7 +15,7 @@ import {
   InputField,
   TimeZoneField,
   type CourseFormApi,
-} from "../course-form/sections/course-form-fields";
+} from "../course-form/fields/course-form-fields";
 import {
   BasicsSection,
   PricingSection,

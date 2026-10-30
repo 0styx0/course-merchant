@@ -11,8 +11,8 @@ import {
 import { server } from "@/mocks/node";
 
 import type { EditCourseFormValues } from "../../validation/edit-course-form-schema";
-import type { KeptParts } from "../../edit-course/edit-course-start";
-import { updateCourseDetailsAction } from "./update-course-details.action";
+import type { FieldsSentBackUnchanged } from "../../edit-course/edit-form-prefill";
+import { saveEditedDetailsAction } from "./save-edited-details.action";
 
 // Its default export throws outside a React Server Component build
 vi.mock("server-only", () => ({}));
@@ -33,7 +33,7 @@ const validValues: EditCourseFormValues = {
   schedule: { timeZone: "America/New_York" },
 };
 
-const keptParts: KeptParts = {
+const fieldsSentBackUnchanged: FieldsSentBackUnchanged = {
   status: "published",
   schedule: {
     startTime: "2020-01-01T14:00:00Z",
@@ -57,14 +57,14 @@ function captureBody() {
   return sent;
 }
 
-describe("updateCourseDetailsAction", () => {
+describe("saveEditedDetailsAction", () => {
   beforeEach(() => server.use(updateCourseSuccess));
 
-  it("sends the checked values and the kept parts to the course's id", async () => {
+  it("sends the checked values and the unchanged fields to the course's id", async () => {
     const sent = captureBody();
 
     await expect(
-      updateCourseDetailsAction(courseId, validValues, keptParts),
+      saveEditedDetailsAction(courseId, validValues, fieldsSentBackUnchanged),
     ).resolves.toEqual({ state: "success", data: { courseId } });
 
     expect(sent.id).toBe(courseId);
@@ -84,23 +84,23 @@ describe("updateCourseDetailsAction", () => {
         endTime: "2020-01-01T22:00:00Z",
         timeZone: "America/New_York",
       },
-      prices: keptParts.prices,
+      prices: fieldsSentBackUnchanged.prices,
     });
   });
 
   it("leaves the start and end unchanged when the zone changes", async () => {
     const sent = captureBody();
 
-    await updateCourseDetailsAction(
+    await saveEditedDetailsAction(
       courseId,
       { ...validValues, schedule: { timeZone: "Asia/Tokyo" } },
-      keptParts,
+      fieldsSentBackUnchanged,
     );
 
     expect(sent.body).toMatchObject({
       schedule: {
-        startTime: keptParts.schedule.startTime,
-        endTime: keptParts.schedule.endTime,
+        startTime: fieldsSentBackUnchanged.schedule.startTime,
+        endTime: fieldsSentBackUnchanged.schedule.endTime,
         timeZone: "Asia/Tokyo",
       },
     });
@@ -109,10 +109,10 @@ describe("updateCourseDetailsAction", () => {
   it("refuses an invalid course id without calling the API", async () => {
     const sent = captureBody();
 
-    const result = await updateCourseDetailsAction(
+    const result = await saveEditedDetailsAction(
       "not-a-uuid",
       validValues,
-      keptParts,
+      fieldsSentBackUnchanged,
     );
 
     expect(sent.calls).toBe(0);
@@ -132,10 +132,10 @@ describe("updateCourseDetailsAction", () => {
   it("refuses invalid values without calling the API", async () => {
     const sent = captureBody();
 
-    const result = await updateCourseDetailsAction(
+    const result = await saveEditedDetailsAction(
       courseId,
       { ...validValues, name: "  " },
-      keptParts,
+      fieldsSentBackUnchanged,
     );
 
     expect(sent.calls).toBe(0);
@@ -152,7 +152,7 @@ describe("updateCourseDetailsAction", () => {
     server.use(updateCourseValidationFailed);
 
     await expect(
-      updateCourseDetailsAction(courseId, validValues, keptParts),
+      saveEditedDetailsAction(courseId, validValues, fieldsSentBackUnchanged),
     ).resolves.toMatchObject({
       state: "failure",
       error: {
@@ -171,7 +171,7 @@ describe("updateCourseDetailsAction", () => {
     server.use(updateCourseError);
 
     await expect(
-      updateCourseDetailsAction(courseId, validValues, keptParts),
+      saveEditedDetailsAction(courseId, validValues, fieldsSentBackUnchanged),
     ).resolves.toEqual({
       state: "failure",
       error: {

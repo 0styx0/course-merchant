@@ -2,7 +2,7 @@
 
 import { toCourseDescription } from "@/features/course-description/description-document";
 
-import type { KeptParts } from "../../edit-course/edit-course-start";
+import type { FieldsSentBackUnchanged } from "../../edit-course/edit-form-prefill";
 import {
   editCourseFormSchema,
   type EditCourseFormValues,
@@ -17,11 +17,11 @@ import {
   type CourseActionResult,
 } from "../course-action-result";
 
-/** Saves the edited details over a course; the kept parts go back as loaded. */
-export async function updateCourseDetailsAction(
+/** Saves the edited details over a course; the fields it cannot edit yet go back as loaded. */
+export async function saveEditedDetailsAction(
   courseId: string,
   values: EditCourseFormValues,
-  keptParts: KeptParts,
+  fieldsSentBackUnchanged: FieldsSentBackUnchanged,
 ): Promise<CourseActionResult> {
   // Anyone can call a Server Action with anything, so check again here.
   if (!isUuid(courseId)) return invalidCourseIdFailure();
@@ -34,9 +34,12 @@ export async function updateCourseDetailsAction(
     summary: data.summary,
     description: toCourseDescription(data.description),
     contentUrl: data.contentUrl,
-    status: keptParts.status,
-    schedule: { ...keptParts.schedule, timeZone: data.schedule.timeZone },
-    prices: keptParts.prices,
+    status: fieldsSentBackUnchanged.status,
+    schedule: {
+      ...fieldsSentBackUnchanged.schedule,
+      timeZone: data.schedule.timeZone,
+    },
+    prices: fieldsSentBackUnchanged.prices,
   });
   if (result.state === "failure") return problemFailure(result.error);
   return successWithCourseId(result.data.id);

@@ -14,13 +14,13 @@ import {
 } from "../validation/edit-course-form-schema";
 import { editCourseFields } from "./edit-course-fields";
 import { EditBasicsSection, EditScheduleSection } from "./edit-course-sections";
-import type { EditCourseStart } from "./edit-course-start";
+import type { EditFormPrefill } from "./edit-form-prefill";
 import { useSaveEditedCourse } from "./use-save-edited-course";
 
-function useEditCourseFormState(start: EditCourseStart) {
+function useEditCourseFormState(prefill: EditFormPrefill) {
   return useForm<EditCourseFormValues, unknown, EditCourseFormValues>({
     resolver: zodResolver(editCourseFormSchema),
-    defaultValues: start.values,
+    defaultValues: prefill.values,
     mode: "onTouched",
     shouldFocusError: false,
   });
@@ -28,7 +28,7 @@ function useEditCourseFormState(start: EditCourseStart) {
 
 type EditCourseFormProps = {
   courseId: string;
-  start: EditCourseStart;
+  prefill: EditFormPrefill;
   /** Built on the server so the server and browser list the same zones. */
   timeZones: string[];
 };
@@ -36,12 +36,12 @@ type EditCourseFormProps = {
 /** The "edit course" form. It saves the details and goes to the home page. */
 export function EditCourseForm({
   courseId,
-  start,
+  prefill,
   timeZones,
 }: EditCourseFormProps) {
-  const form = useEditCourseFormState(start);
+  const form = useEditCourseFormState(prefill);
   const { save, saved, serverProblem, clearServerProblem } =
-    useSaveEditedCourse(form, courseId, start.keptParts);
+    useSaveEditedCourse(form, courseId, prefill.fieldsSentBackUnchanged);
   const errorList = useErrorListAndLeaveWarning(form, editCourseFields, saved);
   const { isSubmitting } = form.formState;
 
@@ -57,7 +57,7 @@ export function EditCourseForm({
       <EditScheduleSection
         form={form}
         timeZones={timeZones}
-        keptSchedule={start.keptParts.schedule}
+        unchangedSchedule={prefill.fieldsSentBackUnchanged.schedule}
       />
       <SaveButton label="Save changes" isSubmitting={isSubmitting} />
     </form>

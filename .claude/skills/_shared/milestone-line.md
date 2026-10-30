@@ -18,6 +18,7 @@ Written by `/plan-create-overview`, read by `/plan-create-implementation` in its
 - Re-measure: <commands for facts that change; no typed counts>
 ```
 
+- The outcome says what the admin, customer or developer can now do, in plain words, with no function, type or file names.
 - Number only: 1, 2, 3. The plan pass labels commits 2a, 2b, matching [commit-line.md](commit-line.md): a number and one letter, never a deeper level. No other scheme.
 - Fields by place: the **Next** milestone has every field. Any other milestone has only *Why here*, *Needs*, *Size*, *Risk* and *Done when*; the plan pass adds the rest when it becomes **Next**, so notes are not written for work that may change.
 - **Spike:** a milestone flagged `*(spike)*` answers one question with throwaway code. Its section has *Question*, *Time-box* (hours, or one commit) and *Done when* = the written answer. No tests are required. It ends with a decision row recording the answer and what was rejected. Use one for any question only running code can answer (a library's real behaviour, a data shape, speed), and put it first.

@@ -31,10 +31,10 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
     - [x] **U3b.** Price schedule list.
     - [x] **U3c.** Searchable time zone picker (shadcn Combobox, pick-only).
 - [x] **5. Image in the create form**, in five commits (design in *Step 5* below):
-  - [x] **5a.** `updateCourseAction` saves the form's values over an existing draft (not used yet); the shared action result helpers live in `save-course/course-action-result.ts`.
+  - [x] **5a.** `retryDraftSaveAction` saves the form's values over an existing draft (not used yet); the shared action result helpers live in `save-course/course-action-result.ts`.
   - [x] **5b.** `uploadCourseImageAction` uploads a file through the new `uploadCourseImage` wrapper (not used yet); `/image` errors map to the `image` field; `bodySizeLimit` is `"6mb"`.
   - [x] **5c.** `image/image-field.tsx` picks a file, shows a 16:9 preview (kept for a refused file) and `image/course-image.ts` measures it once and holds the zod rule (not used yet); an undecodable file is stored as 0 × 0 and reported as unreadable.
-  - [x] **5d.** The form requires an image and uploads it after creating the draft (`use-save-course.ts`); a failed upload keeps the draft id, and the retry updates then uploads. The form types are `CourseFormWithImageValues` and `CheckedCourseFormWithImageValues`; `CourseFormValues` stays the saved fields the actions check.
+  - [x] **5d.** The form requires an image and uploads it after creating the draft (`use-save-new-course.ts`); a failed upload keeps the draft id, and the retry updates then uploads. The form types are `CourseFormWithImageValues` and `CheckedCourseFormWithImageValues`; `CourseFormValues` stays the saved fields the actions check.
   - [x] **5e.** Browser tests with a real image (`src/mocks/fixtures/course-image.png`, 800 × 450): save with an image and land on `/`; a failed upload keeps the draft and the retry updates it, then uploads; no console errors.
 
 - [x] **6. Form behaviour fixes**, in four commits:
@@ -258,7 +258,7 @@ Publishing is not part of this step: the form always saves a draft and the butto
 - On submit the browser runs, in order: `createCourseAction` (the form keeps the course id), `uploadCourseImageAction`, then `router.push("/")`.
 - If the upload fails, or an action is rejected, the admin stays on the form with the error at the top and the draft id kept.
   - An upload error from the API shows on the image field.
-  - The next submit runs `updateCourseAction(id, values)`, then uploads. It never creates a second course.
+  - The next submit runs `retryDraftSaveAction(id, values)`, then uploads. It never creates a second course.
   - The leave warning stays on until the upload succeeds.
 - The Server Action body limit is `"6mb"`; the reasoning is in the Server Action row of [web.md](web.md).
 

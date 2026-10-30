@@ -24,3 +24,4 @@ Written by `/plan-create-implementation`, read by `/next-commit` in its first st
 - `Behaviours` is the plan's input to the test table, not the table. `/next-commit` adds cases it finds.
 - Omit a sub-bullet that is empty; never pad.
 - The same layout applies to the commit lines in the doc and to the presented plan.
+- The outcome line says what the admin, customer or developer can now do, in plain words. It names no function, type or file.

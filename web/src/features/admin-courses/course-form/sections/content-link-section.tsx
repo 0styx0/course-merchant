@@ -3,7 +3,7 @@
 import type { FieldPathByValue, FieldValues } from "react-hook-form";
 
 import { courseFieldLabels } from "../fields/course-field-labels-and-price-row-names";
-import { InputField, type CourseFormApi } from "./course-form-fields";
+import { InputField, type CourseFormApi } from "../fields/course-form-fields";
 import { CourseMaterialSection } from "./course-form-sections";
 
 /** The course material frame with the content link box in it. */

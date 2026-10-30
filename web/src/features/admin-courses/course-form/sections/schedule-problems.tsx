@@ -4,7 +4,7 @@ import type { FieldValues, Path } from "react-hook-form";
 
 import { showsFieldError } from "@/components/form/validated-field";
 
-import type { CourseFormApi } from "./course-form-fields";
+import type { CourseFormApi } from "../fields/course-form-fields";
 import { SCHEDULE_PROBLEMS_ID } from "./course-form-schedule-fields";
 import {
   fieldErrorMessage,

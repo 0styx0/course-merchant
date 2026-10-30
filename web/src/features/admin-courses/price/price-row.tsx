@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   InputField,
   type CourseFormApi,
-} from "../course-form/sections/course-form-fields";
+} from "../course-form/fields/course-form-fields";
 import { priceRowLabels } from "./price-row-labels";
 
 /** The paths of a row's three boxes, each holding a string. */

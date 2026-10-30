@@ -16,8 +16,8 @@ import {
   type CourseActionFailure,
   type CourseActionResult,
 } from "../save-course/course-action-result";
-import { createCourseAction } from "../save-course/create-course.action";
-import { updateCourseAction } from "../save-course/update-course.action";
+import { createCourseAction } from "../save-course/create/create-course.action";
+import { retryDraftSaveAction } from "../save-course/create/retry-draft-save.action";
 import { uploadCourseImageAction } from "../save-course/upload-image/upload-course-image.action";
 
 type CourseForm = UseFormReturn<
@@ -50,7 +50,7 @@ function saveDraft(
   fields: Omit<CheckedCourseFormWithImageValues, "image">,
 ): Promise<CourseActionResult> {
   return draftId
-    ? updateCourseAction(draftId, fields)
+    ? retryDraftSaveAction(draftId, fields)
     : createCourseAction(fields);
 }
 
@@ -59,7 +59,7 @@ function saveDraft(
  * a message and puts its field errors on the fields. The draft's id is kept, so
  * the next try updates that draft instead of creating a second course.
  */
-export function useSaveCourse(form: CourseForm) {
+export function useSaveNewCourse(form: CourseForm) {
   const router = useRouter();
   const { serverProblem, showRefusal, showThrownProblem, clearServerProblem } =
     useServerProblem(form.setError);

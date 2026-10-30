@@ -6,9 +6,9 @@ import {
   refusalMessage,
   useServerProblem,
 } from "../course-form/hooks/use-server-problem";
-import { updateCourseDetailsAction } from "../save-course/edit/update-course-details.action";
+import { saveEditedDetailsAction } from "../save-course/edit/save-edited-details.action";
 import type { EditCourseFormValues } from "../validation/edit-course-form-schema";
-import type { KeptParts } from "./edit-course-start";
+import type { FieldsSentBackUnchanged } from "./edit-form-prefill";
 
 type EditCourseFormApi = UseFormReturn<
   EditCourseFormValues,
@@ -17,13 +17,13 @@ type EditCourseFormApi = UseFormReturn<
 >;
 
 /**
- * Saves the edited details with the kept parts as loaded. A refusal leaves a
+ * Saves the edited details with the fields it cannot edit yet, as loaded. A refusal leaves a
  * message and puts its field errors on the fields; a save goes to the home page.
  */
 export function useSaveEditedCourse(
   form: EditCourseFormApi,
   courseId: string,
-  keptParts: KeptParts,
+  fieldsSentBackUnchanged: FieldsSentBackUnchanged,
 ) {
   const router = useRouter();
   const { serverProblem, showRefusal, showThrownProblem, clearServerProblem } =
@@ -33,10 +33,10 @@ export function useSaveEditedCourse(
   async function save(values: EditCourseFormValues) {
     clearServerProblem();
     try {
-      const result = await updateCourseDetailsAction(
+      const result = await saveEditedDetailsAction(
         courseId,
         values,
-        keptParts,
+        fieldsSentBackUnchanged,
       );
       if (result.state === "failure") {
         return showRefusal(refusalMessage(result.error), result.error);

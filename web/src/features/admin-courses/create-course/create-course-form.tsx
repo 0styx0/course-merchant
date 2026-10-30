@@ -21,7 +21,7 @@ import {
   emptyPrice,
 } from "./create-course-sections";
 import { useBrowserTimeZone } from "./use-browser-time-zone";
-import { useSaveCourse } from "./use-save-course";
+import { useSaveNewCourse } from "./use-save-new-course";
 import {
   courseFormWithImageSchema,
   type CheckedCourseFormWithImageValues,
@@ -89,7 +89,7 @@ type CreateCourseFormProps = {
 export function CreateCourseForm({ timeZones }: CreateCourseFormProps) {
   const { form, priceRows } = useCourseFormState();
   const { save, saved, serverProblem, clearServerProblem } =
-    useSaveCourse(form);
+    useSaveNewCourse(form);
   const { isSubmitted, isSubmitting } = form.formState;
   const errorList = useErrorListAndLeaveWarning(
     form,

@@ -11,7 +11,7 @@ import {
 import { server } from "@/mocks/node";
 
 import { createCourseAction } from "./create-course.action";
-import type { CourseFormValues } from "../validation/course-form-schema";
+import type { CourseFormValues } from "../../validation/course-form-schema";
 
 // Its default export throws outside a React Server Component build
 vi.mock("server-only", () => ({}));

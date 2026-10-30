@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
 import type { AdminCourse } from "@/lib/types";
 
-import { toEditCourseStart } from "./edit-course-start";
+import { toEditFormPrefill } from "./edit-form-prefill";
 
 const enrollment = {
   revokedAt: null,
@@ -26,9 +26,9 @@ const course: AdminCourse = {
   enrollments: [enrollment],
 };
 
-describe("toEditCourseStart", () => {
+describe("toEditFormPrefill", () => {
   it("takes the five edited fields from the course", () => {
-    const { values } = toEditCourseStart(course);
+    const { values } = toEditFormPrefill(course);
 
     expect(values).toEqual({
       name: course.name,
@@ -40,27 +40,29 @@ describe("toEditCourseStart", () => {
   });
 
   it("keeps the status as a plain string", () => {
-    expect(toEditCourseStart(course).keptParts.status).toBe("drafted");
+    expect(toEditFormPrefill(course).fieldsSentBackUnchanged.status).toBe(
+      "drafted",
+    );
   });
 
   it("keeps the start and end as the loaded UTC strings", () => {
-    expect(toEditCourseStart(course).keptParts.schedule).toEqual({
+    expect(toEditFormPrefill(course).fieldsSentBackUnchanged.schedule).toEqual({
       startTime: course.schedule.startTime,
       endTime: course.schedule.endTime,
     });
   });
 
   it("keeps the prices without their ids", () => {
-    expect(toEditCourseStart(course).keptParts.prices).toEqual([
+    expect(toEditFormPrefill(course).fieldsSentBackUnchanged.prices).toEqual([
       { amount: 9900, currency: "USD", effectiveAt: "2026-10-15T18:31:00Z" },
     ]);
   });
 
   it("never carries the enrollments", () => {
-    const start = toEditCourseStart(course);
+    const start = toEditFormPrefill(course);
 
     expect(JSON.stringify(start)).not.toContain("ada@example.com");
     expect(start).not.toHaveProperty("enrollments");
-    expect(start.keptParts).not.toHaveProperty("enrollments");
+    expect(start.fieldsSentBackUnchanged).not.toHaveProperty("enrollments");
   });
 });

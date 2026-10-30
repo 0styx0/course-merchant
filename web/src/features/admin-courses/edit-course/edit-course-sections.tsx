@@ -8,7 +8,7 @@ import {
   InputField,
   TimeZoneField,
   type CourseFormApi,
-} from "../course-form/sections/course-form-fields";
+} from "../course-form/fields/course-form-fields";
 import {
   BasicsSection,
   ScheduleSection,
@@ -19,7 +19,7 @@ import {
   COURSE_SUMMARY_MAX_LENGTH,
 } from "../validation/course-form-limits";
 import type { EditCourseFormValues } from "../validation/edit-course-form-schema";
-import type { KeptParts } from "./edit-course-start";
+import type { FieldsSentBackUnchanged } from "./edit-form-prefill";
 
 type EditForm = CourseFormApi<EditCourseFormValues>;
 
@@ -48,11 +48,11 @@ export function EditBasicsSection({ form }: { form: EditForm }) {
 export function EditScheduleSection({
   form,
   timeZones,
-  keptSchedule,
+  unchangedSchedule,
 }: {
   form: EditForm;
   timeZones: string[];
-  keptSchedule: KeptParts["schedule"];
+  unchangedSchedule: FieldsSentBackUnchanged["schedule"];
 }) {
   const timeZone = useWatch({
     control: form.control,
@@ -61,8 +61,8 @@ export function EditScheduleSection({
   // The sentence needs a real zone; a stored one the list lacks is reported on save.
   const scheduleText = timeZones.includes(timeZone)
     ? scheduleSentence(
-        Date.parse(keptSchedule.startTime),
-        Date.parse(keptSchedule.endTime),
+        Date.parse(unchangedSchedule.startTime),
+        Date.parse(unchangedSchedule.endTime),
         timeZone,
       )
     : undefined;

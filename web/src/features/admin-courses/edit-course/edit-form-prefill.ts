@@ -6,22 +6,22 @@ import type { EditCourseFormValues } from "../validation/edit-course-form-schema
  * The parts of the course the edit form doesn't edit yet. They go back in the
  * save as loaded.
  */
-export type KeptParts = {
+export type FieldsSentBackUnchanged = {
   status: UpdateCourseRequest["status"];
   schedule: Pick<UpdateCourseRequest["schedule"], "startTime" | "endTime">;
   prices: UpdateCourseRequest["prices"];
 };
 
-export type EditCourseStart = {
+export type EditFormPrefill = {
   values: EditCourseFormValues;
-  keptParts: KeptParts;
+  fieldsSentBackUnchanged: FieldsSentBackUnchanged;
 };
 
 /**
  * Picks only what the browser needs from the loaded course: its
  * `enrollments` hold customers' emails and payment details.
  */
-export function toEditCourseStart(course: AdminCourse): EditCourseStart {
+export function toEditFormPrefill(course: AdminCourse): EditFormPrefill {
   return {
     values: {
       name: course.name,
@@ -30,7 +30,7 @@ export function toEditCourseStart(course: AdminCourse): EditCourseStart {
       contentUrl: course.contentUrl,
       schedule: { timeZone: course.schedule.timeZone },
     },
-    keptParts: {
+    fieldsSentBackUnchanged: {
       status: course.status.name,
       schedule: {
         startTime: course.schedule.startTime,

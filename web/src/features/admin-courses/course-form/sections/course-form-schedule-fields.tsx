@@ -2,7 +2,7 @@
 
 import type { FieldPathByValue, FieldValues, PathValue } from "react-hook-form";
 
-import { InputField, type CourseFormApi } from "./course-form-fields";
+import { InputField, type CourseFormApi } from "../fields/course-form-fields";
 
 /** The id of the Schedule line that shows the cross-field messages. */
 export const SCHEDULE_PROBLEMS_ID = "schedule-problems";

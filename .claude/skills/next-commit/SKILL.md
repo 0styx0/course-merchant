@@ -18,7 +18,7 @@ Every item below happens, in this order. Only pure moves, renames and doc-only c
 
 1. Read [outline.md](outline.md), [quality.md](quality.md) and [handoff.md](handoff.md) now.
 2. Run the size check, the coverage check (changes that alter no behaviour) and `git status --short` as real tool calls.
-3. Send the outline (it starts with `Preflight:`; with the flow diagram when the commit has logic), end the turn, and wait for the owner's reply.
+3. Send the outline (it opens with Today / After this commit / Why this way and ends with `Preflight:`; with the flow diagram when the commit has logic), end the turn, and wait for the owner's reply.
 4. Write the tests first and show them failing.
 5. Run `/simplify` in subagents.
 6. Verify, then hand off as [handoff.md](handoff.md) says.
