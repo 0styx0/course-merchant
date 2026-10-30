@@ -18,4 +18,4 @@ Before a refactor, check which lines no test runs (whole suite, about 30 seconds
   - Vitest — `src/test/setup.ts`; unhandled requests fail the test.
   - `yarn dev:mock` — via `src/instrumentation.ts` (Node-only startup in `src/instrumentation-node.ts`); choose the scenario in `src/mocks/node.ts`.
   - Playwright (`tests/browser`, `yarn test:browser`) — via Next's experimental test proxy: import `test` from `next/experimental/testmode/playwright/msw` and switch scenarios with `msw.use(...)`.
-
+- `src/components/ui/` is shadcn CLI output (settings in `components.json`). Wrap primitives in `components/` or `features/` instead of editing them, and start any unavoidable edit with a `// Local change:` comment; the rule is in [docs/web.md](../docs/web.md).

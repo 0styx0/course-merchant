@@ -28,6 +28,7 @@ All web steps are done. The admin create-course form's decisions are in [course-
 - **Pages put features together.** Public features don't import each other. Admin features may import public ones and `admin-auth`, never the reverse.
 - **Wrappers are named after operationIds,** and so are mock handler files, so one name follows an endpoint from the contract to the mock.
 - **Every admin read and action calls `requireAdminSession()`.** The API's guard is the real check; the web check only sends a logged-out admin to the login page.
+- **`components/ui/` holds only shadcn CLI output.** App components wrap primitives from `components/` or `features/`; they don't edit primitives or reuse shadcn export names.
 
 ## Decisions
 
@@ -69,6 +70,7 @@ All web steps are done. The admin create-course form's decisions are in [course-
 | Titles use a template in the root layout (`%s · Course Merchant`, default `Course Merchant`); the course page also sets `description` to the course summary | Tabs and search results show which site; pages only name themselves | Each page writing the full title |
 | One extension list ([description-extensions.ts](../web/src/features/course-description/description-extensions.ts)) drives both the editor and the static renderer's `pm/react` variant for course descriptions | One configuration, so the page can't drift from the editor, and no mapping of our own. Headings are levels 2-4 under the page's `<h1>`; links open in the same tab. Decisions: [course-creation.md](course-creation.md) | The JSON variant with a hand mapping; a heading shift in the renderer |
 | Inter is the one font; Geist and Geist Mono are not loaded | Inter already backs `font-sans` and the heading font; nothing used mono, which falls back to Tailwind's system stack | Switching to Geist; keeping all three |
+| shadcn primitives in `components/ui/` stay as the CLI wrote them (Prettier formatting aside) | shadcn is copied-in code, so the import path is the only clue to where it came from, and `shadcn add --overwrite` silently drops unmarked edits. Add a primitive with `npx shadcn add <name>`; update it with `--overwrite` and review the git diff. A needed edit starts with `// Local change: <what>, because <why>. Re-apply after shadcn --overwrite.` | Editing primitives freely (updates lose the edits); a `Shad…` prefix on imports (goes against shadcn convention, and the folder already says it) |
 
 ## Launch
 

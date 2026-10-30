@@ -64,7 +64,7 @@ Stripe is the record of money: the app stores only what it needs to decide who h
 |---|---|
 | [app/](web/src/app/) | Routes only. The public pages sit in a `(shop)` group whose layout owns the page's `<main>`: the home page with the course list (rendered again at most once a minute), and a page for each course. |
 | [features/](web/src/features/) | One folder per area (today `courses/`): server-only API wrappers (`<feature>.api.ts`), async *sections* that fetch, and components that take plain data. |
-| [components/](web/src/components/) | Pieces used app-wide, such as `ProblemAlert`; `ui/` holds the shadcn primitives. |
+| [components/](web/src/components/) | Pieces used app-wide, such as `ProblemAlert`; `ui/` holds the shadcn primitives (CLI output only; see [docs/web.md](docs/web.md)). |
 | [lib/api/](web/src/lib/api/) | The typed API client (server-only; each call times out after 10 s) and the mapper that turns answers into a `Result`. |
 | [mocks/](web/src/mocks/) | MSW handlers, one file per endpoint named after its operationId, each with named scenarios (`success`, `notFound`, `error`, …). |
 
