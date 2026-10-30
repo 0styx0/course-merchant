@@ -18,8 +18,8 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { fieldErrorMessage } from "./course-form-problems";
-import { TimeZonePicker } from "./schedule/time-zone-picker";
-import type { CourseFormWithImageValues } from "./validation/course-form-schema";
+import { TimeZonePicker } from "../schedule/time-zone-picker/time-zone-picker";
+import type { CourseFormWithImageValues } from "../validation/course-form-schema";
 
 type CourseForm = UseFormReturn<CourseFormWithImageValues>;
 

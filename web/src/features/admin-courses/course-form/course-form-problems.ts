@@ -2,7 +2,7 @@ import { get, type FieldErrors } from "react-hook-form";
 
 import type { ErrorSummaryProblem } from "@/components/form/error-summary";
 
-import type { CourseFormWithImageValues } from "./validation/course-form-schema";
+import type { CourseFormWithImageValues } from "../validation/course-form-schema";
 
 /** The form's fields in page order, with the label the error list shows. */
 const COURSE_FORM_FIELD_LABELS = [

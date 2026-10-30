@@ -14,13 +14,13 @@ import { ScheduleDateTimeFields } from "./course-form-schedule-fields";
 import {
   COURSE_NAME_MAX_LENGTH,
   COURSE_SUMMARY_MAX_LENGTH,
-} from "./validation/course-form-limits";
-import type { CourseFormWithImageValues } from "./validation/course-form-schema";
-import { ImageField } from "./image/image-field";
-import { DescriptionEditor } from "./description-editor/description-editor";
-import type { priceSummary } from "./price/price-summary";
-import { PriceRow } from "./price/price-row";
-import { PriceSchedule } from "./price/price-schedule";
+} from "../validation/course-form-limits";
+import type { CourseFormWithImageValues } from "../validation/course-form-schema";
+import { ImageField } from "../image/image-field";
+import { DescriptionEditor } from "../description-editor/description-editor";
+import type { priceSummary } from "../price/price-summary";
+import { PriceRow } from "../price/price-row";
+import { PriceSchedule } from "../price/price-schedule";
 
 type CourseFormApi = UseFormReturn<CourseFormWithImageValues>;
 

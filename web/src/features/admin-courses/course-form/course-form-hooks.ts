@@ -4,7 +4,7 @@ import type { UseFormReset } from "react-hook-form";
 import {
   browserTimeZone,
   type CourseFormWithImageValues,
-} from "./validation/course-form-schema";
+} from "../validation/course-form-schema";
 
 /** After each submit attempt, moves focus to the list of problems. */
 export function useFocusSummaryOnSubmit(

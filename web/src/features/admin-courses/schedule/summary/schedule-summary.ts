@@ -1,7 +1,7 @@
-import type { CourseFormValues } from "../validation/course-form-schema";
+import type { CourseFormValues } from "../../validation/course-form-schema";
 import { formatCourseLength } from "./format-course-length";
 import { formatMoment } from "./format-moment";
-import { toUtcMs } from "./wall-clock-time";
+import { toUtcMs } from "../wall-clock-time";
 
 /** The start and end as UTC times, or nothing until both are complete, convertible and in order. */
 function scheduleBounds(schedule: CourseFormValues["schedule"]) {

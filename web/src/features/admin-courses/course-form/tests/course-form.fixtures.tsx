@@ -3,9 +3,9 @@ import type userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 
 import { CourseForm } from "../course-form";
-import { createCourseAction } from "../save-course/create-course.action";
-import { updateCourseAction } from "../save-course/update-course.action";
-import { uploadCourseImageAction } from "../save-course/upload-image/upload-course-image.action";
+import { createCourseAction } from "../../save-course/create-course.action";
+import { updateCourseAction } from "../../save-course/update-course.action";
+import { uploadCourseImageAction } from "../../save-course/upload-image/upload-course-image.action";
 
 export const action = vi.mocked(createCourseAction);
 export const updateAction = vi.mocked(updateCourseAction);

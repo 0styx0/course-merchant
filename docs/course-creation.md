@@ -295,7 +295,7 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
 
 - Why here: the owner used the page after step 5 and found validation and input-width problems. Behaviour fixes come before layout, so the layout commits land on stable code.
 - Needs: none.
-- Builds on: [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx) (the schedule fields), [course-form-cross-field-issues.ts](../web/src/features/admin-courses/validation/course-form-cross-field-issues.ts) (schedule messages), [validated-field.tsx](../web/src/components/form/validated-field.tsx) (the status icon). `mode: "onTouched"` is in the *Principles*.
+- Builds on: [course-form-sections.tsx](../web/src/features/admin-courses/course-form/course-form-sections.tsx) (the schedule fields), [course-form-cross-field-issues.ts](../web/src/features/admin-courses/validation/course-form-cross-field-issues.ts) (schedule messages), [validated-field.tsx](../web/src/components/form/validated-field.tsx) (the status icon). `mode: "onTouched"` is in the *Principles*.
 - Done when: unit and browser tests pass; in `yarn --cwd web dev:mock`, using only the pickers, an invalid date shows its error at once and clears when corrected; the end date picker opens at the start month; inputs keep their width when an error appears or clears.
 - Risk: Chrome may ignore `min` when choosing which month the picker opens at (6c).
 - Design notes:
@@ -306,9 +306,9 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
 
 - [ ] **6b.** Schedule-wide messages show under the Schedule heading. **Next**
   - *Files*:
-    - [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx#L172) (message line in `ScheduleSection`)
-    - [course-form-fields.tsx](../web/src/features/admin-courses/course-form-fields.tsx#L98) and [validated-field.tsx](../web/src/components/form/validated-field.tsx#L66) (keep the red border and X, hide the message under the field)
-    - tests in `course-form/`
+    - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/course-form-sections.tsx#L172) (message line in `ScheduleSection`)
+    - [course-form-fields.tsx](../web/src/features/admin-courses/course-form/course-form-fields.tsx#L98) and [validated-field.tsx](../web/src/components/form/validated-field.tsx#L66) (keep the red border and X, hide the message under the field)
+    - tests in `course-form/tests/`
   - *Behaviours*:
     - A schedule-wide message shows once, as a line under the heading (future start, end after start, daylight-saving gap, invalid date).
     - The time field keeps its red border and X, and its `aria-describedby` points at that line.
@@ -319,9 +319,9 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
   - *Settled*: the decision row "Cross-field schedule messages keep their field path".
 - [ ] **6c.** The end date picker opens at the start date.
   - *Files*:
-    - [course-form-fields.tsx](../web/src/features/admin-courses/course-form-fields.tsx#L98) (`InputField` takes `min`)
-    - [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx#L172)
-    - test in `course-form/`
+    - [course-form-fields.tsx](../web/src/features/admin-courses/course-form/course-form-fields.tsx#L98) (`InputField` takes `min`)
+    - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/course-form-sections.tsx#L172)
+    - test in `course-form/tests/`
   - *Behaviours*:
     - The end date input's `min` is the start date.
     - An empty start date means no `min`.
@@ -343,7 +343,7 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
 
 - Why here: layout and wording touch the same files as step 6, so they come after the behaviour is fixed.
 - Needs: 6.
-- Builds on: [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx), [course-form-problems.ts](../web/src/features/admin-courses/course-form-problems.ts) (field order), [form-section.tsx](../web/src/components/form/form-section.tsx), the U3b price list in `price/price-schedule.tsx`.
+- Builds on: [course-form-sections.tsx](../web/src/features/admin-courses/course-form/course-form-sections.tsx), [course-form-problems.ts](../web/src/features/admin-courses/course-form/course-form-problems.ts) (field order), [form-section.tsx](../web/src/components/form/form-section.tsx), the U3b price list in `price/price-schedule.tsx`.
 - Size: 3 commits.
   - **7a.** The price outline (Roman-numeral list) shows only once any price input has text, and hides again when all are empty (derived from the values, no stored state). The Pricing help text adds "Enter 0 for a free course."
   - **7b.** Field order and names: the image field moves into Basics as its first part (`ImageSection` goes); the time zone field moves first in Schedule; `ContentSection` is retitled "Course material" (order: Basics, Course material, Schedule, Pricing). `COURSE_FORM_FIELD_LABELS` and the error list order follow.

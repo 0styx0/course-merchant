@@ -3,7 +3,7 @@
 import type { UseFormReturn } from "react-hook-form";
 
 import { InputField } from "./course-form-fields";
-import type { CourseFormWithImageValues } from "./validation/course-form-schema";
+import type { CourseFormWithImageValues } from "../validation/course-form-schema";
 
 type CourseFormApi = UseFormReturn<CourseFormWithImageValues>;
 

@@ -2,18 +2,18 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import type { Path, UseFormReturn } from "react-hook-form";
 
-import type { ChosenImage } from "./image/course-image";
+import type { ChosenImage } from "../image/course-image";
 import type {
   CheckedCourseFormWithImageValues,
   CourseFormWithImageValues,
-} from "./validation/course-form-schema";
+} from "../validation/course-form-schema";
 import {
   type CourseActionFailure,
   type CourseActionResult,
-} from "./save-course/course-action-result";
-import { createCourseAction } from "./save-course/create-course.action";
-import { updateCourseAction } from "./save-course/update-course.action";
-import { uploadCourseImageAction } from "./save-course/upload-image/upload-course-image.action";
+} from "../save-course/course-action-result";
+import { createCourseAction } from "../save-course/create-course.action";
+import { updateCourseAction } from "../save-course/update-course.action";
+import { uploadCourseImageAction } from "../save-course/upload-image/upload-course-image.action";
 
 type ServerProblem = { title: string; detail: string };
 

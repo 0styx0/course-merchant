@@ -3,7 +3,7 @@ import {
   normalizeDollars,
   type CourseFormValues,
 } from "../validation/course-form-schema";
-import { formatMoment } from "../schedule/format-moment";
+import { formatMoment } from "../schedule/summary/format-moment";
 import { toUtcMs } from "../schedule/wall-clock-time";
 
 /** "$79.50", "$99" or "Free": the typed amount, with a comma read as the decimal mark. */

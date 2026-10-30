@@ -4,8 +4,8 @@ import type { UseFormReturn } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 
-import { InputField } from "../course-form-fields";
-import { priceRowLabels } from "../course-form-problems";
+import { InputField } from "../course-form/course-form-fields";
+import { priceRowLabels } from "../course-form/course-form-problems";
 import type { CourseFormWithImageValues } from "../validation/course-form-schema";
 
 type PriceRowProps = {

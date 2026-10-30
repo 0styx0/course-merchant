@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { CourseForm } from "@/features/admin-courses/course-form";
+import { CourseForm } from "@/features/admin-courses/course-form/course-form";
 
 export const metadata: Metadata = {
   title: "New course",

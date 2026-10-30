@@ -51,6 +51,11 @@ Never hand-edit generated files (a hook refuses it), and never read them whole (
 - **File names state everything the file exports.** Rename or split the file when its exports outgrow its name.
 - **A function name states what it returns.** A function that returns a formatter is `makeDateFormatter`, not `formatDate`.
 - **At most 10 files per folder**, not counting sub-folders; spec files count. Generated and vendored code (`generated.ts`, `migrations/`, `components/ui/`) doesn't. The pre-commit hook ([check-folder-file-count.sh](.husky/check-folder-file-count.sh)) fails when a folder passes it; group the files by job in the same commit that adds the 11th. Name the folder for its job (`stripe/`, `fulfillment/`), never `utils/` or `misc/`.
+- **Folders group files by topic, so a newcomer can find things by name.**
+  - Group files that change together or share a job (the form, the schedule summary, the time zone picker), not by file type or by "what was left over".
+  - Don't leave loose files at a feature's root next to its sub-folders; every file belongs to a topic folder.
+  - Integration tests that render a whole component go in a `tests/` folder beside it; one-file unit tests stay next to their source.
+  - When you add a file, put it in the folder for its topic. If none fits, create one named for the job, and split a full folder by topic, not alphabetically.
 - **Labels:** milestone `3`, commit `3b`; never a deeper level (`3b-i`). Split a commit by re-lettering the rest.
 - To move files, move parent folders before their children; steps are in [api/CLAUDE.md](api/CLAUDE.md#moving-and-renaming-files).
 
@@ -88,7 +93,7 @@ How the owner wants Claude to work on this repo.
 - **Bullets, not blocks.** Outlines, summaries and hand-offs are bullet points, not paragraphs. One idea is one fact, one step or one check, so a bullet holds one short sentence. A sentence that joins two with "and", "then", a comma or a semicolon is split into sub-bullets under a bullet that names the subject, e.g. "`uploadCourseImageAction` does three things:" followed by one sub-bullet each.
 - **Link files.** Any list of files is markdown links relative to the repo root, e.g. `[types.ts](api/types.ts)`.
   - **Link the line the sentence is about.** When a sentence says what is in a function, type, entry or section, link to that line in the file, e.g. `[courseFormSchema](web/src/features/admin-courses/validation/course-form-schema.ts#L117)`. Check the line number with grep first; never guess it. A link on the file's name that sits in such a sentence goes to that line too, e.g. `"Image" is now in the error list in [course-form-problems.ts](…#L12)`.
-  - **A whole-file link goes to the first line of code or comment that isn't an import.** Use it when you mean the file, not a part of it, e.g. `[course-form.tsx](web/src/features/admin-courses/course-form.tsx#L38)`. For a doc, that is the first line of the file.
+  - **A whole-file link goes to the first line of code or comment that isn't an import.** Use it when you mean the file, not a part of it, e.g. `[course-form.tsx](web/src/features/admin-courses/course-form/course-form.tsx#L38)`. For a doc, that is the first line of the file.
   - **Every name in a sentence gets its own link.** In "`use-save-course.ts` is the new `useSaveCourse`, moved out of `course-form-hooks.ts`", the file, the function and the other file each link on their own.
     - The file the sentence is about is a plain link to its first real line.
     - A function, type or other code name is formatted as code and links to its definition.
