@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import type userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 
-import { CourseForm } from "../course-form";
+import { CreateCourseForm } from "../create-course-form";
 import { createCourseAction } from "../../save-course/create-course.action";
 import { updateCourseAction } from "../../save-course/update-course.action";
 import { uploadCourseImageAction } from "../../save-course/upload-image/upload-course-image.action";
@@ -44,7 +44,7 @@ export function summaryWithHeading(name: RegExp | string) {
 
 export function renderForm() {
   return render(
-    <CourseForm timeZones={["America/New_York", "Europe/Paris"]} />,
+    <CreateCourseForm timeZones={["America/New_York", "Europe/Paris"]} />,
   );
 }
 

@@ -14,19 +14,17 @@ import {
 import { ErrorSummary } from "@/components/form/error-summary";
 import { Button } from "@/components/ui/button";
 
-import {
-  useBrowserTimeZone,
-  useFocusSummaryOnSubmit,
-  useLeaveWarning,
-} from "./course-form-hooks";
-import { courseFormProblems } from "./course-form-problems";
+import { useFocusSummaryOnSubmit } from "../course-form/hooks/use-focus-summary-on-submit";
+import { useLeaveWarning } from "../course-form/hooks/use-leave-warning";
+import { courseFormProblems } from "../course-form/problems/course-form-problems";
 import {
   BasicsSection,
   CourseMaterialSection,
   emptyPrice,
   PricingSection,
   ScheduleSection,
-} from "./course-form-sections";
+} from "../course-form/sections/course-form-sections";
+import { useBrowserTimeZone } from "./use-browser-time-zone";
 import { useSaveCourse } from "./use-save-course";
 import {
   courseFormWithImageSchema,
@@ -106,13 +104,13 @@ function SaveButton({ isSubmitting }: { isSubmitting: boolean }) {
   );
 }
 
-type CourseFormProps = {
+type CreateCourseFormProps = {
   /** Built on the server so the server and browser list the same zones. */
   timeZones: string[];
 };
 
 /** The "create course" form. It saves a draft and goes to the home page. */
-export function CourseForm({ timeZones }: CourseFormProps) {
+export function CreateCourseForm({ timeZones }: CreateCourseFormProps) {
   const { form, priceRows } = useCourseFormState();
   const summaryRef = useRef<HTMLDivElement>(null);
   const { save, saved, serverProblem, clearServerProblem } =

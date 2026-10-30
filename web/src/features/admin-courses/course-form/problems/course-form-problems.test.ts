@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { courseFormProblems } from "./course-form-problems";
+import { courseFormProblems } from "../problems/course-form-problems";
 
 describe("courseFormProblems", () => {
   it("is empty without errors", () => {

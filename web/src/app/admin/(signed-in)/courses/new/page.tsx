@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { CourseForm } from "@/features/admin-courses/course-form/course-form";
+import { CreateCourseForm } from "@/features/admin-courses/create-course/create-course-form";
 
 export const metadata: Metadata = {
   title: "New course",
@@ -19,7 +19,7 @@ export default function NewCoursePage() {
         nothing is public until you publish it.
       </p>
       <div className="mt-8">
-        <CourseForm timeZones={timeZones} />
+        <CreateCourseForm timeZones={timeZones} />
       </div>
     </main>
   );

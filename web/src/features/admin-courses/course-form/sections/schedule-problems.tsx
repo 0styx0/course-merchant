@@ -5,8 +5,11 @@ import type { UseFormReturn } from "react-hook-form";
 import { showsFieldError } from "@/components/form/validated-field";
 
 import { SCHEDULE_PROBLEMS_ID } from "./course-form-schedule-fields";
-import { fieldErrorMessage, fieldErrorType } from "./course-form-problems";
-import type { CourseFormWithImageValues } from "../validation/course-form-schema";
+import {
+  fieldErrorMessage,
+  fieldErrorType,
+} from "../problems/course-form-problems";
+import type { CourseFormWithImageValues } from "../../validation/course-form-schema";
 
 const TIME_FIELDS = [
   "schedule.startTimeOfDay",

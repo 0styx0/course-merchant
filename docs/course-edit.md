@@ -9,18 +9,8 @@ Keep this file current **in the same commit as the work**: tick the step, mark t
 Each milestone delivers one outcome. `/plan-create-implementation` splits a milestone into commit lines when it becomes **Next**.
 
 - [ ] **1. Create form rebuilt from shared building blocks.** Create behaves the same, but `CourseForm` becomes a composition of shared sections, fields and hooks, with no `mode` prop and no create/edit conditionals.
-  - [ ] **1a.** Group the form files by job, rename `CourseForm` to `CreateCourseForm`, and split the hooks file. *(mechanical)* **Next**
-    - *Files*:
-      - `course-form/sections/` gets `course-form-fields.tsx`, `course-form-sections.tsx`, `course-form-schedule-fields.tsx` and `schedule-problems.tsx`.
-      - `course-form/problems/` gets `course-form-problems.ts` and its test.
-      - `course-form/hooks/` gets `use-focus-summary-on-submit.ts` and `use-leave-warning.ts`, split from `course-form-hooks.ts` with the same code.
-      - `create-course/` gets `create-course-form.tsx` (renamed from `course-form.tsx`, exporting `CreateCourseForm`), `use-save-course.ts`, `use-browser-time-zone.ts` and `tests/` (9 files).
-      - Imports are fixed in `price/price-row.tsx` and `app/admin/(signed-in)/courses/new/page.tsx`.
-    - *Done when*:
-      - Unit tests and `tests/browser/admin-courses/create-course.spec.ts` pass unchanged.
-      - `sh .husky/check-folder-file-count.sh` prints nothing.
-      - A before/after diagram per folder is shown in the hand-off.
-  - [ ] **1b.** Shared blocks take a form typed on the saved fields; the image becomes create's own.
+  - [x] **1a.** Form files grouped by job (`sections/`, `problems/`, `hooks/`, `create-course/`), `CourseForm` renamed `CreateCourseForm`, hooks file split.
+  - [ ] **1b.** Shared blocks take a form typed on the saved fields; the image becomes create's own. **Next**
     - *Files*:
       - New `course-form/saved-fields-form.ts`:
         - `savedFieldsForm(form)` is the one commented cast.

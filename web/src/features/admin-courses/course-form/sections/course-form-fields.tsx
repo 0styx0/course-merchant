@@ -17,9 +17,12 @@ import {
 } from "@/components/form/validated-field";
 import { Input } from "@/components/ui/input";
 
-import { fieldErrorMessage, fieldErrorType } from "./course-form-problems";
-import { TimeZonePicker } from "../schedule/time-zone-picker/time-zone-picker";
-import type { CourseFormWithImageValues } from "../validation/course-form-schema";
+import {
+  fieldErrorMessage,
+  fieldErrorType,
+} from "../problems/course-form-problems";
+import { TimeZonePicker } from "../../schedule/time-zone-picker/time-zone-picker";
+import type { CourseFormWithImageValues } from "../../validation/course-form-schema";
 
 type CourseForm = UseFormReturn<CourseFormWithImageValues>;
 
