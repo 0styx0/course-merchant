@@ -10,12 +10,9 @@ arguments: [area]
 
 Area: `$area` (becomes `docs/$area.md`). Anything typed after it is the owner's brief or request: `$ARGUMENTS`. Follow CLAUDE.md's working agreements throughout. This pass produces a **map**, not a design: what the milestones are, in what order, and why. Detail is written later, one milestone at a time, by `/plan-create-implementation`, when the code it builds on exists. Detail written now is usually reversed later and costs the owner reading time.
 
-## Chat rules (this whole skill)
+## Chat rules
 
-- Replies are at most ~150 words. Recommendation first, then the one reason that matters most. Offer more ("ask for the trade-offs") rather than writing it.
-- One decision at a time, through the question picker (AskUserQuestion): 2–4 options, the recommended one first and labelled, each with a one-line consequence.
-- Answer what was asked. Don't open new topics in a reply; collect them for *Open questions* instead.
-- Every library mentioned gets a link to its docs.
+Follow [../_shared/chat-rules.md](../_shared/chat-rules.md) throughout. Here, "offer more" means for example "ask for the trade-offs", and new topics are collected under *Open questions*.
 
 ## 1. Get the brief before anything else
 
@@ -64,5 +61,5 @@ If the owner asks for a review, give a subagent only this map plus the files you
 ## 6. After approval, write the doc
 
 - Create `docs/$area.md` following the shape of the existing docs (e.g. [auth.md](../../../docs/auth.md)): a short intro (what it is, "run with `/plan-create-implementation $area`, then `/next-commit $area`", which docs it relates to), then **Status** (the milestones as unticked items, the first marked **Next**), **Principles** (from the brief), **Decisions** (the approved rows), **Open questions** (by milestone) and **Out of scope**.
-- Add the doc to CLAUDE.md's *Design docs* list, and `$area` to the module list in the `next-commit` and `plan-create-implementation` skills' argument hints.
+- Add the doc to CLAUDE.md's *Design docs* list,.
 - Docs only, no code. Hand off with the files changed, a suggested conventional commit message (`docs($area): plan the overview`), and a reminder to `/clear` before `/plan-create-implementation $area`.

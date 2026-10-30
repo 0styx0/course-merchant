@@ -12,15 +12,16 @@ Module: `$module` — the name of a `docs/<module>.md` that has a Status section
 
 ## 1. Find the work
 
-- Remember the module in the memory file `project-next-commit-module.md` (type `project`, body: the module name, with an index line in `MEMORY.md`). When a module is given, create or update that file (update, don't duplicate). With no module, read it and say which one you picked.
+- Module memory: [../_shared/module-memory.md](../_shared/module-memory.md).
 - With a module, read only the Status of `docs/$module.md`. With none and no memory file, run `grep -n Next docs/*.md` and read the Status of the matches. Take the item marked **Next**.
 - Ask instead of guessing when: there is no **Next** item in the remembered module; there are several (list them with one-line summaries, offer the remembered module's as the default); or the free-text task contradicts the **Next** item (show both).
 - If the **Next** item is a milestone not yet split into commits, invoke the `plan-create-implementation` skill (Skill tool, with `$module` as the argument) instead of stopping. Once it finishes, stop: its hand-off tells the owner what to review and when to `/clear` before `/next-commit`.
+- Read the item's commit line (format: [../_shared/commit-line.md](../_shared/commit-line.md)): its Behaviours seed the test table, Settled lists the decisions already made, Done when is the verification. If the line lacks these, say so in the outline.
 - Read what the item needs: the doc's sections about it, and the files it links.
 - Look for existing patterns and helpers before outlining: read one sibling of each kind of file you'll add, and grep for an existing helper before planning a new one.
 - Search for specific things; skip wide surveys. Read a sibling by line range when you only need a pattern. Never read generated files whole.
 - Run the size check in [../_shared/commit-size.md](../_shared/commit-size.md) now that you have read the code. If it fails, stop as it says.
-- Decide whether the commit is **mechanical** (rule in [outline.md](outline.md)). For a change that alters no behaviour, run `test:coverage` on the files you'll touch (commands in the package CLAUDE.md files). If a touched line or branch is uncovered, the missing test is its own commit first and must pass against the old code; say so in the outline. Skip for pure moves, renames and doc-only commits.
+- Decide whether the commit is **mechanical** (rule in [outline.md](outline.md)); the line's *(mechanical)* flag is only a hint. For a change that alters no behaviour, run `test:coverage` on the files you'll touch (commands in the package CLAUDE.md files). If a touched line or branch is uncovered, the missing test is its own commit first and must pass against the old code; say so in the outline. Skip for pure moves, renames and doc-only commits.
 - Run `git status --short`. Leave uncommitted changes from other work alone. If they overlap files you'll touch, stop and ask: hunks can't be split.
 
 ## 2. Outline
