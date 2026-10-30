@@ -12,7 +12,7 @@ A commit is **mechanical** only if it changes no logic lines, or existing tests 
 
 Give a **short outline** of about 5 lines, then end the turn (no tool calls after it in the same message) and wait for the owner's reply.
 - It has: the heading sentence; the files as links (with the per-folder BEFORE/AFTER diagram for moves); the check that proves nothing changed (type check, test count before and after); the doc tick; the file count.
-- Leave out *Terms*, *Trade-offs*, *Config*, *Questions* and *Tests* unless one applies.
+- Leave out the flow diagram (it is for commits with logic), *Terms*, *Trade-offs*, *Config*, *Questions* and *Tests* unless one applies.
 - Use the full outline, and wait, if the commit has new logic, a changed lint rule, a new decision row, a question for the owner, or code the tests don't pin.
 - If a commit labelled mechanical turns out to change behaviour or design while you work, stop and give the full outline.
 
@@ -20,7 +20,7 @@ Give a **short outline** of about 5 lines, then end the turn (no tool calls afte
 
 A commit whose plan line already settled its design gets the short outline, but the owner's reply is still required. It qualifies only if all three hold: the line has no open question; nothing read in step 1 deviates from it (files, behaviours, contract, decisions); no decision row will be added. A choice the line leaves open counts as an open question: any user-visible text, error code or error shape that the line does not state means the full outline, and you wait. A note saying "my pick" in a short outline is not approval. It is not required to be free of logic.
 
-- Give the same ~5-line outline as for mechanical commits, plus the test table, then end the turn and wait for the owner's reply.
+- Give the same ~5-line outline as for mechanical commits, plus the flow diagram ([../_shared/flow-diagram.md](../_shared/flow-diagram.md)) and the test table, then end the turn and wait for the owner's reply.
 - If any condition fails while you work, stop and give the full outline.
 - The hand-off lists any deviation.
 
@@ -31,6 +31,8 @@ Give the outline and wait for the go-ahead. Write no code before approval. In pl
 - **Heading:** a plain-language sentence saying what the commit does (for example "Send queued emails automatically"), not a class or file name.
 - **Terms:** define every specialized term the outline uses: what it means here, why use it, the alternatives.
 - **What:** each file to add or change, as links, with what changes in it, and the total file count. For each new function longer than about 15 lines, list the small named functions it will be composed of, so the split is reviewed before any code exists. Name the existing helpers you will reuse. For moves, splits and renames, include the per-folder diagrams.
+- **Shared with the sibling:** for a commit that adds files beside a sibling (create and edit, two pages), list what is reused from it and what is copied. A copy needs a reason it cannot be shared; if there is none, extract the shared piece in this commit and list it under *What*.
+- **Flow:** for a commit with logic, the diagram in [../_shared/flow-diagram.md](../_shared/flow-diagram.md), so the owner approves the behaviour and not only the files.
 - **Why:** the reason this is the next step, and how it fits the design doc.
 - **Trade-offs:** only alternatives that were strong contenders, one bullet each: what it would give, what it would cost, why you didn't pick it. If no alternative is strong, write "none worth listing"; never add a weak one to fill the section.
 - **Config:** keep module-specific settings inside that module, not in global config. If that would add real complexity, say so first.

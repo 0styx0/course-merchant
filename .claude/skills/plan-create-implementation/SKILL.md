@@ -35,6 +35,7 @@ Run each *Re-measure* command and compare with what the section assumes, then lo
 ## 4. Design what commits share
 
 Follow [architecture-checklist.md](architecture-checklist.md). Write down only what more than one commit depends on or what is expensive to change: shared data shapes, module and file boundaries, user-visible behaviour, security and limits. Define each new term once.
+- Draw the milestone's flow as in [../_shared/flow-diagram.md](../_shared/flow-diagram.md), then use it to split the commits in step 5.
 
 ## 5. Split into commits
 
@@ -45,7 +46,7 @@ Follow [architecture-checklist.md](architecture-checklist.md). Write down only w
 
 ## 6. Check the plan before presenting
 
-Run the self-check in [review.md](review.md): every line dry-run through the size check and the test-table question, folder counts, order. Fix what fails. Then the subagent review in the same file when it applies.
+Run the self-check in [review.md](review.md): every line dry-run through the size check and the test-table question, folder counts, order. Fix what fails. Check that every branch in the flow diagram has exactly one commit that builds it. Then the subagent review in the same file when it applies.
 
 ## 7. Present
 
@@ -55,4 +56,5 @@ Use [present.md](present.md). In plan mode present with ExitPlanMode; otherwise 
 
 - Replace the milestone's Status line with its commit lines (first one **Next**), in the layout of [../_shared/commit-line.md](../_shared/commit-line.md): a sub-bullet per field and one nested bullet per file, behaviour or other item. Every failure behaviour names the error code or message the caller sees; if you cannot name it, it is an open question. Never write a field as a `;`-joined paragraph. Extend the existing `## Step N. <milestone>` section (do not add a second one) with the design notes: keep *Done when* and *Builds on*, delete *Re-measure* and *Blocks the split* once answered, and mark notes that are only for building as *(temporary)* so `/next-commit` can cut them later. Add the approved decision rows. Move settled questions out of *Open questions*.
 - If the plan differs from the overview (an order change, a milestone added, cut or re-sized), add a row to the doc's *Changes* log.
+- Put the flow diagram in the milestone's `## Step N.` section as a design note marked *(temporary)*, so `/next-commit` can reuse it and cut it when the step ships.
 - Docs only. Hand off with the files changed, `` `docs($module): plan step N` `` as the suggested commit message, and a reminder to `/clear` before `/next-commit $module`.

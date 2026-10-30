@@ -9,6 +9,7 @@ Used in step 5 of [SKILL.md](SKILL.md). Keep it short, and write every summary b
   - For a new file, use its first function.
   - When nothing in the file is a function (a doc or YAML), use the first modified line.
   - For moves, add the same per-folder BEFORE/AFTER diagrams as in the outline.
+- The flow diagram as built ([../_shared/flow-diagram.md](../_shared/flow-diagram.md)), for commits with logic. Mark steps that differ from the outline `CHANGED`, with the reason (the same reason the *Deviations* line gives).
 - The verification result.
   - When everything passes, a single line such as `Passed: lint, type check, unit, e2e`.
   - Detail a command only if it failed, with its output.
