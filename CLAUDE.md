@@ -48,9 +48,16 @@ Never hand-edit generated files (a hook refuses it), and never read them whole (
 ## Conventions
 
 - Conventional commit messages with scopes, e.g. `feat(checkout): …`, `refactor(e2e): …`, `test(fixtures): …`. No `Co-Authored-By` trailer.
+  - Write the subject in plain words a newcomer understands, saying what the commit lets the app do, e.g. `feat(course-edit): add the code that loads and saves a course's details`, not `feat(course-edit): add edit's start values and details save action`. No internal function or file names.
 - `ignore.md` at the root is a gitignored scratch file, not documentation.
 - **File names state everything the file exports.** Rename or split the file when its exports outgrow its name.
 - **A function name states what it returns.** A function that returns a formatter is `makeDateFormatter`, not `formatDate`.
+- **No vague names, for any function, variable, parameter or type.** A reader who sees only the name and its call site must know what it does, when it runs and what it works on.
+  - Name the trigger or the object, not a bare verb or noun: `showThrownProblem`, not `showRejected`; `removePriceRow`, not `removeRow`; `extraDetail`, not `note`.
+  - Avoid one-word names like `edit`, `apply`, `close`, `convert`, `part`, `failure`, `pick`, `when`, `warn`, `check`, `handle`, `data`.
+  - Two things in one codebase never share a name (a type and a component, two `isKnownTimeZone` checks).
+  - Before finishing code, reread each new name as a stranger would and rename what needs a comment to be understood.
+  - A name that is longer than the line limit allows is shortened by dropping filler words, not by becoming vague (the lint limit is 40 lines per function).
 - **At most 10 files per folder**, not counting sub-folders; spec files count. Generated and vendored code (`generated.ts`, `migrations/`, `components/ui/`) doesn't. The pre-commit hook ([check-folder-file-count.sh](.husky/check-folder-file-count.sh)) fails when a folder passes it; group the files by job in the same commit that adds the 11th. Name the folder for its job (`stripe/`, `fulfillment/`), never `utils/` or `misc/`.
 - **Folders group files by topic, so a newcomer can find things by name.**
   - Group files that change together or share a job (the form, the schedule summary, the time zone picker), not by file type or by "what was left over".
