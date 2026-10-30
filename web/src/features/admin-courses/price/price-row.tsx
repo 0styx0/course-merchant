@@ -11,7 +11,7 @@ import {
 import { priceRowLabels } from "./price-row-labels";
 
 /** The paths of a row's three boxes, each holding a string. */
-export type PriceRowNames<T extends FieldValues> = {
+type PriceRowNames<T extends FieldValues> = {
   amountDollars: FieldPathByValue<T, string>;
   effectiveDate: FieldPathByValue<T, string>;
   effectiveTimeOfDay: FieldPathByValue<T, string>;

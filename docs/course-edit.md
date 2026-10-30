@@ -15,30 +15,13 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **1d.** Price rows take their names from the parent, and `PricingSection` is layout; create fills it in `create-course/create-course-sections.tsx`.
   - [x] **1e.** Basics and Course material are layout; create fills them in `create-course/create-course-sections.tsx`, with the image and description as its own children.
   - [x] **1f.** The error list takes its fields from the form. The label text and price-row names are shared in `course-form/fields/`; create lists its own fields in `create-course/create-course-fields.ts`.
-- [ ] **2. Edit page loads and saves the details.** A separate edit form prefills name, summary, description, content link and time zone, saves with a full PUT, and goes to `/`. Start and end times, prices and status go back unchanged.
+- [x] **2. Edit page loads and saves the details.** A separate edit form prefills name, summary, description, content link and time zone, saves with a full PUT, and goes to `/`. Start and end times, prices and status go back unchanged.
   - [x] **2a.** `DescriptionField` and `SaveButton` (takes its label) are shared in `course-form/sections/`, and `scheduleSentence` is exported from `schedule-summary.ts`; create behaves the same.
   - [x] **2b.** `focusField` and `useServerProblem` are shared and generic over the form type (`useServerProblem` takes `setError` and an optional note for the rejected message); create keeps its "saved as a draft" note.
   - [x] **2c.** `toEditCourseStart` turns an `AdminCourse` into the five edited values plus the kept parts; `updateCourseDetailsAction` checks them and saves with a full PUT (not used yet).
   - [x] **2d.** The edit form shows the given values and saves them (not routed yet); `refusalMessage`, the content link section and the error list with its leave warning are shared with create; `makeTwoRoundsRefusalHandler` in the update mock gives the two-refusals scenario for 2e.
-  - [ ] **2e.** The page at `/admin/courses/[courseId]/edit` loads the course and shows the form. **Next**
-    - *Files*:
-      - `app/admin/(signed-in)/courses/[courseId]/edit/page.tsx` (new): metadata "Edit course", no index
-      - [admin-courses.api.ts](../web/src/features/admin-courses/save-course/admin-courses.api.ts#L13) gets `getCourseAsAdmin`
-      - `mocks/handlers/get-course-as-admin.ts` (new), with scenarios:
-        - `success`, which uses `draftedAdminCourse`
-        - `notFound`, `invalidId` and `error`
-      - [node.ts](../web/src/mocks/node.ts#L9) registers it and the two-rounds update scenario (`makeTwoRoundsRefusalHandler`)
-      - `tests/browser/admin-courses/edit-course.spec.ts` (new)
-      - README *Status*: the web can edit a course's details
-    - *Behaviours*:
-      - a found course → the prefilled form; saving goes to `/`
-      - `COURSE_NOT_FOUND` (404) or `INVALID_COURSE_ID` (400) → Next's 404 page
-      - any other problem (500, or 401 against the real API) → `ProblemAlert` with the API's title and detail
-    - *Done when*:
-      - the Playwright spec passes
-      - in `dev:mock` the owner edits a name and saves
-      - the owner then walks the two-rounds scenario
-- [ ] **3. Schedule rules on edit.** An unchanged start or end time may be in the past; a changed one must be in the future; end is after start.
+  - [x] **2e.** The page at `/admin/courses/[courseId]/edit` loads the course and shows the form; a missing or malformed id gives Next's 404, any other problem shows `ProblemAlert`; the mock has `getCourseAsAdmin` scenarios and a `twoRounds` update scenario.
+- [ ] **3. Schedule rules on edit.** An unchanged start or end time may be in the past; a changed one must be in the future; end is after start. **Next** (not yet split into commits)
 - [ ] **4. Prices on edit.** Prices in effect are read-only; future prices can be edited, added and removed.
 - [ ] **5. Image upload on edit.** The page shows the current image and uploads a new one in its own step.
 - [ ] **6. Status on edit.** Published, drafted, archived and deleted, with a warning before publishing without an image and a confirmation before deleting.

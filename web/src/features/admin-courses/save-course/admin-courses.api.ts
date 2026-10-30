@@ -18,6 +18,16 @@ export async function createCourse(
   return toResult(await api.POST("/admin/courses", { body: request }));
 }
 
+export async function getCourseAsAdmin(
+  courseId: string,
+): Promise<SaveCourseResult> {
+  return toResult(
+    await api.GET("/admin/courses/{courseId}", {
+      params: { path: { courseId } },
+    }),
+  );
+}
+
 export async function updateCourse(
   courseId: string,
   request: UpdateCourseRequest,
