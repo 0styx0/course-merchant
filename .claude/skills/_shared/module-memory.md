@@ -1,1 +1,0 @@
-- Memory file `project-next-commit-module.md` (type `project`, body: the module name, index line in `MEMORY.md`). When a module is given, create or update it (no duplicates). With no module, read it and say which one you picked.

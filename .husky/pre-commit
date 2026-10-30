@@ -80,3 +80,6 @@ fi
 if [ "$web_touched" = true ] || staged_matches "$WEB_TEST_INPUTS"; then
   run_unit_tests web "$WEB_TEST_INPUTS"
 fi
+
+# At most 10 files per folder (CLAUDE.md *Conventions*)
+sh .husky/check-folder-file-count.sh

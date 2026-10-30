@@ -13,5 +13,6 @@ Used in step 5 of [SKILL.md](SKILL.md). The format itself is in [../_shared/comm
 - **Tests live in the commit that adds the behaviour.** List the behaviours, naming failure and edge cases, so the outline's table is not invented later.
 - **Mechanical flag:** only for commits that change no logic. If existing tests may not pin the touched lines, say "coverage first".
 - **Dependencies:** a line says which commit it needs when the order is not obvious.
-- **Folders:** if the commit adds files to a folder that would pass 7, the line includes the grouping.
+- **Folders:** if the commit adds files to a folder that would pass the files-per-folder limit in CLAUDE.md, the line includes the grouping.
+- **A spike milestone** is one commit line flagged `*(spike)*`: no tests; the code is deleted or kept only if the answer needs it; it ends with the answer written in the doc and a proposed decision row.
 - Leave out exact test code, file contents and names that can be chosen inside one commit.

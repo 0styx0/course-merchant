@@ -1,6 +1,6 @@
 # Quality checks
 
-Used in steps 2–4 of [SKILL.md](SKILL.md).
+Used in steps 2–4 of [SKILL.md](SKILL.md). The overall checklist is [../_shared/definition-of-done.md](../_shared/definition-of-done.md).
 
 ## Test table (in the outline)
 
@@ -14,6 +14,7 @@ One row per behaviour the commit adds or changes:
 - Leave a cell empty only when it truly doesn't apply, and say why in a few words.
 - Follow the test rules in `.claude/rules/` and the package CLAUDE.md files for where each kind of test lives.
 - A test must be able to fail: assert on the outcome, not on "it ran".
+- For a change of behaviour, write the tests first and run them against the untouched code; each must fail for the right reason before you implement.
 
 ## Structure
 

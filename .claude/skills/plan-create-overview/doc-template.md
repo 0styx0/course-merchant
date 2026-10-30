@@ -1,6 +1,6 @@
 # Doc template
 
-Used in step 7 of [SKILL.md](SKILL.md). Match [auth.md](../../../docs/auth.md). Never copy schemas or contract shapes into the doc.
+Used in step 7 of [SKILL.md](SKILL.md). Match the model doc named in [../_shared/project.md](../_shared/project.md). Never copy schemas or contract shapes into the doc.
 
 ```
 # <Area title>
@@ -18,7 +18,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 ## Principles
 ## Numbers        (only when there are limits or measurements: rule | value | source | command that measures it)
 ## Decisions      (| Decision | Why | Rejected |)
-## Step N. <milestone>   (one per milestone: the fields in _shared/milestone-line.md, in that order)
+## Step N. <milestone>   (one per milestone; the Next one has every field in _shared/milestone-line.md, the others only Why here, Needs, Size, Risk, Done when)
+## Changes       (| Date | What changed | Why |; only once the plan moves after approval: an order change, a milestone added, cut or re-sized)
 ## Open questions   (only questions with no milestone yet; others live in their Step)
 ## Out of scope
 ```

@@ -16,7 +16,7 @@ Take what the request says; ask for the rest in **one** message: who uses it; mu
 
 ## 2. Research what decides the shape
 
-- Read the Status of the docs this area touches, any spec for it, the rules in `.claude/rules/` and CLAUDE.md that apply, and the matching part of the OpenAPI file (grep, never whole).
+- Read the Status of the docs this area touches, any spec for it, the rules in `.claude/rules/` and CLAUDE.md that apply, and the matching part of the contract file named in [../_shared/project.md](../_shared/project.md) (grep, never whole).
 - For each milestone-to-be, find what it can build on, by grep. Record links, not summaries.
 - For each must-have and each milestone, run the library check in [library-check.md](library-check.md): is there a reliable library that is simpler than hand-rolling it? Record the candidates for step 3.
 - Facts that can change (counts, lists, versions) are never typed as numbers. Write the command that measures them, and run it once to learn the shape of the problem.
@@ -41,5 +41,4 @@ Use [present.md](present.md). In plan mode present with ExitPlanMode; otherwise 
 
 - Create `docs/$area.md` from [doc-template.md](doc-template.md), with only the approved decision rows.
 - Add the doc to CLAUDE.md's *Design docs* list.
-- Module memory: [../_shared/module-memory.md](../_shared/module-memory.md), with `$area`.
 - Docs only. Hand off with the files changed, `` `docs($area): plan the overview` `` as the suggested commit message, and a reminder to `/clear` before `/plan-create-implementation $area`.

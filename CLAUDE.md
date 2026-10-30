@@ -43,7 +43,7 @@ Run from the repo root with `yarn --cwd api …` / `yarn --cwd web …`, or from
 - `yarn --cwd api generate:api-types` → `api/src/generated/api.d.ts`
 - `yarn --cwd web generate:api-types` → `web/src/lib/api/generated.ts`
 
-Never hand-edit generated files, and never read them whole (they're large): grep for the type or operation name. Both sides alias the generated schemas rather than redefining them: `api/types.ts` (imported as `"types.js"`) and `web/src/lib/types.ts`.
+Never hand-edit generated files (a hook refuses it), and never read them whole (they're large): grep for the type or operation name. Both sides alias the generated schemas rather than redefining them: `api/types.ts` (imported as `"types.js"`) and `web/src/lib/types.ts`.
 
 ## Conventions
 
@@ -51,7 +51,8 @@ Never hand-edit generated files, and never read them whole (they're large): grep
 - `ignore.md` at the root is a gitignored scratch file, not documentation.
 - **File names state everything the file exports.** Rename or split the file when its exports outgrow its name.
 - **A function name states what it returns.** A function that returns a formatter is `makeDateFormatter`, not `formatDate`.
-- **At most 7 files per folder**, not counting sub-folders; spec files count. Generated and vendored code (`generated.ts`, `migrations/`, `components/ui/`) doesn't. No tool checks this, so when you add the 8th file, group the files by job in the same commit. Name the folder for its job (`stripe/`, `fulfillment/`), never `utils/` or `misc/`.
+- **At most 10 files per folder**, not counting sub-folders; spec files count. Generated and vendored code (`generated.ts`, `migrations/`, `components/ui/`) doesn't. The pre-commit hook ([check-folder-file-count.sh](.husky/check-folder-file-count.sh)) fails when a folder passes it; group the files by job in the same commit that adds the 11th. Name the folder for its job (`stripe/`, `fulfillment/`), never `utils/` or `misc/`.
+- **Labels:** milestone `3`, commit `3b`; never a deeper level (`3b-i`). Split a commit by re-lettering the rest.
 - To move files, move parent folders before their children; steps are in [api/CLAUDE.md](api/CLAUDE.md#moving-and-renaming-files).
 
 ## Working agreements
@@ -59,13 +60,13 @@ Never hand-edit generated files, and never read them whole (they're large): grep
 How the owner wants Claude to work on this repo.
 
 **Workflow**
-- **One commit at a time.** Before coding a commit, give a detailed, easy-to-read outline (what, why, trade-offs) and wait for the go-ahead. The exception is a **mechanical** commit (file moves, renames, splits with the same content, doc-only changes, fixes that make existing code pass a lint rule): give a short outline of about 5 lines and go straight on without waiting. Then implement, verify (type check and the relevant tests), and stop with a suggested conventional commit message. The owner makes the commits. Finish one commit's changes before starting the next: interactive `git add -p` isn't available, so mixed hunks can't be split. `/next-commit` ([skill](.claude/skills/next-commit/SKILL.md)) runs this routine from the **Next** item in `docs/`.
-- **Planning a new area.** `/plan-create-overview` ([skill](.claude/skills/plan-create-overview/SKILL.md)) writes a one-page map of milestones; when a milestone is **Next**, `/plan-create-implementation` ([skill](.claude/skills/plan-create-implementation/SKILL.md)) designs it and splits it into commits; `/next-commit` builds each commit. The overview ends with a self-check against its own Principles and a mandatory subagent review for maps over 4 milestones; milestones follow [.claude/skills/_shared/milestone-line.md](.claude/skills/_shared/milestone-line.md).
-- **Usage reviews.** At a natural pause (a step in a design doc's Status just finished, nothing complex in flight), run `/usage-review`.
+- **One commit at a time.** Before coding a commit, give a detailed, easy-to-read outline (what, why, trade-offs) and wait for the go-ahead. The exceptions are a **mechanical** commit (file moves, renames, splits with the same content, doc-only changes, fixes that make existing code pass a lint rule) and a **plan-conformant** commit (its plan line has no open question, the build finds no deviation from the line, and no decision row is added): give a short outline of about 5 lines (with the test table, for plan-conformant ones) and go straight on without waiting. Deviations are listed in the hand-off. Then implement, verify (type check and the relevant tests), and stop with a suggested conventional commit message. The owner makes the commits. Finish one commit's changes before starting the next: interactive `git add -p` isn't available, so mixed hunks can't be split. `/next-commit` ([skill](.claude/skills/next-commit/SKILL.md)) runs this routine from the **Next** item in `docs/`.
+- **Planning a new area.** `/plan-create-overview` ([skill](.claude/skills/plan-create-overview/SKILL.md)) writes a one-page map of milestones; when a milestone is **Next**, `/plan-create-implementation` ([skill](.claude/skills/plan-create-implementation/SKILL.md)) designs it and splits it into commits; `/next-commit` builds each commit. The overview ends with a self-check against its own Principles and a subagent review when the map has a decision row; repo-specific facts the skills use are in [.claude/skills/_shared/project.md](.claude/skills/_shared/project.md); milestones follow [.claude/skills/_shared/milestone-line.md](.claude/skills/_shared/milestone-line.md).
+- **Usage reviews.** About once a month, or when you ask about usage or token cost, run `/usage-review`.
 - **Keep the design docs current** in the same commit (see *Design docs*).
 
 **When to stop and ask**
-- **Ask before any design or behaviour change**, however small, even inside an approved refactor. Mentioning it afterwards isn't enough. If a commit planned as mechanical turns out to change behaviour or design, stop and give the full outline.
+- **Ask before any design or behaviour change**, even inside an approved refactor. A design or behaviour change is a deviation from the commit line, a Decision row or the contract; status ticks and details the commit line already covers (a helper's name, which sibling to copy) are not. Mentioning it afterwards isn't enough. If a commit planned as mechanical turns out to change behaviour or design, stop and give the full outline.
 - **Push back as information comes in.** Past decisions (in docs, plans or earlier in the session) aren't binding when new facts contradict them. Raise the conflict in chat with a recommendation instead of complying or working around it quietly.
 - **Decision rows in `docs/`:** propose the row text in chat and wait for an OK before editing. Status ticks and plan text can be updated without asking.
 - **Questions aren't instructions.** Answer them and stop; offer any resulting change as an option.

@@ -34,7 +34,7 @@ Each milestone delivers one outcome. A milestone is split into one-line commits 
 - **Rules apply to hand-written code, tests included.** Generated files and vendored `components/ui/` (shadcn) are exempt. The one rule tests skip is the 40-line function limit (see *Decisions*).
 - **No number without a reason.** Every limit has a row in *Numbers* saying where it came from and what was measured, and a comment beside it in the config.
 - **Names say what they hold.** A file name states everything the file exports. A function name states what it returns (the old `formatDate` returned a formatter, not a date).
-- **At most 7 files in a folder**, not counting sub-folders. Past that, group the files by job (as `payments/` was split into `stripe/`, `fulfillment/` and `sweeper/`). A guideline, not checked by a tool.
+- **At most 10 files in a folder**, not counting sub-folders. Past that, group the files by job (as `payments/` was split into `stripe/`, `fulfillment/` and `sweeper/`). Checked at commit by `.husky/check-folder-file-count.sh`.
 - **Pin behaviour before a refactor.** A refactor that changes no behaviour is only safe if a test would fail when it does.
 
 ## Numbers
@@ -48,7 +48,7 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 | Complexity (`complexity`) | 10 | McCabe's 1976 paper proposed 10 as the limit. ESLint's rule counts the same thing (independent paths through a function). | 3 over (API 1, web 2). |
 | File length (`max-lines`) | 250 | No principled source. Chosen just above the largest hand-written file, so it stops growth without forcing rewrites. | 0 over in hand-written `src`; only a generated file exceeds it. |
 | Nested ternary (`no-nested-ternary`) | error | Backs the *Simple ternaries only* rule. | 1 in API tests (fixed in 1a), 0 elsewhere in `src`. |
-| Files per folder | 7 | The owner's choice. The cleanup split `admin-courses/` (30 files) and `payments/`; 7 is about one screen of a file tree. | 9 folders over today (recounted before milestone 4; step 1's test splits fixed `test/e2e/courses` and `test/integration`): `web/src/features/admin-courses` 28, `web/src/features/courses` 16, `api/src/auth` 16, `api/src/courses` 13, `api/src/courses/test/unit` 11, `web/src/lib/api` 10 (9 without `generated.ts`), `api/src/email` 9, then 8 each in `description-editor` and `api/src/prisma`. |
+| Files per folder | 10 (was 7 until the folder check was added) | The owner's choice. The cleanup split `admin-courses/` (30 files) and `payments/`; 7 is about one screen of a file tree. | 9 folders over today (recounted before milestone 4; step 1's test splits fixed `test/e2e/courses` and `test/integration`): `web/src/features/admin-courses` 28, `web/src/features/courses` 16, `api/src/auth` 16, `api/src/courses` 13, `api/src/courses/test/unit` 11, `web/src/lib/api` 10 (9 without `generated.ts`), `api/src/email` 9, then 8 each in `description-editor` and `api/src/prisma`. |
 | Coverage threshold | none | The owner chose not to set one: a threshold invites tests written to hit the number. Coverage is used as a check before a refactor only. | Not measured yet. |
 | Short outline | about 5 lines | Enough to name the files and the check, short enough that "go" is a quick read. | n/a |
 
@@ -65,7 +65,7 @@ Measured on 2026-10-29 with the proposed rules run over `api/src` and `web/src`.
 | Mechanical steps get a short outline: moves, renames, splits, doc-only and lint-fix commits. | None of them change runtime behaviour; about 15 "go" turns in the cleanup were only approval. | Full outlines for everything. |
 | If a "mechanical" commit turns out to change behaviour or design, Claude stops and gives the full outline. | The no-wait rule is only safe while the commit really is mechanical. | Trusting the label from the plan. |
 | No coverage threshold. | See *Numbers*. | A percentage gate. |
-| 7 files per folder is a guideline, not a test. | A test would block commits over a judgement call. | A tiny test that counts files. |
+| 7 files per folder is a guideline, not a test. *Superseded:* the limit is 10 and a commit hook checks it. | Seven caused about six regrouping commits for one screen of tree; at 10 the count rarely forces a split that isn't a real group, so a mechanical check is cheap. | Keeping 7 unchecked, or exempting test folders only. |
 | The 9 folders over 7 files are fixed now, in milestone 4. | A rule the code already breaks gets ignored. This is the same "fix first, then enforce" principle as the lint rules. | Applying the rule only to folders touched from now on. |
 | Spec files count toward the 7. | The reason is scanning a file tree, and a tree full of specs is as hard to scan as one full of source. | Counting only source files. |
 | Coverage before a refactor is checked with a `test:coverage` script per package (unit tests only in the API); the old API `test:cov` is removed. | One short command that both the guides and the skill can name. It needs no database, and there is only one coverage script per package. | The raw vitest command in the docs (long flags that are easy to get wrong); a whole-package report (noisy). |
@@ -118,7 +118,7 @@ The commands are in [api/CLAUDE.md](../api/CLAUDE.md) and [web/CLAUDE.md](../web
 
 **Test specs.** A spec split by topic keeps its sub-folder named after the original spec; in `courses/test/unit/` those sub-folders are grouped further by topic (for example service, schemas, image).
 
-**Rules (4c, done).** Short rules in CLAUDE.md for what lint can't check: a file name states everything the file exports; a function name states what it returns; at most 7 files per folder, spec files included; group by job.
+**Rules (4c, done).** Short rules in CLAUDE.md for what lint can't check: a file name states everything the file exports; a function name states what it returns; at most 10 files per folder (7 when written), spec files included; group by job.
 
 ## Open questions
 
@@ -129,7 +129,7 @@ The commands are in [api/CLAUDE.md](../api/CLAUDE.md) and [web/CLAUDE.md](../web
 - New features and rewriting code that already passes.
 - A coverage percentage gate.
 - A tool that checks folder size.
-- Folders over 7 files that appear in generated or vendored code (`migrations/`, `components/ui/`, generated types).
+- Folders over the limit that appear in generated or vendored code (`migrations/`, `components/ui/`, generated types).
 
 ## Step 5. Short outlines for mechanical steps
 
@@ -147,6 +147,6 @@ The commands are in [api/CLAUDE.md](../api/CLAUDE.md) and [web/CLAUDE.md](../web
 
 **References to remove.** The CLAUDE.md doc list entry, the `code-style-cleanup` name in the `next-commit` skill's `argument-hint` and module list, and the link in this doc's intro (becomes plain text). A grep afterwards must find none.
 
-**Memory.** `project-next-commit-module.md` already names this module. `usage-reviews.md` gets one line saying the cleanup is closed.
+**Memory.** `usage-reviews.md` gets one line saying the cleanup is closed.
 
 **Mechanical.** Doc-only, so a short outline and no wait. Commit step 5's edits first, since CLAUDE.md, the skill and this doc are already modified.

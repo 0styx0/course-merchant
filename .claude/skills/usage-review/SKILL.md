@@ -1,6 +1,6 @@
 ---
 name: usage-review
-description: Review how the owner uses Claude on this repo, measured from session transcripts, and give a few ranked tips. Use at a natural pause (a design-doc step just finished) or when the owner asks about usage or token cost.
+description: Review how the owner uses Claude on this repo, measured from session transcripts, and give a few ranked tips. Use about once a month, or when the owner asks about usage or token cost.
 ---
 
 # Usage review
