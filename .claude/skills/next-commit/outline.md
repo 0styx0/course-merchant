@@ -4,13 +4,13 @@ Used in step 2 of [SKILL.md](SKILL.md). Terms, the diagram format for file moves
 
 ## Preflight line
 
-Every outline, short or full, starts with one line of evidence from step 1: `Preflight: size <n files, ok> | coverage <result, or n/a> | git <clean, or the overlap> | siblings read <files> | library API <docs link, only for an API the repo doesn't use yet>`. A missing item is a check that was skipped.
+Every outline, short or full, starts with one line of evidence from step 1: `Preflight: size <n files, ok> | coverage <result, or n/a> | git <the raw `git status --short` output, or `clean` only when the command printed nothing> | siblings read <files> | library API <docs link, only for an API the repo doesn't use yet>`. A missing item is a check that was skipped.
 
 ## Mechanical path
 
 A commit is **mechanical** only if it changes no logic lines, or existing tests already pin every touched line (the coverage check in step 1). Typical cases: file moves, renames, splits of a file with the same content, doc-only changes, lint-rule fixes that change no behaviour.
 
-Give a **short outline** of about 5 lines, then go straight to step 3. The short outline counts as approved.
+Give a **short outline** of about 5 lines, then end the turn (no tool calls after it in the same message) and wait for the owner's reply.
 - It has: the heading sentence; the files as links (with the per-folder BEFORE/AFTER diagram for moves); the check that proves nothing changed (type check, test count before and after); the doc tick; the file count.
 - Leave out *Terms*, *Trade-offs*, *Config*, *Questions* and *Tests* unless one applies.
 - Use the full outline, and wait, if the commit has new logic, a changed lint rule, a new decision row, a question for the owner, or code the tests don't pin.
@@ -18,9 +18,9 @@ Give a **short outline** of about 5 lines, then go straight to step 3. The short
 
 ## Plan-conformant path
 
-A commit whose plan line already settled its design needs no second approval. It qualifies only if all three hold: the line has no open question; nothing read in step 1 deviates from it (files, behaviours, contract, decisions); no decision row will be added. A choice the line leaves open counts as an open question: any user-visible text, error code or error shape that the line does not state means the full outline, and you wait. A note saying "my pick" in a short outline is not approval. It is not required to be free of logic.
+A commit whose plan line already settled its design gets the short outline, but the owner's reply is still required. It qualifies only if all three hold: the line has no open question; nothing read in step 1 deviates from it (files, behaviours, contract, decisions); no decision row will be added. A choice the line leaves open counts as an open question: any user-visible text, error code or error shape that the line does not state means the full outline, and you wait. A note saying "my pick" in a short outline is not approval. It is not required to be free of logic.
 
-- Give the same ~5-line outline as for mechanical commits, plus the test table, then go straight to step 3.
+- Give the same ~5-line outline as for mechanical commits, plus the test table, then end the turn and wait for the owner's reply.
 - If any condition fails while you work, stop and give the full outline.
 - The hand-off lists any deviation.
 
