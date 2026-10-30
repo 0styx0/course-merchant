@@ -37,7 +37,11 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **5d.** The form requires an image and uploads it after creating the draft (`use-save-course.ts`); a failed upload keeps the draft id, and the retry updates then uploads. The form types are `CourseFormWithImageValues` and `CheckedCourseFormWithImageValues`; `CourseFormValues` stays the saved fields the actions check.
   - [x] **5e.** Browser tests with a real image (`src/mocks/fixtures/course-image.png`, 800 × 450): save with an image and land on `/`; a failed upload keeps the draft and the retry updates it, then uploads; no console errors.
 
-- [ ] **6. Form behaviour fixes** (schedule validation timing and messages, end date picker, steady input width; design in *Step 6* below). **Next**
+- [ ] **6. Form behaviour fixes**, in four commits (design in *Step 6* below):
+  - [ ] **6a.** Schedule fields are marked touched and re-checked when a date or time changes. **Next**
+  - [ ] **6b.** Schedule-wide messages show under the Schedule heading.
+  - [ ] **6c.** The end date picker opens at the start date.
+  - [ ] **6d.** The status icon no longer shifts the input.
 - [ ] **7. Layout and wording** (price outline, field order, section names and cards; design in *Step 7* below).
 
 Not part of this work: publishing from the form (a "Publish after saving" box and the update to `published`; it belongs to the later edit-a-course work, where the status is chosen), admin login and logout, the admin course page and list, editing a course (loading a stored document into the editor is `setContent`, no conversion), the payout estimate under the price (payments step 7), a Playwright test comparing the image preview with the saved image, and plain-text or email versions of the description (the static renderer can produce Markdown later).
@@ -292,15 +296,60 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
 - Why here: the owner used the page after step 5 and found validation and input-width problems. Behaviour fixes come before layout, so the layout commits land on stable code.
 - Needs: none.
 - Builds on: [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx) (the schedule fields), [course-form-cross-field-issues.ts](../web/src/features/admin-courses/validation/course-form-cross-field-issues.ts) (schedule messages), [validated-field.tsx](../web/src/components/form/validated-field.tsx) (the status icon). `mode: "onTouched"` is in the *Principles*.
-- Size: 4 commits.
-  - **6a.** Schedule validation runs when a date or time changes, so picker-only use updates errors, and a corrected value clears "The start time must be in the future." at once. Re-check a field only if it is touched or already shows an error, plus the cross-field checks, so "End date required" doesn't appear while the admin is still on the start date.
-  - **6b.** Schedule-wide messages (future start, end after start, daylight-saving gap, valid date) show under the Schedule heading, with the field path kept (see the decision row). Field-specific ones ("required") stay on their field.
-  - **6c.** The end date picker opens at the start date: the end input's `min` is the start date. Check in Chrome (`dev:mock`) first that the picker opens at the start month. If it doesn't, the fallback is copying the start date into an empty end date; that changes behaviour, so ask first.
-  - **6d.** The status icon no longer shifts the input: `StatusIcon` always renders a `size-4 shrink-0` slot, empty when there is nothing to show. The X and the check both stay. Test: the slot is there before and after an error appears. Update the Step 3 text ("red X icon beside the input").
-- Risk: Chrome may ignore `min` when choosing which month the picker opens at (6c); triggering all schedule fields on change would show premature "required" errors (6a handles it).
 - Done when: unit and browser tests pass; in `yarn --cwd web dev:mock`, using only the pickers, an invalid date shows its error at once and clears when corrected; the end date picker opens at the start month; inputs keep their width when an error appears or clears.
-- Can wait: how the schedule-wide messages are told apart from "required" ones (by message source in the cross-field file, not by text).
-- Re-measure: `yarn --cwd web test:unit`, `yarn --cwd web test:browser`.
+- Risk: Chrome may ignore `min` when choosing which month the picker opens at (6c).
+- Design notes:
+  - Cross-field issues have type `custom` and the "required" checks have `too_small`. [The resolver](../web/node_modules/@hookform/resolvers/zod/src/zod.ts) copies the issue code into the error's `type`, so 6b tells schedule-wide messages from "required" ones by `type === "custom"`.
+  - A native date picker may never blur its input, and `ValidatedField` shows a problem only for a touched field. So in 6a a change marks the field touched (`setValue` with `shouldTouch` and `shouldValidate`). The green check then shows right after a pick, for schedule fields only (owner approved).
+  - Price rows keep their messages; this step covers the schedule only.
+  - 6c and 6d don't depend on 6a or 6b.
+
+- [ ] **6a.** Schedule fields are marked touched and re-checked when a date or time changes. **Next**
+  - *Files*:
+    - [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx#L141) (`StartFields`' `onChange` becomes one shared handler on all four date and time fields)
+    - `course-form/course-form.schedule-validation.test.tsx` (new; the folder goes from 8 to 9 files)
+  - *Behaviours*:
+    - A changed field is marked touched and re-checked, with no blur needed.
+    - A start time in the past, then corrected, shows "The start time must be in the future." at once, and the message clears at once when the value is fixed.
+    - Changing the start also re-checks the end, but only if the end is touched or already shows an error.
+    - Changing only the start date never shows "End date required" in the field or the error list.
+    - A field the admin hasn't changed or touched is never re-checked.
+  - *Settled*: the `onTouched` Principle; the design notes above.
+  - *Done when*: the new tests pass, and in `dev:mock` a picker-only invalid date shows its error at once.
+- [ ] **6b.** Schedule-wide messages show under the Schedule heading.
+  - *Files*:
+    - [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx#L172) (message line in `ScheduleSection`)
+    - [course-form-fields.tsx](../web/src/features/admin-courses/course-form-fields.tsx#L98) and [validated-field.tsx](../web/src/components/form/validated-field.tsx#L66) (keep the red border and X, hide the message under the field)
+    - tests in `course-form/`
+  - *Behaviours*:
+    - A schedule-wide message shows once, as a line under the heading (future start, end after start, daylight-saving gap, invalid date).
+    - The time field keeps its red border and X, and its `aria-describedby` points at that line.
+    - The error list still has its entry and link, and focus still works.
+    - "required" messages stay on their own field.
+    - The line is empty when there is no schedule-wide problem.
+  - *Needs*: 6a (the shared change handler).
+  - *Settled*: the decision row "Cross-field schedule messages keep their field path".
+- [ ] **6c.** The end date picker opens at the start date.
+  - *Files*:
+    - [course-form-fields.tsx](../web/src/features/admin-courses/course-form-fields.tsx#L98) (`InputField` takes `min`)
+    - [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx#L172)
+    - test in `course-form/`
+  - *Behaviours*:
+    - The end date input's `min` is the start date.
+    - An empty start date means no `min`.
+    - First check in Chrome (`dev:mock`) that the picker opens at the start month.
+    - If it doesn't, stop and ask: the fallback of copying the start date into an empty end date changes behaviour.
+  - *Settled*: the decision row "The end date input's `min` is the start date".
+- [ ] **6d.** The status icon no longer shifts the input.
+  - *Files*:
+    - [validated-field.tsx](../web/src/components/form/validated-field.tsx#L40)
+    - test
+    - the Step 3 text ("red X icon beside the input")
+  - *Behaviours*:
+    - `StatusIcon` always renders a `size-4 shrink-0` slot, empty when there is nothing to show.
+    - The slot is there before an error appears and after it clears.
+    - The X and the check both stay.
+  - *Settled*: the decision row "The status icon has a fixed slot".
 
 ## Step 7. Layout and wording
 
