@@ -13,6 +13,12 @@ Used in step 5 of [SKILL.md](SKILL.md). Keep it short, and write every summary b
   - When everything passes, a single line such as `Passed: lint, type check, unit, e2e`.
   - Detail a command only if it failed, with its output.
   - For API commits, also `Ran it: <what you did and saw>`. For UI commits, `Ran it: <the states walked in Chrome, what you saw>` and the GIF file name.
+- `Tests:` the overview first, then the list of tests added or modified.
+  - The overview is what the hand-off already carries: the counts, one line per test written first and why it failed, and any test that passed on the old code.
+  - The list is a table in the same format as the files-changed table: links | high-level changes.
+    - One row per test file, with the link on the first added or modified test, as `[file.test.tsx](path/file.test.tsx#L42)`.
+    - The changes column names each test added or modified in that file, in plain words, and says which are new and which were changed.
+    - Fixtures, mocks and other test helpers go in the files-changed table, not here.
 - `Deviations from the plan line: none`, or what differed and why (a file, a behaviour, a decision made on the way).
 - `Reviews:` which of `/code-review` and `/security-review` ran.
   - Give each finding as fixed or rejected, with a reason.
