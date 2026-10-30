@@ -38,8 +38,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **5e.** Browser tests with a real image (`src/mocks/fixtures/course-image.png`, 800 × 450): save with an image and land on `/`; a failed upload keeps the draft and the retry updates it, then uploads; no console errors.
 
 - [ ] **6. Form behaviour fixes**, in four commits (design in *Step 6* below):
-  - [ ] **6a.** Schedule fields are marked touched and re-checked when a date or time changes. **Next**
-  - [ ] **6b.** Schedule-wide messages show under the Schedule heading.
+  - [x] **6a.** A change to a schedule date or time marks the field touched and re-checks it, plus the other schedule fields already touched or showing an error.
+  - [ ] **6b.** Schedule-wide messages show under the Schedule heading. **Next**
   - [ ] **6c.** The end date picker opens at the start date.
   - [ ] **6d.** The status icon no longer shifts the input.
 - [ ] **7. Layout and wording** (price outline, field order, section names and cards; design in *Step 7* below).
@@ -304,19 +304,7 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
   - Price rows keep their messages; this step covers the schedule only.
   - 6c and 6d don't depend on 6a or 6b.
 
-- [ ] **6a.** Schedule fields are marked touched and re-checked when a date or time changes. **Next**
-  - *Files*:
-    - [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx#L141) (`StartFields`' `onChange` becomes one shared handler on all four date and time fields)
-    - `course-form/course-form.schedule-validation.test.tsx` (new; the folder goes from 8 to 9 files)
-  - *Behaviours*:
-    - A changed field is marked touched and re-checked, with no blur needed.
-    - A start time in the past, then corrected, shows "The start time must be in the future." at once, and the message clears at once when the value is fixed.
-    - Changing the start also re-checks the end, but only if the end is touched or already shows an error.
-    - Changing only the start date never shows "End date required" in the field or the error list.
-    - A field the admin hasn't changed or touched is never re-checked.
-  - *Settled*: the `onTouched` Principle; the design notes above.
-  - *Done when*: the new tests pass, and in `dev:mock` a picker-only invalid date shows its error at once.
-- [ ] **6b.** Schedule-wide messages show under the Schedule heading.
+- [ ] **6b.** Schedule-wide messages show under the Schedule heading. **Next**
   - *Files*:
     - [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx#L172) (message line in `ScheduleSection`)
     - [course-form-fields.tsx](../web/src/features/admin-courses/course-form-fields.tsx#L98) and [validated-field.tsx](../web/src/components/form/validated-field.tsx#L66) (keep the red border and X, hide the message under the field)

@@ -12,7 +12,7 @@ Used in step 5 of [SKILL.md](SKILL.md). Keep it short, and write every summary b
 - The verification result.
   - When everything passes, a single line such as `Passed: lint, type check, unit, e2e`.
   - Detail a command only if it failed, with its output.
-  - For UI and API commits, also `Ran it: <what you did and saw>`.
+  - For API commits, also `Ran it: <what you did and saw>`. For UI commits, `Ran it: <the states walked in Chrome, what you saw>` and the GIF file name.
 - `Deviations from the plan line: none`, or what differed and why (a file, a behaviour, a decision made on the way).
 - `Reviews:` which of `/code-review` and `/security-review` ran.
   - Give each finding as fixed or rejected, with a reason.

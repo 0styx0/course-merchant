@@ -10,6 +10,7 @@ import { FormSection } from "@/components/form/form-section";
 import { Button } from "@/components/ui/button";
 
 import { InputField, TimeZoneField } from "./course-form-fields";
+import { ScheduleDateTimeFields } from "./course-form-schedule-fields";
 import {
   COURSE_NAME_MAX_LENGTH,
   COURSE_SUMMARY_MAX_LENGTH,
@@ -138,31 +139,6 @@ export function ContentSection({ form }: { form: CourseFormApi }) {
   );
 }
 
-/** The start date and time; changing either re-checks the end. */
-function StartFields({ form }: { form: CourseFormApi }) {
-  const registerOptions = {
-    onChange: () => form.trigger(["schedule.endDate", "schedule.endTimeOfDay"]),
-  };
-  return (
-    <>
-      <InputField
-        form={form}
-        name="schedule.startDate"
-        label="Start date"
-        type="date"
-        registerOptions={registerOptions}
-      />
-      <InputField
-        form={form}
-        name="schedule.startTimeOfDay"
-        label="Start time"
-        type="time"
-        registerOptions={registerOptions}
-      />
-    </>
-  );
-}
-
 /** When the course starts and ends, and the zone those times are in. */
 export function ScheduleSection({
   form,
@@ -179,19 +155,7 @@ export function ScheduleSection({
       description="When the course runs."
       className="grid gap-4 sm:grid-cols-2"
     >
-      <StartFields form={form} />
-      <InputField
-        form={form}
-        name="schedule.endDate"
-        label="End date"
-        type="date"
-      />
-      <InputField
-        form={form}
-        name="schedule.endTimeOfDay"
-        label="End time"
-        type="time"
-      />
+      <ScheduleDateTimeFields form={form} />
       <TimeZoneField form={form} timeZones={timeZones} />
       <p aria-live="polite" className="text-sm sm:col-span-2">
         {scheduleText}

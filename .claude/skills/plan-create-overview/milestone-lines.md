@@ -9,6 +9,7 @@ Used in step 4 of [SKILL.md](SKILL.md). The format itself is in [../_shared/mile
 - **Fix before enforce.** Any milestone that turns on a check comes after the one that fixes what the check would reject.
 - **Chores that touch unrelated places** (memory, skills, CLAUDE.md edits) are not a milestone together; attach each to the milestone it belongs to, or drop it.
 - **Each milestone's *Done when* is something to run or look at** (a command's output, a page, a test list). "Reviewed" is not a check.
+  - A UI milestone's *Done when* ends with "the owner has used the page in `dev:mock`". Their findings go into the milestone's last commit, or one follow-up commit, before the next milestone starts, so they don't pile up into a separate UX pass.
 - **Facts are re-measured, not frozen.** Write `Re-measure: <command>`. A count appears only inside a *Numbers* row with its date and command.
 
 ## Example (from the guardrails area, as it should have been written)
