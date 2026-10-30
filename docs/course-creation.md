@@ -23,14 +23,14 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **4a.** Formatting toolbar (`description-editor/description-toolbar.tsx`, shadcn `toggle`): Bold, Italic, Heading, Subheading, Bulleted list, Numbered list.
   - [x] **4b.** Link and Remove link buttons after the six format toggles (`description-editor/description-link-field.tsx`, `description-editor/description-link.ts`).
   - [x] **4c.** Google Docs paste fixture and tests (`src/mocks/fixtures/google-docs-paste.html`, `description-editor/description-paste.test.ts`), the browser paste test, and the admin.md list of what pasting doesn't keep.
-- [ ] **UX pass on the create form**, after step 4 and before step 5, from a UX review of the page (design in *UX pass* below). Grouped by complexity; each group is one commit, outlined and approved first as usual:
+- [x] **UX pass on the create form**, after step 4 and before step 5, from a UX review of the page (design in *UX pass* below). Grouped by complexity; each group is one commit, outlined and approved first as usual:
   - [x] **U1. Copy and small layout fixes** (wording and markup only). Also: a shared `CharacterCount` (name and summary counters), and the editor's counter now comes from Tiptap's `CharacterCount` extension (`@tiptap/extensions`, a direct dependency).
   - [x] **U2. Field and component behaviour** (price input, remove button, error summary height, time zone default, leave warning).
-  - [ ] **U3. Live summaries and the time zone picker** (new components), in three commits (see *UX pass* below):
+  - [x] **U3. Live summaries and the time zone picker** (new components), in three commits (see *UX pass* below):
     - [x] **U3a.** Schedule summary sentence.
     - [x] **U3b.** Price schedule list.
-    - [ ] **U3c.** Searchable time zone picker. **Next**
-- [ ] **5. Image and publish in the create form.**
+    - [x] **U3c.** Searchable time zone picker (shadcn Combobox, pick-only).
+- [ ] **5. Image and publish in the create form.** **Next**
 
 Not part of this work: admin login and logout, the admin course page and list, editing a course (loading a stored document into the editor is `setContent`, no conversion), the payout estimate under the price (payments step 7), a Playwright test comparing the image preview with the saved image, and plain-text or email versions of the description (the static renderer can produce Markdown later).
 
@@ -72,7 +72,8 @@ Not part of this work: admin login and logout, the admin course page and list, e
 | An empty "takes effect" becomes now + 1 minute | The API refuses times in the past, and "now" is already past when the API checks it. Cost: a course published later can show up to a minute after its price's start | Sending "now" |
 | After a refused submit, focus moves to the error list | Screen readers read every problem; each link jumps to its field | Focusing the first invalid field |
 | [temporal-polyfill](https://github.com/fullcalendar/temporal-polyfill) for wall-clock time to UTC | Correct across daylight-saving changes, with `disambiguation: "reject"` for skipped or repeated times. About a third of the size of [@js-temporal/polyfill](https://github.com/js-temporal/temporal-polyfill) | `@js-temporal/polyfill`; hand-written offset maths |
-| Native `date`, `time`, `<select>` and file inputs | They already do the job | Date pickers, a time zone combobox, [react-dropzone](https://react-dropzone.js.org), [next-safe-action](https://next-safe-action.dev) |
+| Native `date`, `time` and file inputs | They already do the job | Date pickers, [react-dropzone](https://react-dropzone.js.org), [next-safe-action](https://next-safe-action.dev) |
+| The time zone is a searchable shadcn Combobox (Base UI underneath) that accepts only a listed zone | About 420 names are hard to scroll; the API accepts all of them, so a short list would block some admins. shadcn's combobox is already in the project's style. Matching is a case-insensitive "contains" with `_` as a space, no aliases (EST) | A short list of common zones; keeping the native select; free text in the box |
 | The create form is built in two commits: the plain fields and schedule first, price rows second | The full form is too large to review as one change; price rows are an independent addition (`useFieldArray`) | One commit for the whole form |
 | Step 4 is built in three commits: toolbar, link, paste | Each part has its own tests, and the paste fixture waits on the owner's clipboard sample | One commit for all of step 4 |
 | The Link button checks the address against the API's schemes (`https:`, `http:`, `mailto:`, `tel:`, full address, at most 2,048 characters) before `setLink`; the shared extension list keeps Tiptap's default `isAllowedUri` | Tiptap's default also accepts `ftp:`, `sms:` and addresses with no scheme, which the API refuses, so the admin would only find out on save. A stricter `isAllowedUri` in the shared list would also stop autolinking `www.example.com` (autolink checks the raw word) and change the API's copy | A stricter `isAllowedUri` in the shared extension list; relying on `setLink`'s own check |
@@ -304,7 +305,7 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
 
 11. **U3a, done.** A plain-sentence summary of the schedule, e.g. "Runs Jan 3, 2027, 9:00 AM to Feb 28, 2027, 5:00 PM (America/New_York). Lasts 56 days." It replaced the "Lasts X" line. Dates are US style with a fixed `en-US` locale (owner's choice: prices are US dollars), so the text is the same in every browser.
 12. **U3b, done.** A summary of the price schedule under the rows: a lead line with the time zone, then a Roman-numeral ordered list with one line per price in start order, e.g. "I. $99 from when the course is published", "II. $79 from Feb 1, 2027, 9:00 AM". A list, not one sentence, so seven prices stay readable. It always shows. Only the broken piece reads "Error", in red: "$79 from Error" for an incomplete, impossible or repeated start, "$Error from Feb 1, 2027, 9:00 AM" for an invalid amount. A price not typed yet is an empty item. Lines with an "Error" start go after the dated ones; `0` reads "Free".
-13. A searchable time zone picker or a short list of common zones, instead of the native select.
+13. **U3c, done.** A searchable time zone picker instead of the native select: typing narrows the list, and the value changes only when a zone is picked.
 
 **Out of scope here:** where the form goes after saving, and any "saved" confirmation. The owner will change the redirect later; add the confirmation with it.
 

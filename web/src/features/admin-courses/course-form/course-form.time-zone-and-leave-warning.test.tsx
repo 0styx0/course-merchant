@@ -28,7 +28,9 @@ describe("CourseForm", () => {
     } as Intl.ResolvedDateTimeFormatOptions);
     renderForm();
     await waitFor(() =>
-      expect(screen.getByLabelText("Time zone")).toHaveValue("Europe/Paris"),
+      expect(screen.getByRole("combobox", { name: "Time zone" })).toHaveValue(
+        "Europe/Paris",
+      ),
     );
     vi.restoreAllMocks();
   });
@@ -38,8 +40,22 @@ describe("CourseForm", () => {
       timeZone: "UTC",
     } as Intl.ResolvedDateTimeFormatOptions);
     renderForm();
-    expect(screen.getByLabelText("Time zone")).toHaveValue("America/New_York");
+    expect(screen.getByRole("combobox", { name: "Time zone" })).toHaveValue(
+      "America/New_York",
+    );
     vi.restoreAllMocks();
+  });
+
+  it("uses the zone the admin picks in the schedule summary", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await fillValidForm(user);
+    const zone = screen.getByRole("combobox", { name: "Time zone" });
+    await user.clear(zone);
+    await user.type(zone, "paris");
+    await user.click(screen.getByRole("option", { name: "Europe/Paris" }));
+    expect(await screen.findAllByText(/Europe\/Paris/)).not.toHaveLength(0);
+    expect(screen.getByText(/^Runs .*\(Europe\/Paris\)/)).toBeVisible();
   });
 
   describe("leave-page warning", () => {

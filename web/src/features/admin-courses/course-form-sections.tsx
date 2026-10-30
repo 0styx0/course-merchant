@@ -9,7 +9,7 @@ import {
 import { FormSection } from "@/components/form/form-section";
 import { Button } from "@/components/ui/button";
 
-import { InputField, SelectField } from "./course-form-fields";
+import { InputField, TimeZoneField } from "./course-form-fields";
 import {
   COURSE_NAME_MAX_LENGTH,
   COURSE_SUMMARY_MAX_LENGTH,
@@ -105,14 +105,6 @@ export function ContentSection({ form }: { form: CourseFormApi }) {
   );
 }
 
-function TimeZoneOptions({ timeZones }: { timeZones: string[] }) {
-  return timeZones.map((timeZone) => (
-    <option key={timeZone} value={timeZone}>
-      {timeZone}
-    </option>
-  ));
-}
-
 /** The start date and time; changing either re-checks the end. */
 function StartFields({ form }: { form: CourseFormApi }) {
   const registerOptions = {
@@ -135,27 +127,6 @@ function StartFields({ form }: { form: CourseFormApi }) {
         registerOptions={registerOptions}
       />
     </>
-  );
-}
-
-function TimeZoneField({
-  form,
-  timeZones,
-}: {
-  form: CourseFormApi;
-  timeZones: string[];
-}) {
-  return (
-    <SelectField
-      form={form}
-      name="schedule.timeZone"
-      label="Time zone"
-      registerOptions={{
-        onChange: () => form.trigger(["schedule", "prices"]),
-      }}
-    >
-      <TimeZoneOptions timeZones={timeZones} />
-    </SelectField>
   );
 }
 

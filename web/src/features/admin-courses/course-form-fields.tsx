@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import {
+  Controller,
   get,
   useWatch,
   type Path,
@@ -17,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { fieldErrorMessage } from "./course-form-problems";
+import { TimeZonePicker } from "./schedule/time-zone-picker";
 import type { CourseFormValues } from "./validation/course-form-schema";
 
 type CourseForm = UseFormReturn<CourseFormValues>;
@@ -129,29 +131,35 @@ export function InputField({
   );
 }
 
-const SELECT_CLASSES =
-  "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30";
-
-/** A native `<select>` wired like `InputField`. */
-export function SelectField({
+/** The time zone picker wired to the form; a pick re-checks the times. */
+export function TimeZoneField({
   form,
-  name,
-  label,
-  description,
-  registerOptions,
-  children,
-}: FieldProps & { children: ReactNode }) {
+  timeZones,
+}: {
+  form: CourseForm;
+  timeZones: string[];
+}) {
   return (
-    <FormField label={label} description={description} {...stateOf(form, name)}>
-      {(inputProps) => (
-        <select
-          className={SELECT_CLASSES}
-          {...ariaProps(inputProps)}
-          {...form.register(name, registerOptions)}
-        >
-          {children}
-        </select>
+    <Controller
+      control={form.control}
+      name="schedule.timeZone"
+      render={({ field }) => (
+        <FormField label="Time zone" {...stateOf(form, field.name)}>
+          {(inputProps) => (
+            <TimeZonePicker
+              timeZones={timeZones}
+              value={field.value}
+              onChange={(timeZone) => {
+                field.onChange(timeZone);
+                void form.trigger(["schedule", "prices"]);
+              }}
+              onBlur={field.onBlur}
+              inputRef={field.ref}
+              {...ariaProps(inputProps)}
+            />
+          )}
+        </FormField>
       )}
-    </FormField>
+    />
   );
 }
