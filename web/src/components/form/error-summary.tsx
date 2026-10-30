@@ -63,7 +63,7 @@ function ProblemList({
 /**
  * Every problem in the form in one place, so a screen reader reads them all at
  * once. Each entry is a button styled as a link: the field's id lives inside
- * `FormField`, so the caller does the focusing. Renders nothing when there are
+ * `ValidatedField`, so the caller does the focusing. Renders nothing when there are
  * no problems; the caller decides when it first appears.
  */
 export function ErrorSummary({

@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { Input } from "@/components/ui/input";
 
-import { FormField } from "./form-field";
+import { ValidatedField } from "./validated-field";
 
 type HarnessProps = {
   required?: boolean;
@@ -22,7 +22,7 @@ function Harness({
   const [value, setValue] = useState("");
   const [touched, setTouched] = useState(false);
   return (
-    <FormField
+    <ValidatedField
       label="Course name"
       description={description}
       error={required && !value ? "Enter a course name." : undefined}
@@ -37,11 +37,11 @@ function Harness({
           onBlur={() => setTouched(true)}
         />
       )}
-    </FormField>
+    </ValidatedField>
   );
 }
 
-describe("FormField", () => {
+describe("ValidatedField", () => {
   it("shows the message and marks the input invalid once the empty field loses focus", async () => {
     const user = userEvent.setup();
     render(<Harness />);
@@ -109,14 +109,14 @@ describe("FormField", () => {
     const user = userEvent.setup();
     const onLabelClick = vi.fn();
     render(
-      <FormField
+      <ValidatedField
         label="Description"
         touched={false}
         submitted={false}
         onLabelClick={onLabelClick}
       >
         {({ labelId }) => <div role="textbox" aria-labelledby={labelId} />}
-      </FormField>,
+      </ValidatedField>,
     );
 
     await user.click(screen.getByText("Description"));

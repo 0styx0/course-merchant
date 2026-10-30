@@ -7,9 +7,9 @@ import { useCallback, useEffect } from "react";
 
 import { CharacterCount } from "@/components/form/character-count";
 import {
-  FormField,
-  type FormFieldInputProps,
-} from "@/components/form/form-field";
+  ValidatedField,
+  type ValidatedFieldInputProps,
+} from "@/components/form/validated-field";
 import { toCourseDescription } from "@/features/course-description/description-document";
 import { descriptionExtensions } from "@/features/course-description/description-extensions";
 
@@ -85,7 +85,7 @@ export function DescriptionEditor({
   const count = editor?.storage.characterCount.characters() ?? 0;
 
   return (
-    <FormField
+    <ValidatedField
       label="Description"
       description={
         <CharacterCount
@@ -104,13 +104,13 @@ export function DescriptionEditor({
           <EditableArea editor={editor} {...inputProps} />
         </div>
       )}
-    </FormField>
+    </ValidatedField>
   );
 }
 
-type EditableAreaProps = FormFieldInputProps & { editor: Editor | null };
+type EditableAreaProps = ValidatedFieldInputProps & { editor: Editor | null };
 
-// The ids and ARIA values only exist inside FormField's render function, so
+// The ids and ARIA values only exist inside ValidatedField's render function, so
 // they reach the editable element through the editor's options.
 function EditableArea({
   editor,

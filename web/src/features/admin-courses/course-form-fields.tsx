@@ -12,9 +12,9 @@ import {
 
 import { CharacterCount } from "@/components/form/character-count";
 import {
-  FormField,
-  type FormFieldInputProps,
-} from "@/components/form/form-field";
+  ValidatedField,
+  type ValidatedFieldInputProps,
+} from "@/components/form/validated-field";
 import { Input } from "@/components/ui/input";
 
 import { fieldErrorMessage } from "./course-form-problems";
@@ -65,7 +65,7 @@ function ariaProps({
   id,
   "aria-invalid": invalid,
   "aria-describedby": describedBy,
-}: FormFieldInputProps) {
+}: ValidatedFieldInputProps) {
   return { id, "aria-invalid": invalid, "aria-describedby": describedBy };
 }
 
@@ -90,7 +90,7 @@ function InputPrefix({ prefix }: { prefix?: string }) {
   );
 }
 
-/** A text, date or time box wired to the form and to `FormField`'s states. */
+/** A text, date or time box wired to the form and to `ValidatedField`'s states. */
 export function InputField({
   form,
   name,
@@ -110,7 +110,7 @@ export function InputField({
   prefix?: string;
 }) {
   return (
-    <FormField
+    <ValidatedField
       label={label}
       description={helpFor({ form, name, description, limit })}
       {...stateOf(form, name)}
@@ -127,7 +127,7 @@ export function InputField({
           />
         </div>
       )}
-    </FormField>
+    </ValidatedField>
   );
 }
 
@@ -144,7 +144,7 @@ export function TimeZoneField({
       control={form.control}
       name="schedule.timeZone"
       render={({ field }) => (
-        <FormField label="Time zone" {...stateOf(form, field.name)}>
+        <ValidatedField label="Time zone" {...stateOf(form, field.name)}>
           {(inputProps) => (
             <TimeZonePicker
               timeZones={timeZones}
@@ -158,7 +158,7 @@ export function TimeZoneField({
               {...ariaProps(inputProps)}
             />
           )}
-        </FormField>
+        </ValidatedField>
       )}
     />
   );

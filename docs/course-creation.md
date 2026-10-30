@@ -13,9 +13,9 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 - [x] **1b-ii. Store and show the document** (contract, database, API, course page).
 - [x] **2. Server side of the create form** (no page yet): description helpers, form limits and contract test, wall-clock time to UTC, form schema, request builder, API wrapper, error mapping, Server Action and MSW handler (`createCourseAction`; its design is in *Step 2* below).
 - [x] **3. The create form page**, in six commits (design in *Step 3* below):
-  - [x] **3a.** Form libraries (react-hook-form, resolvers, user-event), shadcn `field`/`input`/`label`, and `FormField` (message, red X, green check).
+  - [x] **3a.** Form libraries (react-hook-form, resolvers, user-event), shadcn `field`/`input`/`label`, and `ValidatedField` (message, red X, green check).
   - [x] **3b.** `error-summary.tsx`, the error list at the top with a link per problem and focus on a refused submit.
-  - [x] **3c.** `description-editor/description-editor.tsx`, first version with no toolbar (adds `@tiptap/react`). It renders its own `FormField` (label, state icon, error, counter); `FormField` gained `labelId` and `onLabelClick`.
+  - [x] **3c.** `description-editor/description-editor.tsx`, first version with no toolbar (adds `@tiptap/react`). It renders its own `ValidatedField` (label, state icon, error, counter); `ValidatedField` gained `labelId` and `onLabelClick`.
   - [x] **3d-i.** `course-form.tsx` with the text fields, description editor, schedule, `formatCourseLength`, one price row, error list and submit handling; `page.tsx` at `app/admin/(signed-in)/courses/new/` (no layout until the login lands); component tests.
   - [x] **3d-ii.** Price rows: `useFieldArray` in `course-form.tsx`, `price-row.tsx` (add and remove, at least one row, new rows start empty), error-list entries per row (`courseFormProblems` takes the row count; labels are numbered only with several rows), and tests. The empty-time help text now says "when the course is published" (wording only: an empty time is still set to now + 1 minute when saved).
   - [x] **3e.** Playwright browser test (`tests/browser/admin-courses/create-course.spec.ts`: save and land on `/`, an API refusal, no console errors); admin.md, courses.md, web.md and README updates.
@@ -167,7 +167,7 @@ Shipped in six commits (2a–2f). Limits and the currency constant live in the `
 - No help text under the field (dropped at the 3c outline).
 - A "1,234 / 5,000" counter from Tiptap's `CharacterCount` extension (added without its `limit` option, which would block typing), shown by the shared `CharacterCount` component (numbers formatted with `"en-US"`, so the server and browser show the same text): linked through `aria-describedby`, not a live region, so it isn't read out on every keystroke; typing past 5,000 is never blocked, the counter turns red and the field shows the error.
 
-**How a field shows its state** (`components/form/form-field.tsx`, built on shadcn [`field`](https://ui.shadcn.com/docs/components/field); done in 3a). It takes `touched`, `submitted` and `error` as plain props, with no react-hook-form import, and renders its one input through a render function that hands over `id`, `aria-invalid` and `aria-describedby` (help text and message both), which the caller spreads onto the input:
+**How a field shows its state** (`components/form/validated-field.tsx`, built on shadcn [`field`](https://ui.shadcn.com/docs/components/field); done in 3a). It takes `touched`, `submitted` and `error` as plain props, with no react-hook-form import, and renders its one input through a render function that hands over `id`, `aria-invalid` and `aria-describedby` (help text and message both), which the caller spreads onto the input:
 
 - An error shows only once the field has been touched or the form has been submitted. A re-check started by another field doesn't show an error on a field the admin hasn't reached.
 - Invalid: red outline, red X icon beside the input, and the message below. The input gets `aria-invalid` and `aria-describedby` pointing at the message.

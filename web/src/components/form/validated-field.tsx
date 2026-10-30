@@ -8,7 +8,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 
-export type FormFieldInputProps = {
+export type ValidatedFieldInputProps = {
   id?: string;
   /** For inputs that aren't labelable elements and use `aria-labelledby`. */
   labelId?: string;
@@ -16,7 +16,7 @@ export type FormFieldInputProps = {
   "aria-describedby"?: string;
 };
 
-type FormFieldProps = {
+type ValidatedFieldProps = {
   label: string;
   /** Help text shown under the input. */
   description?: ReactNode;
@@ -29,7 +29,7 @@ type FormFieldProps = {
   /** Called when the label is clicked, for inputs a label can't focus itself. */
   onLabelClick?: () => void;
   /** Renders the one input; spread the props it receives onto the input. */
-  children: (inputProps: FormFieldInputProps) => ReactNode;
+  children: (inputProps: ValidatedFieldInputProps) => ReactNode;
 };
 
 function describedByIds(...ids: (string | undefined)[]) {
@@ -58,7 +58,7 @@ function StatusIcon({
  * been touched or the form submitted, so a re-check started by another field
  * doesn't flag a field the admin hasn't reached.
  */
-export function FormField({
+export function ValidatedField({
   label,
   description,
   error,
@@ -66,7 +66,7 @@ export function FormField({
   submitted,
   onLabelClick,
   children,
-}: FormFieldProps) {
+}: ValidatedFieldProps) {
   const id = useId();
   const labelId = `${id}-label`;
   const descriptionId = `${id}-description`;
