@@ -42,8 +42,7 @@ export default tseslint.config(
     },
   },
   {
-    // style limits for hand-written code, tests included; each number and
-    // where it comes from is in docs/code-quality-guardrails.md (Numbers)
+    // style limits for hand-written code, tests included.
     rules: {
       "max-lines": [
         "error",

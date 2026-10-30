@@ -16,8 +16,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
-    // style limits for hand-written code, tests included; each number and
-    // where it comes from is in docs/code-quality-guardrails.md (Numbers)
+    // style limits for hand-written code, tests included.
     files: ["src/**/*.{ts,tsx}"],
     // generated and vendored (shadcn) code isn't held to the length rules
     ignores: ["src/lib/api/generated.ts", "src/components/ui/**"],
