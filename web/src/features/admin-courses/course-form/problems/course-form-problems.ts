@@ -2,35 +2,6 @@ import { get, type FieldErrors } from "react-hook-form";
 
 import type { ErrorSummaryProblem } from "@/components/form/error-summary";
 
-import { priceRowLabels } from "../../price/price-row-labels";
-import type { CourseFormWithImageValues } from "../../validation/course-form-schema";
-
-/** The form's fields in page order, with the label the error list shows. */
-const COURSE_FORM_FIELD_LABELS = [
-  ["image", "Image"],
-  ["name", "Course name"],
-  ["summary", "Summary"],
-  ["description", "Description"],
-  ["contentUrl", "Content link"],
-  ["schedule.timeZone", "Time zone"],
-  ["schedule.startDate", "Start date"],
-  ["schedule.startTimeOfDay", "Start time"],
-  ["schedule.endDate", "End date"],
-  ["schedule.endTimeOfDay", "End time"],
-] as const;
-
-/** The price rows' fields in page order, after the fixed fields. */
-function priceFieldLabels(rowCount: number) {
-  return Array.from({ length: rowCount }, (_, index) => {
-    const labels = priceRowLabels(index, rowCount);
-    return [
-      [`prices.${index}.amountDollars`, labels.amountDollars],
-      [`prices.${index}.effectiveDate`, labels.effectiveDate],
-      [`prices.${index}.effectiveTimeOfDay`, labels.effectiveTimeOfDay],
-    ] as const;
-  }).flat();
-}
-
 /** The error message at a field's path, if it has one. */
 export function fieldErrorMessage(
   errors: FieldErrors,
@@ -49,18 +20,17 @@ export function fieldErrorType(
   return (get(errors, fieldName) as { type?: string } | undefined)?.type;
 }
 
+/** A field's name and the label the error list shows for it. */
+export type ProblemField = readonly [fieldName: string, label: string];
+
 /**
- * One entry per field with a message, in page order. The description is one
- * field however many errors a bad paste caused.
+ * One entry per field with a message, in the order of `fields`. The
+ * description is one field however many errors a bad paste caused.
  */
 export function courseFormProblems(
-  errors: FieldErrors<CourseFormWithImageValues>,
-  priceRowCount: number,
+  errors: FieldErrors,
+  fields: readonly ProblemField[],
 ): ErrorSummaryProblem[] {
-  const fields = [
-    ...COURSE_FORM_FIELD_LABELS,
-    ...priceFieldLabels(priceRowCount),
-  ];
   return fields.flatMap(([fieldName, label]) => {
     const message = fieldErrorMessage(errors, fieldName);
     return message ? [{ fieldName, label, message }] : [];

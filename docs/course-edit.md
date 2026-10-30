@@ -8,27 +8,14 @@ Keep this file current **in the same commit as the work**: tick the step, mark t
 
 Each milestone delivers one outcome. `/plan-create-implementation` splits a milestone into commit lines when it becomes **Next**.
 
-- [ ] **1. Create form rebuilt from shared building blocks.** Create behaves the same, but `CourseForm` becomes a composition of shared sections, fields and hooks, with no `mode` prop and no create/edit conditionals.
+- [x] **1. Create form rebuilt from shared building blocks.** Create behaves the same, but `CourseForm` becomes a composition of shared sections, fields and hooks, with no `mode` prop and no create/edit conditionals.
   - [x] **1a.** Form files grouped by job (`sections/`, `problems/`, `hooks/`, `create-course/`), `CourseForm` renamed `CreateCourseForm`, hooks file split.
   - [x] **1b.** Fields and error readers are generic over the form's type; `TimeZoneField` takes its name and the paths to re-check, with a test for the re-check.
   - [x] **1c.** Schedule blocks take their names from the parent, and `ScheduleSection` is layout; create fills it in `create-course/create-course-sections.tsx`.
   - [x] **1d.** Price rows take their names from the parent, and `PricingSection` is layout; create fills it in `create-course/create-course-sections.tsx`.
   - [x] **1e.** Basics and Course material are layout; create fills them in `create-course/create-course-sections.tsx`, with the image and description as its own children.
-  - [ ] **1f.** The error list takes its fields from the form. **Next**
-    - *Files*:
-      - [course-form-problems.ts](../web/src/features/admin-courses/course-form/problems/course-form-problems.ts) and its `.test.ts` (`courseFormProblems(errors, fields)`)
-      - `create-course/create-course-fields.ts` (new; one ordered `[name, label]` list, plus `priceRowNames(index)`)
-      - `create-course/create-course-sections.tsx` and [create-course-form.tsx](../web/src/features/admin-courses/create-course/create-course-form.tsx) read labels from that list
-    - *Behaviours*:
-      - Order and labels are unchanged, with the image first (existing problem-list test).
-      - The description counts as one field, however many errors it has.
-      - The unit test passes its own field list.
-    - *Done when*:
-      - `grep -rnE 'CourseFormWithImageValues|"(image|name|summary|contentUrl|schedule\.|prices)' web/src/features/admin-courses/{course-form,price}` prints nothing.
-      - The create tests and Playwright `create-course.spec.ts` pass.
-      - The folder-count script prints nothing.
-      - A before/after diagram of each changed folder is shown.
-- [ ] **2. Edit page loads and saves the details.** A separate edit form prefills name, summary, description, content link and time zone, saves with a full PUT, and goes to `/`.
+  - [x] **1f.** The error list takes its fields from the form. The label text and price-row names are shared in `course-form/fields/`; create lists its own fields in `create-course/create-course-fields.ts`.
+- [ ] **2. Edit page loads and saves the details.** A separate edit form prefills name, summary, description, content link and time zone, saves with a full PUT, and goes to `/`. **Next** (not yet split into commits)
 - [ ] **3. Schedule rules on edit.** An unchanged start or end time may be in the past; a changed one must be in the future; end is after start.
 - [ ] **4. Prices on edit.** Prices in effect are read-only; future prices can be edited, added and removed.
 - [ ] **5. Image upload on edit.** The page shows the current image and uploads a new one in its own step.
@@ -54,7 +41,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 | Create and edit are two separate form components, composed from shared sections, fields and hooks | Follows the owner's rule to compose rather than branch. No `mode` prop, and each page holds only its own rules (revisit after use) | One form with a `mode` prop (conditionals everywhere); a fully separate copy (drifts) |
 | An unchanged schedule or price time is sent as the original UTC string, not converted back from the wall-clock value | Converting back can shift a time in a DST-ambiguous hour, which the API would see as a change and refuse if it is in the past | Always converting back from the wall clock (simpler, but breaks the unchanged-past case) |
 | Unchanged and in-effect prices are sent back as loaded | The API keeps exact matches and their ids, so the page tracks no ids | Leaving them out (also safe, but the form would hold less than the API) |
-| Shared blocks are generic over the form's own value type and take field names from the parent. Sections are layout with the fields as children. There is no shared value type and no cast | A form's setters and subscriptions are contravariant, so a form with extra fields never fits a shared type (checked with `tsc`); generics avoid the cast. The earlier failure was hard-coded names inside generic blocks, not generics themselves (an architect review re-tested it) | A shared `CourseFormValues` with one cast, `savedFieldsForm` (leaks create's extra field into the shared code); `FormProvider` and `useFormContext` (moves the unchecked step into the library; blocks can't render alone); image outside the form (changes create's validation) |
+| Shared blocks are generic over the form's own value type and take field names from the parent. Sections are layout with the fields as children. There is no shared value type and no cast | A form's setters and subscriptions are contravariant, so a form with extra fields never fits a shared type (checked with `tsc`); generics avoid the cast. The earlier failure was hard-coded names inside generic blocks, not generics themselves (an architect review re-tested it). Generic blocks need the parent to pass field names, because the compiler can't resolve a name inside one. The names are expected to match between create and edit; the generics are there to avoid a cast, not to allow different names | A shared `CourseFormValues` with one cast, `savedFieldsForm` (leaks create's extra field into the shared code); `FormProvider` and `useFormContext` (moves the unchecked step into the library; blocks can't render alone); image outside the form (changes create's validation) |
 | The delete confirmation uses shadcn alert-dialog | Matches the existing shadcn/base-ui setup | An inline confirmation step |
 
 ## Step 1. Create form rebuilt from shared building blocks

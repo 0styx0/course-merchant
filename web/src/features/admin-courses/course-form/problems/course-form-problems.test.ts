@@ -1,102 +1,56 @@
 import { describe, expect, it } from "vitest";
 
-import { courseFormProblems } from "../problems/course-form-problems";
+import { courseFormProblems } from "./course-form-problems";
+
+const fields = [
+  ["title", "Title"],
+  ["group.first", "First"],
+  ["group.second", "Second"],
+] as const;
 
 describe("courseFormProblems", () => {
   it("is empty without errors", () => {
-    expect(courseFormProblems({}, 1)).toEqual([]);
+    expect(courseFormProblems({}, fields)).toEqual([]);
   });
 
-  it("lists problems in page order with their labels", () => {
+  it("lists problems in the order of the given fields with their labels", () => {
     const problems = courseFormProblems(
       {
-        schedule: { endTimeOfDay: { type: "custom", message: "Too early." } },
-        name: { type: "custom", message: "Enter a course name." },
-        image: { type: "custom", message: "Choose an image." },
+        group: { second: { type: "custom", message: "Bad second." } },
+        title: { type: "custom", message: "Bad title." },
       },
-      1,
+      fields,
     );
 
     expect(problems).toEqual([
-      {
-        fieldName: "image",
-        label: "Image",
-        message: "Choose an image.",
-      },
-      {
-        fieldName: "name",
-        label: "Course name",
-        message: "Enter a course name.",
-      },
-      {
-        fieldName: "schedule.endTimeOfDay",
-        label: "End time",
-        message: "Too early.",
-      },
+      { fieldName: "title", label: "Title", message: "Bad title." },
+      { fieldName: "group.second", label: "Second", message: "Bad second." },
     ]);
   });
 
-  it("lists the time zone before the start date", () => {
+  it("finds a nested field's error", () => {
     const problems = courseFormProblems(
-      {
-        schedule: {
-          startDate: { type: "custom", message: "Enter a date." },
-          timeZone: { type: "custom", message: "Choose a time zone." },
-        },
-      },
-      1,
+      { group: { first: { type: "custom", message: "Bad first." } } },
+      fields,
     );
 
     expect(problems.map((problem) => problem.fieldName)).toEqual([
-      "schedule.timeZone",
-      "schedule.startDate",
+      "group.first",
     ]);
   });
 
-  it("finds a price row's field, with a plain label for one row", () => {
+  it("ignores an error on a field that is not in the list", () => {
     expect(
       courseFormProblems(
-        {
-          prices: [
-            { amountDollars: { type: "custom", message: "Enter a price." } },
-          ],
-        },
-        1,
+        { other: { type: "custom", message: "Unlisted." } },
+        fields,
       ),
-    ).toEqual([
-      {
-        fieldName: "prices.0.amountDollars",
-        label: "Price",
-        message: "Enter a price.",
-      },
-    ]);
+    ).toEqual([]);
   });
 
-  it("numbers price rows in page order when there are several", () => {
-    expect(
-      courseFormProblems(
-        {
-          prices: [
-            undefined,
-            {
-              effectiveTimeOfDay: { type: "custom", message: "Too soon." },
-              amountDollars: { type: "custom", message: "Enter a price." },
-            },
-          ],
-        },
-        2,
-      ),
-    ).toEqual([
-      {
-        fieldName: "prices.1.amountDollars",
-        label: "Price 2",
-        message: "Enter a price.",
-      },
-      {
-        fieldName: "prices.1.effectiveTimeOfDay",
-        label: "Price 2 start time",
-        message: "Too soon.",
-      },
-    ]);
+  it("skips a listed field whose error has no message", () => {
+    expect(courseFormProblems({ title: { type: "custom" } }, fields)).toEqual(
+      [],
+    );
   });
 });

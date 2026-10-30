@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { useFocusSummaryOnSubmit } from "../course-form/hooks/use-focus-summary-on-submit";
 import { useLeaveWarning } from "../course-form/hooks/use-leave-warning";
 import { courseFormProblems } from "../course-form/problems/course-form-problems";
+import { createCourseFields } from "./create-course-fields";
 import {
   CreateBasicsSection,
   CreateCourseMaterialSection,
@@ -90,7 +91,9 @@ function useSubmittedProblems(
   priceRowCount: number,
 ) {
   const { errors, isSubmitted } = form.formState;
-  return isSubmitted ? courseFormProblems(errors, priceRowCount) : [];
+  return isSubmitted
+    ? courseFormProblems(errors, createCourseFields(priceRowCount))
+    : [];
 }
 
 /** The schedule's and the price list's summary lines, kept in step with the inputs. */

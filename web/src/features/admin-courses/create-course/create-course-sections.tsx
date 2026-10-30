@@ -3,6 +3,10 @@
 import { Controller, type UseFieldArrayReturn } from "react-hook-form";
 
 import {
+  courseFieldLabels,
+  priceRowNames,
+} from "../course-form/fields/course-field-labels-and-price-row-names";
+import {
   ScheduleDateTimeFields,
   type ScheduleDateTimeNames,
 } from "../course-form/sections/course-form-schedule-fields";
@@ -20,7 +24,7 @@ import {
 import { ScheduleProblems } from "../course-form/sections/schedule-problems";
 import { DescriptionEditor } from "../description-editor/description-editor";
 import { ImageField } from "../image/image-field";
-import { PriceRow, type PriceRowNames } from "../price/price-row";
+import { PriceRow } from "../price/price-row";
 import type { priceSummary } from "../price/price-summary";
 import {
   COURSE_NAME_MAX_LENGTH,
@@ -96,14 +100,14 @@ export function CreateBasicsSection({
       <InputField
         form={form}
         name="name"
-        label="Course name"
+        label={courseFieldLabels.name}
         placeholder="e.g. Introduction to Photography"
         limit={COURSE_NAME_MAX_LENGTH}
       />
       <InputField
         form={form}
         name="summary"
-        label="Summary"
+        label={courseFieldLabels.summary}
         placeholder="One or two sentences shown in the course list"
         limit={COURSE_SUMMARY_MAX_LENGTH}
       />
@@ -119,7 +123,7 @@ export function CreateCourseMaterialSection({ form }: { form: CreateForm }) {
       <InputField
         form={form}
         name="contentUrl"
-        label="Content link"
+        label={courseFieldLabels.contentUrl}
         type="url"
         description="Where students find the course material. It is never shown to the public."
       />
@@ -167,16 +171,6 @@ export const emptyPrice = {
   effectiveDate: "",
   effectiveTimeOfDay: "",
 };
-
-function priceRowNames(
-  index: number,
-): PriceRowNames<CourseFormWithImageValues> {
-  return {
-    amountDollars: `prices.${index}.amountDollars`,
-    effectiveDate: `prices.${index}.effectiveDate`,
-    effectiveTimeOfDay: `prices.${index}.effectiveTimeOfDay`,
-  };
-}
 
 /** Create's pricing: one row per price, and a removal that checks the rest again. */
 export function CreatePricingSection({
