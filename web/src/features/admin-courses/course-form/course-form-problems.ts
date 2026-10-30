@@ -53,6 +53,14 @@ export function fieldErrorMessage(
   return typeof message === "string" ? message : undefined;
 }
 
+/** The kind of error at a field's path ("custom" for a cross-field check). */
+export function fieldErrorType(
+  errors: FieldErrors<CourseFormWithImageValues>,
+  fieldName: string,
+): string | undefined {
+  return (get(errors, fieldName) as { type?: string } | undefined)?.type;
+}
+
 /**
  * One entry per field with a message, in page order. The description is one
  * field however many errors a bad paste caused.

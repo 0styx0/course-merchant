@@ -14,6 +14,9 @@ const SCHEDULE_DATE_TIME_FIELDS = [
   "schedule.endTimeOfDay",
 ] as const;
 
+/** The id of the Schedule line that shows the cross-field messages. */
+export const SCHEDULE_PROBLEMS_ID = "schedule-problems";
+
 type ScheduleDateTimeField = (typeof SCHEDULE_DATE_TIME_FIELDS)[number];
 
 /** True when the admin has reached the field or it already shows a problem. */
@@ -60,6 +63,7 @@ function ScheduleDateTimeField({
       name={name}
       label={label}
       type={type}
+      sharedMessageId={SCHEDULE_PROBLEMS_ID}
       registerOptions={{ onChange: makeScheduleChangeHandler(form, name) }}
     />
   );

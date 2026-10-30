@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 
 import { InputField, TimeZoneField } from "./course-form-fields";
 import { ScheduleDateTimeFields } from "./course-form-schedule-fields";
+import { ScheduleProblems } from "./schedule-problems";
 import {
   COURSE_NAME_MAX_LENGTH,
   COURSE_SUMMARY_MAX_LENGTH,
@@ -155,6 +156,7 @@ export function ScheduleSection({
       description="When the course runs."
       className="grid gap-4 sm:grid-cols-2"
     >
+      <ScheduleProblems form={form} />
       <ScheduleDateTimeFields form={form} />
       <TimeZoneField form={form} timeZones={timeZones} />
       <p aria-live="polite" className="text-sm sm:col-span-2">

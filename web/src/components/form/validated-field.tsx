@@ -26,6 +26,8 @@ type ValidatedFieldProps = {
   touched: boolean;
   /** The form has been submitted at least once. */
   submitted: boolean;
+  /** The id of a message shown elsewhere on the page; the field then draws none. */
+  errorMessageId?: string;
   /** Called when the label is clicked, for inputs a label can't focus itself. */
   onLabelClick?: () => void;
   /** Renders the one input; spread the props it receives onto the input. */
@@ -53,6 +55,58 @@ function StatusIcon({
   return null;
 }
 
+/** A problem shows once the field has been touched or the form submitted. */
+export function showsFieldError({
+  error,
+  touched,
+  submitted,
+}: {
+  error: string | undefined;
+  touched: boolean;
+  submitted: boolean;
+}) {
+  return Boolean(error) && (touched || submitted);
+}
+
+/** What the input receives; it is described by the help text and the message, when shown. */
+function makeInputProps(
+  ids: { id: string; labelId: string; descriptionId: string; errorId: string },
+  showsError: boolean,
+  hasDescription: boolean,
+): ValidatedFieldInputProps {
+  return {
+    id: ids.id,
+    labelId: ids.labelId,
+    "aria-invalid": showsError,
+    "aria-describedby": describedByIds(
+      hasDescription ? ids.descriptionId : undefined,
+      showsError ? ids.errorId : undefined,
+    ),
+  };
+}
+
+/** The help text, then the field's own message when it shows one. */
+function FieldNotes({
+  description,
+  descriptionId,
+  error,
+  errorId,
+}: {
+  description: ReactNode;
+  descriptionId: string;
+  error: string | undefined;
+  errorId: string;
+}) {
+  return (
+    <>
+      {description && (
+        <FieldDescription id={descriptionId}>{description}</FieldDescription>
+      )}
+      {error && <FieldError id={errorId}>{error}</FieldError>}
+    </>
+  );
+}
+
 /**
  * A label, an input and its state. A problem shows only once the field has
  * been touched or the form submitted, so a re-check started by another field
@@ -64,37 +118,36 @@ export function ValidatedField({
   error,
   touched,
   submitted,
+  errorMessageId,
   onLabelClick,
   children,
 }: ValidatedFieldProps) {
   const id = useId();
   const labelId = `${id}-label`;
   const descriptionId = `${id}-description`;
-  const errorId = `${id}-error`;
-
-  const showsError = Boolean(error) && (touched || submitted);
-  const showsValid = !error && touched;
+  const errorId = errorMessageId ?? `${id}-error`;
+  const showsError = showsFieldError({ error, touched, submitted });
   return (
     <Field data-invalid={showsError}>
       <FieldLabel id={labelId} htmlFor={id} onClick={onLabelClick}>
         {label}
       </FieldLabel>
       <div className="flex items-center gap-2">
-        {children({
-          id,
-          labelId,
-          "aria-invalid": showsError,
-          "aria-describedby": describedByIds(
-            description ? descriptionId : undefined,
-            showsError ? errorId : undefined,
+        {children(
+          makeInputProps(
+            { id, labelId, descriptionId, errorId },
+            showsError,
+            Boolean(description),
           ),
-        })}
-        <StatusIcon showsError={showsError} showsValid={showsValid} />
+        )}
+        <StatusIcon showsError={showsError} showsValid={!error && touched} />
       </div>
-      {description && (
-        <FieldDescription id={descriptionId}>{description}</FieldDescription>
-      )}
-      {showsError && <FieldError id={errorId}>{error}</FieldError>}
+      <FieldNotes
+        description={description}
+        descriptionId={descriptionId}
+        error={showsError && !errorMessageId ? error : undefined}
+        errorId={errorId}
+      />
     </Field>
   );
 }

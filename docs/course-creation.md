@@ -39,8 +39,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 
 - [ ] **6. Form behaviour fixes**, in four commits (design in *Step 6* below):
   - [x] **6a.** A change to a schedule date or time marks the field touched and re-checks it, plus the other schedule fields already touched or showing an error.
-  - [ ] **6b.** Schedule-wide messages show under the Schedule heading. **Next**
-  - [ ] **6c.** The end date picker opens at the start date.
+  - [x] **6b.** Schedule-wide messages (`type === "custom"`) show in a line under the Schedule heading (`schedule-problems.tsx`); the time field keeps its border and X and points `aria-describedby` at the line.
+  - [ ] **6c.** The end date picker opens at the start date. **Next**
   - [ ] **6d.** The status icon no longer shifts the input.
 - [ ] **7. Layout and wording** (price outline, field order, section names and cards; design in *Step 7* below).
 
@@ -304,20 +304,7 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
   - Price rows keep their messages; this step covers the schedule only.
   - 6c and 6d don't depend on 6a or 6b.
 
-- [ ] **6b.** Schedule-wide messages show under the Schedule heading. **Next**
-  - *Files*:
-    - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/course-form-sections.tsx#L172) (message line in `ScheduleSection`)
-    - [course-form-fields.tsx](../web/src/features/admin-courses/course-form/course-form-fields.tsx#L98) and [validated-field.tsx](../web/src/components/form/validated-field.tsx#L66) (keep the red border and X, hide the message under the field)
-    - tests in `course-form/tests/`
-  - *Behaviours*:
-    - A schedule-wide message shows once, as a line under the heading (future start, end after start, daylight-saving gap, invalid date).
-    - The time field keeps its red border and X, and its `aria-describedby` points at that line.
-    - The error list still has its entry and link, and focus still works.
-    - "required" messages stay on their own field.
-    - The line is empty when there is no schedule-wide problem.
-  - *Needs*: 6a (the shared change handler).
-  - *Settled*: the decision row "Cross-field schedule messages keep their field path".
-- [ ] **6c.** The end date picker opens at the start date.
+- [ ] **6c.** The end date picker opens at the start date. **Next**
   - *Files*:
     - [course-form-fields.tsx](../web/src/features/admin-courses/course-form/course-form-fields.tsx#L98) (`InputField` takes `min`)
     - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/course-form-sections.tsx#L172)

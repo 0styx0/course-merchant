@@ -17,7 +17,7 @@ import {
 } from "@/components/form/validated-field";
 import { Input } from "@/components/ui/input";
 
-import { fieldErrorMessage } from "./course-form-problems";
+import { fieldErrorMessage, fieldErrorType } from "./course-form-problems";
 import { TimeZonePicker } from "../schedule/time-zone-picker/time-zone-picker";
 import type { CourseFormWithImageValues } from "../validation/course-form-schema";
 
@@ -78,6 +78,16 @@ function stateOf(form: CourseForm, name: Path<CourseFormWithImageValues>) {
   };
 }
 
+/** The shared message id, only while the field's problem is a cross-field one. */
+function sharedIdFor(
+  form: CourseForm,
+  name: Path<CourseFormWithImageValues>,
+  sharedMessageId: string | undefined,
+) {
+  const isCrossField = fieldErrorType(form.formState.errors, name) === "custom";
+  return isCrossField ? sharedMessageId : undefined;
+}
+
 function InputPrefix({ prefix }: { prefix?: string }) {
   if (!prefix) return null;
   return (
@@ -100,6 +110,7 @@ export function InputField({
   placeholder,
   limit,
   prefix,
+  sharedMessageId,
   type = "text",
 }: FieldProps & {
   type?: "text" | "url" | "date" | "time";
@@ -108,11 +119,14 @@ export function InputField({
   limit?: number;
   /** A symbol shown inside the box before the text, such as "$". */
   prefix?: string;
+  /** Where a cross-field message is shown; "required" messages stay under the box. */
+  sharedMessageId?: string;
 }) {
   return (
     <ValidatedField
       label={label}
       description={helpFor({ form, name, description, limit })}
+      errorMessageId={sharedIdFor(form, name, sharedMessageId)}
       {...stateOf(form, name)}
     >
       {(inputProps) => (

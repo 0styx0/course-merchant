@@ -123,4 +123,26 @@ describe("ValidatedField", () => {
     expect(onLabelClick).toHaveBeenCalledOnce();
     expect(screen.getByRole("textbox")).toHaveAccessibleName("Description");
   });
+
+  it("draws no message under the input when it is shown elsewhere, and points at that id", () => {
+    render(
+      <>
+        <p id="elsewhere">Shown elsewhere.</p>
+        <ValidatedField
+          label="Course name"
+          error="Enter a course name."
+          touched
+          submitted={false}
+          errorMessageId="elsewhere"
+        >
+          {(inputProps) => <Input {...inputProps} />}
+        </ValidatedField>
+      </>,
+    );
+
+    const input = screen.getByLabelText("Course name");
+    expect(screen.queryByText("Enter a course name.")).not.toBeInTheDocument();
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input).toHaveAttribute("aria-describedby", "elsewhere");
+  });
 });

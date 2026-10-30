@@ -80,4 +80,65 @@ describe("CourseForm schedule fields", () => {
       "true",
     );
   });
+
+  it("shows a schedule-wide message once, in the Schedule line, not under the time field", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Start date"), "2000-01-01");
+    await user.type(screen.getByLabelText("Start time"), "09:00");
+
+    const message = await screen.findByText(PAST_START);
+    const startTime = screen.getByLabelText("Start time");
+    expect(screen.getAllByText(PAST_START)).toHaveLength(1);
+    expect(startTime.closest("[data-invalid]")).not.toContainElement(message);
+    expect(startTime).toHaveAttribute("aria-invalid", "true");
+    expect(startTime).toHaveAccessibleDescription(PAST_START);
+  });
+
+  it("shows the start and end messages together, in page order", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Start date"), "2000-01-02");
+    await user.type(screen.getByLabelText("Start time"), "09:00");
+    await user.type(screen.getByLabelText("End date"), "2000-01-01");
+    await user.type(screen.getByLabelText("End time"), "10:00");
+
+    const start = await screen.findByText(PAST_START);
+    const end = await screen.findByText(END_BEFORE_START);
+    expect(
+      start.compareDocumentPosition(end) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByLabelText("End time")).toHaveAccessibleDescription(
+      expect.stringContaining(END_BEFORE_START),
+    );
+  });
+
+  it("keeps a required message under its own field", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText("Start date"), "2099-01-01");
+    await user.click(screen.getByLabelText("Start time"));
+    await user.tab();
+
+    const message = await screen.findByText("Enter a start time.");
+    expect(
+      screen.getByLabelText("Start time").closest("[data-invalid]"),
+    ).toContainElement(message);
+  });
+
+  it("lists a schedule-wide problem in the error list after submit", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await user.type(screen.getByLabelText("Start date"), "2000-01-01");
+    await user.type(screen.getByLabelText("Start time"), "09:00");
+
+    await user.click(screen.getByRole("button", { name: "Save as draft" }));
+
+    expect(
+      await screen.findByRole("button", { name: "Start time" }),
+    ).toBeInTheDocument();
+  });
 });
