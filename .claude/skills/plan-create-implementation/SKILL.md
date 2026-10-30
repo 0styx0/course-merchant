@@ -2,6 +2,8 @@
 name: plan-create-implementation
 description: Second planning pass. Design the Next milestone of a design doc, settle its open questions, and split it into well-formed commit lines in the doc for /next-commit to build. Use when a milestone is Next and isn't split into commits yet, or the owner says "plan the next milestone".
 disable-model-invocation: false
+model: opus
+effort: high
 argument-hint: "[module: the name of a docs/<module>.md]"
 arguments: [module]
 ---

@@ -19,4 +19,4 @@ Across the map:
 
 ## Subagent review (only when the map has a decision row)
 
-Give a subagent only the map and the files it names. Ask for at most 5 problems in 250 words: missing or oversized milestones, wrong order or hidden dependency, a principle contradicted, a blocking question marked *can wait*, a fact typed as a number, hand-rolled logic where a reliable library exists. Report which you accept and fix, and which you reject with a reason. Do not relay the full list.
+Give a subagent (Sonnet at medium effort: the Agent tool's `model` and `effort` options) only the map and the files it names. Ask for at most 5 problems in 250 words: missing or oversized milestones, wrong order or hidden dependency, a principle contradicted, a blocking question marked *can wait*, a fact typed as a number, hand-rolled logic where a reliable library exists. Report which you accept and fix, and which you reject with a reason. Do not relay the full list.

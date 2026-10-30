@@ -2,6 +2,7 @@
 name: next-commit
 description: Outline the next commit from a design doc's Status, wait for the owner's reply, then implement, verify and update the doc. Use when the owner says "next", "next commit", or names a status item to work on.
 disable-model-invocation: false
+effort: medium
 argument-hint: "[module: the name of a docs/<module>.md] [task]"
 arguments: [module]
 ---
@@ -46,8 +47,8 @@ Use the format in [outline.md](outline.md): start with the `Preflight:` line; sh
 - **Re-plan trigger.** Stop and invoke `plan-create-implementation` (tell the owner why) when the change needs more than 1.5 times the files the line named, a question that blocks the split appears, or the commit needs something no earlier commit provides. Record it in the doc's *Changes* log.
 - **Tests first** for any change of behaviour: write the tests of the approved table, run them against the untouched code and confirm each fails for the right reason (one line per test in the hand-off), then implement until they pass. Pure moves, renames, refactors and doc-only changes are exempt; their check is coverage.
 - In the same change, update the design doc: tick the item and collapse it to its one-line outcome (git holds the file list; drop its sub-bullets); mark the following item **Next** with enough detail to start on it; add a decision row for anything decided (the approved text, or propose it in chat first if it came up during implementation); when a whole step is done, cut its design notes down to decision rows.
-- Tests must be green before the cleanup pass. Then use a subagent to run `/simplify` (skill `simplify`) on the change, telling it to check the change against CLAUDE.md's code rules and fix what breaks them (style, apply without asking). If a cleanup would change design or behaviour, ask first. Only pure moves, renames and doc-only changes are exempt; size is never an exemption.
-- Then review the diff in subagents: `/security-review` for commits in a high-risk area ([../_shared/project.md](../_shared/project.md)); and for commits that change the contract or the database schema, run the review on a different model from yours (the Agent tool's `model` option), because the model that wrote the code shares its blind spots. Fix what they find; if a fix would change design or behaviour, ask first. Only pure moves, renames and doc-only changes are exempt; size is never an exemption.
+- Tests must be green before the cleanup pass. Then use a subagent to run `/simplify` (skill `simplify`) on the change, on Sonnet at low effort (the Agent tool's `model` and `effort` options), telling it to check the change against CLAUDE.md's code rules and fix what breaks them (style, apply without asking). If a cleanup would change design or behaviour, ask first. Only pure moves, renames and doc-only changes are exempt; size is never an exemption.
+- Then review the diff in subagents: `/security-review` for commits in a high-risk area ([../_shared/project.md](../_shared/project.md)), on Opus at high effort; and for commits that change the contract or the database schema, run the review on a different model from yours (the Agent tool's `model` option: Opus when you are Sonnet, Sonnet at high effort when you are Opus), because the model that wrote the code shares its blind spots. Fix what they find; if a fix would change design or behaviour, ask first. Only pure moves, renames and doc-only changes are exempt; size is never an exemption.
 - A hook formats edited files; don't run prettier yourself.
 
 ## 4. Verify

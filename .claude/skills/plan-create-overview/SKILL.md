@@ -2,6 +2,8 @@
 name: plan-create-overview
 description: First planning pass for a new area. Agree a short brief, settle only the decisions that change the shape of the work, and write a map of milestones into a new docs/<area>.md that /plan-create-implementation can design one at a time. Use when the owner wants to plan a new feature or area, or says "plan overview".
 disable-model-invocation: false
+model: opus
+effort: high
 argument-hint: "<area> [brief]"
 arguments: [area]
 ---
