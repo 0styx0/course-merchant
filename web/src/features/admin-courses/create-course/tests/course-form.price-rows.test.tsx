@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -60,5 +60,32 @@ describe("CourseForm", () => {
     await user.click(await screen.findByRole("button", { name: "Price 2" }));
 
     expect(screen.getByLabelText("Price 2")).toHaveFocus();
+  });
+
+  it("clears the same-time error when the duplicate row is removed", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await user.click(screen.getByRole("button", { name: "Add price" }));
+    for (const row of ["Price 1", "Price 2"]) {
+      fireEvent.change(screen.getByLabelText(row), { target: { value: "10" } });
+      fireEvent.change(screen.getByLabelText(`${row} start date`), {
+        target: { value: "2099-01-10" },
+      });
+      fireEvent.change(screen.getByLabelText(`${row} start time`), {
+        target: { value: "09:00" },
+      });
+    }
+    await user.click(screen.getByRole("button", { name: "Save as draft" }));
+    expect(
+      await screen.findAllByText(
+        "Two prices can't take effect at the same time.",
+      ),
+    ).not.toHaveLength(0);
+
+    await user.click(screen.getByRole("button", { name: "Remove price 2" }));
+
+    expect(
+      screen.queryByText("Two prices can't take effect at the same time."),
+    ).not.toBeInTheDocument();
   });
 });

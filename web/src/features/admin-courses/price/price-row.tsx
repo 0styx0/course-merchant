@@ -1,53 +1,81 @@
 "use client";
 
-import type { UseFormReturn } from "react-hook-form";
+import type { FieldPathByValue, FieldValues } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 
-import { InputField } from "../course-form/sections/course-form-fields";
-import { priceRowLabels } from "../course-form/problems/course-form-problems";
-import type { CourseFormWithImageValues } from "../validation/course-form-schema";
+import {
+  InputField,
+  type CourseFormApi,
+} from "../course-form/sections/course-form-fields";
+import { priceRowLabels } from "./price-row-labels";
 
-type PriceRowProps = {
-  form: UseFormReturn<CourseFormWithImageValues>;
+/** The paths of a row's three boxes, each holding a string. */
+export type PriceRowNames<T extends FieldValues> = {
+  amountDollars: FieldPathByValue<T, string>;
+  effectiveDate: FieldPathByValue<T, string>;
+  effectiveTimeOfDay: FieldPathByValue<T, string>;
+};
+
+type PriceRowProps<T extends FieldValues> = {
+  form: CourseFormApi<T>;
+  names: PriceRowNames<T>;
   index: number;
   rowCount: number;
   onRemove: () => void;
 };
 
+function RemoveRowButton({
+  label,
+  onRemove,
+}: {
+  label: string;
+  onRemove: () => void;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      onClick={onRemove}
+      className="self-start sm:mt-6"
+      aria-label={`Remove ${label.toLowerCase()}`}
+    >
+      Remove
+    </Button>
+  );
+}
+
 /** One line of the price schedule: an amount and when it takes effect. */
-export function PriceRow({ form, index, rowCount, onRemove }: PriceRowProps) {
+export function PriceRow<T extends FieldValues>({
+  form,
+  names,
+  index,
+  rowCount,
+  onRemove,
+}: PriceRowProps<T>) {
   const labels = priceRowLabels(index, rowCount);
   return (
     <div className="grid gap-4 sm:grid-cols-[1fr_1fr_1fr_5rem]">
       <InputField
         form={form}
-        name={`prices.${index}.amountDollars`}
+        name={names.amountDollars}
         label={labels.amountDollars}
         prefix="$"
       />
       <InputField
         form={form}
-        name={`prices.${index}.effectiveDate`}
+        name={names.effectiveDate}
         label={labels.effectiveDate}
         type="date"
       />
       <InputField
         form={form}
-        name={`prices.${index}.effectiveTimeOfDay`}
+        name={names.effectiveTimeOfDay}
         label={labels.effectiveTimeOfDay}
         type="time"
       />
       {rowCount > 1 && (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onRemove}
-          className="self-start sm:mt-6"
-          aria-label={`Remove ${labels.amountDollars.toLowerCase()}`}
-        >
-          Remove
-        </Button>
+        <RemoveRowButton label={labels.amountDollars} onRemove={onRemove} />
       )}
     </div>
   );

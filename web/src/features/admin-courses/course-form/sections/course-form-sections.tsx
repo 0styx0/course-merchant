@@ -1,11 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import {
-  Controller,
-  type UseFieldArrayReturn,
-  type UseFormReturn,
-} from "react-hook-form";
+import { Controller, type UseFormReturn } from "react-hook-form";
 
 import { FormSection } from "@/components/form/form-section";
 import { Button } from "@/components/ui/button";
@@ -19,17 +15,9 @@ import type { CourseFormWithImageValues } from "../../validation/course-form-sch
 import { ImageField } from "../../image/image-field";
 import { DescriptionEditor } from "../../description-editor/description-editor";
 import type { priceSummary } from "../../price/price-summary";
-import { PriceRow } from "../../price/price-row";
 import { PriceSchedule } from "../../price/price-schedule";
 
 type CourseFormApi = UseFormReturn<CourseFormWithImageValues>;
-
-/** What a price row looks like before anything is typed in it. */
-export const emptyPrice = {
-  amountDollars: "",
-  effectiveDate: "",
-  effectiveTimeOfDay: "",
-};
 
 function DescriptionField({
   form,
@@ -162,41 +150,27 @@ export function ScheduleSection({
   );
 }
 
-/** The price rows, the button to add one, and the summary of them. */
+/** The pricing frame: the given rows, the button to add one, and the summary of them. */
 export function PricingSection({
-  form,
-  priceRows,
+  children,
+  onAddPrice,
   summary,
 }: {
-  form: CourseFormApi;
-  priceRows: UseFieldArrayReturn<CourseFormWithImageValues, "prices">;
+  children: ReactNode;
+  onAddPrice: () => void;
   summary: ReturnType<typeof priceSummary>;
 }) {
-  function removeRow(index: number) {
-    priceRows.remove(index);
-    // A "same time as another row" error may now be gone.
-    void form.trigger("prices");
-  }
-
   return (
     <FormSection
       title="Pricing"
       description="What students pay, in US dollars, and when each price starts. Enter 0 for a free course."
       help="Leave the date and time empty to start when the course is published."
     >
-      {priceRows.fields.map((row, index) => (
-        <PriceRow
-          key={row.id}
-          form={form}
-          index={index}
-          rowCount={priceRows.fields.length}
-          onRemove={() => removeRow(index)}
-        />
-      ))}
+      {children}
       <Button
         type="button"
         variant="outline"
-        onClick={() => priceRows.append(emptyPrice)}
+        onClick={onAddPrice}
         className="self-start"
       >
         Add price

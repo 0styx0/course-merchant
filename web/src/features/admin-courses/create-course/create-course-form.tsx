@@ -20,10 +20,12 @@ import { courseFormProblems } from "../course-form/problems/course-form-problems
 import {
   BasicsSection,
   CourseMaterialSection,
-  emptyPrice,
-  PricingSection,
 } from "../course-form/sections/course-form-sections";
-import { CreateScheduleSection } from "./create-course-sections";
+import {
+  CreatePricingSection,
+  CreateScheduleSection,
+  emptyPrice,
+} from "./create-course-sections";
 import { useBrowserTimeZone } from "./use-browser-time-zone";
 import { useSaveCourse } from "./use-save-course";
 import {
@@ -80,6 +82,19 @@ function focusField(
   form.setFocus(name as Path<CourseFormWithImageValues>);
 }
 
+/** The error list's entries: none until the first submit. */
+function useSubmittedProblems(
+  form: UseFormReturn<
+    CourseFormWithImageValues,
+    unknown,
+    CheckedCourseFormWithImageValues
+  >,
+  priceRowCount: number,
+) {
+  const { errors, isSubmitted } = form.formState;
+  return isSubmitted ? courseFormProblems(errors, priceRowCount) : [];
+}
+
 /** The schedule's and the price list's summary lines, kept in step with the inputs. */
 function useScheduleAndPriceText(
   control: Control<
@@ -115,11 +130,8 @@ export function CreateCourseForm({ timeZones }: CreateCourseFormProps) {
   const summaryRef = useRef<HTMLDivElement>(null);
   const { save, saved, serverProblem, clearServerProblem } =
     useSaveCourse(form);
-  const { errors, isDirty, isSubmitted, isSubmitting, submitCount } =
-    form.formState;
-  const problems = isSubmitted
-    ? courseFormProblems(errors, priceRows.fields.length)
-    : [];
+  const { isDirty, isSubmitted, isSubmitting, submitCount } = form.formState;
+  const problems = useSubmittedProblems(form, priceRows.fields.length);
   const { scheduleText, prices } = useScheduleAndPriceText(form.control);
 
   useFocusSummaryOnSubmit(summaryRef, submitCount);
@@ -146,7 +158,11 @@ export function CreateCourseForm({ timeZones }: CreateCourseFormProps) {
         timeZones={timeZones}
         scheduleText={scheduleText}
       />
-      <PricingSection form={form} priceRows={priceRows} summary={prices} />
+      <CreatePricingSection
+        form={form}
+        priceRows={priceRows}
+        summary={prices}
+      />
 
       <SaveButton isSubmitting={isSubmitting} />
     </form>

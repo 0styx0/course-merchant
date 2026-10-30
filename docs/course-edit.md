@@ -12,18 +12,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **1a.** Form files grouped by job (`sections/`, `problems/`, `hooks/`, `create-course/`), `CourseForm` renamed `CreateCourseForm`, hooks file split.
   - [x] **1b.** Fields and error readers are generic over the form's type; `TimeZoneField` takes its name and the paths to re-check, with a test for the re-check.
   - [x] **1c.** Schedule blocks take their names from the parent, and `ScheduleSection` is layout; create fills it in `create-course/create-course-sections.tsx`.
-  - [ ] **1d.** Price rows take their names from the parent, and `PricingSection` becomes layout. **Next**
-    - *Files*:
-      - [price-row.tsx](../web/src/features/admin-courses/price/price-row.tsx) (the row's three names)
-      - `price/price-row-labels.ts` (new; `priceRowLabels` moves here from `course-form/problems`)
-      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/sections/course-form-sections.tsx) (`PricingSection` takes rows as children, `onAddPrice` and the summary)
-      - `create-course/create-course-sections.tsx` (removes a row, then checks again; `emptyPrice` moves here)
-      - [course-form.price-rows.test.tsx](../web/src/features/admin-courses/create-course/tests/course-form.price-rows.test.tsx) (coverage first)
-    - *Behaviours*:
-      - "Add price" appends an empty row.
-      - New test: removing a duplicate-time row clears the "same time" error.
-      - With one row, there is no Remove button and the label reads "Price".
-  - [ ] **1e.** Basics and Course material become layout, and the image becomes create's own child.
+  - [x] **1d.** Price rows take their names from the parent, and `PricingSection` is layout; create fills it in `create-course/create-course-sections.tsx`.
+  - [ ] **1e.** Basics and Course material become layout, and the image becomes create's own child. **Next**
     - *Files*:
       - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/sections/course-form-sections.tsx) (`ImageInput` leaves this file)
       - `create-course/create-course-sections.tsx` (image, name, summary, description, content link)
@@ -89,7 +79,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - `use-save-course.ts` is create-only: its draft-then-image flow doesn't apply to edit.
   - The shared form type is a `Pick` of the members the blocks use (`register`, `formState`, `control`, `trigger`, `getFieldState`, `setValue`, `watch`). It avoids `handleSubmit`, which a form with other fields can't fit. A `tsc` probe on 2026-10-30 accepted create's form with no cast.
   - Create's own pieces live in `create-course/`: its defaults, `emptyPrice`, its field list and its row names. Edit will own its versions.
-  - Folder counts: `create-course/` 3 files → 5 (plus `tests/`); `price/` 4 → 5; `course-form/sections/` stays 4.
+  - Folder counts: `create-course/` 3 files → 5 (plus `tests/`); `price/` 4 → 5 (done); `course-form/sections/` stays 4.
 
 ## Step 2. Edit page loads and saves the details
 

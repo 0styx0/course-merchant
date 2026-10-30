@@ -1,5 +1,7 @@
 "use client";
 
+import type { UseFieldArrayReturn } from "react-hook-form";
+
 import {
   ScheduleDateTimeFields,
   type ScheduleDateTimeNames,
@@ -8,8 +10,13 @@ import {
   TimeZoneField,
   type CourseFormApi,
 } from "../course-form/sections/course-form-fields";
-import { ScheduleSection } from "../course-form/sections/course-form-sections";
+import {
+  PricingSection,
+  ScheduleSection,
+} from "../course-form/sections/course-form-sections";
 import { ScheduleProblems } from "../course-form/sections/schedule-problems";
+import { PriceRow, type PriceRowNames } from "../price/price-row";
+import type { priceSummary } from "../price/price-summary";
 import type { CourseFormWithImageValues } from "../validation/course-form-schema";
 
 const scheduleNames: ScheduleDateTimeNames<CourseFormWithImageValues> = {
@@ -43,5 +50,57 @@ export function CreateScheduleSection({
       />
       <ScheduleDateTimeFields form={form} names={scheduleNames} />
     </ScheduleSection>
+  );
+}
+
+/** What a price row looks like before anything is typed in it. */
+export const emptyPrice = {
+  amountDollars: "",
+  effectiveDate: "",
+  effectiveTimeOfDay: "",
+};
+
+function priceRowNames(
+  index: number,
+): PriceRowNames<CourseFormWithImageValues> {
+  return {
+    amountDollars: `prices.${index}.amountDollars`,
+    effectiveDate: `prices.${index}.effectiveDate`,
+    effectiveTimeOfDay: `prices.${index}.effectiveTimeOfDay`,
+  };
+}
+
+/** Create's pricing: one row per price, and a removal that checks the rest again. */
+export function CreatePricingSection({
+  form,
+  priceRows,
+  summary,
+}: {
+  form: CourseFormApi<CourseFormWithImageValues>;
+  priceRows: UseFieldArrayReturn<CourseFormWithImageValues, "prices">;
+  summary: ReturnType<typeof priceSummary>;
+}) {
+  function removeRow(index: number) {
+    priceRows.remove(index);
+    // A "same time as another row" error may now be gone.
+    void form.trigger("prices");
+  }
+
+  return (
+    <PricingSection
+      onAddPrice={() => priceRows.append(emptyPrice)}
+      summary={summary}
+    >
+      {priceRows.fields.map((row, index) => (
+        <PriceRow
+          key={row.id}
+          form={form}
+          names={priceRowNames(index)}
+          index={index}
+          rowCount={priceRows.fields.length}
+          onRemove={() => removeRow(index)}
+        />
+      ))}
+    </PricingSection>
   );
 }
