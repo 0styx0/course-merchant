@@ -42,20 +42,10 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **6b.** Schedule-wide messages (`type === "custom"`) show in a line under the Schedule heading (`schedule-problems.tsx`); the time field keeps its border and X and points `aria-describedby` at the line.
   - [x] **6c.** The end date input's `min` is the start date (none while it is empty), so the picker opens near it; still to confirm by hand in Chrome.
   - [x] **6d.** `StatusIcon` always renders a fixed `size-4` slot, so the X and the check no longer shift the input.
-- [ ] **7. Layout and wording**, in three commits (design in *Step 7* below):
+- [x] **7. Layout and wording**, in three commits (design in *Step 7* below):
   - [x] **7a.** `priceSummary` returns nothing until any price input has text; `PriceSchedule` keeps its empty `aria-live` box (`empty:-mt-4` cancels the section gap); the Pricing text says "Enter 0 for a free course."
   - [x] **7b.** New field order and section names: Basics (Image, Course name, Summary, Description), Course material, Schedule (Time zone first, in a full-width row), Pricing. The "Content link" label is unchanged.
-  - [ ] **7c.** Each form section is a card. **Next**
-    - *Files*:
-      - [form-section.tsx](../web/src/components/form/form-section.tsx) (card classes per the card decision row)
-      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/course-form-sections.tsx) (only if the schedule grid needs a change inside the card)
-    - *Behaviours*:
-      - The schedule's two-column grid still lays out inside the card.
-      - Sections stay named groups (existing test).
-      - The legend reads inside the card, not on its border.
-      - No horizontal scroll at about 400 px; tab order unchanged.
-    - *Settled*: the card decision row.
-    - *Done when*: unit and browser tests pass; checked by hand at about 400 px and keyboard-only, in light and dark mode.
+  - [x] **7c.** `FormSection` draws the card on the `<fieldset>` (`rounded-lg border bg-muted/30 p-5 sm:p-6`); the legend floats full width so it sits inside the card, and a browser test checks that at 400 px.
 
 Not part of this work: publishing from the form (a "Publish after saving" box and the update to `published`; it belongs to the later edit-a-course work, where the status is chosen), admin login and logout, the admin course page and list, editing a course (loading a stored document into the editor is `setContent`, no conversion), the payout estimate under the price (payments step 7), a Playwright test comparing the image preview with the saved image, and plain-text or email versions of the description (the static renderer can produce Markdown later).
 
@@ -329,11 +319,6 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
 - Builds on: [course-form-sections.tsx](../web/src/features/admin-courses/course-form/course-form-sections.tsx), [course-form-problems.ts](../web/src/features/admin-courses/course-form/course-form-problems.ts) (field order), [form-section.tsx](../web/src/components/form/form-section.tsx), the U3b price list in `price/price-schedule.tsx`.
 - Size: 3 commits (see the status list).
 - Done when: unit and browser tests pass; the page shows the new order, names and cards at about 400 px.
-- Design notes *(temporary; cut to decision rows when step 7 ships)*:
-  - Outline visibility is derived from the watched `prices` on each render, inside `priceSummary`; no stored state. The "anything typed" rule lives there, not in `course-form.tsx`, and is tested in `price/`.
-  - The `aria-live` wrapper stays in the page while empty: a live region added together with its text is often not read out. It must not add a flex gap under "Add price"; `hidden` is not an option because it removes the region from the accessibility tree.
-  - A border on a `<fieldset>` draws the `<legend>` on the border line, so 7c puts the card on the fieldset with the legend floated full width, or wraps it; chosen in 7c's outline.
-  - No folder gains a file (`course-form/` stays at 9).
 
 ## Verification (each step)
 
