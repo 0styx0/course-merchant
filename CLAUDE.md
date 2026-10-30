@@ -22,6 +22,7 @@ Each doc has a status checklist (what's next), principles and decisions with rej
   - [docs/payments/refunds.md](docs/payments/refunds.md) — refunds, disputes, access, sweeper.
 - [docs/courses.md](docs/courses.md) — creating, editing and browsing courses: who sees what, `PUT` semantics, validation.
 - [docs/course-creation.md](docs/course-creation.md) — the admin "create course" page and its rich-text (Tiptap) description. Run with `/next-commit course-creation`.
+- [docs/course-edit.md](docs/course-edit.md) — the admin "edit course" page: prefill, full PUT, schedule and price rules, image, status. Run with `/plan-create-implementation course-edit`.
 - [docs/auth.md](docs/auth.md) — admin login, logout, sessions, the auth guard, the command that creates admins.
 - [docs/web.md](docs/web.md) — the web app: folder layout, API calls, caching, errors, forms, admin login cookie.
 
