@@ -31,26 +31,93 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
     - [x] **U3b.** Price schedule list.
     - [x] **U3c.** Searchable time zone picker (shadcn Combobox, pick-only).
 - [ ] **5. Image in the create form**, in five commits (design in *Step 5* below):
-  - [ ] **5a.** Save the form's values over an existing draft (not used yet) **Next**
-    - Files: `updateCourse` in [admin-courses.api.ts](../web/src/features/admin-courses/save-course/admin-courses.api.ts); `save-course/update-course.action.ts` and its test (`updateCourseAction(courseId, values)` always sends `drafted`; editing adds a status parameter later); a shared action-result helper taken out of [create-course.action.ts](../web/src/features/admin-courses/save-course/create-course.action.ts) (the invalid-form problem, the zod issue mapping, the UUID check, the result type); [to-course-request.ts](../web/src/features/admin-courses/save-course/to-course-request.ts) if the update request's type needs it; `mocks/handlers/update-course.ts`; the [web.md](web.md) body-limit wording fix. `save-course/` grows to 9 files.
-    - Behaviours: an invalid UUID → failure, no API call; invalid values → failure, no API call; API 400 → field errors mapped to the form; API 500 → a problem for the summary; success → the course id; create's existing tests stay green.
-    - Settled: *Step 5* (*Actions*).
-    - Done when: unit tests and build pass.
+  - [ ] **5a.** Save the form's values over an existing draft (not used yet). **Next**
+    - *Files*:
+      - `updateCourse` in [admin-courses.api.ts](../web/src/features/admin-courses/save-course/admin-courses.api.ts)
+      - `save-course/update-course.action.ts` and its test
+        - `updateCourseAction(courseId, values)` always sends `drafted`
+        - editing adds a status parameter later
+      - a shared action-result helper taken out of [create-course.action.ts](../web/src/features/admin-courses/save-course/create-course.action.ts)
+        - the invalid-form problem
+        - the zod issue mapping
+        - the UUID check
+        - the result type
+      - [to-course-request.ts](../web/src/features/admin-courses/save-course/to-course-request.ts), if the update request's type needs it
+      - `mocks/handlers/update-course.ts`
+      - the [web.md](web.md) body-limit wording fix
+      - `save-course/` grows to 9 files
+    - *Behaviours*:
+      - an invalid UUID → failure, no API call
+      - invalid values → failure, no API call
+      - API 400 → field errors mapped to the form
+      - API 500 → a problem for the summary
+      - success → the course id
+      - create's existing tests stay green
+    - *Settled*: *Step 5* (*Actions*)
+    - *Done when*: unit tests and build pass
   - [ ] **5b.** Upload a course image through a Server Action (not used yet).
-    - Files: `save-course/upload-image/upload-course-image.action.ts` and its test; `uploadCourseImage` in the API wrapper (`FormData` through openapi-fetch's [`bodySerializer`](https://openapi-ts.dev/openapi-fetch/api#bodyserializer)); a `/image` → `image` mapping in [field-errors-from-problem.ts](../web/src/features/admin-courses/save-course/field-errors-from-problem.ts) and its test; `mocks/handlers/upload-course-image.ts`; `bodySizeLimit: "6mb"` in [next.config.ts](../web/next.config.ts).
-    - Behaviours: a bad UUID → failure, no API call; no file in the request → failure, no API call; an API error on `/image` → an error on the `image` field; API 500 → a problem for the summary; API 204 → success.
-    - Settled: *Step 5* (*Body size limit*).
+    - *Files*:
+      - `save-course/upload-image/upload-course-image.action.ts` and its test
+      - `uploadCourseImage` in the API wrapper
+        - sends `FormData` through openapi-fetch's [`bodySerializer`](https://openapi-ts.dev/openapi-fetch/api#bodyserializer)
+      - a `/image` → `image` mapping in [field-errors-from-problem.ts](../web/src/features/admin-courses/save-course/field-errors-from-problem.ts) and its test
+      - `mocks/handlers/upload-course-image.ts`
+      - `bodySizeLimit: "6mb"` in [next.config.ts](../web/next.config.ts)
+    - *Behaviours*:
+      - a bad UUID → failure, no API call
+      - no file in the request → failure, no API call
+      - an API error on `/image` → an error on the `image` field
+      - API 500 → a problem for the summary
+      - API 204 → success
+    - *Settled*: *Step 5* (*Body size limit*)
   - [ ] **5c.** Image field with preview and checks (not used yet).
-    - Files: new `admin-courses/image/` folder: `image-field.tsx` and its test; `course-image.ts` (limits copied from the API, `measureImage`, the zod rule) and its test.
-    - Behaviours (`createImageBitmap` stubbed, jsdom lacks it): the 16:9 preview shows; each of wrong type, over 5 MB, under 800×450, over 25 MP and unreadable shows its own message; the object URL is revoked when the file changes and on unmount.
-    - Settled: the decision row on measuring the image once.
+    - *Files*: new `admin-courses/image/` folder
+      - `image-field.tsx` and its test
+      - `course-image.ts` and its test
+        - limits copied from the API
+        - `measureImage`
+        - the zod rule
+    - *Behaviours* (`createImageBitmap` stubbed, since jsdom lacks it):
+      - the 16:9 preview shows
+      - wrong type → its own message
+      - over 5 MB → its own message
+      - under 800×450 → its own message
+      - over 25 MP → its own message
+      - unreadable file → its own message
+      - the object URL is revoked when the file changes
+      - the object URL is revoked on unmount
+    - *Settled*: the decision row on measuring the image once
   - [ ] **5d.** The form requires an image and uploads it after creating the draft.
-    - Files: [course-form-schema.ts](../web/src/features/admin-courses/validation/course-form-schema.ts) (the form's resolver uses the existing schema extended with `image`; the actions keep checking only the saved fields); [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx) (Image section); [course-form-problems.ts](../web/src/features/admin-courses/course-form-problems.ts) (error-list entry); `useSaveCourse` moved into its own file; [course-form.tsx](../web/src/features/admin-courses/course-form.tsx); the saving test.
-    - Behaviours: the happy path (create, upload, go to `/`); a failed upload keeps the id and shows "The course was saved as a draft, but the image didn't upload."; the retry runs update with the edited values, then the upload, and never create; a rejected action keeps the id and shows a general message; an upload error shows on the image field; the leave warning stays on until the upload succeeds; the image file is never sent to create or update.
-    - Needs: 5a, 5b, 5c.
+    - *Files*:
+      - [course-form-schema.ts](../web/src/features/admin-courses/validation/course-form-schema.ts)
+        - the form's resolver uses the existing schema extended with `image`
+        - the actions keep checking only the saved fields
+      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx) (Image section)
+      - [course-form-problems.ts](../web/src/features/admin-courses/course-form-problems.ts) (error-list entry)
+      - `useSaveCourse` moved into its own file
+      - [course-form.tsx](../web/src/features/admin-courses/course-form.tsx)
+      - the saving test
+    - *Behaviours*:
+      - the happy path: create, upload, go to `/`
+      - a failed upload keeps the id and shows "The course was saved as a draft, but the image didn't upload."
+      - the retry runs update with the edited values, then the upload, and never create
+      - a rejected action keeps the id and shows a general message
+      - an upload error shows on the image field
+      - the leave warning stays on until the upload succeeds
+      - the image file is never sent to create or update
+    - *Needs*: 5a, 5b, 5c
   - [ ] **5e.** Browser test with a real image, and docs.
-    - Files: [create-course.spec.ts](../web/tests/browser/admin-courses/create-course.spec.ts) and a small fixture image; docs: tick *Web admin pages* in courses.md (create only; publishing is left to editing), README *Status*, the body-limit reasoning in web.md, and this file cut down to decision rows.
-    - Behaviours: choose an image, save, land on `/`; a failed upload, then a successful retry; no console errors.
+    - *Files*:
+      - [create-course.spec.ts](../web/tests/browser/admin-courses/create-course.spec.ts) and a small fixture image
+      - docs
+        - tick *Web admin pages* in courses.md (create only; publishing is left to editing)
+        - README *Status*
+        - the body-limit reasoning in web.md
+        - this file cut down to decision rows
+    - *Behaviours*:
+      - choose an image, save, land on `/`
+      - a failed upload, then a successful retry
+      - no console errors
 
 Not part of this work: publishing from the form (a "Publish after saving" box and the update to `published`; it belongs to the later edit-a-course work, where the status is chosen), admin login and logout, the admin course page and list, editing a course (loading a stored document into the editor is `setContent`, no conversion), the payout estimate under the price (payments step 7), a Playwright test comparing the image preview with the saved image, and plain-text or email versions of the description (the static renderer can produce Markdown later).
 

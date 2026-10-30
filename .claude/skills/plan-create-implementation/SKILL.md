@@ -13,7 +13,8 @@ Module: `$module` (the matching `docs/<module>.md`). Follow CLAUDE.md's working 
 ## 1. Find the milestone and what it builds on
 
 - A milestone flagged `*(spike)*` is planned as one commit line (see [commit-lines.md](commit-lines.md)).
-- Take the **Next** milestone from `docs/$module.md` and its `## Step N.` section (format: [../_shared/milestone-line.md](../_shared/milestone-line.md)). If it is already split into commits, stop and suggest `/next-commit $module`.
+- **Confirm before working.** Work out which module and milestone you would plan (the `$module` argument if given, otherwise the docs that have a **Next** milestone not yet split into commits; `grep -n Next docs/*.md`). Then ask through the picker (AskUserQuestion), always, even when only one candidate exists or `$module` was given: the question names the module and the milestone (number and title); options are "Plan this one (Recommended)", one option per other candidate (at most two), and the free-text "Other" for anything else. Do not read the milestone's code or start designing until the owner answers. If there is no candidate, say so and stop.
+- Take the confirmed milestone from `docs/<module>.md` and its `## Step N.` section (format: [../_shared/milestone-line.md](../_shared/milestone-line.md)). If it is already split into commits, stop and suggest `/next-commit $module`.
 - Read its *Builds on* links and open questions, the Principles and Decisions, and the docs and rules it links.
 - Read the code it builds on: what earlier milestones added, and one sibling of each kind of file it will add (by line range). Grep for existing helpers before planning a new one; write down each helper you will reuse. Search for specific things. Never read generated files whole.
 - Run `git status --short`; mention uncommitted changes in files this milestone touches.
@@ -50,6 +51,6 @@ Use [present.md](present.md). In plan mode present with ExitPlanMode; otherwise 
 
 ## 8. After approval, write the doc
 
-- Replace the milestone's Status line with its commit lines (first one **Next**). Extend the existing `## Step N. <milestone>` section (do not add a second one) with the design notes: keep *Done when* and *Builds on*, delete *Re-measure* and *Blocks the split* once answered, and mark notes that are only for building as *(temporary)* so `/next-commit` can cut them later. Add the approved decision rows. Move settled questions out of *Open questions*.
+- Replace the milestone's Status line with its commit lines (first one **Next**), in the layout of [../_shared/commit-line.md](../_shared/commit-line.md): a sub-bullet per field and one nested bullet per file, behaviour or other item. Never write a field as a `;`-joined paragraph. Extend the existing `## Step N. <milestone>` section (do not add a second one) with the design notes: keep *Done when* and *Builds on*, delete *Re-measure* and *Blocks the split* once answered, and mark notes that are only for building as *(temporary)* so `/next-commit` can cut them later. Add the approved decision rows. Move settled questions out of *Open questions*.
 - If the plan differs from the overview (an order change, a milestone added, cut or re-sized), add a row to the doc's *Changes* log.
 - Docs only. Hand off with the files changed, `` `docs($module): plan step N` `` as the suggested commit message, and a reminder to `/clear` before `/next-commit $module`.
