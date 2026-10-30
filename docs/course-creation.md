@@ -30,23 +30,12 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
     - [x] **U3a.** Schedule summary sentence.
     - [x] **U3b.** Price schedule list.
     - [x] **U3c.** Searchable time zone picker (shadcn Combobox, pick-only).
-- [ ] **5. Image in the create form**, in five commits (design in *Step 5* below):
+- [x] **5. Image in the create form**, in five commits (design in *Step 5* below):
   - [x] **5a.** `updateCourseAction` saves the form's values over an existing draft (not used yet); the shared action result helpers live in `save-course/course-action-result.ts`.
   - [x] **5b.** `uploadCourseImageAction` uploads a file through the new `uploadCourseImage` wrapper (not used yet); `/image` errors map to the `image` field; `bodySizeLimit` is `"6mb"`.
   - [x] **5c.** `image/image-field.tsx` picks a file, shows a 16:9 preview (kept for a refused file) and `image/course-image.ts` measures it once and holds the zod rule (not used yet); an undecodable file is stored as 0 × 0 and reported as unreadable.
   - [x] **5d.** The form requires an image and uploads it after creating the draft (`use-save-course.ts`); a failed upload keeps the draft id, and the retry updates then uploads. The form types are `CourseFormWithImageValues` and `CheckedCourseFormWithImageValues`; `CourseFormValues` stays the saved fields the actions check.
-  - [ ] **5e.** Browser test with a real image, and docs. **Next**
-    - *Files*:
-      - [create-course.spec.ts](../web/tests/browser/admin-courses/create-course.spec.ts) and a small fixture image
-      - docs
-        - tick *Web admin pages* in courses.md (create only; publishing is left to editing)
-        - README *Status*
-        - the body-limit reasoning in web.md
-        - this file cut down to decision rows
-    - *Behaviours*:
-      - choose an image, save, land on `/`
-      - a failed upload, then a successful retry
-      - no console errors
+  - [x] **5e.** Browser tests with a real image (`src/mocks/fixtures/course-image.png`, 800 × 450): save with an image and land on `/`; a failed upload keeps the draft and the retry updates it, then uploads; no console errors.
 
 Not part of this work: publishing from the form (a "Publish after saving" box and the update to `published`; it belongs to the later edit-a-course work, where the status is chosen), admin login and logout, the admin course page and list, editing a course (loading a stored document into the editor is `setContent`, no conversion), the payout estimate under the price (payments step 7), a Playwright test comparing the image preview with the saved image, and plain-text or email versions of the description (the static renderer can produce Markdown later).
 
@@ -245,47 +234,17 @@ Each button calls Tiptap's chain commands (`toggleBold`, `toggleHeading`, `setLi
 
 **Tests** (done): paste tests in `description-editor/description-paste.test.ts` and one browser test; toolbar button and refused-link tests were added with 4a and 4b.
 
-## Step 5. Image in the create form
+## Step 5. Image in the create form (done)
 
 Publishing is not part of this step: the form always saves a draft and the button stays "Save as draft". Choosing the status belongs to the later edit-a-course work.
 
-**Image field** (`image/image-field.tsx`, required):
-
-- A file input (`accept` JPEG/PNG/WebP).
-- A 16:9 preview (`URL.createObjectURL`, `object-fit: cover`, centred, revoked on change and on unmount), cropped like the public pages.
-
-**Checks when a file is chosen,** shown before submitting: type; 5 MB or smaller; at least 800×450 pixels; at most 25 megapixels. The pixel checks use `createImageBitmap(file, { imageOrientation: "from-image" })`, so the photo's orientation counts like on the server, then `close()`. They run only in the browser; the API checks again. The form's value is `{ file, width, height } | null`, measured once on choosing, so the schema checks it synchronously (see the decision row).
-
-**Actions** (one per outcome; each checks the course id is a UUID, through a helper shared with `createCourseAction`):
-
-- `updateCourseAction(courseId, values)` checks `values` with the saved-fields schema and sends `updateCourse` with status `drafted`. Used for retries.
-- `uploadCourseImageAction(courseId, formData)` uploads with the `uploadCourseImage` wrapper (`FormData` body serializer, as noted in [courses.md](courses.md)), in `save-course/upload-image/`.
-- Both actions keep checking only the saved fields. The form's resolver uses the same schema extended with `image`, and the image is stripped from the values before create or update.
-
-**The browser runs the steps in order:**
-
-1. `createCourseAction(values)`, which returns the course id. The form keeps it until the page reloads.
-2. `uploadCourseImageAction(id, formData)`.
-3. `router.push("/")`.
-
-**If step 2 fails, or an action is rejected** (it throws, for example on a network drop or Next's body size limit, instead of returning a failure):
-
-- The admin stays on the form, with the error at the top, for example "The course was saved as a draft, but the image didn't upload." A rejected action shows a general message and keeps the id.
-- An upload error from the API shows on the image field.
-- The next submit runs `updateCourseAction(id, values)` with the current values, so fixes made before retrying are saved. It then uploads. It never creates a second course.
-- The leave warning stays on until the upload succeeds.
-
-**Body size limit** in `next.config.ts`: `experimental.serverActions.bodySizeLimit: "6mb"`.
-
-- Why 6 MB: one upload request carries the API's 5 MB image limit (`MAX_IMAGE_BYTES` in [course-image.ts](../api/src/courses/images/course-image.ts)) plus the multipart framing (the separators and short headers around each field). Next's docs suggest 10–20 KB of room for that.
-- Next's default of 1 MB would reject most phone photos.
-- The limit stays close to what's needed because Next reads the whole request into memory, and the limit covers every Server Action.
-- Next reads `"6mb"` as 6 × 1024 × 1024 bytes, like the API.
-- Add this reasoning to the existing decision row in [web.md](web.md), and reword that row: the browser runs two actions, create then upload (it currently says one function also publishes).
-
-**MSW:** `update-course.ts` (5a) and `upload-course-image.ts` (5b) handlers.
-
-**Docs:** when this step ships, the *Web admin pages* item in [courses.md](courses.md) and the README *Status* are ticked (create only), and this file is cut down to decision rows.
+- The image field is required. It shows a 16:9 preview and checks type, size and pixels when a file is chosen (see the decision row on measuring once). The API checks again.
+- On submit the browser runs, in order: `createCourseAction` (the form keeps the course id), `uploadCourseImageAction`, then `router.push("/")`.
+- If the upload fails, or an action is rejected, the admin stays on the form with the error at the top and the draft id kept.
+  - An upload error from the API shows on the image field.
+  - The next submit runs `updateCourseAction(id, values)`, then uploads. It never creates a second course.
+  - The leave warning stays on until the upload succeeds.
+- The Server Action body limit is `"6mb"`; the reasoning is in the Server Action row of [web.md](web.md).
 
 ## UX pass
 

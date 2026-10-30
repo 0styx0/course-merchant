@@ -6,7 +6,7 @@ A storefront for selling online courses, with payment through Stripe Checkout. T
 
 It's freelance work for a small business that sells courses, built as two TypeScript projects: a NestJS API and a Next.js web app.
 
-> **Status: in progress.** The API for courses, checkout, Stripe webhooks and email is built and tested. A background job (the "sweeper") retries refunds that failed and finishes payments whose webhook never arrived. Admin endpoints require a login (a session token from `POST /v1/admin/sessions`). The web has a create-course form (no image upload, publish or login yet). Still to come: the web checkout pages, the rest of the web admin pages and the login form, a job that cleans up old sessions, and handling refunds and disputes made in Stripe. Progress is tracked in [docs/payments.md](docs/payments.md) and [docs/courses.md](docs/courses.md).
+> **Status: in progress.** The API for courses, checkout, Stripe webhooks and email is built and tested. A background job (the "sweeper") retries refunds that failed and finishes payments whose webhook never arrived. Admin endpoints require a login (a session token from `POST /v1/admin/sessions`). The web has a create-course form with image upload (no publish or login yet). Still to come: the web checkout pages, the rest of the web admin pages and the login form, a job that cleans up old sessions, and handling refunds and disputes made in Stripe. Progress is tracked in [docs/payments.md](docs/payments.md) and [docs/courses.md](docs/courses.md).
 
 ## Highlights
 

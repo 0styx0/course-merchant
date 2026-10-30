@@ -7,6 +7,11 @@ import {
   createCourseValidationFailed,
 } from "@/mocks/handlers/create-course";
 import { coursesSuccess } from "@/mocks/handlers/list-courses";
+import { updateCourseSuccess } from "@/mocks/handlers/update-course";
+import {
+  uploadCourseImageError,
+  uploadCourseImageSuccess,
+} from "@/mocks/handlers/upload-course-image";
 
 const { test, expect } = msw;
 
@@ -22,6 +27,13 @@ function collectConsoleErrors(page: Page) {
   });
   page.on("pageerror", (error) => errors.push(error.message));
   return errors;
+}
+
+async function chooseImage(page: Page) {
+  await page
+    .getByLabel("Image", { exact: true })
+    .setInputFiles("src/mocks/fixtures/course-image.png");
+  await expect(page.getByAltText("Preview of the chosen image")).toBeVisible();
 }
 
 async function fillValidForm(page: Page) {
@@ -55,10 +67,11 @@ async function fillValidForm(page: Page) {
   await page.getByLabel("End date", { exact: true }).fill("2099-01-10");
   await page.getByLabel("End time", { exact: true }).fill("11:30");
   await page.getByLabel("Price", { exact: true }).fill("79.50");
+  await chooseImage(page);
 }
 
 test("saves a new course and goes to the home page", async ({ page, msw }) => {
-  msw.use(createCourseSuccess);
+  msw.use(createCourseSuccess, uploadCourseImageSuccess);
   const consoleErrors = collectConsoleErrors(page);
 
   await page.goto("/admin/courses/new");
@@ -99,6 +112,33 @@ test("shows the API's refusal and lets the admin try again", async ({
   );
   await expect(page).toHaveURL(/\/admin\/courses\/new$/);
   await expect(save).toBeEnabled();
+  expect(consoleErrors).toEqual([]);
+});
+
+test("keeps the draft when the image upload fails and uploads on retry", async ({
+  page,
+  msw,
+}) => {
+  msw.use(createCourseSuccess, uploadCourseImageError);
+  const consoleErrors = collectConsoleErrors(page);
+
+  await page.goto("/admin/courses/new");
+  await fillValidForm(page);
+
+  const save = page.getByRole("button", { name: "Save as draft" });
+  await save.click();
+
+  const summary = page
+    .getByRole("alert")
+    .filter({ hasText: "Image upload failed" });
+  await expect(summary).toContainText("The course was saved as a draft");
+  await expect(page).toHaveURL(/\/admin\/courses\/new$/);
+
+  // The retry updates the saved draft, then uploads
+  msw.use(updateCourseSuccess, uploadCourseImageSuccess);
+  await save.click();
+
+  await expect(page).toHaveURL("/");
   expect(consoleErrors).toEqual([]);
 });
 
