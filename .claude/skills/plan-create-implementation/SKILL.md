@@ -47,7 +47,7 @@ Define each new term once, in plain language.
 ## 5. Split into commits
 
 - Each commit is one line, starting with what it achieves, then its main files or parts in brackets (e.g. "**3b.** The error list at the top of the form (`error-summary.tsx`)").
-- One concern per commit. If a line needs "and" to join unrelated parts, split it. As a rough guide: a commit that touches more than ~6 files or both `api/` and `web/` is probably two commits.
+- One concern per commit. Split any line that fails the size check in [../_shared/commit-size.md](../_shared/commit-size.md).
 - Each commit leaves the build and tests passing, and includes its own tests.
 - Order: foundations (contract, helpers) first, then pieces, then wiring them into the page, then browser tests and docs.
 - Number them under the milestone (3a, 3b, …), and mark the first **Next**.
