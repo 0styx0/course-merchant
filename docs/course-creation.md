@@ -37,10 +37,10 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **5d.** The form requires an image and uploads it after creating the draft (`use-save-course.ts`); a failed upload keeps the draft id, and the retry updates then uploads. The form types are `CourseFormWithImageValues` and `CheckedCourseFormWithImageValues`; `CourseFormValues` stays the saved fields the actions check.
   - [x] **5e.** Browser tests with a real image (`src/mocks/fixtures/course-image.png`, 800 × 450): save with an image and land on `/`; a failed upload keeps the draft and the retry updates it, then uploads; no console errors.
 
-- [ ] **6. Form behaviour fixes**, in four commits (design in *Step 6* below):
+- [x] **6. Form behaviour fixes**, in four commits:
   - [x] **6a.** A change to a schedule date or time marks the field touched and re-checks it, plus the other schedule fields already touched or showing an error.
   - [x] **6b.** Schedule-wide messages (`type === "custom"`) show in a line under the Schedule heading (`schedule-problems.tsx`); the time field keeps its border and X and points `aria-describedby` at the line.
-  - [x] **6c.** The end date input's `min` is the start date (none while it is empty), so the picker opens near it; still to confirm by hand in Chrome.
+  - [x] **6c.** The end date input's `min` is the start date (none while it is empty), so the picker opens near it.
   - [x] **6d.** `StatusIcon` always renders a fixed `size-4` slot, so the X and the check no longer shift the input.
 - [x] **7. Layout and wording**, in three commits (design in *Step 7* below):
   - [x] **7a.** `priceSummary` returns nothing until any price input has text; `PriceSchedule` keeps its empty `aria-live` box (`empty:-mt-4` cancels the section gap); the Pricing text says "Enter 0 for a free course."
@@ -296,21 +296,9 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
 
 **Tests:** update the component tests and `tests/browser/admin-courses/create-course.spec.ts` for changed labels and behaviour; each new component gets its own test; no hydration warnings.
 
-## Step 6. Form behaviour fixes
+## Step 6. Form behaviour fixes (done)
 
-- Why here: the owner used the page after step 5 and found validation and input-width problems. Behaviour fixes come before layout, so the layout commits land on stable code.
-- Needs: none.
-- Builds on: [course-form-sections.tsx](../web/src/features/admin-courses/course-form/course-form-sections.tsx) (the schedule fields), [course-form-cross-field-issues.ts](../web/src/features/admin-courses/validation/course-form-cross-field-issues.ts) (schedule messages), [validated-field.tsx](../web/src/components/form/validated-field.tsx) (the status icon). `mode: "onTouched"` is in the *Principles*.
-- Done when: unit and browser tests pass; in `yarn --cwd web dev:mock`, using only the pickers, an invalid date shows its error at once and clears when corrected; the end date picker opens at the start month; inputs keep their width when an error appears or clears.
-- Risk: Chrome may ignore `min` when choosing which month the picker opens at (6c).
-- Design notes:
-  - Cross-field issues have type `custom` and the "required" checks have `too_small`. [The resolver](../web/node_modules/@hookform/resolvers/zod/src/zod.ts) copies the issue code into the error's `type`, so 6b tells schedule-wide messages from "required" ones by `type === "custom"`.
-  - A native date picker may never blur its input, and `ValidatedField` shows a problem only for a touched field. So in 6a a change marks the field touched (`setValue` with `shouldTouch` and `shouldValidate`). The green check then shows right after a pick, for schedule fields only (owner approved).
-  - Price rows keep their messages; this step covers the schedule only.
-  - 6c and 6d don't depend on 6a or 6b.
-
-- [x] **6c.** The end date input's `min` is the start date; still to confirm by hand in Chrome (`dev:mock`) that the picker opens at the start month.
-- [x] **6d.** Done (see the status list).
+- Schedule validation now reacts to date picks, schedule-wide messages sit under the heading, the end date's `min` is the start date, and `StatusIcon` keeps a fixed slot. See the status list.
 
 ## Step 7. Layout and wording
 
