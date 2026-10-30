@@ -1,23 +1,131 @@
 "use client";
 
-import type { UseFieldArrayReturn } from "react-hook-form";
+import { Controller, type UseFieldArrayReturn } from "react-hook-form";
 
 import {
   ScheduleDateTimeFields,
   type ScheduleDateTimeNames,
 } from "../course-form/sections/course-form-schedule-fields";
 import {
+  InputField,
   TimeZoneField,
   type CourseFormApi,
 } from "../course-form/sections/course-form-fields";
 import {
+  BasicsSection,
+  CourseMaterialSection,
   PricingSection,
   ScheduleSection,
 } from "../course-form/sections/course-form-sections";
 import { ScheduleProblems } from "../course-form/sections/schedule-problems";
+import { DescriptionEditor } from "../description-editor/description-editor";
+import { ImageField } from "../image/image-field";
 import { PriceRow, type PriceRowNames } from "../price/price-row";
 import type { priceSummary } from "../price/price-summary";
+import {
+  COURSE_NAME_MAX_LENGTH,
+  COURSE_SUMMARY_MAX_LENGTH,
+} from "../validation/course-form-limits";
 import type { CourseFormWithImageValues } from "../validation/course-form-schema";
+
+type CreateForm = CourseFormApi<CourseFormWithImageValues>;
+
+function ImageInput({
+  form,
+  isSubmitted,
+}: {
+  form: CreateForm;
+  isSubmitted: boolean;
+}) {
+  return (
+    <Controller
+      control={form.control}
+      name="image"
+      render={({ field, fieldState }) => (
+        <ImageField
+          value={field.value}
+          onChange={field.onChange}
+          onBlur={field.onBlur}
+          fieldRef={field.ref}
+          error={fieldState.error?.message}
+          touched={fieldState.isTouched}
+          submitted={isSubmitted}
+        />
+      )}
+    />
+  );
+}
+
+function DescriptionField({
+  form,
+  isSubmitted,
+}: {
+  form: CreateForm;
+  isSubmitted: boolean;
+}) {
+  return (
+    <Controller
+      control={form.control}
+      name="description"
+      render={({ field, fieldState }) => (
+        <DescriptionEditor
+          value={field.value}
+          onChange={field.onChange}
+          onBlur={field.onBlur}
+          fieldRef={field.ref}
+          error={fieldState.error?.message}
+          touched={fieldState.isTouched}
+          submitted={isSubmitted}
+        />
+      )}
+    />
+  );
+}
+
+/** Create's basics: the image, name, summary and description. */
+export function CreateBasicsSection({
+  form,
+  isSubmitted,
+}: {
+  form: CreateForm;
+  isSubmitted: boolean;
+}) {
+  return (
+    <BasicsSection>
+      <ImageInput form={form} isSubmitted={isSubmitted} />
+      <InputField
+        form={form}
+        name="name"
+        label="Course name"
+        placeholder="e.g. Introduction to Photography"
+        limit={COURSE_NAME_MAX_LENGTH}
+      />
+      <InputField
+        form={form}
+        name="summary"
+        label="Summary"
+        placeholder="One or two sentences shown in the course list"
+        limit={COURSE_SUMMARY_MAX_LENGTH}
+      />
+      <DescriptionField form={form} isSubmitted={isSubmitted} />
+    </BasicsSection>
+  );
+}
+
+/** Create's course material: the content link. */
+export function CreateCourseMaterialSection({ form }: { form: CreateForm }) {
+  return (
+    <CourseMaterialSection>
+      <InputField
+        form={form}
+        name="contentUrl"
+        label="Content link"
+        type="url"
+        description="Where students find the course material. It is never shown to the public."
+      />
+    </CourseMaterialSection>
+  );
+}
 
 const scheduleNames: ScheduleDateTimeNames<CourseFormWithImageValues> = {
   startDate: "schedule.startDate",

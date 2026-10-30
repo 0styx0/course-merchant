@@ -18,10 +18,8 @@ import { useFocusSummaryOnSubmit } from "../course-form/hooks/use-focus-summary-
 import { useLeaveWarning } from "../course-form/hooks/use-leave-warning";
 import { courseFormProblems } from "../course-form/problems/course-form-problems";
 import {
-  BasicsSection,
-  CourseMaterialSection,
-} from "../course-form/sections/course-form-sections";
-import {
+  CreateBasicsSection,
+  CreateCourseMaterialSection,
   CreatePricingSection,
   CreateScheduleSection,
   emptyPrice,
@@ -151,8 +149,8 @@ export function CreateCourseForm({ timeZones }: CreateCourseFormProps) {
         onSelectField={(name) => focusField(form, name)}
       />
 
-      <BasicsSection form={form} isSubmitted={isSubmitted} />
-      <CourseMaterialSection form={form} />
+      <CreateBasicsSection form={form} isSubmitted={isSubmitted} />
+      <CreateCourseMaterialSection form={form} />
       <CreateScheduleSection
         form={form}
         timeZones={timeZones}

@@ -13,13 +13,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **1b.** Fields and error readers are generic over the form's type; `TimeZoneField` takes its name and the paths to re-check, with a test for the re-check.
   - [x] **1c.** Schedule blocks take their names from the parent, and `ScheduleSection` is layout; create fills it in `create-course/create-course-sections.tsx`.
   - [x] **1d.** Price rows take their names from the parent, and `PricingSection` is layout; create fills it in `create-course/create-course-sections.tsx`.
-  - [ ] **1e.** Basics and Course material become layout, and the image becomes create's own child. **Next**
-    - *Files*:
-      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/sections/course-form-sections.tsx) (`ImageInput` leaves this file)
-      - `create-course/create-course-sections.tsx` (image, name, summary, description, content link)
-    - *Behaviours*:
-      - Field order, labels and counters are unchanged (existing fields and image-upload tests).
-  - [ ] **1f.** The error list takes its fields from the form.
+  - [x] **1e.** Basics and Course material are layout; create fills them in `create-course/create-course-sections.tsx`, with the image and description as its own children.
+  - [ ] **1f.** The error list takes its fields from the form. **Next**
     - *Files*:
       - [course-form-problems.ts](../web/src/features/admin-courses/course-form/problems/course-form-problems.ts) and its `.test.ts` (`courseFormProblems(errors, fields)`)
       - `create-course/create-course-fields.ts` (new; one ordered `[name, label]` list, plus `priceRowNames(index)`)

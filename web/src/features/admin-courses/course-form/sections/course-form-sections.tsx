@@ -1,129 +1,33 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Controller, type UseFormReturn } from "react-hook-form";
 
 import { FormSection } from "@/components/form/form-section";
 import { Button } from "@/components/ui/button";
 
-import { InputField } from "./course-form-fields";
-import {
-  COURSE_NAME_MAX_LENGTH,
-  COURSE_SUMMARY_MAX_LENGTH,
-} from "../../validation/course-form-limits";
-import type { CourseFormWithImageValues } from "../../validation/course-form-schema";
-import { ImageField } from "../../image/image-field";
-import { DescriptionEditor } from "../../description-editor/description-editor";
 import type { priceSummary } from "../../price/price-summary";
 import { PriceSchedule } from "../../price/price-schedule";
 
-type CourseFormApi = UseFormReturn<CourseFormWithImageValues>;
-
-function DescriptionField({
-  form,
-  name,
-  isSubmitted,
-}: {
-  form: CourseFormApi;
-  name: "description";
-  isSubmitted: boolean;
-}) {
-  return (
-    <Controller
-      control={form.control}
-      name={name}
-      render={({ field, fieldState }) => (
-        <DescriptionEditor
-          value={field.value}
-          onChange={field.onChange}
-          onBlur={field.onBlur}
-          fieldRef={field.ref}
-          error={fieldState.error?.message}
-          touched={fieldState.isTouched}
-          submitted={isSubmitted}
-        />
-      )}
-    />
-  );
-}
-
-function ImageInput({
-  form,
-  isSubmitted,
-}: {
-  form: CourseFormApi;
-  isSubmitted: boolean;
-}) {
-  return (
-    <Controller
-      control={form.control}
-      name="image"
-      render={({ field, fieldState }) => (
-        <ImageField
-          value={field.value}
-          onChange={field.onChange}
-          onBlur={field.onBlur}
-          fieldRef={field.ref}
-          error={fieldState.error?.message}
-          touched={fieldState.isTouched}
-          submitted={isSubmitted}
-        />
-      )}
-    />
-  );
-}
-
-/** The course image, name, summary and description. */
-export function BasicsSection({
-  form,
-  isSubmitted,
-}: {
-  form: CourseFormApi;
-  isSubmitted: boolean;
-}) {
+/** The frame for the course image, name, summary and description. */
+export function BasicsSection({ children }: { children: ReactNode }) {
   return (
     <FormSection
       title="Basics"
       description="What students see when they browse for the course."
     >
-      <ImageInput form={form} isSubmitted={isSubmitted} />
-      <InputField
-        form={form}
-        name="name"
-        label="Course name"
-        placeholder="e.g. Introduction to Photography"
-        limit={COURSE_NAME_MAX_LENGTH}
-      />
-      <InputField
-        form={form}
-        name="summary"
-        label="Summary"
-        placeholder="One or two sentences shown in the course list"
-        limit={COURSE_SUMMARY_MAX_LENGTH}
-      />
-      <DescriptionField
-        form={form}
-        name="description"
-        isSubmitted={isSubmitted}
-      />
+      {children}
     </FormSection>
   );
 }
 
-/** The link to the course material. */
-export function CourseMaterialSection({ form }: { form: CourseFormApi }) {
+/** The frame for the link to the course material. */
+export function CourseMaterialSection({ children }: { children: ReactNode }) {
   return (
     <FormSection
       title="Course material"
       description="The material students get after they buy."
     >
-      <InputField
-        form={form}
-        name="contentUrl"
-        label="Content link"
-        type="url"
-        description="Where students find the course material. It is never shown to the public."
-      />
+      {children}
     </FormSection>
   );
 }
