@@ -1,11 +1,10 @@
 "use server";
 
-import { z } from "zod";
-
 import { updateCourse } from "./admin-courses.api";
 import {
   invalidCourseIdFailure,
   invalidFormFailure,
+  isUuid,
   problemFailure,
   successWithCourseId,
   type CourseActionResult,
@@ -15,12 +14,6 @@ import {
   type CourseFormValues,
 } from "../validation/course-form-schema";
 import { toCourseRequest } from "./to-course-request";
-
-const uuidSchema = z.uuid();
-
-function isUuid(value: string): boolean {
-  return uuidSchema.safeParse(value).success;
-}
 
 /** Saves the form's values over an existing course, which stays a draft. */
 export async function updateCourseAction(

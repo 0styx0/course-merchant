@@ -26,6 +26,7 @@ describe("fieldErrorsFromProblem", () => {
     ["/schedule/timeZone", "schedule.timeZone"],
     ["/prices/0/amount", "prices.0.amountDollars"],
     ["/prices/12/effectiveAt", "prices.12.effectiveTimeOfDay"],
+    ["/image", "image"],
     ["/description", "description"],
     ["/description/content/0/content/1/marks/0", "description"],
   ])("maps %s to %s", (pointer, path) => {

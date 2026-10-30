@@ -32,22 +32,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
     - [x] **U3c.** Searchable time zone picker (shadcn Combobox, pick-only).
 - [ ] **5. Image in the create form**, in five commits (design in *Step 5* below):
   - [x] **5a.** `updateCourseAction` saves the form's values over an existing draft (not used yet); the shared action result helpers live in `save-course/course-action-result.ts`.
-  - [ ] **5b.** Upload a course image through a Server Action (not used yet). **Next**
-    - *Files*:
-      - `save-course/upload-image/upload-course-image.action.ts` and its test
-      - `uploadCourseImage` in the API wrapper
-        - sends `FormData` through openapi-fetch's [`bodySerializer`](https://openapi-ts.dev/openapi-fetch/api#bodyserializer)
-      - a `/image` → `image` mapping in [field-errors-from-problem.ts](../web/src/features/admin-courses/save-course/field-errors-from-problem.ts) and its test
-      - `mocks/handlers/upload-course-image.ts`
-      - `bodySizeLimit: "6mb"` in [next.config.ts](../web/next.config.ts)
-    - *Behaviours*:
-      - a bad UUID → failure, no API call
-      - no file in the request → failure, no API call
-      - an API error on `/image` → an error on the `image` field
-      - API 500 → a problem for the summary
-      - API 204 → success
-    - *Settled*: *Step 5* (*Body size limit*)
-  - [ ] **5c.** Image field with preview and checks (not used yet).
+  - [x] **5b.** `uploadCourseImageAction` uploads a file through the new `uploadCourseImage` wrapper (not used yet); `/image` errors map to the `image` field; `bodySizeLimit` is `"6mb"`.
+  - [ ] **5c.** Image field with preview and checks (not used yet). **Next**
     - *Files*: new `admin-courses/image/` folder
       - `image-field.tsx` and its test
       - `course-image.ts` and its test

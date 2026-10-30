@@ -4,7 +4,11 @@ import path from "path";
 const nextConfig: NextConfig = {
   // don't tell scanners which framework to probe for known bugs
   poweredByHeader: false,
-  experimental: { testProxy: process.env.PLAYWRIGHT === "1" },
+  experimental: {
+    testProxy: process.env.PLAYWRIGHT === "1",
+    // one image upload: the API's 5 MB limit plus multipart framing
+    serverActions: { bodySizeLimit: "6mb" },
+  },
   turbopack: {
     root: path.resolve(import.meta.dirname, ".."),
   },

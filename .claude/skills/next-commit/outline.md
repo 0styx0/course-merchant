@@ -1,6 +1,6 @@
 # Outline formats
 
-Used in step 2 of [SKILL.md](SKILL.md). Terms, the diagram format for file moves and the writing rules are in CLAUDE.md (*Writing*); follow them here. Every section of an outline is bullet points, one idea per bullet, never a paragraph.
+Used in step 2 of [SKILL.md](SKILL.md). Terms, the diagram format for file moves and the writing rules are in CLAUDE.md (*Writing*); follow them here. Every section of an outline follows the *Bullets, not blocks* rule: sub-bullets for joined steps, never a paragraph.
 
 ## Preflight line
 

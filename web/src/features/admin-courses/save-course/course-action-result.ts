@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import { z } from "zod";
 
 import type { ProblemDetails, Result } from "@/lib/types";
 
@@ -29,6 +29,12 @@ const invalidCourseIdProblem: ProblemDetails = {
   code: "VALIDATION_FAILED",
 };
 
+const uuidSchema = z.uuid();
+
+export function isUuid(value: string): boolean {
+  return uuidSchema.safeParse(value).success;
+}
+
 export function invalidCourseIdFailure(): CourseActionResult {
   return {
     state: "failure",
@@ -45,6 +51,16 @@ export function invalidFormFailure(error: z.ZodError): CourseActionResult {
         path: issue.path.join("."),
         message: issue.message,
       })),
+    },
+  };
+}
+
+export function invalidImageFailure(): CourseActionResult {
+  return {
+    state: "failure",
+    error: {
+      problem: invalidFormProblem,
+      fieldErrors: [{ path: "image", message: "Choose an image." }],
     },
   };
 }

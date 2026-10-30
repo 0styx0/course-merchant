@@ -3,7 +3,7 @@ import type { ProblemDetails, ValidationProblemDetails } from "@/lib/types";
 /** A message for one form field, addressed by the form's own path. */
 export type FormFieldError = { path: string; message: string };
 
-const SAME_NAME_FIELDS = new Set(["name", "summary", "contentUrl"]);
+const SAME_NAME_FIELDS = new Set(["name", "summary", "contentUrl", "image"]);
 
 // The date and time of day are two boxes for one value; the time box takes the message.
 const SCHEDULE_PATHS: Record<string, string> = {

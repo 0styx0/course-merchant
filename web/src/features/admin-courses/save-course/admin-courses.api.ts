@@ -29,3 +29,21 @@ export async function updateCourse(
     }),
   );
 }
+
+// The generated type calls the file a string; the serializer sends the real file.
+export async function uploadCourseImage(
+  courseId: string,
+  image: File,
+): Promise<Result<undefined, ProblemDetails>> {
+  return toResult(
+    await api.PUT("/admin/courses/{courseId}/image", {
+      params: { path: { courseId } },
+      body: { image: "" },
+      bodySerializer: () => {
+        const formData = new FormData();
+        formData.set("image", image);
+        return formData;
+      },
+    }),
+  );
+}
