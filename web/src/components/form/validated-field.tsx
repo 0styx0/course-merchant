@@ -38,8 +38,8 @@ function describedByIds(...ids: (string | undefined)[]) {
   return ids.filter(Boolean).join(" ") || undefined;
 }
 
-/** The mark beside an input: a cross when it has a problem, a tick when it is valid. */
-function StatusIcon({
+/** The mark inside the slot: a cross when the input has a problem, a tick when it is valid. */
+function StatusMark({
   showsError,
   showsValid,
 }: {
@@ -47,12 +47,21 @@ function StatusIcon({
   showsValid: boolean;
 }) {
   if (showsError) {
-    return <X aria-hidden className="size-4 shrink-0 text-destructive" />;
+    return <X aria-hidden className="size-4 text-destructive" />;
   }
   if (showsValid) {
-    return <Check aria-hidden className="size-4 shrink-0 text-green-600" />;
+    return <Check aria-hidden className="size-4 text-green-600" />;
   }
   return null;
+}
+
+/** A slot of fixed size beside the input, so a mark appearing or clearing never shifts the input. */
+function StatusIcon(props: { showsError: boolean; showsValid: boolean }) {
+  return (
+    <span data-slot="status-icon" className="size-4 shrink-0">
+      <StatusMark {...props} />
+    </span>
+  );
 }
 
 /** A problem shows once the field has been touched or the form submitted. */

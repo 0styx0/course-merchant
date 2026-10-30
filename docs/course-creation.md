@@ -41,8 +41,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **6a.** A change to a schedule date or time marks the field touched and re-checks it, plus the other schedule fields already touched or showing an error.
   - [x] **6b.** Schedule-wide messages (`type === "custom"`) show in a line under the Schedule heading (`schedule-problems.tsx`); the time field keeps its border and X and points `aria-describedby` at the line.
   - [x] **6c.** The end date input's `min` is the start date (none while it is empty), so the picker opens near it; still to confirm by hand in Chrome.
-  - [ ] **6d.** The status icon no longer shifts the input. **Next**
-- [ ] **7. Layout and wording** (price outline, field order, section names and cards; design in *Step 7* below).
+  - [x] **6d.** `StatusIcon` always renders a fixed `size-4` slot, so the X and the check no longer shift the input.
+- [ ] **7. Layout and wording** (price outline, field order, section names and cards; design in *Step 7* below). **Next**
 
 Not part of this work: publishing from the form (a "Publish after saving" box and the update to `published`; it belongs to the later edit-a-course work, where the status is chosen), admin login and logout, the admin course page and list, editing a course (loading a stored document into the editor is `setContent`, no conversion), the payout estimate under the price (payments step 7), a Playwright test comparing the image preview with the saved image, and plain-text or email versions of the description (the static renderer can produce Markdown later).
 
@@ -187,7 +187,7 @@ Shipped in six commits (2a–2f). Limits and the currency constant live in the `
 **How a field shows its state** (`components/form/validated-field.tsx`, built on shadcn [`field`](https://ui.shadcn.com/docs/components/field); done in 3a). It takes `touched`, `submitted` and `error` as plain props, with no react-hook-form import, and renders its one input through a render function that hands over `id`, `aria-invalid` and `aria-describedby` (help text and message both), which the caller spreads onto the input:
 
 - An error shows only once the field has been touched or the form has been submitted. A re-check started by another field doesn't show an error on a field the admin hasn't reached.
-- Invalid: red outline, red X icon beside the input, and the message below. The input gets `aria-invalid` and `aria-describedby` pointing at the message.
+- Invalid: red outline, red X icon in a fixed slot beside the input, and the message below. The input gets `aria-invalid` and `aria-describedby` pointing at the message.
 - Touched and valid: green check.
 
 **Error list at the top** (`components/form/error-summary.tsx`):
@@ -305,16 +305,7 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
   - 6c and 6d don't depend on 6a or 6b.
 
 - [x] **6c.** The end date input's `min` is the start date; still to confirm by hand in Chrome (`dev:mock`) that the picker opens at the start month.
-- [ ] **6d.** The status icon no longer shifts the input. **Next**
-  - *Files*:
-    - [validated-field.tsx](../web/src/components/form/validated-field.tsx#L40)
-    - test
-    - the Step 3 text ("red X icon beside the input")
-  - *Behaviours*:
-    - `StatusIcon` always renders a `size-4 shrink-0` slot, empty when there is nothing to show.
-    - The slot is there before an error appears and after it clears.
-    - The X and the check both stay.
-  - *Settled*: the decision row "The status icon has a fixed slot".
+- [x] **6d.** Done (see the status list).
 
 ## Step 7. Layout and wording
 

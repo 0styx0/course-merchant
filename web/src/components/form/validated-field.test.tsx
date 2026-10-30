@@ -81,6 +81,22 @@ describe("ValidatedField", () => {
     expect(document.querySelector("svg")).not.toBeInTheDocument();
   });
 
+  it("keeps a fixed slot for the status icon before an error appears and after it clears", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    const slotSelector = '[data-slot="status-icon"]';
+
+    expect(document.querySelector(slotSelector)).toBeInTheDocument();
+    expect(document.querySelector(slotSelector)).toBeEmptyDOMElement();
+
+    await user.click(screen.getByLabelText("Course name"));
+    await user.tab();
+    expect(document.querySelector(slotSelector)).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Course name"), "Cooking");
+    expect(document.querySelectorAll(slotSelector)).toHaveLength(1);
+  });
+
   it("shows the problem on an untouched field after the form was submitted", () => {
     render(<Harness submitted />);
 
