@@ -7,7 +7,6 @@ import {
   useForm,
   useWatch,
   type Control,
-  type Path,
   type UseFormReturn,
 } from "react-hook-form";
 
@@ -15,6 +14,7 @@ import { ErrorSummary } from "@/components/form/error-summary";
 
 import { useFocusSummaryOnSubmit } from "../course-form/hooks/use-focus-summary-on-submit";
 import { useLeaveWarning } from "../course-form/hooks/use-leave-warning";
+import { focusField } from "../course-form/problems/focus-field";
 import { courseFormProblems } from "../course-form/problems/course-form-problems";
 import { SaveButton } from "../course-form/sections/save-button";
 import { createCourseFields } from "./create-course-fields";
@@ -67,18 +67,6 @@ function useCourseFormState() {
   });
   const priceRows = useFieldArray({ control: form.control, name: "prices" });
   return { form, priceRows };
-}
-
-/** The error list names fields with plain strings; every one is a form field. */
-function focusField(
-  form: UseFormReturn<
-    CourseFormWithImageValues,
-    unknown,
-    CheckedCourseFormWithImageValues
-  >,
-  name: string,
-) {
-  form.setFocus(name as Path<CourseFormWithImageValues>);
 }
 
 /** The error list's entries: none until the first submit. */
@@ -141,7 +129,7 @@ export function CreateCourseForm({ timeZones }: CreateCourseFormProps) {
         ref={summaryRef}
         problems={problems}
         serverProblem={serverProblem}
-        onSelectField={(name) => focusField(form, name)}
+        onSelectField={(name) => focusField(form.setFocus, name)}
       />
 
       <CreateBasicsSection form={form} isSubmitted={isSubmitted} />

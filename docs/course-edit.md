@@ -17,15 +17,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **1f.** The error list takes its fields from the form. The label text and price-row names are shared in `course-form/fields/`; create lists its own fields in `create-course/create-course-fields.ts`.
 - [ ] **2. Edit page loads and saves the details.** A separate edit form prefills name, summary, description, content link and time zone, saves with a full PUT, and goes to `/`. Start and end times, prices and status go back unchanged.
   - [x] **2a.** `DescriptionField` and `SaveButton` (takes its label) are shared in `course-form/sections/`, and `scheduleSentence` is exported from `schedule-summary.ts`; create behaves the same.
-  - [ ] **2b.** The error-handling logic edit needs from create becomes shared and generic over the form type; create behaves the same. *(coverage first)* **Next**
-    - *Files*:
-      - `focusField` moves from [create-course-form.tsx](../web/src/features/admin-courses/create-course/create-course-form.tsx#L73) to a new file in `course-form/problems/`
-      - `useServerProblem` moves from [use-save-course.ts](../web/src/features/admin-courses/create-course/use-save-course.ts#L61) to a new file in `course-form/hooks/`, taking `setError`; create keeps its own "saved as a draft" note
-      - folder counts: `problems/` 2 → 3, `hooks/` 2 → 3
-    - *Behaviours*:
-      - none new; the create saving and problem-list tests pass unchanged
-    - *Done when*: the moved lines show as covered before the move; all tests pass unchanged.
-  - [ ] **2c.** Edit's start values and its save action on the server (not used yet).
+  - [x] **2b.** `focusField` and `useServerProblem` are shared and generic over the form type (`useServerProblem` takes `setError` and an optional note for the rejected message); create keeps its "saved as a draft" note.
+  - [ ] **2c.** Edit's start values and its save action on the server (not used yet). **Next**
     - *Files*:
       - [course-form-schema.ts](../web/src/features/admin-courses/validation/course-form-schema.ts#L120) exports the field schemas for name, summary, description, content link and time zone; `savedFieldsSchema` is built from them
       - `validation/edit-course-form-schema.ts` (new): edit's schema and value types, the five fields with `schedule.timeZone` nested, no cross-field checks

@@ -1,7 +1,11 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import type { Path, UseFormReturn } from "react-hook-form";
+import type { UseFormReturn } from "react-hook-form";
 
+import {
+  useServerProblem,
+  type ServerProblem,
+} from "../course-form/hooks/use-server-problem";
 import type { ChosenImage } from "../image/course-image";
 import type {
   CheckedCourseFormWithImageValues,
@@ -15,19 +19,13 @@ import { createCourseAction } from "../save-course/create-course.action";
 import { updateCourseAction } from "../save-course/update-course.action";
 import { uploadCourseImageAction } from "../save-course/upload-image/upload-course-image.action";
 
-type ServerProblem = { title: string; detail: string };
-
 type CourseForm = UseFormReturn<
   CourseFormWithImageValues,
   unknown,
   CheckedCourseFormWithImageValues
 >;
 
-const rejectedProblem: ServerProblem = {
-  title: "Couldn't save the course",
-  detail:
-    "Something went wrong while saving. Check your connection and try again.",
-};
+const draftNote = " The course was saved as a draft.";
 
 /** Says the draft exists, then gives the API's own reason. */
 function uploadFailedProblem({ problem }: CourseActionFailure): ServerProblem {
@@ -57,33 +55,6 @@ function problemTextOf({ problem }: CourseActionFailure): ServerProblem {
   return { title: problem.title, detail: problem.detail };
 }
 
-/** The message above the form, and the errors put on its fields. */
-function useServerProblem(form: CourseForm) {
-  const [serverProblem, setServerProblem] = useState<ServerProblem>();
-
-  function showFailure(problem: ServerProblem, failure: CourseActionFailure) {
-    setServerProblem(problem);
-    for (const { path, message } of failure.fieldErrors) {
-      form.setError(path as Path<CourseFormWithImageValues>, { message });
-    }
-  }
-
-  function showRejected(hasDraft: boolean) {
-    const draftNote = hasDraft ? " The course was saved as a draft." : "";
-    setServerProblem({
-      ...rejectedProblem,
-      detail: rejectedProblem.detail + draftNote,
-    });
-  }
-
-  return {
-    serverProblem,
-    showFailure,
-    showRejected,
-    clearServerProblem: () => setServerProblem(undefined),
-  };
-}
-
 /**
  * Saves the form in two steps: the draft, then its image. A refused step leaves
  * a message and puts its field errors on the fields. The draft's id is kept, so
@@ -92,7 +63,7 @@ function useServerProblem(form: CourseForm) {
 export function useSaveCourse(form: CourseForm) {
   const router = useRouter();
   const { serverProblem, showFailure, showRejected, clearServerProblem } =
-    useServerProblem(form);
+    useServerProblem(form.setError);
   const [saved, setSaved] = useState(false);
   const draftId = useRef<string>(undefined);
 
@@ -122,7 +93,7 @@ export function useSaveCourse(form: CourseForm) {
       await saveDraftThenUploadImage(values);
     } catch {
       // A rejected Server Action throws instead of returning a failure.
-      showRejected(draftId.current !== undefined);
+      showRejected(draftId.current === undefined ? undefined : draftNote);
     }
   }
 
