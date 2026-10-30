@@ -10,20 +10,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 
 - [ ] **1. Create form rebuilt from shared building blocks.** Create behaves the same, but `CourseForm` becomes a composition of shared sections, fields and hooks, with no `mode` prop and no create/edit conditionals.
   - [x] **1a.** Form files grouped by job (`sections/`, `problems/`, `hooks/`, `create-course/`), `CourseForm` renamed `CreateCourseForm`, hooks file split.
-  - [ ] **1b.** Fields and error readers are generic over the form's type. **Next**
-    - *Files*:
-      - [course-form-fields.tsx](../web/src/features/admin-courses/course-form/sections/course-form-fields.tsx) (`InputField` and `TimeZoneField`; defines the narrowed form type `CourseFormApi<T>`)
-      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/sections/course-form-sections.tsx) (`DescriptionField` takes `name`)
-      - [course-form-problems.ts](../web/src/features/admin-courses/course-form/problems/course-form-problems.ts) (`fieldErrorMessage` and `fieldErrorType` take any `FieldErrors`)
-      - [course-form.time-zone-and-leave-warning.test.tsx](../web/src/features/admin-courses/create-course/tests/course-form.time-zone-and-leave-warning.test.tsx) (coverage first)
-    - *Behaviours*:
-      - `TimeZoneField` takes its name from the parent.
-      - `TimeZoneField` takes the names to check again after a pick from the parent.
-      - Create passes `schedule.timeZone` and `["schedule", "prices"]`.
-      - New test: a pick that makes a start time past shows its error, and a pick back clears it.
-      - Each field still shows its error, its counter and its shared-message id (existing fields tests).
-    - *Done when*: type check, lint, and the `admin-courses` unit tests pass.
-  - [ ] **1c.** Schedule blocks take their names from the parent, and `ScheduleSection` becomes layout.
+  - [x] **1b.** Fields and error readers are generic over the form's type; `TimeZoneField` takes its name and the paths to re-check, with a test for the re-check.
+  - [ ] **1c.** Schedule blocks take their names from the parent, and `ScheduleSection` becomes layout. **Next**
     - *Files*:
       - [course-form-schedule-fields.tsx](../web/src/features/admin-courses/course-form/sections/course-form-schedule-fields.tsx) (four names)
       - [schedule-problems.tsx](../web/src/features/admin-courses/course-form/sections/schedule-problems.tsx) (two time names)

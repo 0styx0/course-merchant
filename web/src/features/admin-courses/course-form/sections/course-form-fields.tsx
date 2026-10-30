@@ -5,6 +5,8 @@ import {
   Controller,
   get,
   useWatch,
+  type FieldPathByValue,
+  type FieldValues,
   type Path,
   type RegisterOptions,
   type UseFormReturn,
@@ -22,25 +24,37 @@ import {
   fieldErrorType,
 } from "../problems/course-form-problems";
 import { TimeZonePicker } from "../../schedule/time-zone-picker/time-zone-picker";
-import type { CourseFormWithImageValues } from "../../validation/course-form-schema";
 
-type CourseForm = UseFormReturn<CourseFormWithImageValues>;
+/**
+ * The members of a form the fields use. It leaves out `handleSubmit`, which a
+ * form with extra fields can't fit, so any course form's own type works here.
+ */
+export type CourseFormApi<T extends FieldValues> = Pick<
+  UseFormReturn<T>,
+  | "register"
+  | "formState"
+  | "control"
+  | "trigger"
+  | "getFieldState"
+  | "setValue"
+  | "watch"
+>;
 
-type FieldProps = {
-  form: CourseForm;
-  name: Path<CourseFormWithImageValues>;
+type FieldProps<T extends FieldValues> = {
+  form: CourseFormApi<T>;
+  name: Path<T>;
   label: string;
   description?: string;
-  registerOptions?: RegisterOptions<CourseFormWithImageValues>;
+  registerOptions?: RegisterOptions<T>;
 };
 
 /** The field's help text, then its "n / limit" counter. */
-function FieldHelp({
+function FieldHelp<T extends FieldValues>({
   form,
   name,
   description,
   limit,
-}: Pick<FieldProps, "form" | "name" | "description"> & { limit: number }) {
+}: Pick<FieldProps<T>, "form" | "name" | "description"> & { limit: number }) {
   const value = useWatch({ control: form.control, name });
   return (
     <>
@@ -50,10 +64,10 @@ function FieldHelp({
   );
 }
 
-function helpFor({
+function helpFor<T extends FieldValues>({
   limit,
   ...rest
-}: Pick<FieldProps, "form" | "name" | "description"> & {
+}: Pick<FieldProps<T>, "form" | "name" | "description"> & {
   limit?: number;
 }): ReactNode {
   if (limit === undefined) {
@@ -72,7 +86,7 @@ function ariaProps({
   return { id, "aria-invalid": invalid, "aria-describedby": describedBy };
 }
 
-function stateOf(form: CourseForm, name: Path<CourseFormWithImageValues>) {
+function stateOf<T extends FieldValues>(form: CourseFormApi<T>, name: Path<T>) {
   const { errors, touchedFields, isSubmitted } = form.formState;
   return {
     error: fieldErrorMessage(errors, name),
@@ -82,9 +96,9 @@ function stateOf(form: CourseForm, name: Path<CourseFormWithImageValues>) {
 }
 
 /** The shared message id, only while the field's problem is a cross-field one. */
-function sharedIdFor(
-  form: CourseForm,
-  name: Path<CourseFormWithImageValues>,
+function sharedIdFor<T extends FieldValues>(
+  form: CourseFormApi<T>,
+  name: Path<T>,
   sharedMessageId: string | undefined,
 ) {
   const isCrossField = fieldErrorType(form.formState.errors, name) === "custom";
@@ -117,7 +131,7 @@ function PrefixedInput({
 }
 
 /** A text, date or time box wired to the form and to `ValidatedField`'s states. */
-export function InputField({
+export function InputField<T extends FieldValues>({
   form,
   name,
   label,
@@ -129,7 +143,7 @@ export function InputField({
   sharedMessageId,
   min,
   type = "text",
-}: FieldProps & {
+}: FieldProps<T> & {
   type?: "text" | "url" | "date" | "time";
   placeholder?: string;
   /** Shows an "n / limit" counter. Typing past it is allowed. */
@@ -163,18 +177,24 @@ export function InputField({
 }
 
 /** The time zone picker wired to the form; a pick re-checks the times. */
-export function TimeZoneField({
+export function TimeZoneField<T extends FieldValues>({
   form,
+  name,
+  recheck,
   timeZones,
 }: {
-  form: CourseForm;
+  form: CourseFormApi<T>;
+  /** The path of the time zone, which must hold a string. */
+  name: FieldPathByValue<T, string>;
+  /** The paths to validate again after a pick, since their times are read in the new zone. */
+  recheck: Path<T>[];
   timeZones: string[];
 }) {
   return (
     <div className="sm:col-span-2">
       <Controller
         control={form.control}
-        name="schedule.timeZone"
+        name={name}
         render={({ field }) => (
           <ValidatedField label="Time zone" {...stateOf(form, field.name)}>
             {(inputProps) => (
@@ -183,7 +203,7 @@ export function TimeZoneField({
                 value={field.value}
                 onChange={(timeZone) => {
                   field.onChange(timeZone);
-                  void form.trigger(["schedule", "prices"]);
+                  void form.trigger(recheck);
                 }}
                 onBlur={field.onBlur}
                 inputRef={field.ref}

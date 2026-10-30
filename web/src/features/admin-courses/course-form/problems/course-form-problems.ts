@@ -45,7 +45,7 @@ function priceFieldLabels(rowCount: number) {
 
 /** The error message at a field's path, if it has one. */
 export function fieldErrorMessage(
-  errors: FieldErrors<CourseFormWithImageValues>,
+  errors: FieldErrors,
   fieldName: string,
 ): string | undefined {
   const message = (get(errors, fieldName) as { message?: unknown } | undefined)
@@ -55,7 +55,7 @@ export function fieldErrorMessage(
 
 /** The kind of error at a field's path ("custom" for a cross-field check). */
 export function fieldErrorType(
-  errors: FieldErrors<CourseFormWithImageValues>,
+  errors: FieldErrors,
   fieldName: string,
 ): string | undefined {
   return (get(errors, fieldName) as { type?: string } | undefined)?.type;

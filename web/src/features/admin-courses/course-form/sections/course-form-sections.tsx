@@ -34,15 +34,17 @@ export const emptyPrice = {
 
 function DescriptionField({
   form,
+  name,
   isSubmitted,
 }: {
   form: CourseFormApi;
+  name: "description";
   isSubmitted: boolean;
 }) {
   return (
     <Controller
       control={form.control}
-      name="description"
+      name={name}
       render={({ field, fieldState }) => (
         <DescriptionEditor
           value={field.value}
@@ -112,7 +114,11 @@ export function BasicsSection({
         placeholder="One or two sentences shown in the course list"
         limit={COURSE_SUMMARY_MAX_LENGTH}
       />
-      <DescriptionField form={form} isSubmitted={isSubmitted} />
+      <DescriptionField
+        form={form}
+        name="description"
+        isSubmitted={isSubmitted}
+      />
     </FormSection>
   );
 }
@@ -152,7 +158,12 @@ export function ScheduleSection({
       className="grid gap-4 sm:grid-cols-2"
     >
       <ScheduleProblems form={form} />
-      <TimeZoneField form={form} timeZones={timeZones} />
+      <TimeZoneField
+        form={form}
+        name="schedule.timeZone"
+        recheck={["schedule", "prices"]}
+        timeZones={timeZones}
+      />
       <ScheduleDateTimeFields form={form} />
       <p aria-live="polite" className="text-sm sm:col-span-2">
         {scheduleText}

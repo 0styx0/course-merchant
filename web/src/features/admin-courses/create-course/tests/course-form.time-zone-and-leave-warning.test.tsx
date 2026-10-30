@@ -36,6 +36,17 @@ beforeEach(() => {
   });
 });
 
+async function pickTimeZone(
+  user: ReturnType<typeof userEvent.setup>,
+  search: string,
+  option: string,
+) {
+  const zone = screen.getByRole("combobox", { name: "Time zone" });
+  await user.clear(zone);
+  await user.type(zone, search);
+  await user.click(screen.getByRole("option", { name: option }));
+}
+
 describe("CourseForm", () => {
   it("starts on the browser's time zone when the list has it", async () => {
     vi.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions").mockReturnValue({
@@ -71,6 +82,37 @@ describe("CourseForm", () => {
     await user.click(screen.getByRole("option", { name: "Europe/Paris" }));
     expect(await screen.findAllByText(/Europe\/Paris/)).not.toHaveLength(0);
     expect(screen.getByText(/^Runs .*\(Europe\/Paris\)/)).toBeVisible();
+  });
+
+  it("re-checks the times when a pick makes the start past, and again when it is picked back", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    // Three hours ahead in New York, which is already past in Paris (hours ahead of it).
+    const [date, time] = new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "America/New_York",
+      dateStyle: "short",
+      timeStyle: "short",
+    })
+      .format(Date.now() + 3 * 60 * 60 * 1000)
+      .split(" ");
+    await pickTimeZone(user, "york", "America/New_York");
+    await user.type(screen.getByLabelText("Start date"), date);
+    await user.type(screen.getByLabelText("Start time"), time);
+    expect(
+      screen.queryByText("The start time must be in the future."),
+    ).not.toBeInTheDocument();
+
+    await pickTimeZone(user, "paris", "Europe/Paris");
+    expect(
+      await screen.findByText("The start time must be in the future."),
+    ).toBeInTheDocument();
+
+    await pickTimeZone(user, "york", "America/New_York");
+    await waitFor(() =>
+      expect(
+        screen.queryByText("The start time must be in the future."),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   describe("leave-page warning", () => {
