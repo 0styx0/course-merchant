@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 
@@ -48,20 +48,22 @@ export function renderForm() {
   );
 }
 
+/** Sets a whole value in one change event; typing it key by key is what made the form tests slow. */
+function setValue(label: string, value: string) {
+  fireEvent.change(screen.getByLabelText(label), { target: { value } });
+}
+
 export async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByLabelText("Course name"), "Intro to Emptiness");
-  await user.type(screen.getByLabelText("Summary"), "A short summary.");
+  setValue("Course name", "Intro to Emptiness");
+  setValue("Summary", "A short summary.");
   await user.click(
     await screen.findByRole("button", { name: "Fill description" }),
   );
   await chooseImage(user);
-  await user.type(
-    screen.getByLabelText("Content link"),
-    "https://example.com/c",
-  );
-  await user.type(screen.getByLabelText("Start date"), "2099-01-10");
-  await user.type(screen.getByLabelText("Start time"), "09:00");
-  await user.type(screen.getByLabelText("End date"), "2099-01-10");
-  await user.type(screen.getByLabelText("End time"), "11:30");
-  await user.type(screen.getByLabelText("Price"), "79.50");
+  setValue("Content link", "https://example.com/c");
+  setValue("Start date", "2099-01-10");
+  setValue("Start time", "09:00");
+  setValue("End date", "2099-01-10");
+  setValue("End time", "11:30");
+  setValue("Price", "79.50");
 }

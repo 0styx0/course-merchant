@@ -43,26 +43,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **6c.** The end date input's `min` is the start date (none while it is empty), so the picker opens near it; still to confirm by hand in Chrome.
   - [x] **6d.** `StatusIcon` always renders a fixed `size-4` slot, so the X and the check no longer shift the input.
 - [ ] **7. Layout and wording**, in three commits (design in *Step 7* below):
-  - [ ] **7a.** The price outline appears only once any price input has text, and the Pricing text says how to make a course free. **Next**
-    - *Files*:
-      - [price-summary.ts](../web/src/features/admin-courses/price/price-summary.ts) (`priceSummary` returns `undefined` while every price input is empty after trimming)
-      - [price-summary.test.ts](../web/src/features/admin-courses/price/price-summary.test.ts)
-      - [price-schedule.tsx](../web/src/features/admin-courses/price/price-schedule.tsx) (`summary` optional; the `aria-live` box always renders, its content only with a summary)
-      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/course-form-sections.tsx) (Pricing description gains "Enter 0 for a free course."; `PricingSection`'s `summary` prop type)
-      - [course-form.fields.test.tsx](../web/src/features/admin-courses/course-form/tests/course-form.fields.test.tsx)
-    - *Behaviours*:
-      - First load: no "Price schedule (…)" text.
-      - Typing an amount shows the outline with its line.
-      - Typing only a start date (no amount) shows the heading over an empty item (owner's choice).
-      - Typing in a second row's input only also shows it.
-      - Spaces alone count as empty.
-      - Clearing every price input hides it again.
-      - Removing the only row with text hides it.
-      - The empty live region adds no gap under "Add price" (how: chosen at the outline; not `hidden`, which removes the live region).
-      - "Enter 0 for a free course." is in the Pricing section's text.
-    - *Settled*: U3b in *UX pass*; the decision row on the price outline.
-    - *Done when*: unit tests pass; in `dev:mock` the outline appears on the first keystroke and goes when cleared.
-  - [ ] **7b.** New field order and section names: Basics (Image, Course name, Summary, Description), Course material, Schedule (Time zone first), Pricing.
+  - [x] **7a.** `priceSummary` returns nothing until any price input has text; `PriceSchedule` keeps its empty `aria-live` box (`empty:-mt-4` cancels the section gap); the Pricing text says "Enter 0 for a free course."
+  - [ ] **7b.** New field order and section names: Basics (Image, Course name, Summary, Description), Course material, Schedule (Time zone first), Pricing. **Next**
     - *Files*:
       - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/course-form-sections.tsx) (the image field moves into `BasicsSection` first; `ImageSection` removed; `ContentSection` becomes `CourseMaterialSection` titled "Course material"; `TimeZoneField` first in `ScheduleSection`)
       - [course-form-fields.tsx](../web/src/features/admin-courses/course-form/course-form-fields.tsx) (`TimeZoneField` takes a full row in the schedule's two-column grid, `sm:col-span-2`)

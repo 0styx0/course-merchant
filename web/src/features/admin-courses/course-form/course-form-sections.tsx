@@ -185,7 +185,7 @@ export function PricingSection({
   return (
     <FormSection
       title="Pricing"
-      description="What students pay, in US dollars, and when each price starts."
+      description="What students pay, in US dollars, and when each price starts. Enter 0 for a free course."
       help="Leave the date and time empty to start when the course is published."
     >
       {priceRows.fields.map((row, index) => (

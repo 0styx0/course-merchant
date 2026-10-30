@@ -9,12 +9,17 @@ describe("priceSummary", () => {
     effectiveDate: date,
     effectiveTimeOfDay: time,
   });
+  const summaryOf = (prices: ReturnType<typeof price>[], timeZone = zone) => {
+    const summary = priceSummary(prices, timeZone);
+    if (!summary) throw new Error("expected a summary");
+    return summary;
+  };
   const texts = (prices: ReturnType<typeof price>[], timeZone = zone) =>
-    priceSummary(prices, timeZone).lines.map((parts) =>
+    summaryOf(prices, timeZone).lines.map((parts) =>
       parts.map(({ text }) => text).join(""),
     );
   const errorTexts = (prices: ReturnType<typeof price>[]) =>
-    priceSummary(prices, zone).lines.map((parts) =>
+    summaryOf(prices).lines.map((parts) =>
       parts.filter(({ isError }) => isError).map(({ text }) => text),
     );
 
@@ -22,7 +27,7 @@ describe("priceSummary", () => {
     expect(texts([price("99")])).toEqual([
       "$99 from when the course is published",
     ]);
-    expect(priceSummary([price("99")], zone).timeZone).toBe(zone);
+    expect(summaryOf([price("99")]).timeZone).toBe(zone);
   });
 
   it("lists prices in start order, whatever the row order", () => {
@@ -49,7 +54,7 @@ describe("priceSummary", () => {
   it("shows moments in the chosen zone", () => {
     const row = [price("99", "2030-02-01", "09:00")];
     expect(texts(row, "Asia/Tokyo")).toEqual(["$99 from Feb 1, 2030, 9:00 AM"]);
-    expect(priceSummary(row, "Asia/Tokyo").timeZone).toBe("Asia/Tokyo");
+    expect(summaryOf(row, "Asia/Tokyo").timeZone).toBe("Asia/Tokyo");
   });
 
   it("replaces only the invalid amount with Error", () => {
@@ -86,5 +91,29 @@ describe("priceSummary", () => {
       "$5 from when the course is published",
     ]);
     expect(errorTexts([price("", "2030-02-01", "")])).toEqual([[]]);
+  });
+
+  it("returns nothing while every price input is empty", () => {
+    expect(priceSummary([price("")], zone)).toBeUndefined();
+    expect(priceSummary([price(""), price("")], zone)).toBeUndefined();
+  });
+
+  it("counts spaces alone as empty", () => {
+    expect(priceSummary([price("  ", " ", " ")], zone)).toBeUndefined();
+  });
+
+  it.each([
+    ["an amount", price("5")],
+    ["only a start date", price("", "2030-02-01", "")],
+    ["only a start time", price("", "", "09:00")],
+  ])("returns the summary once there is %s", (_name, row) => {
+    expect(priceSummary([row], zone)).toBeDefined();
+  });
+
+  it("returns the summary when only a later row has text", () => {
+    expect(texts([price(""), price("5")])).toEqual([
+      "",
+      "$5 from when the course is published",
+    ]);
   });
 });

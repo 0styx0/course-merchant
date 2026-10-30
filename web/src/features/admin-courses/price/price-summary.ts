@@ -77,17 +77,26 @@ function priceLine(
   };
 }
 
+function hasPriceInput(prices: CourseFormValues["prices"]): boolean {
+  return prices.some(({ amountDollars, effectiveDate, effectiveTimeOfDay }) =>
+    [amountDollars, effectiveDate, effectiveTimeOfDay].some(
+      (typed) => typed.trim() !== "",
+    ),
+  );
+}
+
 /**
- * One line per price, as pieces: valid starts in start order, then the prices
- * whose start is incomplete, unconvertible or the same as an earlier row's.
- * Only the broken piece reads "Error" ("$79 from Error", "$Error from Feb 1,
+ * Nothing while every price input is empty; otherwise one line per price, as
+ * pieces: valid starts in start order, then the prices whose start is
+ * incomplete, unconvertible or the same as an earlier row's. Only the broken piece reads "Error" ("$79 from Error", "$Error from Feb 1,
  * 2027, 9:00 AM"). A price with no amount typed is an empty line. The form's
  * own checks say what is wrong.
  */
 export function priceSummary(
   prices: CourseFormValues["prices"],
   timeZone: string,
-): { timeZone: string; lines: PricePart[][] } {
+): { timeZone: string; lines: PricePart[][] } | undefined {
+  if (!hasPriceInput(prices)) return undefined;
   const taken = new Set<number>();
   // Rows are read in the order shown, so the later of two equal starts is the repeat.
   const lines = prices.map((price) => priceLine(price, timeZone, taken));

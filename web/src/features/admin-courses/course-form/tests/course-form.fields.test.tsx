@@ -119,8 +119,7 @@ describe("CourseForm", () => {
     const user = userEvent.setup();
     renderForm();
 
-    expect(screen.getByText(/^Price schedule \(/)).toBeInTheDocument();
-    expect(screen.queryByText("Error")).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Price schedule \(/)).not.toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Price"), "abc");
     expect(screen.getByText("Error")).toHaveClass("text-destructive");
@@ -129,8 +128,56 @@ describe("CourseForm", () => {
     await user.type(screen.getByLabelText("Price"), "79,5");
 
     expect(screen.queryByText("Error")).not.toBeInTheDocument();
+    expect(screen.getByText(/^Price schedule \(/)).toBeInTheDocument();
     expect(screen.getByRole("listitem")).toHaveTextContent(
       "$79.50 from when the course is published",
+    );
+  });
+
+  it("shows the price outline once any price input has text, and hides it when all are empty", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    const outline = () => screen.queryByText(/^Price schedule \(/);
+
+    await user.type(screen.getByLabelText("Price start date"), "2099-01-10");
+    expect(outline()).toBeInTheDocument();
+    await user.clear(screen.getByLabelText("Price start date"));
+    expect(outline()).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Price"), "  ");
+    expect(outline()).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText("Price"), "5");
+    expect(outline()).toBeInTheDocument();
+    await user.clear(screen.getByLabelText("Price"));
+    expect(outline()).not.toBeInTheDocument();
+  });
+
+  it("shows the price outline for text in a second row only, and hides it when that row is removed", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await user.click(screen.getByRole("button", { name: "Add price" }));
+
+    await user.type(screen.getByLabelText("Price 2"), "5");
+    expect(screen.getByText(/^Price schedule \(/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Remove price 2" }));
+    expect(screen.queryByText(/^Price schedule \(/)).not.toBeInTheDocument();
+  });
+
+  it("keeps an empty live region that adds no gap while the outline is hidden", () => {
+    renderForm();
+    const region = screen
+      .getByRole("group", { name: "Pricing" })
+      .querySelector("[aria-live]");
+
+    expect(region).toBeEmptyDOMElement();
+    expect(region).toHaveClass("empty:-mt-4");
+  });
+
+  it("tells how to make a course free in the Pricing section", () => {
+    renderForm();
+    expect(screen.getByRole("group", { name: "Pricing" })).toHaveTextContent(
+      "Enter 0 for a free course.",
     );
   });
 
