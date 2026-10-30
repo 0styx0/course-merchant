@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
   Controller,
   type UseFieldArrayReturn,
@@ -9,9 +10,7 @@ import {
 import { FormSection } from "@/components/form/form-section";
 import { Button } from "@/components/ui/button";
 
-import { InputField, TimeZoneField } from "./course-form-fields";
-import { ScheduleDateTimeFields } from "./course-form-schedule-fields";
-import { ScheduleProblems } from "./schedule-problems";
+import { InputField } from "./course-form-fields";
 import {
   COURSE_NAME_MAX_LENGTH,
   COURSE_SUMMARY_MAX_LENGTH,
@@ -141,14 +140,12 @@ export function CourseMaterialSection({ form }: { form: CourseFormApi }) {
   );
 }
 
-/** When the course starts and ends, and the zone those times are in. */
+/** The schedule's frame: its problem line, the given boxes, and the summary line. */
 export function ScheduleSection({
-  form,
-  timeZones,
+  children,
   scheduleText,
 }: {
-  form: CourseFormApi;
-  timeZones: string[];
+  children: ReactNode;
   scheduleText: string | undefined;
 }) {
   return (
@@ -157,14 +154,7 @@ export function ScheduleSection({
       description="When the course runs."
       className="grid gap-4 sm:grid-cols-2"
     >
-      <ScheduleProblems form={form} />
-      <TimeZoneField
-        form={form}
-        name="schedule.timeZone"
-        recheck={["schedule", "prices"]}
-        timeZones={timeZones}
-      />
-      <ScheduleDateTimeFields form={form} />
+      {children}
       <p aria-live="polite" className="text-sm sm:col-span-2">
         {scheduleText}
       </p>

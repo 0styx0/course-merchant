@@ -1,25 +1,23 @@
 "use client";
 
-import type { UseFormReturn } from "react-hook-form";
+import type { FieldValues, Path } from "react-hook-form";
 
 import { showsFieldError } from "@/components/form/validated-field";
 
+import type { CourseFormApi } from "./course-form-fields";
 import { SCHEDULE_PROBLEMS_ID } from "./course-form-schedule-fields";
 import {
   fieldErrorMessage,
   fieldErrorType,
 } from "../problems/course-form-problems";
-import type { CourseFormWithImageValues } from "../../validation/course-form-schema";
 
-const TIME_FIELDS = [
-  "schedule.startTimeOfDay",
-  "schedule.endTimeOfDay",
-] as const;
-
-/** The cross-field messages of the start and end time, shown by the same rule as a field's own. */
-function scheduleMessages(form: UseFormReturn<CourseFormWithImageValues>) {
+/** The cross-field messages of the named fields, shown by the same rule as a field's own. */
+function scheduleMessages<T extends FieldValues>(
+  form: CourseFormApi<T>,
+  names: Path<T>[],
+) {
   const { errors, isSubmitted } = form.formState;
-  return TIME_FIELDS.flatMap((name) => {
+  return names.flatMap((name) => {
     const message = fieldErrorMessage(errors, name);
     const isShown = showsFieldError({
       error: message,
@@ -32,17 +30,20 @@ function scheduleMessages(form: UseFormReturn<CourseFormWithImageValues>) {
 }
 
 /** One line per problem that compares the schedule's fields; empty when there is none. */
-export function ScheduleProblems({
+export function ScheduleProblems<T extends FieldValues>({
   form,
+  names,
 }: {
-  form: UseFormReturn<CourseFormWithImageValues>;
+  form: CourseFormApi<T>;
+  /** The start and end time, where the cross-field messages land. */
+  names: Path<T>[];
 }) {
   return (
     <div
       id={SCHEDULE_PROBLEMS_ID}
       className="text-sm text-destructive empty:hidden sm:col-span-2"
     >
-      {scheduleMessages(form).map((message) => (
+      {scheduleMessages(form, names).map((message) => (
         <p key={message}>{message}</p>
       ))}
     </div>

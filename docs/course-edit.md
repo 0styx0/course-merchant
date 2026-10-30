@@ -11,20 +11,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [ ] **1. Create form rebuilt from shared building blocks.** Create behaves the same, but `CourseForm` becomes a composition of shared sections, fields and hooks, with no `mode` prop and no create/edit conditionals.
   - [x] **1a.** Form files grouped by job (`sections/`, `problems/`, `hooks/`, `create-course/`), `CourseForm` renamed `CreateCourseForm`, hooks file split.
   - [x] **1b.** Fields and error readers are generic over the form's type; `TimeZoneField` takes its name and the paths to re-check, with a test for the re-check.
-  - [ ] **1c.** Schedule blocks take their names from the parent, and `ScheduleSection` becomes layout. **Next**
-    - *Files*:
-      - [course-form-schedule-fields.tsx](../web/src/features/admin-courses/course-form/sections/course-form-schedule-fields.tsx) (four names)
-      - [schedule-problems.tsx](../web/src/features/admin-courses/course-form/sections/schedule-problems.tsx) (two time names)
-      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/sections/course-form-sections.tsx) (`ScheduleSection` takes children and `scheduleText`)
-      - `create-course/create-course-sections.tsx` (new; create's filled sections, so the form file stays short)
-      - [create-course-form.tsx](../web/src/features/admin-courses/create-course/create-course-form.tsx)
-    - *Behaviours*:
-      - A date change marks the field touched.
-      - A date change checks again only the siblings the admin has reached (existing schedule-validation tests).
-      - The end date's `min` follows the start date.
-      - Cross-field messages show in the shared line.
-    - *Settled*: try `FieldPathByValue<T, string>` names for `setValue` first; if `tsc` still refuses, one commented cast for the library's type limit, and a clause added to the "no cast" decision row.
-  - [ ] **1d.** Price rows take their names from the parent, and `PricingSection` becomes layout.
+  - [x] **1c.** Schedule blocks take their names from the parent, and `ScheduleSection` is layout; create fills it in `create-course/create-course-sections.tsx`.
+  - [ ] **1d.** Price rows take their names from the parent, and `PricingSection` becomes layout. **Next**
     - *Files*:
       - [price-row.tsx](../web/src/features/admin-courses/price/price-row.tsx) (the row's three names)
       - `price/price-row-labels.ts` (new; `priceRowLabels` moves here from `course-form/problems`)

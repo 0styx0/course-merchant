@@ -1,26 +1,25 @@
 "use client";
 
-import type { UseFormReturn } from "react-hook-form";
+import type { FieldPathByValue, FieldValues, PathValue } from "react-hook-form";
 
-import { InputField } from "./course-form-fields";
-import type { CourseFormWithImageValues } from "../../validation/course-form-schema";
-
-type CourseFormApi = UseFormReturn<CourseFormWithImageValues>;
-
-const SCHEDULE_DATE_TIME_FIELDS = [
-  "schedule.startDate",
-  "schedule.startTimeOfDay",
-  "schedule.endDate",
-  "schedule.endTimeOfDay",
-] as const;
+import { InputField, type CourseFormApi } from "./course-form-fields";
 
 /** The id of the Schedule line that shows the cross-field messages. */
 export const SCHEDULE_PROBLEMS_ID = "schedule-problems";
 
-type ScheduleDateTimeField = (typeof SCHEDULE_DATE_TIME_FIELDS)[number];
+/** The paths of the four boxes, each holding a string. */
+export type ScheduleDateTimeNames<T extends FieldValues> = {
+  startDate: FieldPathByValue<T, string>;
+  startTimeOfDay: FieldPathByValue<T, string>;
+  endDate: FieldPathByValue<T, string>;
+  endTimeOfDay: FieldPathByValue<T, string>;
+};
 
 /** True when the admin has reached the field or it already shows a problem. */
-function isReached(form: CourseFormApi, name: ScheduleDateTimeField) {
+function isReached<T extends FieldValues>(
+  form: CourseFormApi<T>,
+  name: FieldPathByValue<T, string>,
+) {
   const { isTouched, error } = form.getFieldState(name);
   return isTouched || Boolean(error);
 }
@@ -30,31 +29,36 @@ function isReached(form: CourseFormApi, name: ScheduleDateTimeField) {
  * touched and checks it. The other schedule fields are checked too (they
  * compare with it), but only those already reached, so none is flagged early.
  */
-function makeScheduleChangeHandler(
-  form: CourseFormApi,
-  name: ScheduleDateTimeField,
+function makeScheduleChangeHandler<T extends FieldValues>(
+  form: CourseFormApi<T>,
+  name: FieldPathByValue<T, string>,
+  allNames: FieldPathByValue<T, string>[],
 ) {
   return (event: { target: { value: string } }) => {
-    form.setValue(name, event.target.value, {
+    // The library types `setValue`'s value as the field's type, which it can't
+    // narrow to string for a generic `T`, so it needs this cast.
+    form.setValue(name, event.target.value as PathValue<T, typeof name>, {
       shouldTouch: true,
       shouldValidate: true,
     });
-    const others = SCHEDULE_DATE_TIME_FIELDS.filter(
+    const others = allNames.filter(
       (other) => other !== name && isReached(form, other),
     );
     if (others.length > 0) void form.trigger(others);
   };
 }
 
-function ScheduleDateTimeField({
+function ScheduleDateTimeField<T extends FieldValues>({
   form,
   name,
+  allNames,
   label,
   type,
   min,
 }: {
-  form: CourseFormApi;
-  name: ScheduleDateTimeField;
+  form: CourseFormApi<T>;
+  name: FieldPathByValue<T, string>;
+  allNames: FieldPathByValue<T, string>[];
   label: string;
   type: "date" | "time";
   min?: string;
@@ -67,38 +71,48 @@ function ScheduleDateTimeField({
       type={type}
       min={min}
       sharedMessageId={SCHEDULE_PROBLEMS_ID}
-      registerOptions={{ onChange: makeScheduleChangeHandler(form, name) }}
+      registerOptions={{
+        onChange: makeScheduleChangeHandler(form, name, allNames),
+      }}
     />
   );
 }
 
 /** The start and end date and time boxes, in page order. */
-export function ScheduleDateTimeFields({ form }: { form: CourseFormApi }) {
-  const startDate = form.watch("schedule.startDate");
+export function ScheduleDateTimeFields<T extends FieldValues>({
+  form,
+  names,
+}: {
+  form: CourseFormApi<T>;
+  names: ScheduleDateTimeNames<T>;
+}) {
+  const startDate = form.watch(names.startDate);
+  const allNames = Object.values<FieldPathByValue<T, string>>(names);
+  const shared = { form, allNames };
   return (
     <>
       <ScheduleDateTimeField
-        form={form}
-        name="schedule.startDate"
+        {...shared}
+        name={names.startDate}
         label="Start date"
         type="date"
       />
       <ScheduleDateTimeField
-        form={form}
-        name="schedule.startTimeOfDay"
+        {...shared}
+        name={names.startTimeOfDay}
         label="Start time"
         type="time"
       />
       <ScheduleDateTimeField
-        form={form}
-        name="schedule.endDate"
+        {...shared}
+        name={names.endDate}
         label="End date"
         type="date"
-        min={startDate || undefined}
+        min={String(startDate) || undefined}
       />
       <ScheduleDateTimeField
-        form={form}
-        name="schedule.endTimeOfDay"
+        {...shared}
+        name={names.endTimeOfDay}
         label="End time"
         type="time"
       />

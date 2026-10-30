@@ -22,8 +22,8 @@ import {
   CourseMaterialSection,
   emptyPrice,
   PricingSection,
-  ScheduleSection,
 } from "../course-form/sections/course-form-sections";
+import { CreateScheduleSection } from "./create-course-sections";
 import { useBrowserTimeZone } from "./use-browser-time-zone";
 import { useSaveCourse } from "./use-save-course";
 import {
@@ -141,7 +141,7 @@ export function CreateCourseForm({ timeZones }: CreateCourseFormProps) {
 
       <BasicsSection form={form} isSubmitted={isSubmitted} />
       <CourseMaterialSection form={form} />
-      <ScheduleSection
+      <CreateScheduleSection
         form={form}
         timeZones={timeZones}
         scheduleText={scheduleText}
