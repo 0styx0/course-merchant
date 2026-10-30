@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
 import {
+  refusalMessage,
   useServerProblem,
   type ServerProblem,
 } from "../course-form/hooks/use-server-problem";
@@ -51,10 +52,6 @@ function saveDraft(
   return draftId
     ? updateCourseAction(draftId, fields)
     : createCourseAction(fields);
-}
-
-function refusalMessage({ problem }: CourseActionFailure): ServerProblem {
-  return { title: problem.title, detail: problem.detail };
 }
 
 /**

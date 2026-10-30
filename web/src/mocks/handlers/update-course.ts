@@ -43,6 +43,43 @@ export const updateCourseError = http.put(updateCourseUrl, () => {
   return problemResponse(500, body);
 });
 
+type FieldRefusal = { field: string; detail: string };
+
+function refusedFieldResponse({ field, detail }: FieldRefusal) {
+  const body = {
+    title: "Validation failed",
+    detail: "The request contains 1 invalid field.",
+    code: "VALIDATION_FAILED",
+    errors: [{ field, code: "INVALID_FORMAT", detail }],
+  } satisfies ValidationFailedResponse;
+
+  return problemResponse(400, body);
+}
+
+/**
+ * Makes a handler that refuses the first save on `/name`, the second on
+ * `/contentUrl`, and accepts the rest. Each call starts a fresh count.
+ */
+export function makeTwoRoundsRefusalHandler() {
+  let saveCount = 0;
+  return http.put(updateCourseUrl, () => {
+    saveCount += 1;
+    if (saveCount === 1) {
+      return refusedFieldResponse({
+        field: "/name",
+        detail: "Name is already used by another course.",
+      });
+    }
+    if (saveCount === 2) {
+      return refusedFieldResponse({
+        field: "/contentUrl",
+        detail: "Content link must start with https://.",
+      });
+    }
+    return HttpResponse.json(draftedAdminCourse);
+  });
+}
+
 export const updateCourseHandlers = {
   success: updateCourseSuccess,
   validationFailed: updateCourseValidationFailed,

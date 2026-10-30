@@ -18,7 +18,6 @@ import {
 } from "../course-form/sections/course-form-fields";
 import {
   BasicsSection,
-  CourseMaterialSection,
   PricingSection,
   ScheduleSection,
 } from "../course-form/sections/course-form-sections";
@@ -87,21 +86,6 @@ export function CreateBasicsSection({
       />
       <DescriptionField form={form} name="description" />
     </BasicsSection>
-  );
-}
-
-/** Create's course material: the content link. */
-export function CreateCourseMaterialSection({ form }: { form: CreateForm }) {
-  return (
-    <CourseMaterialSection>
-      <InputField
-        form={form}
-        name="contentUrl"
-        label={courseFieldLabels.contentUrl}
-        type="url"
-        description="Where students find the course material. It is never shown to the public."
-      />
-    </CourseMaterialSection>
   );
 }
 

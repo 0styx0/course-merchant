@@ -1,26 +1,21 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRef } from "react";
 import {
   useFieldArray,
   useForm,
   useWatch,
   type Control,
-  type UseFormReturn,
 } from "react-hook-form";
 
 import { ErrorSummary } from "@/components/form/error-summary";
 
-import { useFocusSummaryOnSubmit } from "../course-form/hooks/use-focus-summary-on-submit";
-import { useLeaveWarning } from "../course-form/hooks/use-leave-warning";
-import { focusField } from "../course-form/problems/focus-field";
-import { courseFormProblems } from "../course-form/problems/course-form-problems";
+import { useErrorListAndLeaveWarning } from "../course-form/hooks/use-error-list-and-leave-warning";
+import { ContentLinkSection } from "../course-form/sections/content-link-section";
 import { SaveButton } from "../course-form/sections/save-button";
 import { createCourseFields } from "./create-course-fields";
 import {
   CreateBasicsSection,
-  CreateCourseMaterialSection,
   CreatePricingSection,
   CreateScheduleSection,
   emptyPrice,
@@ -69,21 +64,6 @@ function useCourseFormState() {
   return { form, priceRows };
 }
 
-/** The error list's entries: none until the first submit. */
-function useSubmittedProblems(
-  form: UseFormReturn<
-    CourseFormWithImageValues,
-    unknown,
-    CheckedCourseFormWithImageValues
-  >,
-  priceRowCount: number,
-) {
-  const { errors, isSubmitted } = form.formState;
-  return isSubmitted
-    ? courseFormProblems(errors, createCourseFields(priceRowCount))
-    : [];
-}
-
 /** The schedule's and the price list's summary lines, kept in step with the inputs. */
 function useScheduleAndPriceText(
   control: Control<
@@ -108,16 +88,17 @@ type CreateCourseFormProps = {
 /** The "create course" form. It saves a draft and goes to the home page. */
 export function CreateCourseForm({ timeZones }: CreateCourseFormProps) {
   const { form, priceRows } = useCourseFormState();
-  const summaryRef = useRef<HTMLDivElement>(null);
   const { save, saved, serverProblem, clearServerProblem } =
     useSaveCourse(form);
-  const { isDirty, isSubmitted, isSubmitting, submitCount } = form.formState;
-  const problems = useSubmittedProblems(form, priceRows.fields.length);
+  const { isSubmitted, isSubmitting } = form.formState;
+  const errorList = useErrorListAndLeaveWarning(
+    form,
+    createCourseFields(priceRows.fields.length),
+    saved,
+  );
   const { scheduleText, prices } = useScheduleAndPriceText(form.control);
 
-  useFocusSummaryOnSubmit(summaryRef, submitCount);
   useBrowserTimeZone(form.reset, timeZones, defaultValues);
-  useLeaveWarning(isDirty && !saved);
 
   return (
     <form
@@ -125,15 +106,10 @@ export function CreateCourseForm({ timeZones }: CreateCourseFormProps) {
       onSubmit={form.handleSubmit(save, clearServerProblem)}
       className="flex flex-col gap-8"
     >
-      <ErrorSummary
-        ref={summaryRef}
-        problems={problems}
-        serverProblem={serverProblem}
-        onSelectField={(name) => focusField(form.setFocus, name)}
-      />
+      <ErrorSummary {...errorList} serverProblem={serverProblem} />
 
       <CreateBasicsSection form={form} isSubmitted={isSubmitted} />
-      <CreateCourseMaterialSection form={form} />
+      <ContentLinkSection form={form} name="contentUrl" />
       <CreateScheduleSection
         form={form}
         timeZones={timeZones}

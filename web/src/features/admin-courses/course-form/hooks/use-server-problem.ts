@@ -11,6 +11,13 @@ const actionThrewProblem: ServerProblem = {
     "Something went wrong while saving. Check your connection and try again.",
 };
 
+/** The API's own title and detail for a refused save. */
+export function refusalMessage({
+  problem,
+}: CourseActionFailure): ServerProblem {
+  return { title: problem.title, detail: problem.detail };
+}
+
 /** The message above the form, and the errors put on its fields. */
 export function useServerProblem<TValues extends FieldValues>(
   setError: UseFormSetError<TValues>,
