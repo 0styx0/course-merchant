@@ -1,5 +1,6 @@
 "use client";
 
+import type { JSONContent } from "@tiptap/core";
 import type { ComponentProps, ReactNode } from "react";
 import {
   Controller,
@@ -23,6 +24,7 @@ import {
   fieldErrorMessage,
   fieldErrorType,
 } from "../problems/course-form-problems";
+import { DescriptionEditor } from "../../description-editor/description-editor";
 import { TimeZonePicker } from "../../schedule/time-zone-picker/time-zone-picker";
 
 /**
@@ -214,5 +216,33 @@ export function TimeZoneField<T extends FieldValues>({
         )}
       />
     </div>
+  );
+}
+
+/** The rich-text description editor wired to the form. */
+export function DescriptionField<T extends FieldValues>({
+  form,
+  name,
+}: {
+  form: CourseFormApi<T>;
+  /** The path of the description, which must hold a rich-text document. */
+  name: FieldPathByValue<T, JSONContent>;
+}) {
+  return (
+    <Controller
+      control={form.control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <DescriptionEditor
+          value={field.value}
+          onChange={field.onChange}
+          onBlur={field.onBlur}
+          fieldRef={field.ref}
+          error={fieldState.error?.message}
+          touched={fieldState.isTouched}
+          submitted={form.formState.isSubmitted}
+        />
+      )}
+    />
   );
 }

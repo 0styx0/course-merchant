@@ -11,6 +11,7 @@ import {
   type ScheduleDateTimeNames,
 } from "../course-form/sections/course-form-schedule-fields";
 import {
+  DescriptionField,
   InputField,
   TimeZoneField,
   type CourseFormApi,
@@ -22,7 +23,6 @@ import {
   ScheduleSection,
 } from "../course-form/sections/course-form-sections";
 import { ScheduleProblems } from "../course-form/sections/schedule-problems";
-import { DescriptionEditor } from "../description-editor/description-editor";
 import { ImageField } from "../image/image-field";
 import { PriceRow } from "../price/price-row";
 import type { priceSummary } from "../price/price-summary";
@@ -47,32 +47,6 @@ function ImageInput({
       name="image"
       render={({ field, fieldState }) => (
         <ImageField
-          value={field.value}
-          onChange={field.onChange}
-          onBlur={field.onBlur}
-          fieldRef={field.ref}
-          error={fieldState.error?.message}
-          touched={fieldState.isTouched}
-          submitted={isSubmitted}
-        />
-      )}
-    />
-  );
-}
-
-function DescriptionField({
-  form,
-  isSubmitted,
-}: {
-  form: CreateForm;
-  isSubmitted: boolean;
-}) {
-  return (
-    <Controller
-      control={form.control}
-      name="description"
-      render={({ field, fieldState }) => (
-        <DescriptionEditor
           value={field.value}
           onChange={field.onChange}
           onBlur={field.onBlur}
@@ -111,7 +85,7 @@ export function CreateBasicsSection({
         placeholder="One or two sentences shown in the course list"
         limit={COURSE_SUMMARY_MAX_LENGTH}
       />
-      <DescriptionField form={form} isSubmitted={isSubmitted} />
+      <DescriptionField form={form} name="description" />
     </BasicsSection>
   );
 }

@@ -18,17 +18,23 @@ function scheduleBounds(schedule: CourseFormValues["schedule"]) {
   return { startMs, endMs };
 }
 
+/** "Runs Jan 3, 2027, 9:00 AM to Jan 3, 2027, 11:30 AM (America/New_York). Lasts 2 hours 30 minutes." */
+export function scheduleSentence(
+  startMs: number,
+  endMs: number,
+  timeZone: string,
+): string {
+  return `Runs ${formatMoment(startMs, timeZone)} to ${formatMoment(endMs, timeZone)} (${timeZone}). Lasts ${formatCourseLength(endMs - startMs)}.`;
+}
+
 /**
- * "Runs Jan 3, 2027, 9:00 AM to Jan 3, 2027, 11:30 AM (America/New_York).
- * Lasts 2 hours 30 minutes.", or nothing until both ends are complete,
- * convertible and in order. The form's own checks report the rest.
+ * The sentence from `scheduleSentence`, or nothing until both ends are
+ * complete, convertible and in order. The form's own checks report the rest.
  */
 export function scheduleSummary(
   schedule: CourseFormValues["schedule"],
 ): string | undefined {
   const bounds = scheduleBounds(schedule);
   if (!bounds) return undefined;
-  const { startMs, endMs } = bounds;
-  const { timeZone } = schedule;
-  return `Runs ${formatMoment(startMs, timeZone)} to ${formatMoment(endMs, timeZone)} (${timeZone}). Lasts ${formatCourseLength(endMs - startMs)}.`;
+  return scheduleSentence(bounds.startMs, bounds.endMs, schedule.timeZone);
 }

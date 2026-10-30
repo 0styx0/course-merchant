@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { scheduleSummary } from "./schedule-summary";
+import { scheduleSentence, scheduleSummary } from "./schedule-summary";
 
 describe("scheduleSummary", () => {
   const complete = {
@@ -44,5 +44,23 @@ describe("scheduleSummary", () => {
         endTimeOfDay: "06:00",
       }),
     ).toContain("Lasts 5 hours.");
+  });
+});
+
+describe("scheduleSentence", () => {
+  it("describes the given start and end in the given zone", () => {
+    const startMs = Date.UTC(2030, 0, 10, 14, 0);
+    const endMs = Date.UTC(2030, 0, 10, 14, 30);
+    expect(scheduleSentence(startMs, endMs, "America/New_York")).toBe(
+      "Runs Jan 10, 2030, 9:00 AM to Jan 10, 2030, 9:30 AM (America/New_York). Lasts 30 minutes.",
+    );
+  });
+
+  it("reads the same moments in another zone", () => {
+    const startMs = Date.UTC(2030, 0, 10, 14, 0);
+    const endMs = Date.UTC(2030, 0, 10, 16, 0);
+    expect(scheduleSentence(startMs, endMs, "UTC")).toBe(
+      "Runs Jan 10, 2030, 2:00 PM to Jan 10, 2030, 4:00 PM (UTC). Lasts 2 hours.",
+    );
   });
 });

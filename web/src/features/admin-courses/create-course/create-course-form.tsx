@@ -12,11 +12,11 @@ import {
 } from "react-hook-form";
 
 import { ErrorSummary } from "@/components/form/error-summary";
-import { Button } from "@/components/ui/button";
 
 import { useFocusSummaryOnSubmit } from "../course-form/hooks/use-focus-summary-on-submit";
 import { useLeaveWarning } from "../course-form/hooks/use-leave-warning";
 import { courseFormProblems } from "../course-form/problems/course-form-problems";
+import { SaveButton } from "../course-form/sections/save-button";
 import { createCourseFields } from "./create-course-fields";
 import {
   CreateBasicsSection,
@@ -112,14 +112,6 @@ function useScheduleAndPriceText(
   return { scheduleText: scheduleSummary(schedule), prices };
 }
 
-function SaveButton({ isSubmitting }: { isSubmitting: boolean }) {
-  return (
-    <Button type="submit" disabled={isSubmitting} className="self-start">
-      {isSubmitting ? "Saving…" : "Save as draft"}
-    </Button>
-  );
-}
-
 type CreateCourseFormProps = {
   /** Built on the server so the server and browser list the same zones. */
   timeZones: string[];
@@ -165,7 +157,7 @@ export function CreateCourseForm({ timeZones }: CreateCourseFormProps) {
         summary={prices}
       />
 
-      <SaveButton isSubmitting={isSubmitting} />
+      <SaveButton label="Save as draft" isSubmitting={isSubmitting} />
     </form>
   );
 }

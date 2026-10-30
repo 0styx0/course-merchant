@@ -16,20 +16,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **1e.** Basics and Course material are layout; create fills them in `create-course/create-course-sections.tsx`, with the image and description as its own children.
   - [x] **1f.** The error list takes its fields from the form. The label text and price-row names are shared in `course-form/fields/`; create lists its own fields in `create-course/create-course-fields.ts`.
 - [ ] **2. Edit page loads and saves the details.** A separate edit form prefills name, summary, description, content link and time zone, saves with a full PUT, and goes to `/`. Start and end times, prices and status go back unchanged.
-  - [ ] **2a.** The display pieces edit needs from create become shared; create looks and behaves the same. *(coverage first)* **Next**
-    - *Files*:
-      - [course-form-fields.tsx](../web/src/features/admin-courses/course-form/sections/course-form-fields.tsx#L134) gets `DescriptionField`, moved from [create-course-sections.tsx](../web/src/features/admin-courses/create-course/create-course-sections.tsx#L63); it takes its `name` from the parent
-      - `SaveButton` moves from [create-course-form.tsx](../web/src/features/admin-courses/create-course/create-course-form.tsx#L115) to a new file in `course-form/sections/`; it takes its label (create passes "Save as draft")
-      - [schedule-summary.ts](../web/src/features/admin-courses/schedule/summary/schedule-summary.ts#L26) also exports the sentence built from a start, an end and a zone; `scheduleSummary` uses it
-      - `schedule-summary.test.ts` gets a case for the new export
-      - folder counts: `sections/` 4 → 5
-    - *Behaviours*:
-      - none new; the create tests and Playwright `create-course.spec.ts` pass unchanged
-    - *Settled*:
-      - Decision row "Shared blocks are generic…"
-      - Step 1 note that the save label waits for milestone 2
-    - *Done when*: the moved lines show as covered before the move; all tests pass unchanged.
-  - [ ] **2b.** The error-handling logic edit needs from create becomes shared and generic over the form type; create behaves the same. *(coverage first)*
+  - [x] **2a.** `DescriptionField` and `SaveButton` (takes its label) are shared in `course-form/sections/`, and `scheduleSentence` is exported from `schedule-summary.ts`; create behaves the same.
+  - [ ] **2b.** The error-handling logic edit needs from create becomes shared and generic over the form type; create behaves the same. *(coverage first)* **Next**
     - *Files*:
       - `focusField` moves from [create-course-form.tsx](../web/src/features/admin-courses/create-course/create-course-form.tsx#L73) to a new file in `course-form/problems/`
       - `useServerProblem` moves from [use-save-course.ts](../web/src/features/admin-courses/create-course/use-save-course.ts#L61) to a new file in `course-form/hooks/`, taking `setError`; create keeps its own "saved as a draft" note
