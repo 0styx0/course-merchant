@@ -2,13 +2,14 @@ import { get, type FieldErrors } from "react-hook-form";
 
 import type { ErrorSummaryProblem } from "@/components/form/error-summary";
 
-import type { CourseFormValues } from "./validation/course-form-schema";
+import type { CourseFormWithImageValues } from "./validation/course-form-schema";
 
 /** The form's fields in page order, with the label the error list shows. */
 const COURSE_FORM_FIELD_LABELS = [
   ["name", "Course name"],
   ["summary", "Summary"],
   ["description", "Description"],
+  ["image", "Image"],
   ["contentUrl", "Content link"],
   ["schedule.startDate", "Start date"],
   ["schedule.startTimeOfDay", "Start time"],
@@ -44,7 +45,7 @@ function priceFieldLabels(rowCount: number) {
 
 /** The error message at a field's path, if it has one. */
 export function fieldErrorMessage(
-  errors: FieldErrors<CourseFormValues>,
+  errors: FieldErrors<CourseFormWithImageValues>,
   fieldName: string,
 ): string | undefined {
   const message = (get(errors, fieldName) as { message?: unknown } | undefined)
@@ -57,7 +58,7 @@ export function fieldErrorMessage(
  * field however many errors a bad paste caused.
  */
 export function courseFormProblems(
-  errors: FieldErrors<CourseFormValues>,
+  errors: FieldErrors<CourseFormWithImageValues>,
   priceRowCount: number,
 ): ErrorSummaryProblem[] {
   const fields = [

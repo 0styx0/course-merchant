@@ -34,26 +34,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
   - [x] **5a.** `updateCourseAction` saves the form's values over an existing draft (not used yet); the shared action result helpers live in `save-course/course-action-result.ts`.
   - [x] **5b.** `uploadCourseImageAction` uploads a file through the new `uploadCourseImage` wrapper (not used yet); `/image` errors map to the `image` field; `bodySizeLimit` is `"6mb"`.
   - [x] **5c.** `image/image-field.tsx` picks a file, shows a 16:9 preview (kept for a refused file) and `image/course-image.ts` measures it once and holds the zod rule (not used yet); an undecodable file is stored as 0 × 0 and reported as unreadable.
-  - [ ] **5d.** The form requires an image and uploads it after creating the draft. **Next**
-    - *Files*:
-      - [course-form-schema.ts](../web/src/features/admin-courses/validation/course-form-schema.ts)
-        - the form's resolver uses the existing schema extended with `image`
-        - the actions keep checking only the saved fields
-      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx) (Image section)
-      - [course-form-problems.ts](../web/src/features/admin-courses/course-form-problems.ts) (error-list entry)
-      - `useSaveCourse` moved into its own file
-      - [course-form.tsx](../web/src/features/admin-courses/course-form.tsx)
-      - the saving test
-    - *Behaviours*:
-      - the happy path: create, upload, go to `/`
-      - a failed upload keeps the id and shows "The course was saved as a draft, but the image didn't upload."
-      - the retry runs update with the edited values, then the upload, and never create
-      - a rejected action keeps the id and shows a general message
-      - an upload error shows on the image field
-      - the leave warning stays on until the upload succeeds
-      - the image file is never sent to create or update
-    - *Needs*: 5a, 5b, 5c
-  - [ ] **5e.** Browser test with a real image, and docs.
+  - [x] **5d.** The form requires an image and uploads it after creating the draft (`use-save-course.ts`); a failed upload keeps the draft id, and the retry updates then uploads. The form types are `CourseFormWithImageValues` and `CheckedCourseFormWithImageValues`; `CourseFormValues` stays the saved fields the actions check.
+  - [ ] **5e.** Browser test with a real image, and docs. **Next**
     - *Files*:
       - [create-course.spec.ts](../web/tests/browser/admin-courses/create-course.spec.ts) and a small fixture image
       - docs

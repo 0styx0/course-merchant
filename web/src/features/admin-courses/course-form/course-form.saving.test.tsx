@@ -8,6 +8,7 @@ import {
   fillValidForm,
   renderForm,
   summaryWithHeading,
+  uploadAction,
 } from "./course-form.fixtures";
 import { push } from "./course-form.mocks";
 
@@ -18,13 +19,25 @@ vi.mock(
 vi.mock("../save-course/create-course.action", () => ({
   createCourseAction: vi.fn(),
 }));
+vi.mock("../save-course/update-course.action", () => ({
+  updateCourseAction: vi.fn(),
+}));
+vi.mock("../save-course/upload-image/upload-course-image.action", () => ({
+  uploadCourseImageAction: vi.fn(),
+}));
 vi.mock("../description-editor/description-editor", async () => ({
   DescriptionEditor: (await import("./course-form.mocks"))
     .MockDescriptionEditor,
 }));
 
+const created: CourseActionResult = {
+  state: "success",
+  data: { courseId: "c1" },
+};
+
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
+  uploadAction.mockResolvedValue(created);
 });
 
 describe("CourseForm", () => {
@@ -42,6 +55,10 @@ describe("CourseForm", () => {
       name: "Intro to Emptiness",
       schedule: { timeZone: "America/New_York" },
     });
+    expect(action.mock.calls[0][0]).not.toHaveProperty("image");
+    expect(uploadAction).toHaveBeenCalledOnce();
+    expect(uploadAction.mock.calls[0][0]).toBe("c1");
+    expect(uploadAction.mock.calls[0][1].get("image")).toBeInstanceOf(File);
   });
 
   it("is disabled and reads Saving… while saving", async () => {

@@ -14,13 +14,14 @@ import {
   COURSE_NAME_MAX_LENGTH,
   COURSE_SUMMARY_MAX_LENGTH,
 } from "./validation/course-form-limits";
-import type { CourseFormValues } from "./validation/course-form-schema";
+import type { CourseFormWithImageValues } from "./validation/course-form-schema";
+import { ImageField } from "./image/image-field";
 import { DescriptionEditor } from "./description-editor/description-editor";
 import type { priceSummary } from "./price/price-summary";
 import { PriceRow } from "./price/price-row";
 import { PriceSchedule } from "./price/price-schedule";
 
-type CourseFormApi = UseFormReturn<CourseFormValues>;
+type CourseFormApi = UseFormReturn<CourseFormWithImageValues>;
 
 /** What a price row looks like before anything is typed in it. */
 export const emptyPrice = {
@@ -83,6 +84,38 @@ export function BasicsSection({
         limit={COURSE_SUMMARY_MAX_LENGTH}
       />
       <DescriptionField form={form} isSubmitted={isSubmitted} />
+    </FormSection>
+  );
+}
+
+/** The picture shown on the course's pages. */
+export function ImageSection({
+  form,
+  isSubmitted,
+}: {
+  form: CourseFormApi;
+  isSubmitted: boolean;
+}) {
+  return (
+    <FormSection
+      title="Image"
+      description="The picture shown with the course in the list and on its page."
+    >
+      <Controller
+        control={form.control}
+        name="image"
+        render={({ field, fieldState }) => (
+          <ImageField
+            value={field.value}
+            onChange={field.onChange}
+            onBlur={field.onBlur}
+            fieldRef={field.ref}
+            error={fieldState.error?.message}
+            touched={fieldState.isTouched}
+            submitted={isSubmitted}
+          />
+        )}
+      />
     </FormSection>
   );
 }
@@ -174,7 +207,7 @@ export function PricingSection({
   summary,
 }: {
   form: CourseFormApi;
-  priceRows: UseFieldArrayReturn<CourseFormValues, "prices">;
+  priceRows: UseFieldArrayReturn<CourseFormWithImageValues, "prices">;
   summary: ReturnType<typeof priceSummary>;
 }) {
   function removeRow(index: number) {

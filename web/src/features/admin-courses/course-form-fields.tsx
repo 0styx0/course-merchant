@@ -19,16 +19,16 @@ import { Input } from "@/components/ui/input";
 
 import { fieldErrorMessage } from "./course-form-problems";
 import { TimeZonePicker } from "./schedule/time-zone-picker";
-import type { CourseFormValues } from "./validation/course-form-schema";
+import type { CourseFormWithImageValues } from "./validation/course-form-schema";
 
-type CourseForm = UseFormReturn<CourseFormValues>;
+type CourseForm = UseFormReturn<CourseFormWithImageValues>;
 
 type FieldProps = {
   form: CourseForm;
-  name: Path<CourseFormValues>;
+  name: Path<CourseFormWithImageValues>;
   label: string;
   description?: string;
-  registerOptions?: RegisterOptions<CourseFormValues>;
+  registerOptions?: RegisterOptions<CourseFormWithImageValues>;
 };
 
 /** The field's help text, then its "n / limit" counter. */
@@ -69,7 +69,7 @@ function ariaProps({
   return { id, "aria-invalid": invalid, "aria-describedby": describedBy };
 }
 
-function stateOf(form: CourseForm, name: Path<CourseFormValues>) {
+function stateOf(form: CourseForm, name: Path<CourseFormWithImageValues>) {
   const { errors, touchedFields, isSubmitted } = form.formState;
   return {
     error: fieldErrorMessage(errors, name),

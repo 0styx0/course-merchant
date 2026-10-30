@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 
 import { InputField } from "../course-form-fields";
 import { priceRowLabels } from "../course-form-problems";
-import type { CourseFormValues } from "../validation/course-form-schema";
+import type { CourseFormWithImageValues } from "../validation/course-form-schema";
 
 type PriceRowProps = {
-  form: UseFormReturn<CourseFormValues>;
+  form: UseFormReturn<CourseFormWithImageValues>;
   index: number;
   rowCount: number;
   onRemove: () => void;

@@ -11,6 +11,12 @@ vi.mock(
 vi.mock("../save-course/create-course.action", () => ({
   createCourseAction: vi.fn(),
 }));
+vi.mock("../save-course/update-course.action", () => ({
+  updateCourseAction: vi.fn(),
+}));
+vi.mock("../save-course/upload-image/upload-course-image.action", () => ({
+  uploadCourseImageAction: vi.fn(),
+}));
 vi.mock("../description-editor/description-editor", async () => ({
   DescriptionEditor: (await import("./course-form.mocks"))
     .MockDescriptionEditor,

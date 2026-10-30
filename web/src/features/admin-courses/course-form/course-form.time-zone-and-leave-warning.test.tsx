@@ -2,7 +2,12 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { action, fillValidForm, renderForm } from "./course-form.fixtures";
+import {
+  action,
+  fillValidForm,
+  renderForm,
+  uploadAction,
+} from "./course-form.fixtures";
 import { push } from "./course-form.mocks";
 
 vi.mock(
@@ -12,6 +17,12 @@ vi.mock(
 vi.mock("../save-course/create-course.action", () => ({
   createCourseAction: vi.fn(),
 }));
+vi.mock("../save-course/update-course.action", () => ({
+  updateCourseAction: vi.fn(),
+}));
+vi.mock("../save-course/upload-image/upload-course-image.action", () => ({
+  uploadCourseImageAction: vi.fn(),
+}));
 vi.mock("../description-editor/description-editor", async () => ({
   DescriptionEditor: (await import("./course-form.mocks"))
     .MockDescriptionEditor,
@@ -19,6 +30,10 @@ vi.mock("../description-editor/description-editor", async () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  uploadAction.mockResolvedValue({
+    state: "success",
+    data: { courseId: "c1" },
+  });
 });
 
 describe("CourseForm", () => {

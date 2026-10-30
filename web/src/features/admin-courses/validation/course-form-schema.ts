@@ -6,6 +6,7 @@ import {
   hasVisibleText,
 } from "@/features/course-description/description-document";
 
+import { courseImageSchema, type ChosenImage } from "../image/course-image";
 import {
   COURSE_CONTENT_URL_MAX_LENGTH,
   COURSE_DESCRIPTION_MAX_TEXT_LENGTH,
@@ -30,6 +31,7 @@ const requiredStartDate = "Enter a start date.";
 const requiredStartTime = "Enter a start time.";
 const requiredEndDate = "Enter an end date.";
 const requiredEndTime = "Enter an end time.";
+const requiredImage = "Choose an image.";
 
 const timeZoneMessage = "Choose a time zone.";
 
@@ -114,39 +116,65 @@ const priceSchema = z.object({
   effectiveTimeOfDay: z.string(),
 });
 
-export const courseFormSchema = z
-  .object({
-    name: z
-      .string()
-      .trim()
-      .min(1, requiredName)
-      .max(COURSE_NAME_MAX_LENGTH, tooLong("name", COURSE_NAME_MAX_LENGTH)),
-    summary: z
-      .string()
-      .trim()
-      .min(1, requiredSummary)
-      .max(
-        COURSE_SUMMARY_MAX_LENGTH,
-        tooLong("summary", COURSE_SUMMARY_MAX_LENGTH),
-      ),
-    description: descriptionSchema,
-    contentUrl: z.string().trim().superRefine(checkedBy(contentUrlProblem)),
-    schedule: z.object({
-      startDate: z.string().min(1, requiredStartDate),
-      startTimeOfDay: z.string().min(1, requiredStartTime),
-      endDate: z.string().min(1, requiredEndDate),
-      endTimeOfDay: z.string().min(1, requiredEndTime),
-      timeZone: z.string().refine(isKnownTimeZone, timeZoneMessage),
-    }),
-    prices: z.array(priceSchema).min(1, "Add at least one price."),
-  })
-  .check((ctx) => {
-    for (const issue of crossFieldIssues(ctx.value, Date.now())) {
-      ctx.issues.push({ code: "custom", input: ctx.value, ...issue });
-    }
-  });
+/** The fields the API saves; the image is sent in a separate request. */
+const savedFieldsSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, requiredName)
+    .max(COURSE_NAME_MAX_LENGTH, tooLong("name", COURSE_NAME_MAX_LENGTH)),
+  summary: z
+    .string()
+    .trim()
+    .min(1, requiredSummary)
+    .max(
+      COURSE_SUMMARY_MAX_LENGTH,
+      tooLong("summary", COURSE_SUMMARY_MAX_LENGTH),
+    ),
+  description: descriptionSchema,
+  contentUrl: z.string().trim().superRefine(checkedBy(contentUrlProblem)),
+  schedule: z.object({
+    startDate: z.string().min(1, requiredStartDate),
+    startTimeOfDay: z.string().min(1, requiredStartTime),
+    endDate: z.string().min(1, requiredEndDate),
+    endTimeOfDay: z.string().min(1, requiredEndTime),
+    timeZone: z.string().refine(isKnownTimeZone, timeZoneMessage),
+  }),
+  prices: z.array(priceSchema).min(1, "Add at least one price."),
+});
 
-export type CourseFormValues = z.input<typeof courseFormSchema>;
+/** The saved fields as typed, before the schema checks and trims them. */
+export type CourseFormValues = z.input<typeof savedFieldsSchema>;
 
-/** The values after the schema has checked and trimmed them. */
-export type CheckedCourseFormValues = z.output<typeof courseFormSchema>;
+/** The saved fields after the schema has checked and trimmed them. */
+export type CheckedCourseFormValues = z.output<typeof savedFieldsSchema>;
+
+function checkCrossFields(ctx: z.core.ParsePayload<CheckedCourseFormValues>) {
+  for (const issue of crossFieldIssues(ctx.value, Date.now())) {
+    ctx.issues.push({ code: "custom", input: ctx.value, ...issue });
+  }
+}
+
+/** What the actions check: the fields the API saves. */
+export const courseFormSchema = savedFieldsSchema.check(checkCrossFields);
+
+/**
+ * The chosen image, or null before one is chosen (which is refused). A refine
+ * (not a pipe) keeps the other fields' cross-checks running while it fails.
+ */
+const imageSchema = courseImageSchema
+  .nullable()
+  .refine((image): image is ChosenImage => image !== null, requiredImage);
+
+/** What the form checks: the saved fields and the image. */
+export const courseFormWithImageSchema = savedFieldsSchema
+  .extend({ image: imageSchema })
+  .check(checkCrossFields);
+
+export type CourseFormWithImageValues = z.input<
+  typeof courseFormWithImageSchema
+>;
+
+export type CheckedCourseFormWithImageValues = z.output<
+  typeof courseFormWithImageSchema
+>;

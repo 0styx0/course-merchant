@@ -12,6 +12,7 @@ describe("courseFormProblems", () => {
       {
         schedule: { endTimeOfDay: { type: "custom", message: "Too early." } },
         name: { type: "custom", message: "Enter a course name." },
+        image: { type: "custom", message: "Choose an image." },
       },
       1,
     );
@@ -21,6 +22,11 @@ describe("courseFormProblems", () => {
         fieldName: "name",
         label: "Course name",
         message: "Enter a course name.",
+      },
+      {
+        fieldName: "image",
+        label: "Image",
+        message: "Choose an image.",
       },
       {
         fieldName: "schedule.endTimeOfDay",

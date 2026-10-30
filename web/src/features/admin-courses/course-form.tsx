@@ -8,6 +8,7 @@ import {
   useWatch,
   type Control,
   type Path,
+  type UseFormReturn,
 } from "react-hook-form";
 
 import { ErrorSummary } from "@/components/form/error-summary";
@@ -17,20 +18,21 @@ import {
   useBrowserTimeZone,
   useFocusSummaryOnSubmit,
   useLeaveWarning,
-  useSaveCourse,
 } from "./course-form-hooks";
 import { courseFormProblems } from "./course-form-problems";
 import {
   BasicsSection,
   ContentSection,
   emptyPrice,
+  ImageSection,
   PricingSection,
   ScheduleSection,
 } from "./course-form-sections";
+import { useSaveCourse } from "./use-save-course";
 import {
-  courseFormSchema,
-  type CheckedCourseFormValues,
-  type CourseFormValues,
+  courseFormWithImageSchema,
+  type CheckedCourseFormWithImageValues,
+  type CourseFormWithImageValues,
 } from "./validation/course-form-schema";
 import { priceSummary } from "./price/price-summary";
 import { scheduleSummary } from "./schedule/schedule-summary";
@@ -38,10 +40,11 @@ import { scheduleSummary } from "./schedule/schedule-summary";
 /** Used until the browser's own zone is known, and when the list lacks it. */
 const DEFAULT_TIME_ZONE = "America/New_York";
 
-const defaultValues: CourseFormValues = {
+const defaultValues: CourseFormWithImageValues = {
   name: "",
   summary: "",
   description: { type: "doc", content: [] },
+  image: null,
   contentUrl: "",
   schedule: {
     startDate: "",
@@ -54,8 +57,12 @@ const defaultValues: CourseFormValues = {
 };
 
 function useCourseFormState() {
-  const form = useForm<CourseFormValues, unknown, CheckedCourseFormValues>({
-    resolver: zodResolver(courseFormSchema),
+  const form = useForm<
+    CourseFormWithImageValues,
+    unknown,
+    CheckedCourseFormWithImageValues
+  >({
+    resolver: zodResolver(courseFormWithImageSchema),
     defaultValues,
     mode: "onTouched",
     shouldFocusError: false,
@@ -64,9 +71,25 @@ function useCourseFormState() {
   return { form, priceRows };
 }
 
+/** The error list names fields with plain strings; every one is a form field. */
+function focusField(
+  form: UseFormReturn<
+    CourseFormWithImageValues,
+    unknown,
+    CheckedCourseFormWithImageValues
+  >,
+  name: string,
+) {
+  form.setFocus(name as Path<CourseFormWithImageValues>);
+}
+
 /** The schedule's and the price list's summary lines, kept in step with the inputs. */
 function useScheduleAndPriceText(
-  control: Control<CourseFormValues, unknown, CheckedCourseFormValues>,
+  control: Control<
+    CourseFormWithImageValues,
+    unknown,
+    CheckedCourseFormWithImageValues
+  >,
 ) {
   const schedule = useWatch({ control, name: "schedule" });
   const prices = priceSummary(
@@ -74,6 +97,14 @@ function useScheduleAndPriceText(
     schedule.timeZone,
   );
   return { scheduleText: scheduleSummary(schedule), prices };
+}
+
+function SaveButton({ isSubmitting }: { isSubmitting: boolean }) {
+  return (
+    <Button type="submit" disabled={isSubmitting} className="self-start">
+      {isSubmitting ? "Saving…" : "Save as draft"}
+    </Button>
+  );
 }
 
 type CourseFormProps = {
@@ -108,10 +139,11 @@ export function CourseForm({ timeZones }: CourseFormProps) {
         ref={summaryRef}
         problems={problems}
         serverProblem={serverProblem}
-        onSelectField={(name) => form.setFocus(name as Path<CourseFormValues>)}
+        onSelectField={(name) => focusField(form, name)}
       />
 
       <BasicsSection form={form} isSubmitted={isSubmitted} />
+      <ImageSection form={form} isSubmitted={isSubmitted} />
       <ContentSection form={form} />
       <ScheduleSection
         form={form}
@@ -120,9 +152,7 @@ export function CourseForm({ timeZones }: CourseFormProps) {
       />
       <PricingSection form={form} priceRows={priceRows} summary={prices} />
 
-      <Button type="submit" disabled={isSubmitting} className="self-start">
-        {isSubmitting ? "Saving…" : "Save as draft"}
-      </Button>
+      <SaveButton isSubmitting={isSubmitting} />
     </form>
   );
 }
