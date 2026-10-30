@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import {
   Controller,
   get,
@@ -100,6 +100,19 @@ function InputPrefix({ prefix }: { prefix?: string }) {
   );
 }
 
+/** An input box with an optional symbol shown inside it before the text. */
+function PrefixedInput({
+  prefix,
+  ...inputProps
+}: ComponentProps<typeof Input> & { prefix?: string }) {
+  return (
+    <div className="relative w-full">
+      <InputPrefix prefix={prefix} />
+      <Input className={prefix ? "pl-6" : undefined} {...inputProps} />
+    </div>
+  );
+}
+
 /** A text, date or time box wired to the form and to `ValidatedField`'s states. */
 export function InputField({
   form,
@@ -111,6 +124,7 @@ export function InputField({
   limit,
   prefix,
   sharedMessageId,
+  min,
   type = "text",
 }: FieldProps & {
   type?: "text" | "url" | "date" | "time";
@@ -121,6 +135,8 @@ export function InputField({
   prefix?: string;
   /** Where a cross-field message is shown; "required" messages stay under the box. */
   sharedMessageId?: string;
+  /** The earliest value the date or time picker offers. */
+  min?: string;
 }) {
   return (
     <ValidatedField
@@ -130,16 +146,14 @@ export function InputField({
       {...stateOf(form, name)}
     >
       {(inputProps) => (
-        <div className="relative w-full">
-          <InputPrefix prefix={prefix} />
-          <Input
-            type={type}
-            placeholder={placeholder}
-            className={prefix ? "pl-6" : undefined}
-            {...ariaProps(inputProps)}
-            {...form.register(name, registerOptions)}
-          />
-        </div>
+        <PrefixedInput
+          prefix={prefix}
+          type={type}
+          min={min}
+          placeholder={placeholder}
+          {...ariaProps(inputProps)}
+          {...form.register(name, registerOptions)}
+        />
       )}
     </ValidatedField>
   );

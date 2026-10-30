@@ -30,6 +30,21 @@ const PAST_START = "The start time must be in the future.";
 const END_BEFORE_START = "The end time must be after the start time.";
 
 describe("CourseForm schedule fields", () => {
+  it("sets the end date's minimum to the start date, and none while it is empty", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    expect(screen.getByLabelText("End date")).not.toHaveAttribute("min");
+
+    await user.type(screen.getByLabelText("Start date"), "2099-03-05");
+    expect(screen.getByLabelText("End date")).toHaveAttribute(
+      "min",
+      "2099-03-05",
+    );
+
+    await user.clear(screen.getByLabelText("Start date"));
+    expect(screen.getByLabelText("End date")).not.toHaveAttribute("min");
+  });
+
   it("shows a past start at once and clears it when corrected, with no blur", async () => {
     const user = userEvent.setup();
     renderForm();

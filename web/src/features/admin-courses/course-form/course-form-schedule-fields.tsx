@@ -51,11 +51,13 @@ function ScheduleDateTimeField({
   name,
   label,
   type,
+  min,
 }: {
   form: CourseFormApi;
   name: ScheduleDateTimeField;
   label: string;
   type: "date" | "time";
+  min?: string;
 }) {
   return (
     <InputField
@@ -63,6 +65,7 @@ function ScheduleDateTimeField({
       name={name}
       label={label}
       type={type}
+      min={min}
       sharedMessageId={SCHEDULE_PROBLEMS_ID}
       registerOptions={{ onChange: makeScheduleChangeHandler(form, name) }}
     />
@@ -71,6 +74,7 @@ function ScheduleDateTimeField({
 
 /** The start and end date and time boxes, in page order. */
 export function ScheduleDateTimeFields({ form }: { form: CourseFormApi }) {
+  const startDate = form.watch("schedule.startDate");
   return (
     <>
       <ScheduleDateTimeField
@@ -90,6 +94,7 @@ export function ScheduleDateTimeFields({ form }: { form: CourseFormApi }) {
         name="schedule.endDate"
         label="End date"
         type="date"
+        min={startDate || undefined}
       />
       <ScheduleDateTimeField
         form={form}

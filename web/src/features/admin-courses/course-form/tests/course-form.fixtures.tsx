@@ -23,7 +23,7 @@ function stubImageBrowserApis({ width, height }: ImageSize) {
   URL.revokeObjectURL = vi.fn();
 }
 
-export function imageFile(type = "image/webp") {
+function imageFile(type = "image/webp") {
   return new File([new Uint8Array(10)], "photo", { type });
 }
 

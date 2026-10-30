@@ -40,8 +40,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 - [ ] **6. Form behaviour fixes**, in four commits (design in *Step 6* below):
   - [x] **6a.** A change to a schedule date or time marks the field touched and re-checks it, plus the other schedule fields already touched or showing an error.
   - [x] **6b.** Schedule-wide messages (`type === "custom"`) show in a line under the Schedule heading (`schedule-problems.tsx`); the time field keeps its border and X and points `aria-describedby` at the line.
-  - [ ] **6c.** The end date picker opens at the start date. **Next**
-  - [ ] **6d.** The status icon no longer shifts the input.
+  - [x] **6c.** The end date input's `min` is the start date (none while it is empty), so the picker opens near it; still to confirm by hand in Chrome.
+  - [ ] **6d.** The status icon no longer shifts the input. **Next**
 - [ ] **7. Layout and wording** (price outline, field order, section names and cards; design in *Step 7* below).
 
 Not part of this work: publishing from the form (a "Publish after saving" box and the update to `published`; it belongs to the later edit-a-course work, where the status is chosen), admin login and logout, the admin course page and list, editing a course (loading a stored document into the editor is `setContent`, no conversion), the payout estimate under the price (payments step 7), a Playwright test comparing the image preview with the saved image, and plain-text or email versions of the description (the static renderer can produce Markdown later).
@@ -304,18 +304,8 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
   - Price rows keep their messages; this step covers the schedule only.
   - 6c and 6d don't depend on 6a or 6b.
 
-- [ ] **6c.** The end date picker opens at the start date. **Next**
-  - *Files*:
-    - [course-form-fields.tsx](../web/src/features/admin-courses/course-form/course-form-fields.tsx#L98) (`InputField` takes `min`)
-    - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/course-form-sections.tsx#L172)
-    - test in `course-form/tests/`
-  - *Behaviours*:
-    - The end date input's `min` is the start date.
-    - An empty start date means no `min`.
-    - First check in Chrome (`dev:mock`) that the picker opens at the start month.
-    - If it doesn't, stop and ask: the fallback of copying the start date into an empty end date changes behaviour.
-  - *Settled*: the decision row "The end date input's `min` is the start date".
-- [ ] **6d.** The status icon no longer shifts the input.
+- [x] **6c.** The end date input's `min` is the start date; still to confirm by hand in Chrome (`dev:mock`) that the picker opens at the start month.
+- [ ] **6d.** The status icon no longer shifts the input. **Next**
   - *Files*:
     - [validated-field.tsx](../web/src/components/form/validated-field.tsx#L40)
     - test
