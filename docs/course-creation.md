@@ -30,9 +30,29 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
     - [x] **U3a.** Schedule summary sentence.
     - [x] **U3b.** Price schedule list.
     - [x] **U3c.** Searchable time zone picker (shadcn Combobox, pick-only).
-- [ ] **5. Image and publish in the create form.** **Next**
+- [ ] **5. Image in the create form**, in five commits (design in *Step 5* below):
+  - [ ] **5a.** Save the form's values over an existing draft (not used yet) **Next**
+    - Files: `updateCourse` in [admin-courses.api.ts](../web/src/features/admin-courses/save-course/admin-courses.api.ts); `save-course/update-course.action.ts` and its test (`updateCourseAction(courseId, values)` always sends `drafted`; editing adds a status parameter later); a shared action-result helper taken out of [create-course.action.ts](../web/src/features/admin-courses/save-course/create-course.action.ts) (the invalid-form problem, the zod issue mapping, the UUID check, the result type); [to-course-request.ts](../web/src/features/admin-courses/save-course/to-course-request.ts) if the update request's type needs it; `mocks/handlers/update-course.ts`; the [web.md](web.md) body-limit wording fix. `save-course/` grows to 9 files.
+    - Behaviours: an invalid UUID → failure, no API call; invalid values → failure, no API call; API 400 → field errors mapped to the form; API 500 → a problem for the summary; success → the course id; create's existing tests stay green.
+    - Settled: *Step 5* (*Actions*).
+    - Done when: unit tests and build pass.
+  - [ ] **5b.** Upload a course image through a Server Action (not used yet).
+    - Files: `save-course/upload-image/upload-course-image.action.ts` and its test; `uploadCourseImage` in the API wrapper (`FormData` through openapi-fetch's [`bodySerializer`](https://openapi-ts.dev/openapi-fetch/api#bodyserializer)); a `/image` → `image` mapping in [field-errors-from-problem.ts](../web/src/features/admin-courses/save-course/field-errors-from-problem.ts) and its test; `mocks/handlers/upload-course-image.ts`; `bodySizeLimit: "6mb"` in [next.config.ts](../web/next.config.ts).
+    - Behaviours: a bad UUID → failure, no API call; no file in the request → failure, no API call; an API error on `/image` → an error on the `image` field; API 500 → a problem for the summary; API 204 → success.
+    - Settled: *Step 5* (*Body size limit*).
+  - [ ] **5c.** Image field with preview and checks (not used yet).
+    - Files: new `admin-courses/image/` folder: `image-field.tsx` and its test; `course-image.ts` (limits copied from the API, `measureImage`, the zod rule) and its test.
+    - Behaviours (`createImageBitmap` stubbed, jsdom lacks it): the 16:9 preview shows; each of wrong type, over 5 MB, under 800×450, over 25 MP and unreadable shows its own message; the object URL is revoked when the file changes and on unmount.
+    - Settled: the decision row on measuring the image once.
+  - [ ] **5d.** The form requires an image and uploads it after creating the draft.
+    - Files: [course-form-schema.ts](../web/src/features/admin-courses/validation/course-form-schema.ts) (the form's resolver uses the existing schema extended with `image`; the actions keep checking only the saved fields); [course-form-sections.tsx](../web/src/features/admin-courses/course-form-sections.tsx) (Image section); [course-form-problems.ts](../web/src/features/admin-courses/course-form-problems.ts) (error-list entry); `useSaveCourse` moved into its own file; [course-form.tsx](../web/src/features/admin-courses/course-form.tsx); the saving test.
+    - Behaviours: the happy path (create, upload, go to `/`); a failed upload keeps the id and shows "The course was saved as a draft, but the image didn't upload."; the retry runs update with the edited values, then the upload, and never create; a rejected action keeps the id and shows a general message; an upload error shows on the image field; the leave warning stays on until the upload succeeds; the image file is never sent to create or update.
+    - Needs: 5a, 5b, 5c.
+  - [ ] **5e.** Browser test with a real image, and docs.
+    - Files: [create-course.spec.ts](../web/tests/browser/admin-courses/create-course.spec.ts) and a small fixture image; docs: tick *Web admin pages* in courses.md (create only; publishing is left to editing), README *Status*, the body-limit reasoning in web.md, and this file cut down to decision rows.
+    - Behaviours: choose an image, save, land on `/`; a failed upload, then a successful retry; no console errors.
 
-Not part of this work: admin login and logout, the admin course page and list, editing a course (loading a stored document into the editor is `setContent`, no conversion), the payout estimate under the price (payments step 7), a Playwright test comparing the image preview with the saved image, and plain-text or email versions of the description (the static renderer can produce Markdown later).
+Not part of this work: publishing from the form (a "Publish after saving" box and the update to `published`; it belongs to the later edit-a-course work, where the status is chosen), admin login and logout, the admin course page and list, editing a course (loading a stored document into the editor is `setContent`, no conversion), the payout estimate under the price (payments step 7), a Playwright test comparing the image preview with the saved image, and plain-text or email versions of the description (the static renderer can produce Markdown later).
 
 ## Principles
 
@@ -69,7 +89,8 @@ Not part of this work: admin login and logout, the admin course page and list, e
 | No empty paragraphs in the stored document; `toCourseDescription` strips them and the API refuses them | Blank lines from Docs and the editor's trailing empty line show as blank space in the editor but take no height on the page. Spacing between paragraphs comes from CSS | Keeping them and giving them a line of height |
 | One web form schema, no Zod shared with the API, plus a contract test | The API's validators load server settings and NestJS ([allowed-currencies.ts](../api/src/courses/validation/allowed-currencies.ts) reads `process.env`, [error-codes.ts](../api/src/common/errors/error-codes.ts) imports `@nestjs/common`), the packages aren't a workspace, and the form's values differ from the request. The request builder is type-checked against the generated `CreateCourseRequest`; the contract test compares the form's limits with [openapi-v1.yaml](../api/openapi/openapi-v1.yaml) | Sharing the API's schemas |
 | Admin forms use react-hook-form and call Server Actions as functions; public forms are free to use `useActionState` | Per-field touched/valid state, `useFieldArray` for price rows and `setError` for server errors, with typed values and no `FormData` parsing. The page needs JavaScript anyway | [Conform](https://conform.guide) (its advantage, working without JavaScript, doesn't apply here); `useActionState` for this page |
-| An empty "takes effect" becomes now + 1 minute | The API refuses times in the past, and "now" is already past when the API checks it. Cost: a course published later can show up to a minute after its price's start | Sending "now" |
+| An empty "takes effect" becomes now + 1 minute | The API refuses times in the past, and "now" is already past when the API checks it. Cost: a course published later can show up to a minute after its price's start. A retry more than a minute after the first save sends a new "when saved" time, so the API keeps the now-active price and adds another; the course is still a draft then | Sending "now" |
+| The image is measured once when chosen, and the form schema checks the stored width and height | Decoding a large photo is slow, and the form re-checks on every keystroke | An async zod rule calling `createImageBitmap` (decodes the image again on each check); `setError` from the field (cleared by the next check, so a bad image could be submitted) |
 | After a refused submit, focus moves to the error list | Screen readers read every problem; each link jumps to its field | Focusing the first invalid field |
 | [temporal-polyfill](https://github.com/fullcalendar/temporal-polyfill) for wall-clock time to UTC | Correct across daylight-saving changes, with `disambiguation: "reject"` for skipped or repeated times. About a third of the size of [@js-temporal/polyfill](https://github.com/js-temporal/temporal-polyfill) | `@js-temporal/polyfill`; hand-written offset maths |
 | Native `date`, `time` and file inputs | They already do the job | Date pickers, [react-dropzone](https://react-dropzone.js.org), [next-safe-action](https://next-safe-action.dev) |
@@ -126,7 +147,7 @@ The form's values are named after the request, so every field is qualified by it
 - `name`, `summary`, `description` (the document), `contentUrl`;
 - `schedule.startDate` and `schedule.startTimeOfDay`, `schedule.endDate` and `schedule.endTimeOfDay` (two inputs each: a date `2026-07-01` and a time of day `09:00`, typed in the chosen zone), `schedule.timeZone`. The API's `startTime` and `endTime` are the combined UTC instants, so the form avoids those names;
 - `prices.N.amountDollars` ("79.50"; the API's `amount` is cents), `prices.N.effectiveDate` and `prices.N.effectiveTimeOfDay` (both empty for "when saved"; one without the other is refused);
-- `image` and `publishAfterSaving` (step 5; never sent as JSON).
+- `image` (step 5; a file plus its measured size, never sent as JSON).
 
 Price rows go to the API in the order shown, so the API's `/prices/0` is the form's first row. Any path under `/description/` maps to `description`.
 
@@ -228,34 +249,35 @@ Each button calls Tiptap's chain commands (`toggleBold`, `toggleHeading`, `setLi
 
 **Tests** (done): paste tests in `description-editor/description-paste.test.ts` and one browser test; toolbar button and refused-link tests were added with 4a and 4b.
 
-## Step 5. Image and publish in the create form
+## Step 5. Image in the create form
 
-**Image field** (`image-field.tsx`, required):
+Publishing is not part of this step: the form always saves a draft and the button stays "Save as draft". Choosing the status belongs to the later edit-a-course work.
+
+**Image field** (`image/image-field.tsx`, required):
 
 - A file input (`accept` JPEG/PNG/WebP).
-- A 16:9 preview (`URL.createObjectURL`, `object-fit: cover`, centred, revoked on change), cropped like the public pages.
+- A 16:9 preview (`URL.createObjectURL`, `object-fit: cover`, centred, revoked on change and on unmount), cropped like the public pages.
 
-**Checks when a file is chosen,** shown before submitting: type; 5 MB or smaller; at least 800×450 pixels; at most 25 megapixels. The pixel checks use `createImageBitmap(file, { imageOrientation: "from-image" })`, so the photo's orientation counts like on the server, then `close()`. They run only in the browser; the API checks again.
+**Checks when a file is chosen,** shown before submitting: type; 5 MB or smaller; at least 800×450 pixels; at most 25 megapixels. The pixel checks use `createImageBitmap(file, { imageOrientation: "from-image" })`, so the photo's orientation counts like on the server, then `close()`. They run only in the browser; the API checks again. The form's value is `{ file, width, height } | null`, measured once on choosing, so the schema checks it synchronously (see the decision row).
 
-**"Publish after saving"** checkbox, off by default.
+**Actions** (one per outcome; each checks the course id is a UUID, through a helper shared with `createCourseAction`):
 
-**Actions** (one per outcome; each checks the course id is a UUID):
-
-- `uploadCourseImageAction(courseId, formData)` uploads with the `uploadCourseImage` wrapper (`FormData` body serializer, as noted in [courses.md](courses.md)).
-- `updateCourseAction(courseId, values, status)` checks `values` with the schema and sends `updateCourse`. It's used for publishing and for retries.
+- `updateCourseAction(courseId, values)` checks `values` with the saved-fields schema and sends `updateCourse` with status `drafted`. Used for retries.
+- `uploadCourseImageAction(courseId, formData)` uploads with the `uploadCourseImage` wrapper (`FormData` body serializer, as noted in [courses.md](courses.md)), in `save-course/upload-image/`.
+- Both actions keep checking only the saved fields. The form's resolver uses the same schema extended with `image`, and the image is stripped from the values before create or update.
 
 **The browser runs the steps in order:**
 
-1. `createCourseAction(values)`, which returns the course id. The form keeps it.
+1. `createCourseAction(values)`, which returns the course id. The form keeps it until the page reloads.
 2. `uploadCourseImageAction(id, formData)`.
-3. If the box is ticked, `updateCourseAction(id, values, "published")`.
-4. `router.push("/")`.
+3. `router.push("/")`.
 
-**If step 2 or 3 fails:**
+**If step 2 fails, or an action is rejected** (it throws, for example on a network drop or Next's body size limit, instead of returning a failure):
 
-- The admin stays on the form, with the error at the top, for example "The course was saved as a draft, but the image didn't upload."
-- The next submit runs `updateCourseAction(id, values, "drafted")` with the current values, so fixes made before retrying are saved. It then uploads, then publishes if ticked. It never creates a second course.
-- Nothing publishes unless the upload succeeded.
+- The admin stays on the form, with the error at the top, for example "The course was saved as a draft, but the image didn't upload." A rejected action shows a general message and keeps the id.
+- An upload error from the API shows on the image field.
+- The next submit runs `updateCourseAction(id, values)` with the current values, so fixes made before retrying are saved. It then uploads. It never creates a second course.
+- The leave warning stays on until the upload succeeds.
 
 **Body size limit** in `next.config.ts`: `experimental.serverActions.bodySizeLimit: "6mb"`.
 
@@ -263,19 +285,11 @@ Each button calls Tiptap's chain commands (`toggleBold`, `toggleHeading`, `setLi
 - Next's default of 1 MB would reject most phone photos.
 - The limit stays close to what's needed because Next reads the whole request into memory, and the limit covers every Server Action.
 - Next reads `"6mb"` as 6 × 1024 × 1024 bytes, like the API.
-- Add this reasoning to the existing decision row in [web.md](web.md).
+- Add this reasoning to the existing decision row in [web.md](web.md), and reword that row: the browser runs two actions, create then upload (it currently says one function also publishes).
 
-**MSW:** `upload-course-image.ts` and `update-course.ts` handlers.
+**MSW:** `update-course.ts` (5a) and `upload-course-image.ts` (5b) handlers.
 
-**Tests:**
-
-- `createImageBitmap` is stubbed, since the test environment (jsdom) lacks it;
-- preview shown;
-- each file check shows its error;
-- publish runs only after a successful upload;
-- a failed upload keeps the id, and the retry calls `updateCourseAction` with the edited values, not `createCourseAction`.
-
-**Docs:** when this step ships, the *Web admin pages* item in [courses.md](courses.md) and the README *Status* are ticked, and this file is cut down to decision rows.
+**Docs:** when this step ships, the *Web admin pages* item in [courses.md](courses.md) and the README *Status* are ticked (create only), and this file is cut down to decision rows.
 
 ## UX pass
 
@@ -294,10 +308,10 @@ Findings from using the page in Chrome (`yarn --cwd web dev:mock`, 2026-10-28), 
 **U1. Copy and small layout fixes**
 
 1. A one-line intro under the title: details, price, saved as a draft, nothing public until published.
-2. Titled sections with a one-line description each: **Basics** (name, summary, description), **Content** (link), **Schedule** ("when the course runs"), **Pricing**. Leave room for step 5's image and publish checkbox.
+2. Titled sections with a one-line description each: **Basics** (name, summary, description), **Content** (link), **Schedule** ("when the course runs"), **Pricing**. Leave room for step 5's image.
 3. Placeholders or example help text for name and summary, and a visible character limit on both (as the description already has).
 4. One shared help line for the price start date and time, instead of one under a single field.
-5. Button label **Save as draft**. Until step 5 adds "Publish after saving", saving always makes a draft; revisit the label when step 5 lands.
+5. Button label **Save as draft**. Saving always makes a draft, and step 5 keeps the label (publishing is left to editing).
 
 **U2. Field and component behaviour** is done: `$` prefix and comma decimals on the price (see the decisions table), Remove hidden while there is one price row, the error list capped at 12rem, scrolling and sticky, the time zone starting on the browser's (America/New_York when the list lacks it; it stays beside the times), and a `beforeunload` leave warning while the form has unsaved changes.
 
