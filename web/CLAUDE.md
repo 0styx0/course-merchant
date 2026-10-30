@@ -10,6 +10,17 @@ Before `yarn tsc --noEmit`, run `yarn next typegen` (Next's `PageProps`/`LayoutP
 
 Before a refactor, check which lines no test runs (whole suite, about 30 seconds): `yarn test:coverage --coverage.include=<file>`. "No files with missing coverage" means the file is fully covered.
 
+## Shared form blocks (React Hook Form)
+
+Create and edit forms share no value type and no state; each owns its `useForm`, resolver, defaults and type. Build shared blocks like this ([react-hook-form docs](https://react-hook-form.com/ts)):
+
+- A field is generic: `form: UseFormReturn<T, unknown, O>` plus `name: FieldPathByValue<T, string>` (or the matching value type). The parent passes the name, so the compiler checks it.
+- A section is layout only (`FormSection`, title, help) with the fields as `children`. The parent lists the fields.
+- A block that needs a fixed field name (a cross-field re-check, a price row's `prices.${i}.…`) takes it as a prop.
+- Shared logic is plain hooks and helpers that take `control` or `form`, not a shared form type.
+- Share the zod field schemas (values), never a `CourseFormValues`-style type that both forms must fit.
+- A hard-coded name inside a generic block fails `tsc`; that is the signal to pass it in. The one accepted cast is `as PathValue<T, typeof name>` on a `setValue` value, with a comment.
+
 ## Web architecture
 
 - Layout and remaining steps are in [docs/web.md](../docs/web.md): `app/` holds routes only, `src/features/<feature>/` holds API wrappers (`<feature>.api.ts`), async `…Section` components and plain-data components.

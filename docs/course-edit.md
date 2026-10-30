@@ -10,24 +10,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 
 - [ ] **1. Create form rebuilt from shared building blocks.** Create behaves the same, but `CourseForm` becomes a composition of shared sections, fields and hooks, with no `mode` prop and no create/edit conditionals.
   - [x] **1a.** Form files grouped by job (`sections/`, `problems/`, `hooks/`, `create-course/`), `CourseForm` renamed `CreateCourseForm`, hooks file split.
-  - [ ] **1b.** Shared blocks take a form typed on the saved fields; the image becomes create's own. **Next**
-    - *Files*:
-      - New `course-form/saved-fields-form.ts`:
-        - `savedFieldsForm(form)` is the one commented cast.
-        - A type-level check beside it fails the build if `CourseFormWithImageValues` stops including `CourseFormValues`.
-      - The fields, schedule fields, schedule problems, sections and `price/price-row.tsx` change their `form` prop to `UseFormReturn<CourseFormValues>`.
-      - `BasicsSection` takes a `children` slot, rendered first, for the image.
-      - New `create-course/course-image-input.tsx` holds the image `Controller`, moved out of the sections.
-      - `create-course-form.tsx` passes `savedFieldsForm(form)` and the image input as the Basics child.
-    - *Behaviours*:
-      - Field errors, counters, the schedule error list and the image error behave unchanged; the existing tests pin this.
-    - *Needs*: 1a.
-    - *Settled*: the decision row on the shared form type.
-    - *Done when*:
-      - Existing tests unchanged and green.
-      - `tsc`, `knip` and lint are clean.
-      - The Playwright create spec passes.
-      - The page has been run in `dev:mock`.
+  - [ ] **1b.** Shared blocks become generic over each form's own type; sections become layout with fields as children; the image becomes create's own child. Needs splitting into commit lines (the first plan, built on a shared `CourseFormValues` type, was replaced). **Next**
 - [ ] **2. Edit page loads and saves the details.** A separate edit form prefills name, summary, description, content link and time zone, saves with a full PUT, and goes to `/`.
 - [ ] **3. Schedule rules on edit.** An unchanged start or end time may be in the past; a changed one must be in the future; end is after start.
 - [ ] **4. Prices on edit.** Prices in effect are read-only; future prices can be edited, added and removed.
@@ -38,6 +21,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 
 - **The page is `app/admin/(signed-in)/courses/[courseId]/edit`.** Admins reach it by URL; the admin course list is out of scope.
 - **Compose, don't branch.** Create and edit are two components built from shared blocks. A shared block takes what differs as props or children, never a `mode` flag.
+- **Create and edit share no form type and no state.** Each owns its `useForm`, resolver, defaults and value type. Shared blocks are generic and take field names from the parent.
 - **Save is a full PUT.** Every field, every time. Strip what the API rejects: the course id, `enrollments`, `status.changedAt` (send status as a plain string) and each price's id.
 - **A failed save changes nothing,** so the form stays as it is and shows the errors. Errors can arrive in two rounds: a format error hides the state errors (past times, schedule) until fixed, so expect a second 400.
 - **The "must be in the future" check applies only to a changed time,** for the schedule and for price times alike. An unchanged time is sent as the original UTC string.
@@ -53,7 +37,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 | Create and edit are two separate form components, composed from shared sections, fields and hooks | Follows the owner's rule to compose rather than branch. No `mode` prop, and each page holds only its own rules (revisit after use) | One form with a `mode` prop (conditionals everywhere); a fully separate copy (drifts) |
 | An unchanged schedule or price time is sent as the original UTC string, not converted back from the wall-clock value | Converting back can shift a time in a DST-ambiguous hour, which the API would see as a change and refuse if it is in the past | Always converting back from the wall clock (simpler, but breaks the unchanged-past case) |
 | Unchanged and in-effect prices are sent back as loaded | The API keeps exact matches and their ids, so the page tracks no ids | Leaving them out (also safe, but the form would hold less than the API) |
-| Shared form blocks take `UseFormReturn<CourseFormValues>`. The create form hands its form in through one commented cast, `savedFieldsForm`, guarded by a type-level check | React Hook Form's types won't accept a form with `image` where one without is expected (checked with `tsc`). One cast with a build-time check keeps the compiler guarding the step | `FormProvider` and `useFormContext` (moves the unchecked step into the library; blocks can't render alone without a provider; 5 files rewritten); generic blocks (field names fail to type-check); image outside the form (changes create's validation) |
+| Shared blocks are generic over the form's own value type and take field names from the parent. Sections are layout with the fields as children. There is no shared value type and no cast | A form's setters and subscriptions are contravariant, so a form with extra fields never fits a shared type (checked with `tsc`); generics avoid the cast. The earlier failure was hard-coded names inside generic blocks, not generics themselves (an architect review re-tested it) | A shared `CourseFormValues` with one cast, `savedFieldsForm` (leaks create's extra field into the shared code); `FormProvider` and `useFormContext` (moves the unchecked step into the library; blocks can't render alone); image outside the form (changes create's validation) |
 | The delete confirmation uses shadcn alert-dialog | Matches the existing shadcn/base-ui setup | An inline confirmation step |
 
 ## Step 1. Create form rebuilt from shared building blocks
