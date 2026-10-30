@@ -1,6 +1,8 @@
 # Outline formats
 
-Used in step 2 of [SKILL.md](SKILL.md). Terms, the diagram format for file moves and the writing rules are in CLAUDE.md (*Writing*); follow them here. Every section of an outline follows the *Bullets, not blocks* rule: sub-bullets for joined steps, never a paragraph.
+Used in step 2 of [SKILL.md](SKILL.md). The writing rules are in CLAUDE.md (*Writing*), the diagram, flow and link formats in [../_shared/output-format.md](../_shared/output-format.md); follow them here. Every section of an outline follows the *Bullets, not blocks* rule: sub-bullets for joined steps, never a paragraph.
+
+**Every outline, short or full, ends the turn: no tool calls after it in the same message. Wait for the owner's reply; a note saying "my pick" is not approval.**
 
 ## Opening (every outline, short or full)
 
@@ -18,7 +20,7 @@ A commit is **mechanical** if it changes no logic lines, or existing tests alrea
 
 It is also eligible if it is **plan-conformant**: all three hold. The plan line has no open question (any user-visible text, error code or error shape the line leaves unstated counts as one); nothing read in step 1 deviates from the line; no decision row will be added. A plan-conformant commit may contain logic.
 
-Give a **short outline** of about 5 lines after the opening, then end the turn (no tool calls after it in the same message) and wait for the owner's reply. A note saying "my pick" is not approval.
+Give a **short outline** of about 5 lines after the opening.
 - It has: the files (with the per-folder BEFORE/AFTER diagram for moves); the check that proves nothing changed (type check, test count before and after); the doc tick; the file count; the *Preflight* line.
 - For a plan-conformant commit with logic, add the flow diagram ([../_shared/flow-diagram.md](../_shared/flow-diagram.md)) and the test table.
 - Leave out *Terms*, *Trade-offs*, *Questions* and *Tests* unless one applies.
@@ -27,7 +29,7 @@ Give a **short outline** of about 5 lines after the opening, then end the turn (
 
 ## Full outline
 
-Give the outline and wait for the go-ahead. Write no code before approval. In plan mode, present it with ExitPlanMode. If the owner asks a question while in plan mode, answer it in chat and do not call ExitPlanMode until they say to proceed.
+Write no code before approval. In plan mode, present it with ExitPlanMode. If the owner asks a question while in plan mode, answer it in chat and do not call ExitPlanMode until they say to proceed.
 
 After the opening:
 
@@ -42,3 +44,13 @@ After the opening:
 - **Preflight (last line):** `Preflight: size <n files, ok> | coverage <result, or n/a> | git <the raw `git status --short` output, or `clean` only when the command printed nothing> | siblings read <files> | library API <docs link, only for an API the repo doesn't use yet>`. A missing item is a check that was skipped. The short outline ends with it too.
 
 If the owner replies with questions or objections, discuss them first: answer, recommend, ask follow-ups. Don't edit the outline or write code while the discussion is open. Once they agree, present the updated outline and wait for the go-ahead again.
+
+## Before you send (outline)
+
+- It opens with Today / After this commit / Why this way, and those lines name no code.
+- Every new noun is defined where it first appears; no domain word is reused for something else.
+- Each "why" says what would go wrong without it, in plain words.
+- Each bullet keeps its "because"; joined steps are sub-bullets.
+- Each file is linked once, with a line number checked by grep.
+- A commit with logic has the flow diagram; a move has the folder diagrams.
+- It ends with the `Preflight:` line, and no tool call follows it.

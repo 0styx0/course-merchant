@@ -7,7 +7,7 @@ Written by `/plan-create-implementation`, read by `/next-commit` in its first st
   - *Files*:
     - <link or path> (<short note, if any>)
     - <link or path>
-    - <folder counts, if near 7>
+    - <folder counts, if near the limit>
   - *Behaviours*:
     - <one behaviour, with its failure or edge case named; for a failure, the error code or message the caller sees>
     - <next behaviour>

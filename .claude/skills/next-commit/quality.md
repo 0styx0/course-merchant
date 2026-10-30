@@ -18,7 +18,7 @@ One row per behaviour the commit adds or changes:
 
 ## Structure
 
-- Folders are named for their job; file names state everything the file exports; function names state what they return (CLAUDE.md *Conventions*).
+- Folders are named for their job; a file name states the file's main job; function names state what they return (CLAUDE.md *Conventions*).
 - No cast exists only to make one caller's type fit another's, and no shared type forces sibling features to conform (CLAUDE.md *Code*). A comment-justified cast for a library type limit is fine.
 - Reuse the helpers found in step 1; don't add a second copy.
 - Count the files in every folder you touched; if it passes the limit in CLAUDE.md, group them in this commit.

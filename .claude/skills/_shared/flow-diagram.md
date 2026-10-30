@@ -1,6 +1,6 @@
 # Flow diagram
 
-Used by `/next-commit` (outline and hand-off) and `/plan-create-implementation` (the presented plan). It shows what a user or a request goes through, not where code lives. File moves use the BEFORE/AFTER folder diagram in CLAUDE.md (*Writing*) instead.
+Used by `/next-commit` (outline and hand-off) and `/plan-create-implementation` (the presented plan). It shows what a user or a request goes through, not where code lives. File moves use the BEFORE/AFTER folder diagram in [output-format.md](output-format.md) instead.
 
 ## When to draw it
 

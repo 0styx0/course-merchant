@@ -1,6 +1,6 @@
 # Hand-off format
 
-Used in step 5 of [SKILL.md](SKILL.md). Keep it short, and write every summary by the *Bullets, not blocks* rule in CLAUDE.md (one short sentence per bullet, joined steps as sub-bullets, never a paragraph). The items:
+Used in step 5 of [SKILL.md](SKILL.md). Keep it short, and write every summary by the *Bullets, not blocks* rule in CLAUDE.md (one short sentence per bullet, joined steps as sub-bullets, never a paragraph). Diagram, flow and link formats are in [../_shared/output-format.md](../_shared/output-format.md). The items:
 
 - Open with two plain lines that name no code: what the app can now do, and why the commit is shaped this way. The subagent or tool output you relay is restated in your own words.
 - The files changed, as a table: links | high-level changes.
@@ -22,7 +22,7 @@ Used in step 5 of [SKILL.md](SKILL.md). Keep it short, and write every summary b
     - The changes column names each test added or modified in that file, in plain words, and says which are new and which were changed.
     - Fixtures, mocks and other test helpers go in the files-changed table, not here.
 - `Deviations from the plan line: none`, or what differed and why (a file, a behaviour, a decision made on the way).
-- `Reviews:` which of `/code-review` and `/security-review` ran.
+- `Reviews:` which of the `/simplify` pass, `/security-review` and the other-model review (SKILL.md step 3) ran.
   - Give each finding as fixed or rejected, with a reason.
 - A suggested conventional commit message.
   - No body unless it needs one.
@@ -33,3 +33,12 @@ Used in step 5 of [SKILL.md](SKILL.md). Keep it short, and write every summary b
 Then stop. The owner makes the commit.
 
 If the work is part of a sequence, give the command for the next item as a copyable command, e.g. `/next-commit <module-name>`.
+
+## Before you send (hand-off)
+
+- It opens with what the app can now do and why the commit is shaped this way, with no code names.
+- Subagent and tool output is restated in your own words.
+- Each file is linked once, with a line number checked by grep.
+- A commit with logic has the flow diagram as built, with `CHANGED` steps explained.
+- Every `Deviations` entry says why; "none" only if the diff holds nothing the outline didn't name.
+- The commit message is a copyable single line in plain words.
