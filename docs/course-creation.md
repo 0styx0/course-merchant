@@ -33,24 +33,8 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 - [ ] **5. Image in the create form**, in five commits (design in *Step 5* below):
   - [x] **5a.** `updateCourseAction` saves the form's values over an existing draft (not used yet); the shared action result helpers live in `save-course/course-action-result.ts`.
   - [x] **5b.** `uploadCourseImageAction` uploads a file through the new `uploadCourseImage` wrapper (not used yet); `/image` errors map to the `image` field; `bodySizeLimit` is `"6mb"`.
-  - [ ] **5c.** Image field with preview and checks (not used yet). **Next**
-    - *Files*: new `admin-courses/image/` folder
-      - `image-field.tsx` and its test
-      - `course-image.ts` and its test
-        - limits copied from the API
-        - `measureImage`
-        - the zod rule
-    - *Behaviours* (`createImageBitmap` stubbed, since jsdom lacks it):
-      - the 16:9 preview shows
-      - wrong type → its own message
-      - over 5 MB → its own message
-      - under 800×450 → its own message
-      - over 25 MP → its own message
-      - unreadable file → its own message
-      - the object URL is revoked when the file changes
-      - the object URL is revoked on unmount
-    - *Settled*: the decision row on measuring the image once
-  - [ ] **5d.** The form requires an image and uploads it after creating the draft.
+  - [x] **5c.** `image/image-field.tsx` picks a file, shows a 16:9 preview (kept for a refused file) and `image/course-image.ts` measures it once and holds the zod rule (not used yet); an undecodable file is stored as 0 × 0 and reported as unreadable.
+  - [ ] **5d.** The form requires an image and uploads it after creating the draft. **Next**
     - *Files*:
       - [course-form-schema.ts](../web/src/features/admin-courses/validation/course-form-schema.ts)
         - the form's resolver uses the existing schema extended with `image`
