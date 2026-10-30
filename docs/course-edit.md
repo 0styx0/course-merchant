@@ -10,7 +10,63 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 
 - [ ] **1. Create form rebuilt from shared building blocks.** Create behaves the same, but `CourseForm` becomes a composition of shared sections, fields and hooks, with no `mode` prop and no create/edit conditionals.
   - [x] **1a.** Form files grouped by job (`sections/`, `problems/`, `hooks/`, `create-course/`), `CourseForm` renamed `CreateCourseForm`, hooks file split.
-  - [ ] **1b.** Shared blocks become generic over each form's own type; sections become layout with fields as children; the image becomes create's own child. Needs splitting into commit lines (the first plan, built on a shared `CourseFormValues` type, was replaced). **Next**
+  - [ ] **1b.** Fields and error readers are generic over the form's type. **Next**
+    - *Files*:
+      - [course-form-fields.tsx](../web/src/features/admin-courses/course-form/sections/course-form-fields.tsx) (`InputField` and `TimeZoneField`; defines the narrowed form type `CourseFormApi<T>`)
+      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/sections/course-form-sections.tsx) (`DescriptionField` takes `name`)
+      - [course-form-problems.ts](../web/src/features/admin-courses/course-form/problems/course-form-problems.ts) (`fieldErrorMessage` and `fieldErrorType` take any `FieldErrors`)
+      - [course-form.time-zone-and-leave-warning.test.tsx](../web/src/features/admin-courses/create-course/tests/course-form.time-zone-and-leave-warning.test.tsx) (coverage first)
+    - *Behaviours*:
+      - `TimeZoneField` takes its name from the parent.
+      - `TimeZoneField` takes the names to check again after a pick from the parent.
+      - Create passes `schedule.timeZone` and `["schedule", "prices"]`.
+      - New test: a pick that makes a start time past shows its error, and a pick back clears it.
+      - Each field still shows its error, its counter and its shared-message id (existing fields tests).
+    - *Done when*: type check, lint, and the `admin-courses` unit tests pass.
+  - [ ] **1c.** Schedule blocks take their names from the parent, and `ScheduleSection` becomes layout.
+    - *Files*:
+      - [course-form-schedule-fields.tsx](../web/src/features/admin-courses/course-form/sections/course-form-schedule-fields.tsx) (four names)
+      - [schedule-problems.tsx](../web/src/features/admin-courses/course-form/sections/schedule-problems.tsx) (two time names)
+      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/sections/course-form-sections.tsx) (`ScheduleSection` takes children and `scheduleText`)
+      - `create-course/create-course-sections.tsx` (new; create's filled sections, so the form file stays short)
+      - [create-course-form.tsx](../web/src/features/admin-courses/create-course/create-course-form.tsx)
+    - *Behaviours*:
+      - A date change marks the field touched.
+      - A date change checks again only the siblings the admin has reached (existing schedule-validation tests).
+      - The end date's `min` follows the start date.
+      - Cross-field messages show in the shared line.
+    - *Settled*: try `FieldPathByValue<T, string>` names for `setValue` first; if `tsc` still refuses, one commented cast for the library's type limit, and a clause added to the "no cast" decision row.
+  - [ ] **1d.** Price rows take their names from the parent, and `PricingSection` becomes layout.
+    - *Files*:
+      - [price-row.tsx](../web/src/features/admin-courses/price/price-row.tsx) (the row's three names)
+      - `price/price-row-labels.ts` (new; `priceRowLabels` moves here from `course-form/problems`)
+      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/sections/course-form-sections.tsx) (`PricingSection` takes rows as children, `onAddPrice` and the summary)
+      - `create-course/create-course-sections.tsx` (removes a row, then checks again; `emptyPrice` moves here)
+      - [course-form.price-rows.test.tsx](../web/src/features/admin-courses/create-course/tests/course-form.price-rows.test.tsx) (coverage first)
+    - *Behaviours*:
+      - "Add price" appends an empty row.
+      - New test: removing a duplicate-time row clears the "same time" error.
+      - With one row, there is no Remove button and the label reads "Price".
+  - [ ] **1e.** Basics and Course material become layout, and the image becomes create's own child.
+    - *Files*:
+      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/sections/course-form-sections.tsx) (`ImageInput` leaves this file)
+      - `create-course/create-course-sections.tsx` (image, name, summary, description, content link)
+    - *Behaviours*:
+      - Field order, labels and counters are unchanged (existing fields and image-upload tests).
+  - [ ] **1f.** The error list takes its fields from the form.
+    - *Files*:
+      - [course-form-problems.ts](../web/src/features/admin-courses/course-form/problems/course-form-problems.ts) and its `.test.ts` (`courseFormProblems(errors, fields)`)
+      - `create-course/create-course-fields.ts` (new; one ordered `[name, label]` list, plus `priceRowNames(index)`)
+      - `create-course/create-course-sections.tsx` and [create-course-form.tsx](../web/src/features/admin-courses/create-course/create-course-form.tsx) read labels from that list
+    - *Behaviours*:
+      - Order and labels are unchanged, with the image first (existing problem-list test).
+      - The description counts as one field, however many errors it has.
+      - The unit test passes its own field list.
+    - *Done when*:
+      - `grep -rnE 'CourseFormWithImageValues|"(image|name|summary|contentUrl|schedule\.|prices)' web/src/features/admin-courses/{course-form,price}` prints nothing.
+      - The create tests and Playwright `create-course.spec.ts` pass.
+      - The folder-count script prints nothing.
+      - A before/after diagram of each changed folder is shown.
 - [ ] **2. Edit page loads and saves the details.** A separate edit form prefills name, summary, description, content link and time zone, saves with a full PUT, and goes to `/`.
 - [ ] **3. Schedule rules on edit.** An unchanged start or end time may be in the past; a changed one must be in the future; end is after start.
 - [ ] **4. Prices on edit.** Prices in effect are read-only; future prices can be edited, added and removed.
@@ -45,7 +101,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - Why here: edit needs the same sections and fields; extracting them first means milestone 2 composes instead of forking or adding a `mode` prop.
 - Needs: none.
 - Builds on: [course-form/](../web/src/features/admin-courses/course-form/) (sections, fields, hooks, `use-save-course.ts`), [course-form.tsx](../web/src/features/admin-courses/course-form/course-form.tsx), [CLAUDE.md](../CLAUDE.md) *Conventions* (files per folder, folder grouping, diagram of file moves).
-- Size: 2 commits (group files by job; shared blocks typed on the saved fields). 1a is mechanical.
+- Size: 6 commits (1a mechanical; 1b–1f one shared area each: fields, schedule, prices, basics, error list).
 - Risk: low; behaviour must not change.
 - Done when: the create form tests and the Playwright `create-course.spec.ts` pass unchanged; the folder-count command prints nothing; a before/after diagram of each changed folder is shown.
 - Design notes *(temporary)*:
@@ -55,6 +111,9 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
     - the defaults and the resolver;
     - the save button label.
   - `use-save-course.ts` is create-only: its draft-then-image flow doesn't apply to edit.
+  - The shared form type is a `Pick` of the members the blocks use (`register`, `formState`, `control`, `trigger`, `getFieldState`, `setValue`, `watch`). It avoids `handleSubmit`, which a form with other fields can't fit. A `tsc` probe on 2026-10-30 accepted create's form with no cast.
+  - Create's own pieces live in `create-course/`: its defaults, `emptyPrice`, its field list and its row names. Edit will own its versions.
+  - Folder counts: `create-course/` 3 files → 5 (plus `tests/`); `price/` 4 → 5; `course-form/sections/` stays 4.
 
 ## Step 2. Edit page loads and saves the details
 
@@ -103,3 +162,9 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - The web login.
 - The payout estimate under the price.
 - A Playwright test comparing the image preview with the saved image.
+
+## Changes
+
+| Date | Change |
+|---|---|
+| 2026-10-30 | Milestone 1: the 2 planned commits became 6 (1a done; 1b split into 1b–1f) after the size check. Two tests are added first because none pinned them. |
