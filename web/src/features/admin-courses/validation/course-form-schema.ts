@@ -102,7 +102,7 @@ function checkedBy<T>(problem: (value: T) => string | undefined) {
   };
 }
 
-const descriptionSchema = z
+export const descriptionSchema = z
   .custom<JSONContent>(
     (value) => typeof value === "object" && value !== null,
     requiredDescription,
@@ -116,29 +116,42 @@ const priceSchema = z.object({
   effectiveTimeOfDay: z.string(),
 });
 
+export const nameSchema = z
+  .string()
+  .trim()
+  .min(1, requiredName)
+  .max(COURSE_NAME_MAX_LENGTH, tooLong("name", COURSE_NAME_MAX_LENGTH));
+
+export const summarySchema = z
+  .string()
+  .trim()
+  .min(1, requiredSummary)
+  .max(
+    COURSE_SUMMARY_MAX_LENGTH,
+    tooLong("summary", COURSE_SUMMARY_MAX_LENGTH),
+  );
+
+export const contentUrlSchema = z
+  .string()
+  .trim()
+  .superRefine(checkedBy(contentUrlProblem));
+
+export const timeZoneSchema = z
+  .string()
+  .refine(isKnownTimeZone, timeZoneMessage);
+
 /** The fields the API saves; the image is sent in a separate request. */
 const savedFieldsSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, requiredName)
-    .max(COURSE_NAME_MAX_LENGTH, tooLong("name", COURSE_NAME_MAX_LENGTH)),
-  summary: z
-    .string()
-    .trim()
-    .min(1, requiredSummary)
-    .max(
-      COURSE_SUMMARY_MAX_LENGTH,
-      tooLong("summary", COURSE_SUMMARY_MAX_LENGTH),
-    ),
+  name: nameSchema,
+  summary: summarySchema,
   description: descriptionSchema,
-  contentUrl: z.string().trim().superRefine(checkedBy(contentUrlProblem)),
+  contentUrl: contentUrlSchema,
   schedule: z.object({
     startDate: z.string().min(1, requiredStartDate),
     startTimeOfDay: z.string().min(1, requiredStartTime),
     endDate: z.string().min(1, requiredEndDate),
     endTimeOfDay: z.string().min(1, requiredEndTime),
-    timeZone: z.string().refine(isKnownTimeZone, timeZoneMessage),
+    timeZone: timeZoneSchema,
   }),
   prices: z.array(priceSchema).min(1, "Add at least one price."),
 });
