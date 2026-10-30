@@ -16,7 +16,7 @@ export type ScheduleDateTimeNames<T extends FieldValues> = {
 };
 
 /** True when the admin has reached the field or it already shows a problem. */
-function isReached<T extends FieldValues>(
+function isReachedOrInvalid<T extends FieldValues>(
   form: CourseFormApi<T>,
   name: FieldPathByValue<T, string>,
 ) {
@@ -42,7 +42,7 @@ function makeScheduleChangeHandler<T extends FieldValues>(
       shouldValidate: true,
     });
     const others = allNames.filter(
-      (other) => other !== name && isReached(form, other),
+      (other) => other !== name && isReachedOrInvalid(form, other),
     );
     if (others.length > 0) void form.trigger(others);
   };

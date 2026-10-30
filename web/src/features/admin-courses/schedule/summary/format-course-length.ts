@@ -2,7 +2,7 @@ const MS_PER_MINUTE = 60_000;
 const MINUTES_PER_HOUR = 60;
 const MINUTES_PER_DAY = 24 * MINUTES_PER_HOUR;
 
-function plural(count: number, unit: string): string {
+function countWithUnit(count: number, unit: string): string {
   return `${count} ${unit}${count === 1 ? "" : "s"}`;
 }
 
@@ -17,6 +17,6 @@ export function formatCourseLength(durationMs: number): string {
 
   const shown = parts
     .filter(([count]) => count > 0)
-    .map(([count, unit]) => plural(count, unit));
-  return shown.length > 0 ? shown.join(" ") : plural(0, "minute");
+    .map(([count, unit]) => countWithUnit(count, unit));
+  return shown.length > 0 ? shown.join(" ") : countWithUnit(0, "minute");
 }

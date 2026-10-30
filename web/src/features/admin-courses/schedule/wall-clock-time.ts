@@ -10,7 +10,7 @@ export type WallClockToUtcResult = Result<string, WallClockFailureReason>;
 // What a `datetime-local` input gives: a date and a time, never a date alone.
 const WALL_CLOCK_FORMAT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/;
 
-function failure(error: WallClockFailureReason): WallClockToUtcResult {
+function wallClockFailure(error: WallClockFailureReason): WallClockToUtcResult {
   return { state: "failure", error };
 }
 
@@ -22,7 +22,7 @@ function parseDateTime(wallClock: string): Temporal.PlainDateTime | undefined {
   }
 }
 
-function isKnownTimeZone(
+function convertsInTimeZone(
   dateTime: Temporal.PlainDateTime,
   timeZone: string,
 ): boolean {
@@ -58,14 +58,16 @@ export function wallClockToUtc(
   wallClock: string,
   timeZone: string,
 ): WallClockToUtcResult {
-  if (!WALL_CLOCK_FORMAT.test(wallClock)) return failure("invalid-time");
+  if (!WALL_CLOCK_FORMAT.test(wallClock))
+    return wallClockFailure("invalid-time");
 
   const dateTime = parseDateTime(wallClock);
-  if (!dateTime) return failure("invalid-time");
-  if (!isKnownTimeZone(dateTime, timeZone)) return failure("unknown-zone");
+  if (!dateTime) return wallClockFailure("invalid-time");
+  if (!convertsInTimeZone(dateTime, timeZone))
+    return wallClockFailure("unknown-zone");
 
   const instant = toUtcInstant(dateTime, timeZone);
-  if (!instant) return failure("daylight-saving");
+  if (!instant) return wallClockFailure("daylight-saving");
   return { state: "success", data: instant };
 }
 

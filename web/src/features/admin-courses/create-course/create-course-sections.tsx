@@ -156,7 +156,7 @@ export function CreatePricingSection({
   priceRows: UseFieldArrayReturn<CourseFormWithImageValues, "prices">;
   summary: ReturnType<typeof priceSummary>;
 }) {
-  function removeRow(index: number) {
+  function removePriceRow(index: number) {
     priceRows.remove(index);
     // A "same time as another row" error may now be gone.
     void form.trigger("prices");
@@ -174,7 +174,7 @@ export function CreatePricingSection({
           names={priceRowNames(index)}
           index={index}
           rowCount={priceRows.fields.length}
-          onRemove={() => removeRow(index)}
+          onRemove={() => removePriceRow(index)}
         />
       ))}
     </PricingSection>

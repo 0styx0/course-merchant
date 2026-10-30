@@ -5,7 +5,7 @@ import type { CourseActionFailure } from "../../save-course/course-action-result
 
 export type ServerProblem = { title: string; detail: string };
 
-const rejectedProblem: ServerProblem = {
+const actionThrewProblem: ServerProblem = {
   title: "Couldn't save the course",
   detail:
     "Something went wrong while saving. Check your connection and try again.",
@@ -17,7 +17,7 @@ export function useServerProblem<TValues extends FieldValues>(
 ) {
   const [serverProblem, setServerProblem] = useState<ServerProblem>();
 
-  function showFailure(problem: ServerProblem, failure: CourseActionFailure) {
+  function showRefusal(problem: ServerProblem, failure: CourseActionFailure) {
     setServerProblem(problem);
     for (const { path, message } of failure.fieldErrors) {
       // A cast for a limit of the library's types: a plain string is not a `Path`.
@@ -25,18 +25,18 @@ export function useServerProblem<TValues extends FieldValues>(
     }
   }
 
-  /** `note` is added after the usual text; start it with a space. */
-  function showRejected(note = "") {
+  /** `extraDetail` is added after the usual text; start it with a space. */
+  function showThrownProblem(extraDetail = "") {
     setServerProblem({
-      ...rejectedProblem,
-      detail: rejectedProblem.detail + note,
+      ...actionThrewProblem,
+      detail: actionThrewProblem.detail + extraDetail,
     });
   }
 
   return {
     serverProblem,
-    showFailure,
-    showRejected,
+    showRefusal,
+    showThrownProblem,
     clearServerProblem: () => setServerProblem(undefined),
   };
 }

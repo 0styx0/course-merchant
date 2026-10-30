@@ -21,7 +21,7 @@ type Schedule = CourseFormValues["schedule"];
 type Price = CourseFormValues["prices"][number];
 
 /** Date and time of day to UTC milliseconds, or the message to show instead. */
-function convert(
+function toUtcMsOrIssue(
   { date, timeOfDay }: DateAndTime,
   timeZone: string,
 ): Conversion {
@@ -60,11 +60,11 @@ export function crossFieldIssues(
 
 // Problems with a combined date and time are shown on the time-of-day field.
 function scheduleIssues(schedule: Schedule, nowMs: number): FormIssue[] {
-  const start = convert(
+  const start = toUtcMsOrIssue(
     { date: schedule.startDate, timeOfDay: schedule.startTimeOfDay },
     schedule.timeZone,
   );
-  const end = convert(
+  const end = toUtcMsOrIssue(
     { date: schedule.endDate, timeOfDay: schedule.endTimeOfDay },
     schedule.timeZone,
   );
@@ -77,12 +77,12 @@ function scheduleIssues(schedule: Schedule, nowMs: number): FormIssue[] {
 
 function conversionIssues(start: Conversion, end: Conversion): FormIssue[] {
   return [
-    ...issueOf(start, ["schedule", "startTimeOfDay"]),
-    ...issueOf(end, ["schedule", "endTimeOfDay"]),
+    ...conversionIssue(start, ["schedule", "startTimeOfDay"]),
+    ...conversionIssue(end, ["schedule", "endTimeOfDay"]),
   ];
 }
 
-function issueOf(conversion: Conversion, path: FormIssue["path"]) {
+function conversionIssue(conversion: Conversion, path: FormIssue["path"]) {
   if (conversion.kind !== "issue") return [];
   return [issueAt(path, conversion.message)];
 }
@@ -119,7 +119,7 @@ function priceTimeIssues(
   nowMs: number,
 ): FormIssue[] {
   const rows = prices.map((price, index) =>
-    priceRow(price, index, timeZone, nowMs),
+    checkPriceRow(price, index, timeZone, nowMs),
   );
   return rows.flatMap((row, index) =>
     row.issues.length > 0
@@ -128,7 +128,7 @@ function priceTimeIssues(
   );
 }
 
-function priceRow(
+function checkPriceRow(
   price: Price,
   index: number,
   timeZone: string,
@@ -141,7 +141,7 @@ function priceRow(
   const { effectiveDate: date, effectiveTimeOfDay: timeOfDay } = price;
   if (!date) return { issues: [], ms: nowMs + MIN_PRICE_LEAD_MS };
 
-  const time = convert({ date, timeOfDay }, timeZone);
+  const time = toUtcMsOrIssue({ date, timeOfDay }, timeZone);
   const path = ["prices", index, "effectiveTimeOfDay"];
   if (time.kind === "issue") {
     return { issues: [issueAt(path, time.message)] };

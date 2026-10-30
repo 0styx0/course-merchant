@@ -35,7 +35,7 @@ const requiredImage = "Choose an image.";
 
 const timeZoneMessage = "Choose a time zone.";
 
-function tooLong(label: string, max: number): string {
+function tooLongMessage(label: string, max: number): string {
   return `The ${label} must be ${max.toLocaleString("en-US")} characters or fewer.`;
 }
 
@@ -60,7 +60,7 @@ function isWebUrl(url: string): boolean {
 function contentUrlProblem(url: string): string | undefined {
   if (!url) return "Enter the link to the course material.";
   if (url.length > COURSE_CONTENT_URL_MAX_LENGTH) {
-    return tooLong("link", COURSE_CONTENT_URL_MAX_LENGTH);
+    return tooLongMessage("link", COURSE_CONTENT_URL_MAX_LENGTH);
   }
   if (isWebUrl(url)) return undefined;
   return "Enter a link starting with https:// or http://.";
@@ -71,7 +71,7 @@ function descriptionProblem(description: JSONContent): string | undefined {
   if (
     countDescriptionCharacters(description) > COURSE_DESCRIPTION_MAX_TEXT_LENGTH
   ) {
-    return tooLong("description", COURSE_DESCRIPTION_MAX_TEXT_LENGTH);
+    return tooLongMessage("description", COURSE_DESCRIPTION_MAX_TEXT_LENGTH);
   }
   return undefined;
 }
@@ -95,7 +95,7 @@ export function amountProblem(typed: string): string | undefined {
 }
 
 /** Adds the first problem found as the field's single message. */
-function checkedBy<T>(problem: (value: T) => string | undefined) {
+function addFirstProblemAsIssue<T>(problem: (value: T) => string | undefined) {
   return (value: T, ctx: z.RefinementCtx) => {
     const message = problem(value);
     if (message) ctx.addIssue({ code: "custom", message });
@@ -107,10 +107,10 @@ export const descriptionSchema = z
     (value) => typeof value === "object" && value !== null,
     requiredDescription,
   )
-  .superRefine(checkedBy(descriptionProblem));
+  .superRefine(addFirstProblemAsIssue(descriptionProblem));
 
 const priceSchema = z.object({
-  amountDollars: z.string().superRefine(checkedBy(amountProblem)),
+  amountDollars: z.string().superRefine(addFirstProblemAsIssue(amountProblem)),
   /** Date and time of day as typed; both empty means "when saved". */
   effectiveDate: z.string(),
   effectiveTimeOfDay: z.string(),
@@ -120,7 +120,7 @@ export const nameSchema = z
   .string()
   .trim()
   .min(1, requiredName)
-  .max(COURSE_NAME_MAX_LENGTH, tooLong("name", COURSE_NAME_MAX_LENGTH));
+  .max(COURSE_NAME_MAX_LENGTH, tooLongMessage("name", COURSE_NAME_MAX_LENGTH));
 
 export const summarySchema = z
   .string()
@@ -128,13 +128,13 @@ export const summarySchema = z
   .min(1, requiredSummary)
   .max(
     COURSE_SUMMARY_MAX_LENGTH,
-    tooLong("summary", COURSE_SUMMARY_MAX_LENGTH),
+    tooLongMessage("summary", COURSE_SUMMARY_MAX_LENGTH),
   );
 
 export const contentUrlSchema = z
   .string()
   .trim()
-  .superRefine(checkedBy(contentUrlProblem));
+  .superRefine(addFirstProblemAsIssue(contentUrlProblem));
 
 export const timeZoneSchema = z
   .string()
@@ -162,14 +162,16 @@ export type CourseFormValues = z.input<typeof savedFieldsSchema>;
 /** The saved fields after the schema has checked and trimmed them. */
 export type CheckedCourseFormValues = z.output<typeof savedFieldsSchema>;
 
-function checkCrossFields(ctx: z.core.ParsePayload<CheckedCourseFormValues>) {
+function addCrossFieldIssues(
+  ctx: z.core.ParsePayload<CheckedCourseFormValues>,
+) {
   for (const issue of crossFieldIssues(ctx.value, Date.now())) {
     ctx.issues.push({ code: "custom", input: ctx.value, ...issue });
   }
 }
 
 /** What the actions check: the fields the API saves. */
-export const courseFormSchema = savedFieldsSchema.check(checkCrossFields);
+export const courseFormSchema = savedFieldsSchema.check(addCrossFieldIssues);
 
 /**
  * The chosen image, or null before one is chosen (which is refused). A refine
@@ -182,7 +184,7 @@ const imageSchema = courseImageSchema
 /** What the form checks: the saved fields and the image. */
 export const courseFormWithImageSchema = savedFieldsSchema
   .extend({ image: imageSchema })
-  .check(checkCrossFields);
+  .check(addCrossFieldIssues);
 
 export type CourseFormWithImageValues = z.input<
   typeof courseFormWithImageSchema

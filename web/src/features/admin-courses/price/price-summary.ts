@@ -31,28 +31,28 @@ export type PricePart = { text: string; isError: boolean };
 
 const WHEN_PUBLISHED = "when the course is published";
 
-const part = (text: string): PricePart => ({ text, isError: false });
+const textPart = (text: string): PricePart => ({ text, isError: false });
 const errorPart: PricePart = { text: "Error", isError: true };
 
 /** "$79.50", "$99" or "Free", or "$Error" for an amount that isn't a valid price. */
 function amountParts(typed: string): PricePart[] {
-  if (amountProblem(typed) !== undefined) return [part("$"), errorPart];
-  return [part(formatDollars(typed))];
+  if (amountProblem(typed) !== undefined) return [textPart("$"), errorPart];
+  return [textPart(formatDollars(typed))];
 }
 
 function startPart(startMs: number | undefined, timeZone: string): PricePart {
   if (startMs === undefined) return errorPart;
-  if (startMs === -Infinity) return part(WHEN_PUBLISHED);
-  return part(formatMoment(startMs, timeZone));
+  if (startMs === -Infinity) return textPart(WHEN_PUBLISHED);
+  return textPart(formatMoment(startMs, timeZone));
 }
 
 /** The start, or nothing if an earlier row already starts then. */
-function claimStart(
+function unclaimedStart(
   startMs: number | undefined,
-  taken: Set<number>,
+  usedStarts: Set<number>,
 ): number | undefined {
-  if (startMs === undefined || taken.has(startMs)) return undefined;
-  taken.add(startMs);
+  if (startMs === undefined || usedStarts.has(startMs)) return undefined;
+  usedStarts.add(startMs);
   return startMs;
 }
 
@@ -60,17 +60,17 @@ function claimStart(
 function priceLine(
   price: CourseFormValues["prices"][number],
   timeZone: string,
-  taken: Set<number>,
+  usedStarts: Set<number>,
 ) {
   const startMs = priceStartMs(price, timeZone);
   if (price.amountDollars.trim() === "") {
     return { parts: [], sortKey: startMs ?? Infinity };
   }
-  const claimed = claimStart(startMs, taken);
+  const claimed = unclaimedStart(startMs, usedStarts);
   return {
     parts: [
       ...amountParts(price.amountDollars),
-      part(" from "),
+      textPart(" from "),
       startPart(claimed, timeZone),
     ],
     sortKey: claimed ?? Infinity,
@@ -97,9 +97,9 @@ export function priceSummary(
   timeZone: string,
 ): { timeZone: string; lines: PricePart[][] } | undefined {
   if (!hasPriceInput(prices)) return undefined;
-  const taken = new Set<number>();
+  const usedStarts = new Set<number>();
   // Rows are read in the order shown, so the later of two equal starts is the repeat.
-  const lines = prices.map((price) => priceLine(price, timeZone, taken));
+  const lines = prices.map((price) => priceLine(price, timeZone, usedStarts));
   // Two equal infinities subtract to NaN, which sort treats as "keep the order".
   lines.sort((a, b) => a.sortKey - b.sortKey);
   return { timeZone, lines: lines.map(({ parts }) => parts) };

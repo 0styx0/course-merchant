@@ -9,7 +9,9 @@ import { uploadCourseImageHandlers } from "./handlers/upload-course-image";
 const scenario = "success"; // change to the mock you want to test
 
 // An endpoint without the chosen scenario falls back to its success one.
-function pick(handlers: Record<string, RequestHandler>): RequestHandler {
+function scenarioHandler(
+  handlers: Record<string, RequestHandler>,
+): RequestHandler {
   return handlers[scenario] ?? handlers.success;
 }
 
@@ -26,9 +28,9 @@ if (
 }
 
 export const server = setupServer(
-  pick(listCoursesHandlers),
-  pick(getCourseHandlers),
-  pick(createCourseHandlers),
-  pick(updateCourseHandlers),
-  pick(uploadCourseImageHandlers),
+  scenarioHandler(listCoursesHandlers),
+  scenarioHandler(getCourseHandlers),
+  scenarioHandler(createCourseHandlers),
+  scenarioHandler(updateCourseHandlers),
+  scenarioHandler(uploadCourseImageHandlers),
 );

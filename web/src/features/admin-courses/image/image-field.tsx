@@ -76,7 +76,7 @@ function FileInput({
     };
   }, []);
 
-  async function onFileChosen(event: ChangeEvent<HTMLInputElement>) {
+  async function measureChosenFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
     const choice = ++latestChoice.current;
@@ -90,7 +90,7 @@ function FileInput({
       ref={setInput}
       type="file"
       accept={ACCEPTED_IMAGE_TYPES.join(",")}
-      onChange={onFileChosen}
+      onChange={measureChosenFile}
       onBlur={onBlur}
     />
   );

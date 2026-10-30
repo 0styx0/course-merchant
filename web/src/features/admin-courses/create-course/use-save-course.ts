@@ -25,17 +25,19 @@ type CourseForm = UseFormReturn<
   CheckedCourseFormWithImageValues
 >;
 
-const draftNote = " The course was saved as a draft.";
+const draftSavedNote = " The course was saved as a draft.";
 
 /** Says the draft exists, then gives the API's own reason. */
-function uploadFailedProblem({ problem }: CourseActionFailure): ServerProblem {
+function imageUploadFailedMessage({
+  problem,
+}: CourseActionFailure): ServerProblem {
   return {
     title: "Image upload failed",
     detail: `The course was saved as a draft, but the image didn't upload. ${problem.detail}`,
   };
 }
 
-function imageFormData(image: ChosenImage): FormData {
+function toImageFormData(image: ChosenImage): FormData {
   const formData = new FormData();
   formData.set("image", image.file);
   return formData;
@@ -51,7 +53,7 @@ function saveDraft(
     : createCourseAction(fields);
 }
 
-function problemTextOf({ problem }: CourseActionFailure): ServerProblem {
+function refusalMessage({ problem }: CourseActionFailure): ServerProblem {
   return { title: problem.title, detail: problem.detail };
 }
 
@@ -62,7 +64,7 @@ function problemTextOf({ problem }: CourseActionFailure): ServerProblem {
  */
 export function useSaveCourse(form: CourseForm) {
   const router = useRouter();
-  const { serverProblem, showFailure, showRejected, clearServerProblem } =
+  const { serverProblem, showRefusal, showThrownProblem, clearServerProblem } =
     useServerProblem(form.setError);
   const [saved, setSaved] = useState(false);
   const draftId = useRef<string>(undefined);
@@ -73,15 +75,15 @@ export function useSaveCourse(form: CourseForm) {
   }: CheckedCourseFormWithImageValues) {
     const draft = await saveDraft(draftId.current, fields);
     if (draft.state === "failure") {
-      return showFailure(problemTextOf(draft.error), draft.error);
+      return showRefusal(refusalMessage(draft.error), draft.error);
     }
     draftId.current = draft.data.courseId;
     const upload = await uploadCourseImageAction(
       draftId.current,
-      imageFormData(image),
+      toImageFormData(image),
     );
     if (upload.state === "failure") {
-      return showFailure(uploadFailedProblem(upload.error), upload.error);
+      return showRefusal(imageUploadFailedMessage(upload.error), upload.error);
     }
     setSaved(true);
     router.push("/");
@@ -93,7 +95,9 @@ export function useSaveCourse(form: CourseForm) {
       await saveDraftThenUploadImage(values);
     } catch {
       // A rejected Server Action throws instead of returning a failure.
-      showRejected(draftId.current === undefined ? undefined : draftNote);
+      showThrownProblem(
+        draftId.current === undefined ? undefined : draftSavedNote,
+      );
     }
   }
 

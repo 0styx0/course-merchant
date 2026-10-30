@@ -66,7 +66,7 @@ function FieldHelp<T extends FieldValues>({
   );
 }
 
-function helpFor<T extends FieldValues>({
+function helpWithCounter<T extends FieldValues>({
   limit,
   ...rest
 }: Pick<FieldProps<T>, "form" | "name" | "description"> & {
@@ -80,7 +80,7 @@ function helpFor<T extends FieldValues>({
 }
 
 // `labelId` is for inputs that aren't labelable elements; these are.
-function ariaProps({
+function labelableInputProps({
   id,
   "aria-invalid": invalid,
   "aria-describedby": describedBy,
@@ -88,7 +88,10 @@ function ariaProps({
   return { id, "aria-invalid": invalid, "aria-describedby": describedBy };
 }
 
-function stateOf<T extends FieldValues>(form: CourseFormApi<T>, name: Path<T>) {
+function fieldErrorState<T extends FieldValues>(
+  form: CourseFormApi<T>,
+  name: Path<T>,
+) {
   const { errors, touchedFields, isSubmitted } = form.formState;
   return {
     error: fieldErrorMessage(errors, name),
@@ -98,7 +101,7 @@ function stateOf<T extends FieldValues>(form: CourseFormApi<T>, name: Path<T>) {
 }
 
 /** The shared message id, only while the field's problem is a cross-field one. */
-function sharedIdFor<T extends FieldValues>(
+function crossFieldMessageId<T extends FieldValues>(
   form: CourseFormApi<T>,
   name: Path<T>,
   sharedMessageId: string | undefined,
@@ -160,9 +163,9 @@ export function InputField<T extends FieldValues>({
   return (
     <ValidatedField
       label={label}
-      description={helpFor({ form, name, description, limit })}
-      errorMessageId={sharedIdFor(form, name, sharedMessageId)}
-      {...stateOf(form, name)}
+      description={helpWithCounter({ form, name, description, limit })}
+      errorMessageId={crossFieldMessageId(form, name, sharedMessageId)}
+      {...fieldErrorState(form, name)}
     >
       {(inputProps) => (
         <PrefixedInput
@@ -170,7 +173,7 @@ export function InputField<T extends FieldValues>({
           type={type}
           min={min}
           placeholder={placeholder}
-          {...ariaProps(inputProps)}
+          {...labelableInputProps(inputProps)}
           {...form.register(name, registerOptions)}
         />
       )}
@@ -198,7 +201,10 @@ export function TimeZoneField<T extends FieldValues>({
         control={form.control}
         name={name}
         render={({ field }) => (
-          <ValidatedField label="Time zone" {...stateOf(form, field.name)}>
+          <ValidatedField
+            label="Time zone"
+            {...fieldErrorState(form, field.name)}
+          >
             {(inputProps) => (
               <TimeZonePicker
                 timeZones={timeZones}
@@ -209,7 +215,7 @@ export function TimeZoneField<T extends FieldValues>({
                 }}
                 onBlur={field.onBlur}
                 inputRef={field.ref}
-                {...ariaProps(inputProps)}
+                {...labelableInputProps(inputProps)}
               />
             )}
           </ValidatedField>

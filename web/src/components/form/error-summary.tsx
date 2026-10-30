@@ -24,7 +24,13 @@ function headingFor(count: number): string {
   return `Fix ${count} ${count === 1 ? "problem" : "problems"} before saving`;
 }
 
-function ServerProblem({ title, detail }: { title: string; detail: string }) {
+function ServerProblemHeading({
+  title,
+  detail,
+}: {
+  title: string;
+  detail: string;
+}) {
   return (
     <>
       <h2 className="font-medium text-destructive">{title}</h2>
@@ -81,7 +87,7 @@ export function ErrorSummary({
       role="alert"
       className="sticky top-0 z-10 max-h-48 overflow-y-auto rounded-lg border border-destructive bg-background p-4 text-sm outline-none focus-visible:ring-3 focus-visible:ring-destructive/40"
     >
-      {serverProblem && <ServerProblem {...serverProblem} />}
+      {serverProblem && <ServerProblemHeading {...serverProblem} />}
       {problems.length > 0 && (
         <ProblemList problems={problems} onSelectField={onSelectField} />
       )}

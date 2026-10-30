@@ -31,24 +31,24 @@ function useLinkAddress(editor: Editor) {
   );
   const [error, setError] = useState<string>();
 
-  function edit(value: string) {
+  function changeAddress(value: string) {
     setAddress(value);
     setError(undefined);
   }
 
   /** The trimmed address, or undefined after showing what is wrong with it. */
-  function checkedHref() {
+  function validHrefOrShowError() {
     const href = address.trim();
     const problem = addressProblem(href);
     setError(problem);
     return problem ? undefined : href;
   }
 
-  return { address, error, edit, checkedHref };
+  return { address, error, changeAddress, validHrefOrShowError };
 }
 
 /** Enter applies and Escape cancels; other keys are left alone. */
-function runKeyAction(
+function applyOrCloseOnKey(
   event: React.KeyboardEvent,
   actions: { apply: () => void; close: () => void },
 ) {
@@ -99,22 +99,23 @@ export function DescriptionLinkField({
 }: DescriptionLinkFieldProps) {
   const errorId = useId();
   const inputRef = useFocusOnMount();
-  const { address, error, edit, checkedHref } = useLinkAddress(editor);
+  const { address, error, changeAddress, validHrefOrShowError } =
+    useLinkAddress(editor);
 
-  function close() {
+  function closeLinkField() {
     editor.commands.focus();
     onClose();
   }
 
-  function apply() {
-    const href = checkedHref();
+  function applyLink() {
+    const href = validHrefOrShowError();
     if (!href) return;
     editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
     onClose();
   }
 
-  const handleKey = (event: React.KeyboardEvent) =>
-    runKeyAction(event, { apply, close });
+  const handleLinkFieldKey = (event: React.KeyboardEvent) =>
+    applyOrCloseOnKey(event, { apply: applyLink, close: closeLinkField });
 
   return (
     <div id={id} className="flex flex-col gap-1">
@@ -126,10 +127,10 @@ export function DescriptionLinkField({
           aria-describedby={error ? errorId : undefined}
           className="min-w-0 flex-1"
           value={address}
-          onChange={(event) => edit(event.target.value)}
-          onKeyDown={handleKey}
+          onChange={(event) => changeAddress(event.target.value)}
+          onKeyDown={handleLinkFieldKey}
         />
-        <ApplyCancelButtons onApply={apply} onCancel={close} />
+        <ApplyCancelButtons onApply={applyLink} onCancel={closeLinkField} />
       </div>
       <FieldError id={errorId}>{error}</FieldError>
     </div>
