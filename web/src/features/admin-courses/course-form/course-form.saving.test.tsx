@@ -2,7 +2,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { CreateCourseActionResult } from "../save-course/create-course.action";
+import type { CourseActionResult } from "../save-course/course-action-result";
 import {
   action,
   fillValidForm,
@@ -46,7 +46,7 @@ describe("CourseForm", () => {
 
   it("is disabled and reads Saving… while saving", async () => {
     const user = userEvent.setup();
-    let finish: (result: CreateCourseActionResult) => void = () => {};
+    let finish: (result: CourseActionResult) => void = () => {};
     action.mockReturnValue(new Promise((resolve) => (finish = resolve)));
     renderForm();
 

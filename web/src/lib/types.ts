@@ -18,6 +18,7 @@ export type CoursesResponse =
   operations["listCourses"]["responses"][200]["content"]["application/json"];
 export type CreateCourseStatus = components["schemas"]["CreateCourseStatus"];
 export type CreateCourseRequest = components["schemas"]["CreateCourseRequest"];
+export type UpdateCourseRequest = components["schemas"]["UpdateCourseRequest"];
 export type AdminCourse = components["schemas"]["AdminCourse"];
 export type ValidationProblemDetails =
   components["schemas"]["ValidationProblemDetails"];

@@ -12,8 +12,8 @@ Module: `$module` — the name of a `docs/<module>.md` that has a Status section
 
 ## 1. Find the work
 
-- With a module, read only the Status of `docs/$module.md`. With none, run `grep -n Next docs/*.md`; if one doc has a **Next** item take it, otherwise list them with one-line summaries and ask. Take the item marked **Next**.
-- Ask instead of guessing when: there is no **Next** item in the module; or the free-text task contradicts the **Next** item (show both).
+- With a module, read only the Status of `docs/$module.md`. With none, run `grep -n Next docs/*.md`; if one doc has a **Next** item take it; otherwise ask through the picker (AskUserQuestion): one option per doc with a **Next** item (at most 4; drop prose matches that aren't status items), each labelled with the module and item number and described in one line, the most buildable one first and marked "(Recommended)". Take the item marked **Next**.
+- Ask through the picker instead of guessing when: there is no **Next** item in the module (options: the other docs' **Next** items); or the free-text task contradicts the **Next** item (options: the **Next** item, the free-text task).
 - If the **Next** item is a milestone not yet split into commits, invoke the `plan-create-implementation` skill (Skill tool, with `$module` as the argument) instead of stopping. Once it finishes, stop: its hand-off tells the owner what to review and when to `/clear` before `/next-commit`.
 - Read the item's commit line (format: [../_shared/commit-line.md](../_shared/commit-line.md)): its Behaviours seed the test table, Settled lists the decisions already made, Done when is the verification. If the line lacks these, say so in the outline.
 - Read what the item needs: the doc's sections about it, and the files it links.
@@ -22,7 +22,7 @@ Module: `$module` — the name of a `docs/<module>.md` that has a Status section
 - Run the size check in [../_shared/commit-size.md](../_shared/commit-size.md) now that you have read the code. If it fails, stop as it says.
 - Decide whether the commit is **mechanical** (rule in [outline.md](outline.md)); the line's *(mechanical)* flag is only a hint. For a change that alters no behaviour, run `test:coverage` on the files you'll touch (commands in the package CLAUDE.md files). If a touched line or branch is uncovered, the missing test is its own commit first and must pass against the old code; say so in the outline. Skip for pure moves, renames and doc-only commits.
 - Run `git status --short`. Leave uncommitted changes from other work alone. If they overlap files you'll touch, stop and ask: hunks can't be split.
-- Choose the outline path (rules in [outline.md](outline.md)): **mechanical**, **plan-conformant** (the line has no open question, nothing you read deviates from it, and no decision row will be added), or full. Keep the results of this step for the `Preflight:` line.
+- Choose the outline path (rules in [outline.md](outline.md)): **mechanical**, **plan-conformant** (the line has no open question, including user-visible text, error codes or error shapes it leaves out, nothing you read deviates from it, and no decision row will be added), or full. Keep the results of this step for the `Preflight:` line.
 
 ## 2. Outline
 

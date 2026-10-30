@@ -9,7 +9,7 @@ Written by `/plan-create-implementation`, read by `/next-commit` in its first st
     - <link or path>
     - <folder counts, if near 7>
   - *Behaviours*:
-    - <one behaviour, with its failure or edge case named>
+    - <one behaviour, with its failure or edge case named; for a failure, the error code or message the caller sees>
     - <next behaviour>
   - *Needs*: <earlier commit, if not the one before>
   - *Settled*: <decision rows or sections that already cover the design>

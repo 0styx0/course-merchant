@@ -18,7 +18,7 @@ Give a **short outline** of about 5 lines, then go straight to step 3. The short
 
 ## Plan-conformant path
 
-A commit whose plan line already settled its design needs no second approval. It qualifies only if all three hold: the line has no open question; nothing read in step 1 deviates from it (files, behaviours, contract, decisions); no decision row will be added. It is not required to be free of logic.
+A commit whose plan line already settled its design needs no second approval. It qualifies only if all three hold: the line has no open question; nothing read in step 1 deviates from it (files, behaviours, contract, decisions); no decision row will be added. A choice the line leaves open counts as an open question: any user-visible text, error code or error shape that the line does not state means the full outline, and you wait. A note saying "my pick" in a short outline is not approval. It is not required to be free of logic.
 
 - Give the same ~5-line outline as for mechanical commits, plus the test table, then go straight to step 3.
 - If any condition fails while you work, stop and give the full outline.
