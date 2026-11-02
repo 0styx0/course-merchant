@@ -57,10 +57,13 @@ export function ScheduleSection({
 /** The pricing frame: the given rows, the button to add one, and the summary of them. */
 export function PricingSection({
   children,
+  help,
   onAddPrice,
   summary,
 }: {
   children: ReactNode;
+  /** The line under the title; create and edit start an empty-start price differently. */
+  help: string;
   onAddPrice: () => void;
   summary: ReturnType<typeof priceSummary>;
 }) {
@@ -68,7 +71,7 @@ export function PricingSection({
     <FormSection
       title="Pricing"
       description="What students pay, in US dollars, and when each price starts. Enter 0 for a free course."
-      help="Leave the date and time empty to start when the course is published."
+      help={help}
     >
       {children}
       <Button

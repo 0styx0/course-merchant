@@ -73,10 +73,10 @@ function useScheduleAndPriceText(
   >,
 ) {
   const schedule = useWatch({ control, name: "schedule" });
-  const prices = priceSummary(
-    useWatch({ control, name: "prices" }),
-    schedule.timeZone,
-  );
+  const prices = priceSummary(useWatch({ control, name: "prices" }), {
+    timeZone: schedule.timeZone,
+    textForEmptyStart: "when the course is published",
+  });
   return { scheduleText: scheduleSummary(schedule), prices };
 }
 

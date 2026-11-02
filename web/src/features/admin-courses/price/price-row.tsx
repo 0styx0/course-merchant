@@ -22,6 +22,7 @@ type PriceRowProps<T extends FieldValues> = {
   names: PriceRowNames<T>;
   index: number;
   rowCount: number;
+  showRemove: boolean;
   onRemove: () => void;
 };
 
@@ -51,6 +52,7 @@ export function PriceRow<T extends FieldValues>({
   names,
   index,
   rowCount,
+  showRemove,
   onRemove,
 }: PriceRowProps<T>) {
   const labels = priceRowLabels(index, rowCount);
@@ -74,7 +76,7 @@ export function PriceRow<T extends FieldValues>({
         label={labels.effectiveTimeOfDay}
         type="time"
       />
-      {rowCount > 1 && (
+      {showRemove && (
         <RemoveRowButton label={labels.amountDollars} onRemove={onRemove} />
       )}
     </div>

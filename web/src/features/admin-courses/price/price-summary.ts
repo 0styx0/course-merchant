@@ -29,8 +29,6 @@ function priceStartMs(
 /** A piece of a price line; an error piece reads "Error" and is shown in red. */
 export type PricePart = { text: string; isError: boolean };
 
-const WHEN_PUBLISHED = "when the course is published";
-
 const textPart = (text: string): PricePart => ({ text, isError: false });
 const errorPart: PricePart = { text: "Error", isError: true };
 
@@ -40,9 +38,15 @@ function amountParts(typed: string): PricePart[] {
   return [textPart(formatDollars(typed))];
 }
 
-function startPart(startMs: number | undefined, timeZone: string): PricePart {
+/** What the page shows for a price start: its words for an empty start, a moment, or an error. */
+type StartTextOptions = { timeZone: string; textForEmptyStart: string };
+
+function startPart(
+  startMs: number | undefined,
+  { timeZone, textForEmptyStart }: StartTextOptions,
+): PricePart {
   if (startMs === undefined) return errorPart;
-  if (startMs === -Infinity) return textPart(WHEN_PUBLISHED);
+  if (startMs === -Infinity) return textPart(textForEmptyStart);
   return textPart(formatMoment(startMs, timeZone));
 }
 
@@ -59,10 +63,10 @@ function unclaimedStart(
 /** A price's pieces, and where it sorts: by start, with broken starts last. */
 function priceLine(
   price: CourseFormValues["prices"][number],
-  timeZone: string,
+  startText: StartTextOptions,
   usedStarts: Set<number>,
 ) {
-  const startMs = priceStartMs(price, timeZone);
+  const startMs = priceStartMs(price, startText.timeZone);
   if (price.amountDollars.trim() === "") {
     return { parts: [], sortKey: startMs ?? Infinity };
   }
@@ -71,7 +75,7 @@ function priceLine(
     parts: [
       ...amountParts(price.amountDollars),
       textPart(" from "),
-      startPart(claimed, timeZone),
+      startPart(claimed, startText),
     ],
     sortKey: claimed ?? Infinity,
   };
@@ -90,17 +94,21 @@ function hasPriceInput(prices: CourseFormValues["prices"]): boolean {
  * pieces: valid starts in start order, then the prices whose start is
  * incomplete, unconvertible or the same as an earlier row's. Only the broken piece reads "Error" ("$79 from Error", "$Error from Feb 1,
  * 2027, 9:00 AM"). A price with no amount typed is an empty line. The form's
- * own checks say what is wrong.
+ * own checks say what is wrong. An empty start reads `textForEmptyStart`,
+ * because create and edit start such a price at different moments.
  */
 export function priceSummary(
   prices: CourseFormValues["prices"],
-  timeZone: string,
+  startText: StartTextOptions,
 ): { timeZone: string; lines: PricePart[][] } | undefined {
   if (!hasPriceInput(prices)) return undefined;
   const usedStarts = new Set<number>();
   // Rows are read in the order shown, so the later of two equal starts is the repeat.
-  const lines = prices.map((price) => priceLine(price, timeZone, usedStarts));
+  const lines = prices.map((price) => priceLine(price, startText, usedStarts));
   // Two equal infinities subtract to NaN, which sort treats as "keep the order".
   lines.sort((a, b) => a.sortKey - b.sortKey);
-  return { timeZone, lines: lines.map(({ parts }) => parts) };
+  return {
+    timeZone: startText.timeZone,
+    lines: lines.map(({ parts }) => parts),
+  };
 }

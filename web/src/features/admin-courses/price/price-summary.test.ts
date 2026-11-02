@@ -9,8 +9,12 @@ describe("priceSummary", () => {
     effectiveDate: date,
     effectiveTimeOfDay: time,
   });
+  const startText = (timeZone: string) => ({
+    timeZone,
+    textForEmptyStart: "when the course is published",
+  });
   const summaryOf = (prices: ReturnType<typeof price>[], timeZone = zone) => {
-    const summary = priceSummary(prices, timeZone);
+    const summary = priceSummary(prices, startText(timeZone));
     if (!summary) throw new Error("expected a summary");
     return summary;
   };
@@ -94,12 +98,16 @@ describe("priceSummary", () => {
   });
 
   it("returns nothing while every price input is empty", () => {
-    expect(priceSummary([price("")], zone)).toBeUndefined();
-    expect(priceSummary([price(""), price("")], zone)).toBeUndefined();
+    expect(priceSummary([price("")], startText(zone))).toBeUndefined();
+    expect(
+      priceSummary([price(""), price("")], startText(zone)),
+    ).toBeUndefined();
   });
 
   it("counts spaces alone as empty", () => {
-    expect(priceSummary([price("  ", " ", " ")], zone)).toBeUndefined();
+    expect(
+      priceSummary([price("  ", " ", " ")], startText(zone)),
+    ).toBeUndefined();
   });
 
   it.each([
@@ -107,7 +115,7 @@ describe("priceSummary", () => {
     ["only a start date", price("", "2030-02-01", "")],
     ["only a start time", price("", "", "09:00")],
   ])("returns the summary once there is %s", (_name, row) => {
-    expect(priceSummary([row], zone)).toBeDefined();
+    expect(priceSummary([row], startText(zone))).toBeDefined();
   });
 
   it("returns the summary when only a later row has text", () => {

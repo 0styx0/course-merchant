@@ -28,15 +28,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3d.** The admin sees and edits the four date and time boxes; problems that compare boxes show on the schedule line, and a zone change re-checks the schedule.
 - [ ] **4. Prices on edit.** Prices in effect are read-only; future prices can be edited, added and removed.
   - [x] **4a.** The code can check edited price rows (a row still holding a loaded future price may start in the past) and turn stored cents into dollar text; create's price checks run through the same code and behave the same.
-  - [ ] **4b.** The shared price pieces take what create and edit decide differently from the page that uses them: whether a row shows Remove, the section's help line, and the words for an empty start. The price rows' error-list entries become shared. Create behaves the same. *(mechanical, coverage first: no test pins create's help line yet)* **Next**
-    - *Files*:
-      - [price-row.tsx](../web/src/features/admin-courses/price/price-row.tsx) (takes whether Remove shows)
-      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/sections/course-form-sections.tsx) (`PricingSection` takes its help line)
-      - [price-summary.ts](../web/src/features/admin-courses/price/price-summary.ts) (takes the words for an empty start; exports its dollar formatting for 4d)
-      - [price-row-labels.ts](../web/src/features/admin-courses/price/price-row-labels.ts) (receives `priceRowFields`)
-      - [create-course-fields.ts](../web/src/features/admin-courses/create-course/create-course-fields.ts), [create-course-sections.tsx](../web/src/features/admin-courses/create-course/create-course-sections.tsx), [create-course-form.tsx](../web/src/features/admin-courses/create-course/create-course-form.tsx) (pass create's current values)
-    - *Done when*: create's tests and `create-course.spec.ts` pass with the same count, plus the new help-line test.
-  - [ ] **4c.** Saving sends the edited prices. The page splits the loaded prices into those in effect and future ones when it renders. Future ones become price rows, the PUT sends the rows and then the prices in effect as loaded, and the browser and the action refuse broken rows. The rows aren't on screen yet.
+  - [x] **4b.** The shared price pieces take from the page whether a row shows Remove, the section's help line and the words for an empty start, and the price rows' error-list entries are shared; create behaves the same.
+  - [ ] **4c.** Saving sends the edited prices. The page splits the loaded prices into those in effect and future ones when it renders. Future ones become price rows, the PUT sends the rows and then the prices in effect as loaded, and the browser and the action refuse broken rows. The rows aren't on screen yet. **Next**
     - *Files*:
       - [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (the split at render time; rows in the course's zone; the "fields sent back unchanged" keep only the status)
       - [edit-course-form-schema.ts](../web/src/features/admin-courses/validation/edit-course-form-schema.ts) (create's row schema, 4a's checks with the loaded future prices, "Add at least one price." only when none is in effect)

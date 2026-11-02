@@ -148,6 +148,7 @@ export function CreatePricingSection({
 
   return (
     <PricingSection
+      help="Leave the date and time empty to start when the course is published."
       onAddPrice={() => priceRows.append(emptyPrice)}
       summary={summary}
     >
@@ -158,6 +159,7 @@ export function CreatePricingSection({
           names={priceRowNames(index)}
           index={index}
           rowCount={priceRows.fields.length}
+          showRemove={priceRows.fields.length > 1}
           onRemove={() => removePriceRow(index)}
         />
       ))}
