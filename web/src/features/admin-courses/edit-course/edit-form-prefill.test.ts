@@ -26,6 +26,17 @@ const course: AdminCourse = {
   enrollments: [enrollment],
 };
 
+const priceIds = [
+  "6a1f8e2c-3b4d-4e5f-8a9b-0c1d2e3f4a51",
+  "6a1f8e2c-3b4d-4e5f-8a9b-0c1d2e3f4a52",
+  "6a1f8e2c-3b4d-4e5f-8a9b-0c1d2e3f4a53",
+];
+
+/** A price as the PUT sends it: no id, in the store's currency. */
+function pricedAt(effectiveAt: string, amount: number) {
+  return { amount, currency: "USD", effectiveAt } as const;
+}
+
 describe("toEditFormPrefill", () => {
   it("takes the edited fields from the course, with the times in its zone", () => {
     const { values } = toEditFormPrefill(course);
@@ -42,6 +53,8 @@ describe("toEditFormPrefill", () => {
         endDate: "2026-10-01",
         endTimeOfDay: "16:00",
       },
+      // The course's only price is already in effect, so it is no row.
+      prices: [],
     });
   });
 
@@ -73,9 +86,43 @@ describe("toEditFormPrefill", () => {
     });
   });
 
-  it("keeps the prices without their ids", () => {
-    expect(toEditFormPrefill(course).fieldsSentBackUnchanged.prices).toEqual([
-      { amount: 9900, currency: "USD", effectiveAt: "2026-10-15T18:31:00Z" },
+  it("keeps the prices in effect without their ids", () => {
+    const afterTheOnlyPrice = Date.parse("2026-11-01T00:00:00Z");
+
+    expect(toEditFormPrefill(course, afterTheOnlyPrice).loadedPrices).toEqual({
+      inEffect: [
+        { amount: 9900, currency: "USD", effectiveAt: "2026-10-15T18:31:00Z" },
+      ],
+      future: [],
+    });
+  });
+
+  it("splits the prices at the render moment and makes the future ones rows", () => {
+    const renderMs = Date.parse("2026-11-01T00:00:00Z");
+    const withFuturePrices: AdminCourse = {
+      ...course,
+      prices: [
+        { ...pricedAt("2026-10-15T18:31:00Z", 9900), id: priceIds[0] },
+        { ...pricedAt("2026-11-01T00:00:00Z", 7950), id: priceIds[1] },
+        { ...pricedAt("2027-01-01T14:00:30Z", 12900), id: priceIds[2] },
+      ],
+    };
+
+    const prefill = toEditFormPrefill(withFuturePrices, renderMs);
+
+    expect(prefill.loadedPrices).toEqual({
+      inEffect: [
+        pricedAt("2026-10-15T18:31:00Z", 9900),
+        pricedAt("2026-11-01T00:00:00Z", 7950),
+      ],
+      future: [pricedAt("2027-01-01T14:00:30Z", 12900)],
+    });
+    expect(prefill.values.prices).toEqual([
+      {
+        amountDollars: "129.00",
+        effectiveDate: "2027-01-01",
+        effectiveTimeOfDay: "09:00",
+      },
     ]);
   });
 

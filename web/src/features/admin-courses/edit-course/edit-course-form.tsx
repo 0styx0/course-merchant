@@ -19,7 +19,9 @@ import { useSaveEditedCourse } from "./use-save-edited-course";
 
 function useEditCourseFormState(prefill: EditFormPrefill) {
   return useForm<EditCourseFormValues, unknown, EditCourseFormValues>({
-    resolver: zodResolver(makeEditCourseFormSchema(prefill.loadedSchedule)),
+    resolver: zodResolver(
+      makeEditCourseFormSchema(prefill.loadedSchedule, prefill.loadedPrices),
+    ),
     defaultValues: prefill.values,
     mode: "onTouched",
     shouldFocusError: false,
@@ -45,9 +47,15 @@ export function EditCourseForm({
       form,
       courseId,
       prefill.loadedSchedule,
+      prefill.loadedPrices,
       prefill.fieldsSentBackUnchanged,
     );
-  const errorList = useErrorListAndLeaveWarning(form, editCourseFields, saved);
+  const errorList = useErrorListAndLeaveWarning(
+    form,
+    // The rows go on screen in the next step; until then their number is fixed.
+    editCourseFields(prefill.values.prices.length),
+    saved,
+  );
   const { isSubmitting } = form.formState;
 
   return (

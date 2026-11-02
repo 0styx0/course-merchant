@@ -105,7 +105,8 @@ export const descriptionSchema = z
   )
   .superRefine(addFirstProblemAsIssue(descriptionProblem));
 
-const priceSchema = z.object({
+/** One price row as typed; create and edit both use it. */
+export const priceRowSchema = z.object({
   amountDollars: z.string().superRefine(addFirstProblemAsIssue(amountProblem)),
   /** Date and time of day as typed; both empty means "when saved". */
   effectiveDate: z.string(),
@@ -154,7 +155,7 @@ const savedFieldsSchema = z.object({
     ...scheduleBoxesSchema,
     timeZone: timeZoneSchema,
   }),
-  prices: z.array(priceSchema).min(1, "Add at least one price."),
+  prices: z.array(priceRowSchema).min(1, "Add at least one price."),
 });
 
 /** The saved fields as typed, before the schema checks and trims them. */

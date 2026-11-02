@@ -11,6 +11,7 @@ import {
   captureBody,
   courseId,
   fieldsSentBackUnchanged,
+  loadedPrices,
   loadedSchedule,
   validValues,
 } from "./save-edited-details.action.fixtures";
@@ -30,6 +31,7 @@ describe("saveEditedDetailsAction", () => {
         courseId,
         validValues,
         loadedSchedule,
+        loadedPrices,
         fieldsSentBackUnchanged,
       ),
     ).resolves.toEqual({ state: "success", data: { courseId } });
@@ -51,7 +53,7 @@ describe("saveEditedDetailsAction", () => {
         endTime: "2020-01-01T22:00:00Z",
         timeZone: "America/New_York",
       },
-      prices: fieldsSentBackUnchanged.prices,
+      prices: loadedPrices.inEffect,
     });
   });
 
@@ -62,6 +64,7 @@ describe("saveEditedDetailsAction", () => {
       "not-a-uuid",
       validValues,
       loadedSchedule,
+      loadedPrices,
       fieldsSentBackUnchanged,
     );
 
@@ -86,6 +89,7 @@ describe("saveEditedDetailsAction", () => {
       courseId,
       { ...validValues, name: "  " },
       loadedSchedule,
+      loadedPrices,
       fieldsSentBackUnchanged,
     );
 
@@ -107,6 +111,7 @@ describe("saveEditedDetailsAction", () => {
         courseId,
         validValues,
         loadedSchedule,
+        loadedPrices,
         fieldsSentBackUnchanged,
       ),
     ).resolves.toMatchObject({
@@ -131,6 +136,7 @@ describe("saveEditedDetailsAction", () => {
         courseId,
         validValues,
         loadedSchedule,
+        loadedPrices,
         fieldsSentBackUnchanged,
       ),
     ).resolves.toEqual({

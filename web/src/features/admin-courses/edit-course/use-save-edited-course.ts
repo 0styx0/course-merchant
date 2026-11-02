@@ -9,6 +9,7 @@ import {
 import { saveEditedDetailsAction } from "../save-course/edit/save-edited-details.action";
 import type {
   EditCourseFormValues,
+  LoadedPrices,
   LoadedSchedule,
 } from "../validation/edit-course-form-schema";
 import type { FieldsSentBackUnchanged } from "./edit-form-prefill";
@@ -20,13 +21,15 @@ type EditCourseFormApi = UseFormReturn<
 >;
 
 /**
- * Saves the edited details with the fields it cannot edit yet, as loaded. A refusal leaves a
- * message and puts its field errors on the fields; a save goes to the home page.
+ * Saves the edited details and prices with the fields it cannot edit yet, as
+ * loaded. A refusal leaves a message and puts its field errors on the fields;
+ * a save goes to the home page.
  */
 export function useSaveEditedCourse(
   form: EditCourseFormApi,
   courseId: string,
   loadedSchedule: LoadedSchedule,
+  loadedPrices: LoadedPrices,
   fieldsSentBackUnchanged: FieldsSentBackUnchanged,
 ) {
   const router = useRouter();
@@ -41,6 +44,7 @@ export function useSaveEditedCourse(
         courseId,
         values,
         loadedSchedule,
+        loadedPrices,
         fieldsSentBackUnchanged,
       );
       if (result.state === "failure") {

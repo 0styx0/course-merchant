@@ -48,6 +48,7 @@ describe("EditCourseForm saving", () => {
       draftedAdminCourse.id,
       { ...prefill.values, name: "Renamed" },
       prefill.loadedSchedule,
+      prefill.loadedPrices,
       prefill.fieldsSentBackUnchanged,
     );
   });

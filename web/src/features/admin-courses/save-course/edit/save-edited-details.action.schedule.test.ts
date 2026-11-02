@@ -8,6 +8,7 @@ import {
   captureBody,
   courseId,
   fieldsSentBackUnchanged,
+  loadedPrices,
   loadedSchedule,
   validValues,
 } from "./save-edited-details.action.fixtures";
@@ -39,6 +40,7 @@ describe("saveEditedDetailsAction schedule", () => {
         },
       },
       futureLoaded,
+      loadedPrices,
       fieldsSentBackUnchanged,
     );
 
@@ -99,6 +101,7 @@ describe("saveEditedDetailsAction schedule", () => {
           schedule: { ...validValues.schedule, ...boxes },
         },
         loadedSchedule,
+        loadedPrices,
         fieldsSentBackUnchanged,
       );
 

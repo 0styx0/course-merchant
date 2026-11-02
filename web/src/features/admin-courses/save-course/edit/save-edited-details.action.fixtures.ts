@@ -7,6 +7,7 @@ import { server } from "@/mocks/node";
 import type { FieldsSentBackUnchanged } from "../../edit-course/edit-form-prefill";
 import type {
   EditCourseFormValues,
+  LoadedPrices,
   LoadedSchedule,
 } from "../../validation/edit-course-form-schema";
 
@@ -30,6 +31,7 @@ export const validValues: EditCourseFormValues = {
     endDate: "2020-01-01",
     endTimeOfDay: "17:00",
   },
+  prices: [],
 };
 
 export const loadedSchedule: LoadedSchedule = {
@@ -37,11 +39,15 @@ export const loadedSchedule: LoadedSchedule = {
   endTime: "2020-01-01T22:00:00Z",
 };
 
-export const fieldsSentBackUnchanged: FieldsSentBackUnchanged = {
-  status: "published",
-  prices: [
+export const loadedPrices: LoadedPrices = {
+  inEffect: [
     { amount: 9900, currency: "USD", effectiveAt: "2019-12-01T00:00:00Z" },
   ],
+  future: [],
+};
+
+export const fieldsSentBackUnchanged: FieldsSentBackUnchanged = {
+  status: "published",
 };
 
 export function captureBody() {

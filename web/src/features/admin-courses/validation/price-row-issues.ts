@@ -33,15 +33,19 @@ const MINUTE_MS = 60_000;
 /** The boxes show minutes only, so the loaded time is compared without its seconds. */
 const dropSeconds = (ms: number) => Math.floor(ms / MINUTE_MS) * MINUTE_MS;
 
-function isUnchangedPriceRow(
+/**
+ * The loaded future price a row still holds: the same amount, and the same time
+ * once the loaded one drops its seconds. Undefined for a changed or new row.
+ */
+export function findLoadedFuturePrice<Loaded extends LoadedFuturePrice>(
   amountDollars: string,
-  ms: number,
-  loadedFuturePrices: LoadedFuturePrice[],
-): boolean {
-  return loadedFuturePrices.some(
+  rowTimeMs: number,
+  loadedFuturePrices: Loaded[],
+): Loaded | undefined {
+  return loadedFuturePrices.find(
     (loaded) =>
       loaded.amount === toCents(amountDollars) &&
-      dropSeconds(Date.parse(loaded.effectiveAt)) === ms,
+      dropSeconds(Date.parse(loaded.effectiveAt)) === rowTimeMs,
   );
 }
 
@@ -83,7 +87,7 @@ function checkPriceRow(
     return { issues: [issueAt(path, time.message)] };
   }
   if (time.kind === "skip") return { issues: [] };
-  if (isUnchangedPriceRow(row.amountDollars, time.ms, loadedFuturePrices)) {
+  if (findLoadedFuturePrice(row.amountDollars, time.ms, loadedFuturePrices)) {
     return { issues: [], ms: time.ms };
   }
   return { issues: tooSoonIssues(time.ms, path, options), ms: time.ms };

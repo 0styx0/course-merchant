@@ -29,31 +29,12 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [ ] **4. Prices on edit.** Prices in effect are read-only; future prices can be edited, added and removed.
   - [x] **4a.** The code can check edited price rows (a row still holding a loaded future price may start in the past) and turn stored cents into dollar text; create's price checks run through the same code and behave the same.
   - [x] **4b.** The shared price pieces take from the page whether a row shows Remove, the section's help line and the words for an empty start, and the price rows' error-list entries are shared; create behaves the same.
-  - [ ] **4c.** Saving sends the edited prices. The page splits the loaded prices into those in effect and future ones when it renders. Future ones become price rows, the PUT sends the rows and then the prices in effect as loaded, and the browser and the action refuse broken rows. The rows aren't on screen yet. **Next**
-    - *Files*:
-      - [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (the split at render time; rows in the course's zone; the "fields sent back unchanged" keep only the status)
-      - [edit-course-form-schema.ts](../web/src/features/admin-courses/validation/edit-course-form-schema.ts) (create's row schema, 4a's checks with the loaded future prices, "Add at least one price." only when none is in effect)
-      - [save-edited-details.action.ts](../web/src/features/admin-courses/save-course/edit/save-edited-details.action.ts) (an unchanged row goes as the loaded price; others converted, an empty start as now + 1 minute)
-      - [to-course-request.ts](../web/src/features/admin-courses/save-course/to-course-request.ts) (exports the row-to-request-price conversion)
-      - [use-save-edited-course.ts](../web/src/features/admin-courses/edit-course/use-save-edited-course.ts), [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (pass the loaded prices)
-      - [edit-course-fields.ts](../web/src/features/admin-courses/edit-course/edit-course-fields.ts) (price rows in the error list, so a price problem never blocks Save without a message)
-      - `save-course/edit/` 4 → 5 files (a prices test).
-    - *Behaviours*:
-      - A price starting at or before the render moment goes to the prices in effect; a later one becomes a row.
-      - A save with untouched rows sends exactly the loaded prices (test).
-      - A course with a price in effect and a future price, saved untouched, succeeds.
-      - An edited amount sends a new entry in place of the loaded one.
-      - A row with an empty date and time sends now + 1 minute.
-      - The action refuses a changed row in the past with the message on `prices.N.effectiveTimeOfDay`, and sends no request.
-      - No rows and none in effect: the action refuses with "Add at least one price.", and sends no request.
-      - No rows and some in effect: the PUT holds only the prices in effect.
-      - An API 400 at `/prices/N/effectiveAt` shows on row N's time box (existing mapping).
-    - *Needs*: 4a.
-  - [ ] **4d.** The admin sees the prices in effect as a read-only list, latest marked "current price", and edits, adds and removes future price rows. The page intro says only status can't be changed yet.
+  - [x] **4c.** Saving sends the edited prices: the page splits the loaded prices into those in effect and future ones when it renders, future ones become rows, and the browser and the action refuse broken rows. The rows aren't on screen yet.
+  - [ ] **4d.** The admin sees the prices in effect as a read-only list, latest marked "current price", and edits, adds and removes future price rows. The page intro says only status can't be changed yet. **Next**
     - *Files*:
       - `price/prices-in-effect.tsx` (new; `price/` 5 → 6 files)
       - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx) (edit's pricing section; the zone field re-checks the prices)
-      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (the row list and the price summary)
+      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (the row list, the price summary, and the error list counting the live rows instead of the loaded ones)
       - [page.tsx](../web/src/app/admin/(signed-in)/courses/[courseId]/edit/page.tsx) (intro: "Change the course details. Status can't be changed here yet.")
       - [get-course-as-admin.ts](../web/src/mocks/handlers/get-course-as-admin.ts) and its fixture (a course with one price in effect and one future price)
       - `edit-course/tests/` 5 → 6 files (a prices test).
@@ -285,3 +266,4 @@ Leave the date and time empty to start when you save.
 | 2026-11-02 | Milestone 3: split into 4 commits (the map said 2 to 3), because the stored times must move out of "sent back unchanged" first and the checks are worth reviewing apart from the save. Two decisions changed: a zone change now keeps the typed times and moves the moment, and start and end are always converted from the boxes. |
 | 2026-11-02 | Milestone 4: split into 4 commits. A review found that stored price times can hold seconds, so a price row counts as unchanged when its amount matches and its time is less than a minute from the loaded one. The shared price pieces' props moved into one mechanical commit so the list and rows go on screen together. |
 | 2026-11-02 | 4a: the unchanged rule became "the time equals the loaded one with seconds dropped", because a one-minute window treated a row moved by one minute as unchanged and lost the edit. The dollar conversions moved to `price/dollar-amount.ts`, not the schema file, because the price checks importing the schema file would form an import loop. 4a changed 8 files with the owner's OK. |
+| 2026-11-02 | 4c: built as one commit of 9 files with the owner's OK (the line named 7). Create's price row schema and the "row still holds a loaded future price" match are now exported, so edit reuses them instead of copying the rules. |

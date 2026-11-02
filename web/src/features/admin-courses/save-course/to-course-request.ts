@@ -53,7 +53,8 @@ function toSchedule(schedule: Schedule): CreateCourseRequest["schedule"] {
   };
 }
 
-function toScheduledPrice(
+/** One checked price row as the request's price; an empty start is a minute after `nowMs`. */
+export function toScheduledPrice(
   price: Price,
   timeZone: string,
   nowMs: number,
