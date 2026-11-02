@@ -28,6 +28,17 @@ export async function getCourseAsAdmin(
   );
 }
 
+export async function getCourseImageAsAdmin(
+  courseId: string,
+): Promise<Result<ArrayBuffer, ProblemDetails>> {
+  return toResult(
+    await api.GET("/admin/courses/{courseId}/image", {
+      params: { path: { courseId } },
+      parseAs: "arrayBuffer",
+    }),
+  );
+}
+
 export async function updateCourse(
   courseId: string,
   request: UpdateCourseRequest,

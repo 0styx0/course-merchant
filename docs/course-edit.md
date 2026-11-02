@@ -33,21 +33,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **4d.** The admin sees the prices in effect as a read-only list, latest marked "current price", and edits, adds and removes future price rows; the page intro says only status can't be changed yet.
 - [ ] **5. Image upload on edit.** The page shows the current image, and a newly chosen image uploads when the admin saves, after the details.
   - [x] **5a.** Create's image input and its preview are shared pieces (`ImageInput` takes the name and a preview function; `ImagePreview` is its own file); create behaves the same.
-  - [ ] **5b.** The web app serves a course's stored image to the admin's browser at `/admin/courses/{courseId}/image`. Nothing uses it yet. **Next**
-    - *Files*:
-      - [admin-courses.api.ts](../web/src/features/admin-courses/save-course/admin-courses.api.ts) (new `getCourseImageAsAdmin`, `parseAs: "arrayBuffer"`)
-      - `web/src/app/admin/(signed-in)/courses/[courseId]/image/route.ts` and its test
-      - `web/src/mocks/handlers/get-course-image-as-admin.ts` (success with a tiny real WebP, not found, error)
-      - [node.ts](../web/src/mocks/node.ts)
-    - *Behaviours*:
-      - Stored image: 200 with `image/webp` and `Cache-Control: private, no-cache`.
-      - Id not a UUID: 404, with no API call.
-      - `COURSE_NOT_FOUND` or `COURSE_IMAGE_NOT_FOUND`: 404 with no body.
-      - Any other API problem: 502 with no body.
-      - API unreachable: the route throws, so Next shows its 500.
-    - *New shared pieces*: the route URL, used by 5e.
-    - *Done when*: the route test passes for each behaviour.
-  - [ ] **5c.** Create's "save the details, then upload the image" logic becomes a shared hook. Create behaves the same. *(mechanical, coverage first)*
+  - [x] **5b.** The web app serves a course's stored image to the admin's browser at `/admin/courses/{courseId}/image` (404 when missing, 502 on other API problems). Nothing uses it yet.
+  - [ ] **5c.** Create's "save the details, then upload the image" logic becomes a shared hook. Create behaves the same. *(mechanical, coverage first)* **Next**
     - *Files*:
       - `course-form/hooks/use-save-then-upload-image.ts` (new; takes one function that saves the details, plus the words for "the details are saved")
       - [use-save-new-course.ts](../web/src/features/admin-courses/create-course/use-save-new-course.ts) (shrinks to the draft create-or-update and the draft id)
@@ -79,6 +66,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
       - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx)
       - [edit-course-fields.ts](../web/src/features/admin-courses/edit-course/edit-course-fields.ts) (error-list entry for the image)
       - [admin-courses.ts](../web/src/mocks/fixtures/admin-courses.ts) (a course with an image)
+      - `web/src/features/admin-courses/image/course-image-route.ts` (new; the web app's address for a course's image, moved here from 5b because knip refuses an unused file)
       - Tests: `edit-course/tests/edit-course-form.image.test.tsx`, `edit-form-prefill.test.ts` and [edit-course.spec.ts](../web/tests/browser/admin-courses/edit-course.spec.ts).
       - Docs: tick here, the admin-image line in [courses.md](courses.md), and the README status.
       - Folder counts: `edit-course/tests/` 6 → 7.

@@ -9,6 +9,7 @@ import {
   updateCourseHandlers,
 } from "./handlers/update-course";
 import { uploadCourseImageHandlers } from "./handlers/upload-course-image";
+import { getCourseImageAsAdminHandlers } from "./handlers/get-course-image-as-admin";
 
 const scenario = "success"; // change to the mock you want to test
 
@@ -31,7 +32,8 @@ if (
   !(scenario in createCourseHandlers) &&
   !(scenario in getCourseAsAdminHandlers) &&
   !(scenario in updateCourseScenarios) &&
-  !(scenario in uploadCourseImageHandlers)
+  !(scenario in uploadCourseImageHandlers) &&
+  !(scenario in getCourseImageAsAdminHandlers)
 ) {
   throw new Error(
     `[MSW Setup] Unknown scenario "${scenario}". Pick one in src/mocks/node.ts`,
@@ -45,4 +47,5 @@ export const server = setupServer(
   scenarioHandler(getCourseAsAdminHandlers),
   scenarioHandler(updateCourseScenarios),
   scenarioHandler(uploadCourseImageHandlers),
+  scenarioHandler(getCourseImageAsAdminHandlers),
 );

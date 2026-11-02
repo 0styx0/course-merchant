@@ -2,9 +2,9 @@
 
 Used in step 2 of [SKILL.md](SKILL.md). The writing rules are in CLAUDE.md (*Writing*), the diagram, flow and link formats in [../_shared/output-format.md](../_shared/output-format.md); follow them here. Every section of an outline follows the *Bullets, not blocks* rule: sub-bullets for joined steps, never a paragraph.
 
-**Every outline, short or full, ends the turn: no tool calls after it in the same message. Wait for the owner's reply; a note saying "my pick" is not approval.**
+**Every outline, short or full, is followed by exactly one tool call: the one that starts the background build (SKILL.md step 3). Then end the turn and wait for the owner's reply; a note saying "my pick" is not approval. Show no build output (code, test results, hand-off) until the owner approves.**
 
-**Exception:** when the owner typed `go` and the commit is plan-conformant, post the short outline and keep working in the same turn (tests first, `/simplify`, checks, hand-off). If it is not plan-conformant, say which condition failed, send the full outline and wait.
+**Before sending:** each *Questions* item needs a recommendation, and the build applies it. Ask any question without a recommendation, or with several equally good options, through the picker first (AskUserQuestion), so the outline holds only settled recommendations.
 
 ## Opening (every outline, short or full)
 
@@ -31,7 +31,7 @@ Give a **short outline** of about 5 lines after the opening.
 
 ## Full outline
 
-Write no code before approval. In plan mode, present it with ExitPlanMode. If the owner asks a question while in plan mode, answer it in chat and do not call ExitPlanMode until they say to proceed.
+The code is written in the background right after the outline is sent, but the owner sees none of it before approving. In plan mode, present it with ExitPlanMode. If the owner asks a question while in plan mode, answer it in chat and do not call ExitPlanMode until they say to proceed.
 
 After the opening:
 
@@ -45,7 +45,7 @@ After the opening:
 - **Doc update:** what changes in `docs/<area>.md`. Write out the exact text of any new decision row.
 - **Preflight (last line):** `Preflight: size <n files, ok> | coverage <result, or n/a> | git <the raw `git status --short` output, or `clean` only when the command printed nothing> | siblings read <files> | library API <docs link, only for an API the repo doesn't use yet>`. A missing item is a check that was skipped. The short outline ends with it too.
 
-If the owner replies with questions or objections, discuss them first: answer, recommend, ask follow-ups. Don't edit the outline or write code while the discussion is open. Once they agree, present the updated outline and wait for the go-ahead again.
+If the owner replies with questions or objections, discuss them first: answer, recommend, ask follow-ups. Don't edit the outline while the discussion is open. Once they agree, present the updated outline, adjust the background build to match (SKILL.md step 3), and wait for the go-ahead again.
 
 ## Before you send (outline)
 
@@ -55,4 +55,5 @@ If the owner replies with questions or objections, discuss them first: answer, r
 - Each bullet keeps its "because"; joined steps are sub-bullets.
 - Each file is linked once, with a line number checked by grep.
 - A commit with logic has the flow diagram; a move has the folder diagrams.
-- It ends with the `Preflight:` line, and no tool call follows it.
+- It ends with the `Preflight:` line; the only tool call after it starts the background build.
+- Every question in it carries a recommendation (the rest went through the picker).
