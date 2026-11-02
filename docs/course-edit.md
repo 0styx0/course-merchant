@@ -35,24 +35,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **5a.** Create's image input and its preview are shared pieces (`ImageInput` takes the name and a preview function; `ImagePreview` is its own file); create behaves the same.
   - [x] **5b.** The web app serves a course's stored image to the admin's browser at `/admin/courses/{courseId}/image` (404 when missing, 502 on other API problems). Nothing uses it yet.
   - [x] **5c.** Create's "save the details, then upload the image" logic is a shared hook (`use-save-then-upload-image.ts`); create keeps only its draft create-or-update and draft id, and behaves the same.
-  - [ ] **5d.** Saving an edited course can also upload a newly chosen image, after the details. The picker is not on screen yet. **Next**
-    - *Files*:
-      - [edit-course-form-schema.ts](../web/src/features/admin-courses/validation/edit-course-form-schema.ts) (optional `image`, checked with `courseImageSchema`)
-      - [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (image starts empty; carries the stored image version, or null)
-      - [use-save-edited-course.ts](../web/src/features/admin-courses/edit-course/use-save-edited-course.ts) (wraps the shared hook around `saveEditedDetailsAction`)
-    - *Behaviours*:
-      - No file chosen: only the `PUT` runs, exactly as today.
-      - Image left as it was (only other fields edited): the upload action is not called and the MSW upload handler records no request; the `PUT` body has no image.
-      - Details refused: no upload is sent, and the API's message and field errors show.
-      - Details saved, image refused: "The course details were saved, but the image didn't upload. <API detail>", with the error on the image field. The form stays.
-      - Both succeed: go to `/`.
-      - An action that throws: "Couldn't save the course. Something went wrong while saving. Check your connection and try again." Once the details are saved, the note says so.
-      - The file fails the browser check: refused before any request, with the `courseImageSchema` message.
-      - The next click on Save changes sends both again (the one case where the same chosen file goes up twice).
-    - *New shared pieces*: none.
-    - *Needs*: 5c.
-    - *Done when*: the tests for each behaviour pass.
-  - [ ] **5e.** The admin sees the course's current image, or "No image yet", on the edit page and replaces it by choosing a file and saving.
+  - [x] **5d.** Saving an edited course uploads a newly chosen image after the details (no file chosen: only the `PUT`); the shared save hook works for both forms and skips the upload when no image is chosen. The picker is not on screen yet.
+  - [ ] **5e.** The admin sees the course's current image, or "No image yet", on the edit page and replaces it by choosing a file and saving. **Next**
     - *Files*:
       - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx) (the basics section gets the shared `ImageInput`, with the stored image as its preview)
       - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx)

@@ -1,14 +1,10 @@
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
-import {
-  refusalMessage,
-  useServerProblem,
-} from "../course-form/hooks/use-server-problem";
+import { useSaveThenUploadImage } from "../course-form/hooks/use-save-then-upload-image";
 import { saveEditedDetailsAction } from "../save-course/edit/save-edited-details.action";
 import type {
   EditCourseFormValues,
+  EditedDetailsValues,
   LoadedPrices,
   LoadedSchedule,
 } from "../validation/edit-course-form-schema";
@@ -22,8 +18,8 @@ type EditCourseFormApi = UseFormReturn<
 
 /**
  * Saves the edited details and prices with the fields it cannot edit yet, as
- * loaded. A refusal leaves a message and puts its field errors on the fields;
- * a save goes to the home page.
+ * loaded, then uploads a newly chosen image. A refusal leaves a message and
+ * puts its field errors on the fields; a save goes to the home page.
  */
 export function useSaveEditedCourse(
   form: EditCourseFormApi,
@@ -32,31 +28,19 @@ export function useSaveEditedCourse(
   loadedPrices: LoadedPrices,
   fieldsSentBackUnchanged: FieldsSentBackUnchanged,
 ) {
-  const router = useRouter();
-  const { serverProblem, showRefusal, showThrownProblem, clearServerProblem } =
-    useServerProblem(form.setError);
-  const [saved, setSaved] = useState(false);
-
-  async function save(values: EditCourseFormValues) {
-    clearServerProblem();
-    try {
-      const result = await saveEditedDetailsAction(
-        courseId,
-        values,
-        loadedSchedule,
-        loadedPrices,
-        fieldsSentBackUnchanged,
-      );
-      if (result.state === "failure") {
-        return showRefusal(refusalMessage(result.error), result.error);
-      }
-      setSaved(true);
-      router.push("/");
-    } catch {
-      // A rejected Server Action throws instead of returning a failure.
-      showThrownProblem();
-    }
+  function saveEditedDetails(fields: EditedDetailsValues) {
+    return saveEditedDetailsAction(
+      courseId,
+      fields,
+      loadedSchedule,
+      loadedPrices,
+      fieldsSentBackUnchanged,
+    );
   }
 
-  return { save, saved, serverProblem, clearServerProblem };
+  return useSaveThenUploadImage(
+    form,
+    saveEditedDetails,
+    "The course details were saved",
+  );
 }

@@ -1,10 +1,7 @@
 import { useRef } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
-import {
-  type CourseDetailsFields,
-  useSaveThenUploadImage,
-} from "../course-form/hooks/use-save-then-upload-image";
+import { useSaveThenUploadImage } from "../course-form/hooks/use-save-then-upload-image";
 import type {
   CheckedCourseFormWithImageValues,
   CourseFormWithImageValues,
@@ -18,6 +15,9 @@ type CourseForm = UseFormReturn<
   unknown,
   CheckedCourseFormWithImageValues
 >;
+
+/** The fields the draft save sends; the image goes up in its own request. */
+type CourseDetailsFields = Omit<CheckedCourseFormWithImageValues, "image">;
 
 /** Creates the draft, or updates it when an earlier try already created it. */
 function saveDraft(

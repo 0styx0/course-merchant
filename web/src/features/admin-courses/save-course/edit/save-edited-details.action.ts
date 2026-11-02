@@ -7,6 +7,7 @@ import { wallClockToUtc } from "../../schedule/wall-clock-time";
 import {
   makeEditCourseFormSchema,
   type EditCourseFormValues,
+  type EditedDetailsValues,
   type LoadedPrice,
   type LoadedPrices,
   type LoadedSchedule,
@@ -89,17 +90,18 @@ function toEditedRequestPrices(
  */
 export async function saveEditedDetailsAction(
   courseId: string,
-  values: EditCourseFormValues,
+  values: EditedDetailsValues,
   loadedSchedule: LoadedSchedule,
   loadedPrices: LoadedPrices,
   fieldsSentBackUnchanged: FieldsSentBackUnchanged,
 ): Promise<CourseActionResult> {
   // Anyone can call a Server Action with anything, so check again here.
   if (!isUuid(courseId)) return invalidCourseIdFailure();
+  // The image goes up in its own request, so the schema sees none.
   const checked = makeEditCourseFormSchema(
     loadedSchedule,
     loadedPrices,
-  ).safeParse(values);
+  ).safeParse({ ...values, image: null });
   if (!checked.success) return invalidFormFailure(checked.error);
 
   const { data } = checked;

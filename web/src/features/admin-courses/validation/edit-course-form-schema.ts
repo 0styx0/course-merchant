@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import type { UpdateCourseRequest } from "@/lib/types";
 
+import { courseImageSchema } from "../image/course-image";
 import {
   contentUrlSchema,
   descriptionSchema,
@@ -22,6 +23,8 @@ const editFieldsSchema = z.object({
   contentUrl: contentUrlSchema,
   schedule: z.object({ ...scheduleBoxesSchema, timeZone: timeZoneSchema }),
   prices: z.array(priceRowSchema),
+  // A new image to upload, or null to keep the stored one.
+  image: courseImageSchema.nullable(),
 });
 
 /** The course's stored start and end, as the UTC strings the API sent. */
@@ -44,6 +47,9 @@ export type LoadedPrices = {
 
 /** The edited details as typed, before the schema checks and trims them. */
 export type EditCourseFormValues = z.input<typeof editFieldsSchema>;
+
+/** The edit form's values without the image, which goes up in its own request. */
+export type EditedDetailsValues = Omit<EditCourseFormValues, "image">;
 
 type CheckedEditFields = z.output<typeof editFieldsSchema>;
 

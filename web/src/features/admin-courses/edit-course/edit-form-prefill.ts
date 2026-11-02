@@ -22,6 +22,8 @@ export type EditFormPrefill = {
   loadedSchedule: LoadedSchedule;
   loadedPrices: LoadedPrices;
   fieldsSentBackUnchanged: FieldsSentBackUnchanged;
+  /** The stored image's version, or null when the course has no image yet. */
+  storedImageVersion: string | null;
 };
 
 type PriceRowValues = EditCourseFormValues["prices"][number];
@@ -94,9 +96,11 @@ export function toEditFormPrefill(
       prices: loadedPrices.future.map((price) =>
         toPriceRowValues(price, timeZone),
       ),
+      image: null,
     },
     loadedSchedule: { startTime, endTime },
     loadedPrices,
     fieldsSentBackUnchanged: { status: course.status.name },
+    storedImageVersion: course.image?.version ?? null,
   };
 }

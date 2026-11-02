@@ -55,6 +55,7 @@ describe("toEditFormPrefill", () => {
       },
       // The course's only price is already in effect, so it is no row.
       prices: [],
+      image: null,
     });
   });
 
@@ -71,6 +72,16 @@ describe("toEditFormPrefill", () => {
       endDate: "2026-10-01",
       endTimeOfDay: "20:00",
     });
+  });
+
+  it("carries the stored image's version, or null when there is none", () => {
+    const withImage: AdminCourse = {
+      ...course,
+      image: { updatedAt: "2026-10-01T10:00:00Z", version: "3" },
+    };
+
+    expect(toEditFormPrefill(withImage).storedImageVersion).toBe("3");
+    expect(toEditFormPrefill(course).storedImageVersion).toBeNull();
   });
 
   it("keeps the status as a plain string", () => {

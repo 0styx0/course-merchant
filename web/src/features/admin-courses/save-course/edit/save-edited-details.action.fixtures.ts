@@ -6,14 +6,14 @@ import { server } from "@/mocks/node";
 
 import type { FieldsSentBackUnchanged } from "../../edit-course/edit-form-prefill";
 import type {
-  EditCourseFormValues,
+  EditedDetailsValues,
   LoadedPrices,
   LoadedSchedule,
 } from "../../validation/edit-course-form-schema";
 
 export const courseId = draftedAdminCourse.id;
 
-export const validValues: EditCourseFormValues = {
+export const validValues: EditedDetailsValues = {
   name: "React Fundamentals",
   summary: "Learn React.",
   description: {
