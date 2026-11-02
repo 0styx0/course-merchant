@@ -90,6 +90,10 @@ How the owner wants Claude to work on this repo.
 
 **Writing**
 - **Plain language** in chat, outlines, docs and code comments. Define every specialized term (for example "tick", "sweeper", "outbox"): what it means in the current context, why use it, and the alternatives. Don't assume a term means its usual meaning elsewhere.
+- **Active, positive sentences.** Each sentence names who acts and what they do, and states what something is or does.
+  - Replace "to be" verbs with the action: "the action refuses a past start", over "a past start is refused".
+  - Replace a negation with the positive fact: "keeps the stored time", over "doesn't change the stored time"; "runs only on edit", over "doesn't run on create".
+  - Keep a negation only when the absence itself carries the meaning, such as a test proving the form sent no request.
 - **Don't coin terms.** Never reuse a domain word (start, schedule, price, status) for something else. If a new term is unavoidable, define it in the same message where it first appears, and use it in code only if the name says the same thing.
 - **Explain a design by what would go wrong without it**, for a user or a developer, in one sentence. If that sentence needs type-system terms, say so and reconsider the design before defending it.
 - **Say what and why before how.** Every outline, hand-off and doc status line starts with what the admin, customer or developer can now do; code names come after. Status lines in `docs/` name no functions.
