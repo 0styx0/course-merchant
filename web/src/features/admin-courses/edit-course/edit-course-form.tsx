@@ -19,6 +19,7 @@ import {
   EditScheduleSection,
 } from "./edit-course-sections";
 import type { EditFormPrefill } from "./edit-form-prefill";
+import { StatusSection } from "./status/status-section";
 import { useSaveEditedCourse } from "./use-save-edited-course";
 
 function useEditCourseFormState(prefill: EditFormPrefill) {
@@ -98,6 +99,7 @@ export function EditCourseForm({
         priceRows={priceRows}
         pricesInEffect={prefill.loadedPrices.inEffect}
       />
+      <StatusSection form={form} />
       <SaveButton label="Save changes" isSubmitting={isSubmitting} />
     </form>
   );

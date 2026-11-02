@@ -40,24 +40,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [ ] **6. Status on edit.** Published, drafted, archived and deleted, with a note that publishing needs an image and a confirmation before deleting.
   - [x] **6a.** Saving an edited course uploads a newly chosen image before its details, so one save can publish a course with its first image; a retry after a refused save skips the image already stored. Create behaves the same.
   - [x] **6b.** The edit code holds the course's status as a form value, prefilled as loaded, and saves it; the API's refusal on the status lands on the status field. Not on screen yet.
-  - [ ] **6c.** The admin sees the course's status and changes it. **Next**
-    - *Files*:
-      - `components/ui/radio-group.tsx` (vendored)
-      - `edit-course/status/status-section.tsx` (new)
-      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx)
-      - [edit-course-fields.ts](../web/src/features/admin-courses/edit-course/edit-course-fields.ts)
-      - [course-field-labels-and-price-row-names.ts](../web/src/features/admin-courses/course-form/fields/course-field-labels-and-price-row-names.ts)
-      - the page intro in `app/admin/(signed-in)/courses/[courseId]/edit/page.tsx`
-    - *Behaviours*:
-      - First load: the loaded status is chosen.
-      - The Published option says "Needs an image" while the course has none stored.
-      - The API's refusal to publish without an image shows on the status field.
-      - The error list names Status and focuses it.
-      - The arrow keys move between options.
-    - *New shared pieces*: none
-    - *Needs*: 6b
-    - *Done when*: form tests pass and the owner has used the page in `dev:mock`.
-  - [ ] **6d.** Deleting asks for confirmation first.
+  - [x] **6c.** The admin sees the course's status on the edit page and changes it, and the API's refusal to publish without an image shows on the status field.
+  - [ ] **6d.** Deleting asks for confirmation first. **Next**
     - *Files*:
       - `components/ui/alert-dialog.tsx` (vendored)
       - `edit-course/status/delete-confirmation.tsx` (new)
@@ -104,7 +88,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 | On edit, an empty price date and time means "when you save" (now + 1 minute, as create's request). The prices in effect show as a read-only list, oldest first, the latest marked "current price", in the chosen zone (revisit after use) | Create's "when the course is published" is wrong for a course that is already published. The full list is what the PUT sends back | Requiring a date and time on every edit row (more typing for an immediate change; low); showing only the current price (shorter; hides prices the PUT keeps; low) |
 | Create and edit share the save steps (messages, saved flag, going home); each picks its own order of image and details | Without it, the "details saved, image failed" message, the retry and the thrown-action note would be written twice and drift apart. The cost: edit can't upload while its details `PUT` is still running, so a save takes the two steps' time | Uploading at the same time as the `PUT` (faster; needs edit's own save code and a message for each of four outcomes, and nothing shared; medium) |
 | Edit uploads a newly chosen image before saving the details; create keeps details then image | One Save can publish a course together with its first image, because the API refuses publishing with no stored image. The cost: a refused `PUT` leaves the new image stored anyway, so a retry skips the upload. Create can't upload first, since it needs the new course's id | Details first, then image (publishing a first image takes two saves; low); three steps with a second `PUT` (a new partial-failure case; medium) |
-| The browser doesn't check "publishing needs an image"; the API's refusal shows on the status field, and the Published option says "Needs an image" | The image is stored before the `PUT` runs, so the API's own check is right whenever one is chosen or stored, and the browser would only copy it | A browser check with a `hasImage` value passed to the schema and action (a second copy of the rule; medium) |
+| The browser doesn't check "publishing needs an image", and the status options carry no image hint; the API's refusal shows on the status field | The image is stored before the `PUT` runs, so the API's own check is right whenever an image is chosen or stored. The status code then needs no image knowledge | A browser check with a `hasImage` value passed to the schema and action (a second copy of the rule; medium); a "Needs an image" note on Published (misleads when an image is chosen in the same form; low) |
 | After a partly failed save, the next Save changes sends both steps again | Create already does this (its draft update repeats). Edit's form always sends what the admin sees. The cost: a time changed and saved by the first click, now compared with the originally loaded time, can be refused as "in the past" if it has since passed; accepted as rare | Remembering which step is stored and redoing only the failed one (extra state, and edits to the stored step are dropped; medium) |
 | The stored image is a plain `<img>` from a web route `/admin/courses/{id}/image` | The API's admin image is never cached, so the admin sees what is stored. `next/image` would cache an old copy and needs an allow-list entry | `next/image` (stale after replacing; low) |
 | The delete confirmation uses shadcn alert-dialog | Matches the existing shadcn/base-ui setup | An inline confirmation step |
@@ -298,7 +282,7 @@ Admin picks a status, clicks Save changes
 
 ```
 Status — Who can see the course.
-  (•) Published  Students can find and buy it. Needs an image.
+  (•) Published  Students can find and buy it.
   ( ) Drafted    Hidden while you work on it.
   ( ) Archived   Hidden, can be published again.
   ( ) Deleted    Removed from the admin list.
