@@ -140,6 +140,14 @@ export const timeZoneSchema = z
   .string()
   .refine(isKnownTimeZone, timeZoneMessage);
 
+/** The four boxes of a schedule as typed; create and edit both use them. */
+export const scheduleBoxesSchema = {
+  startDate: z.string().min(1, requiredStartDate),
+  startTimeOfDay: z.string().min(1, requiredStartTime),
+  endDate: z.string().min(1, requiredEndDate),
+  endTimeOfDay: z.string().min(1, requiredEndTime),
+};
+
 /** The fields the API saves; the image is sent in a separate request. */
 const savedFieldsSchema = z.object({
   name: nameSchema,
@@ -147,10 +155,7 @@ const savedFieldsSchema = z.object({
   description: descriptionSchema,
   contentUrl: contentUrlSchema,
   schedule: z.object({
-    startDate: z.string().min(1, requiredStartDate),
-    startTimeOfDay: z.string().min(1, requiredStartTime),
-    endDate: z.string().min(1, requiredEndDate),
-    endTimeOfDay: z.string().min(1, requiredEndTime),
+    ...scheduleBoxesSchema,
     timeZone: timeZoneSchema,
   }),
   prices: z.array(priceSchema).min(1, "Add at least one price."),

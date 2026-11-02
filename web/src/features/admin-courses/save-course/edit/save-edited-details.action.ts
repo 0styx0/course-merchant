@@ -3,8 +3,9 @@
 import { toCourseDescription } from "@/features/course-description/description-document";
 
 import type { FieldsSentBackUnchanged } from "../../edit-course/edit-form-prefill";
+import { wallClockToUtc } from "../../schedule/wall-clock-time";
 import {
-  editCourseFormSchema,
+  makeEditCourseFormSchema,
   type EditCourseFormValues,
   type LoadedSchedule,
 } from "../../validation/edit-course-form-schema";
@@ -18,7 +19,16 @@ import {
   type CourseActionResult,
 } from "../course-action-result";
 
-/** Saves the edited details over a course; the loaded start and end and the fields it cannot edit yet go back as loaded. */
+// The schema has already refused a time that doesn't convert, so a failure here is a bug.
+function boxesToUtc(date: string, timeOfDay: string, timeZone: string) {
+  const result = wallClockToUtc(`${date}T${timeOfDay}`, timeZone);
+  if (result.state === "failure") {
+    throw new Error(`Checked time failed to convert: ${result.error}`);
+  }
+  return result.data;
+}
+
+/** Saves the edited details and the start and end read from the boxes; the fields the form cannot edit yet go back as loaded. */
 export async function saveEditedDetailsAction(
   courseId: string,
   values: EditCourseFormValues,
@@ -27,10 +37,21 @@ export async function saveEditedDetailsAction(
 ): Promise<CourseActionResult> {
   // Anyone can call a Server Action with anything, so check again here.
   if (!isUuid(courseId)) return invalidCourseIdFailure();
-  const checked = editCourseFormSchema.safeParse(values);
+  const checked = makeEditCourseFormSchema(loadedSchedule).safeParse(values);
   if (!checked.success) return invalidFormFailure(checked.error);
 
   const { data } = checked;
+  const { schedule } = data;
+  const startTime = boxesToUtc(
+    schedule.startDate,
+    schedule.startTimeOfDay,
+    schedule.timeZone,
+  );
+  const endTime = boxesToUtc(
+    schedule.endDate,
+    schedule.endTimeOfDay,
+    schedule.timeZone,
+  );
   const result = await updateCourse(courseId, {
     name: data.name,
     summary: data.summary,
@@ -38,8 +59,9 @@ export async function saveEditedDetailsAction(
     contentUrl: data.contentUrl,
     status: fieldsSentBackUnchanged.status,
     schedule: {
-      ...loadedSchedule,
-      timeZone: data.schedule.timeZone,
+      startTime,
+      endTime,
+      timeZone: schedule.timeZone,
     },
     prices: fieldsSentBackUnchanged.prices,
   });

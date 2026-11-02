@@ -4,7 +4,7 @@ One rule, used by `/plan-create-implementation` (when splitting a milestone) and
 
 Any other commit is too big if any of these is true:
 
-- More than about 6 files change (not counting generated files and doc ticks).
+- More than 6 files change, not counting tests, fixtures and test files split out for length, generated files and doc ticks. A plan line that admits more than 6 still fails; split it.
 - It spans two separate areas of the codebase (for example `api/` and `web/`).
 - Its one-line description needs "and" to join unrelated parts.
 - More than 2 design questions are still undecided.

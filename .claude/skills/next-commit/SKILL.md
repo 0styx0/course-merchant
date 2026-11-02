@@ -33,7 +33,7 @@ Every item below happens, in this order.
 - Read the item's commit line (format: [../_shared/commit-line.md](../_shared/commit-line.md)): its Behaviours seed the test table, Settled lists the decisions already made, Done when is the verification. If the line lacks these, say so in the outline.
 - Read what the item needs: the doc's sections about it, and the files it links.
 - Look for existing patterns and helpers before outlining: read one sibling of each kind of file you'll add, and grep for an existing helper before planning a new one.
-- Search for specific things; skip wide surveys. Read a sibling by line range when you only need a pattern. Never read generated files whole.
+- Send independent reads in one message and stop reading once the outline can be written. Search for specific things; skip wide surveys. Read a sibling by line range when you only need a pattern. Never read generated files whole.
 - Run the size check in [../_shared/commit-size.md](../_shared/commit-size.md) now that you have read the code. If it fails, stop as it says.
 - Decide whether the commit is **mechanical** (rule in [outline.md](outline.md)); the line's *(mechanical)* flag is only a hint. For a change that alters no behaviour, run `test:coverage` on the files you'll touch (commands in the package CLAUDE.md files). If a touched line or branch is uncovered, the missing test is its own commit first and must pass against the old code; say so in the outline.
 - Run `git status --short`. Leave uncommitted changes from other work alone. If they overlap files you'll touch, stop and ask: hunks can't be split.
@@ -55,7 +55,7 @@ Use the format in [outline.md](outline.md): start with the `Preflight:` line; sh
 
 ## 4. Verify
 
-- Run lint, the type check and the relevant tests in parallel in one message; use single-file specs for the code you touched where the package CLAUDE.md allows. Re-run after `/simplify`.
+- Run `yarn --cwd <package> check:changed` (type check, lint on the changed files, related unit tests) for each package you touched, in one message. Run a whole suite or coverage run only with `run_in_background`, never twice at once. Re-run after `/simplify`.
 - Check the list in [../_shared/definition-of-done.md](../_shared/definition-of-done.md), then the structure checks and failure handling in [quality.md](quality.md).
 
 ## 5. Hand off

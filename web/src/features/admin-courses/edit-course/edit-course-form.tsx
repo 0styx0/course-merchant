@@ -9,7 +9,7 @@ import { useErrorListAndLeaveWarning } from "../course-form/hooks/use-error-list
 import { ContentLinkSection } from "../course-form/sections/content-link-section";
 import { SaveButton } from "../course-form/sections/save-button";
 import {
-  editCourseFormSchema,
+  makeEditCourseFormSchema,
   type EditCourseFormValues,
 } from "../validation/edit-course-form-schema";
 import { editCourseFields } from "./edit-course-fields";
@@ -19,7 +19,7 @@ import { useSaveEditedCourse } from "./use-save-edited-course";
 
 function useEditCourseFormState(prefill: EditFormPrefill) {
   return useForm<EditCourseFormValues, unknown, EditCourseFormValues>({
-    resolver: zodResolver(editCourseFormSchema),
+    resolver: zodResolver(makeEditCourseFormSchema(prefill.loadedSchedule)),
     defaultValues: prefill.values,
     mode: "onTouched",
     shouldFocusError: false,
@@ -59,11 +59,7 @@ export function EditCourseForm({
       <ErrorSummary {...errorList} serverProblem={serverProblem} />
       <EditBasicsSection form={form} />
       <ContentLinkSection form={form} name="contentUrl" />
-      <EditScheduleSection
-        form={form}
-        timeZones={timeZones}
-        loadedSchedule={prefill.loadedSchedule}
-      />
+      <EditScheduleSection form={form} timeZones={timeZones} />
       <SaveButton label="Save changes" isSubmitting={isSubmitting} />
     </form>
   );

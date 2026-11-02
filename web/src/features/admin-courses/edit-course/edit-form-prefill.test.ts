@@ -27,7 +27,7 @@ const course: AdminCourse = {
 };
 
 describe("toEditFormPrefill", () => {
-  it("takes the five edited fields from the course", () => {
+  it("takes the edited fields from the course, with the times in its zone", () => {
     const { values } = toEditFormPrefill(course);
 
     expect(values).toEqual({
@@ -35,7 +35,28 @@ describe("toEditFormPrefill", () => {
       summary: course.summary,
       description: course.description,
       contentUrl: course.contentUrl,
-      schedule: { timeZone: course.schedule.timeZone },
+      schedule: {
+        timeZone: "America/New_York",
+        startDate: "2026-10-01",
+        startTimeOfDay: "14:00",
+        endDate: "2026-10-01",
+        endTimeOfDay: "16:00",
+      },
+    });
+  });
+
+  it("fills the times in UTC when the stored zone is not a real zone", () => {
+    const { values } = toEditFormPrefill({
+      ...course,
+      schedule: { ...course.schedule, timeZone: "Not/AZone" },
+    });
+
+    expect(values.schedule).toEqual({
+      timeZone: "Not/AZone",
+      startDate: "2026-10-01",
+      startTimeOfDay: "18:00",
+      endDate: "2026-10-01",
+      endTimeOfDay: "20:00",
     });
   });
 

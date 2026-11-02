@@ -30,4 +30,4 @@ One row per behaviour the commit adds or changes:
 - Fix failures your change caused. At most 3 attempts, then stop and report.
 - If a failure was already there (run the same test on the untouched code to confirm), say so and leave it.
 - If the fix needs a design or behaviour change, stop and ask.
-- Never weaken, skip or delete a test to make it pass.
+- Never weaken, skip, merge or delete a test to make it pass or to meet a lint or size limit. A file that is too long is split into parts named for their topic, with shared set-up in a `<name>.fixtures.tsx` beside them (as `create-course/tests/` does).

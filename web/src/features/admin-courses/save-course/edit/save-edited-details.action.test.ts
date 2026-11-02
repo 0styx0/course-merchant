@@ -1,65 +1,23 @@
-import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
 import {
   updateCourseError,
   updateCourseSuccess,
-  updateCourseUrl,
   updateCourseValidationFailed,
 } from "@/mocks/handlers/update-course";
 import { server } from "@/mocks/node";
 
-import type {
-  EditCourseFormValues,
-  LoadedSchedule,
-} from "../../validation/edit-course-form-schema";
-import type { FieldsSentBackUnchanged } from "../../edit-course/edit-form-prefill";
+import {
+  captureBody,
+  courseId,
+  fieldsSentBackUnchanged,
+  loadedSchedule,
+  validValues,
+} from "./save-edited-details.action.fixtures";
 import { saveEditedDetailsAction } from "./save-edited-details.action";
 
 // Its default export throws outside a React Server Component build
 vi.mock("server-only", () => ({}));
-
-const courseId = draftedAdminCourse.id;
-
-const validValues: EditCourseFormValues = {
-  name: "React Fundamentals",
-  summary: "Learn React.",
-  description: {
-    type: "doc",
-    content: [
-      { type: "paragraph", content: [{ type: "text", text: "Hi" }] },
-      { type: "paragraph" },
-    ],
-  },
-  contentUrl: "https://example.com/course",
-  schedule: { timeZone: "America/New_York" },
-};
-
-const loadedSchedule: LoadedSchedule = {
-  startTime: "2020-01-01T14:00:00Z",
-  endTime: "2020-01-01T22:00:00Z",
-};
-
-const fieldsSentBackUnchanged: FieldsSentBackUnchanged = {
-  status: "published",
-  prices: [
-    { amount: 9900, currency: "USD", effectiveAt: "2019-12-01T00:00:00Z" },
-  ],
-};
-
-function captureBody() {
-  const sent: { id?: unknown; body?: unknown; calls: number } = { calls: 0 };
-  server.use(
-    http.put(updateCourseUrl, async ({ request, params }) => {
-      sent.calls += 1;
-      sent.id = params.courseId;
-      sent.body = await request.json();
-      return HttpResponse.json(draftedAdminCourse);
-    }),
-  );
-  return sent;
-}
 
 describe("saveEditedDetailsAction", () => {
   beforeEach(() => server.use(updateCourseSuccess));
@@ -94,25 +52,6 @@ describe("saveEditedDetailsAction", () => {
         timeZone: "America/New_York",
       },
       prices: fieldsSentBackUnchanged.prices,
-    });
-  });
-
-  it("leaves the start and end unchanged when the zone changes", async () => {
-    const sent = captureBody();
-
-    await saveEditedDetailsAction(
-      courseId,
-      { ...validValues, schedule: { timeZone: "Asia/Tokyo" } },
-      loadedSchedule,
-      fieldsSentBackUnchanged,
-    );
-
-    expect(sent.body).toMatchObject({
-      schedule: {
-        startTime: loadedSchedule.startTime,
-        endTime: loadedSchedule.endTime,
-        timeZone: "Asia/Tokyo",
-      },
     });
   });
 

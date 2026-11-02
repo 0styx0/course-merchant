@@ -8,7 +8,7 @@ This Next version differs from training data; its docs live in `node_modules/nex
 
 Before `yarn tsc --noEmit`, run `yarn next typegen` (Next's `PageProps`/`LayoutProps` types live in `.next/`, which can be stale or missing and cause false type errors).
 
-Before a refactor, check which lines no test runs (whole suite, about 30 seconds): `yarn test:coverage --coverage.include=<file>`. "No files with missing coverage" means the file is fully covered.
+Verify a change with `yarn check:changed`: it type-checks, lints the changed files and runs only the tests related to them. The whole suite runs at commit and push, so skip it while working. Before a refactor, check which lines no test runs (runs the whole suite, so start it in the background): `yarn test:coverage --coverage.include=<file>`. "No files with missing coverage" means the file is fully covered.
 
 ## Shared form blocks (React Hook Form)
 

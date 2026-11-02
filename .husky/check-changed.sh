@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+# Checks one package against what changed since the last commit: the type
+# check (whole package, because a change can break an importer), lint on the
+# changed files, and only the unit tests related to them.
+# Usage, from the repo root: sh .husky/check-changed.sh api|web
+set -e
+package=$1
+[ "$package" = api ] || [ "$package" = web ] || { echo "Usage: check-changed.sh api|web" >&2; exit 2; }
+
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+changed=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } |
+  sed -n "s|^$package/||p" | grep -E '\.tsx?$' | sort -u | while read -r file; do
+    [ -e "$package/$file" ] && echo "$file"
+  done || true)
+
+[ "$package" = web ] && yarn --cwd web next typegen
+yarn --cwd "$package" tsc --noEmit
+
+if [ -z "$changed" ]; then
+  echo "No changed TypeScript files in $package: type check only."
+  exit 0
+fi
+# shellcheck disable=SC2086 # the repo has no spaces in its paths
+yarn --cwd "$package" eslint $changed
+# shellcheck disable=SC2086
+yarn --cwd "$package" test:unit:related $changed

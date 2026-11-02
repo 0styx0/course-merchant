@@ -16,7 +16,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
-    // style limits for hand-written code, tests included.
+    // style limits for hand-written code; tests skip the file length limit (below).
     files: ["src/**/*.{ts,tsx}"],
     // generated and vendored (shadcn) code isn't held to the length rules
     ignores: ["src/lib/api/generated.ts", "src/components/ui/**"],
@@ -35,9 +35,14 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // test files wrap everything in a describe callback, long by design
-    files: ["src/**/*.test.{ts,tsx}", "src/test/**"],
-    rules: { "max-lines-per-function": "off" },
+    // test files wrap everything in a describe callback, long by design, and
+    // a test file may grow with its behaviours (a split never drops a test)
+    files: [
+      "src/**/*.test.{ts,tsx}",
+      "src/**/*.fixtures.{ts,tsx}",
+      "src/test/**",
+    ],
+    rules: { "max-lines-per-function": "off", "max-lines": "off" },
   },
 ]);
 

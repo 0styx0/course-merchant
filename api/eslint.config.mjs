@@ -42,7 +42,7 @@ export default tseslint.config(
     },
   },
   {
-    // style limits for hand-written code, tests included.
+    // style limits for hand-written code; tests skip the file length limit (below).
     rules: {
       "max-lines": [
         "error",
@@ -58,9 +58,10 @@ export default tseslint.config(
     },
   },
   {
-    // describe callbacks are long by design, so tests skip the function limit
+    // describe callbacks are long by design, and a test file may grow with its
+    // behaviours, so tests skip the function and file length limits
     files: ["**/*.spec.ts", "src/test/**", "**/test/**"],
-    rules: { "max-lines-per-function": "off" },
+    rules: { "max-lines-per-function": "off", "max-lines": "off" },
   },
   {
     // vitest's asymmetric matchers (expect.any, expect.objectContaining, ...)

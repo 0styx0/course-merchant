@@ -1,3 +1,4 @@
+import { utcToWallClock } from "../schedule/wall-clock-time";
 import type { AdminCourse, UpdateCourseRequest } from "@/lib/types";
 
 import type {
@@ -20,23 +21,35 @@ export type EditFormPrefill = {
   fieldsSentBackUnchanged: FieldsSentBackUnchanged;
 };
 
+// A stored zone the list lacks shows its times in UTC; the zone field reports the zone.
+function storedTimeBoxes(utc: string, timeZone: string) {
+  const wallClock = utcToWallClock(utc, timeZone) ?? utcToWallClock(utc, "UTC");
+  return { date: wallClock?.date ?? "", timeOfDay: wallClock?.timeOfDay ?? "" };
+}
+
 /**
  * Picks only what the browser needs from the loaded course: its
  * `enrollments` hold customers' emails and payment details.
  */
 export function toEditFormPrefill(course: AdminCourse): EditFormPrefill {
+  const { startTime, endTime, timeZone } = course.schedule;
+  const start = storedTimeBoxes(startTime, timeZone);
+  const end = storedTimeBoxes(endTime, timeZone);
   return {
     values: {
       name: course.name,
       summary: course.summary,
       description: course.description,
       contentUrl: course.contentUrl,
-      schedule: { timeZone: course.schedule.timeZone },
+      schedule: {
+        timeZone,
+        startDate: start.date,
+        startTimeOfDay: start.timeOfDay,
+        endDate: end.date,
+        endTimeOfDay: end.timeOfDay,
+      },
     },
-    loadedSchedule: {
-      startTime: course.schedule.startTime,
-      endTime: course.schedule.endTime,
-    },
+    loadedSchedule: { startTime, endTime },
     fieldsSentBackUnchanged: {
       status: course.status.name,
       // The API keeps a price that matches a stored one exactly, so no ids.

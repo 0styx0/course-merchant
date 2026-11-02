@@ -24,21 +24,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [ ] **3. Schedule rules on edit.** The admin can change the start and end date and time. An unchanged start or end time may be in the past; a changed one must be in the future; end is after start.
   - [x] **3a.** The stored start and end are their own item (`loadedSchedule`), no longer among the "fields sent back unchanged"; nothing changes for the admin.
   - [x] **3b.** The code can show a stored time as date and time boxes in a zone, and check an edited schedule (an unchanged time may be in the past, a changed one may not). Nothing uses it yet.
-  - [ ] **3c.** Saving sends the start and end from the boxes, and the browser and the action both refuse a broken schedule. The schedule line follows the boxes. The boxes aren't on screen yet. **Next**
-    - *Files*:
-      - edit-form-prefill.ts (+ test): the boxes are filled in the course's zone (in UTC when that zone isn't known)
-      - edit-course-form-schema.ts: the four boxes; the schema is built for each course from the loaded schedule
-      - save-edited-details.action.ts (+ test): converts the boxes, then sends them
-      - edit-course-form.tsx: builds the form's checks from the loaded schedule
-      - edit-course-sections.tsx: the sentence comes from the boxes in the chosen zone (reuses `scheduleSummary`)
-      - about 7 files, slightly over the size limit, because the schema type, the action and the form must change together
-    - *Behaviours*:
-      - an unchanged save of a course that has started goes through, with the same UTC times
-      - a zone change moves the times (6 PM EST becomes 6 PM CST in the request)
-      - a changed start in the past: the action refuses it, so the form shows the problem and no request is sent
-      - the schedule line follows a zone change
-    - *Needs*: 3a, 3b
-  - [ ] **3d.** The admin sees and edits the four boxes, and problems that compare boxes show on the schedule line.
+  - [x] **3c.** Saving sends the start and end from the four date and time boxes, and the browser and the action both refuse a broken schedule. The schedule line follows the boxes. The boxes aren't on screen yet.
+  - [ ] **3d.** The admin sees and edits the four boxes, and problems that compare boxes show on the schedule line. **Next**
     - *Files*:
       - edit-course-sections.tsx (reuses `ScheduleDateTimeFields` and `ScheduleProblems`; a zone change re-checks the schedule)
       - edit-course-fields.ts (the error list's labels for the boxes)

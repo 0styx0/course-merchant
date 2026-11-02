@@ -34,7 +34,7 @@ The root [README.md](README.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [ARCHITE
 
 ## Commands
 
-Run from the repo root with `yarn --cwd api …` / `yarn --cwd web …`, or from inside each package. See `package.json` (in `web/` and `api/`) and `.husky` for the scripts. Edited `api/` and `web/` files are formatted by a hook ([format-edited.sh](.claude/hooks/format-edited.sh)); don't run prettier by hand after each edit.
+Run package scripts from the repo root with `yarn --cwd api …` / `yarn --cwd web …`, with no `cd` and no `npx` (`npx` can fetch an unrelated package of the same name; `yarn <tool>` runs the one the package pins). To check a commit, run `yarn --cwd web check:changed` (or `api`): the type check, lint on the changed files and the unit tests related to them. Start any whole-suite or coverage run with `run_in_background`, wait for its notice, and start no second one while it runs. See `package.json` (in `web/` and `api/`) and `.husky` for the scripts. Edited `api/` and `web/` files are formatted by a hook ([format-edited.sh](.claude/hooks/format-edited.sh)); don't run prettier by hand after each edit.
 
 ## Contract-first API
 
