@@ -31,31 +31,13 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **4b.** The shared price pieces take from the page whether a row shows Remove, the section's help line and the words for an empty start, and the price rows' error-list entries are shared; create behaves the same.
   - [x] **4c.** Saving sends the edited prices: the page splits the loaded prices into those in effect and future ones when it renders, future ones become rows, and the browser and the action refuse broken rows. The rows aren't on screen yet.
   - [x] **4d.** The admin sees the prices in effect as a read-only list, latest marked "current price", and edits, adds and removes future price rows; the page intro says only status can't be changed yet.
-- [ ] **5. Image upload on edit.** The page shows the current image, and a newly chosen image uploads when the admin saves, after the details.
+- [x] **5. Image upload on edit.** The page shows the current image, and a newly chosen image uploads when the admin saves, after the details.
   - [x] **5a.** Create's image input and its preview are shared pieces (`ImageInput` takes the name and a preview function; `ImagePreview` is its own file); create behaves the same.
   - [x] **5b.** The web app serves a course's stored image to the admin's browser at `/admin/courses/{courseId}/image` (404 when missing, 502 on other API problems). Nothing uses it yet.
   - [x] **5c.** Create's "save the details, then upload the image" logic is a shared hook (`use-save-then-upload-image.ts`); create keeps only its draft create-or-update and draft id, and behaves the same.
   - [x] **5d.** Saving an edited course uploads a newly chosen image after the details (no file chosen: only the `PUT`); the shared save hook works for both forms and skips the upload when no image is chosen. The picker is not on screen yet.
-  - [ ] **5e.** The admin sees the course's current image, or "No image yet", on the edit page and replaces it by choosing a file and saving. **Next**
-    - *Files*:
-      - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx) (the basics section gets the shared `ImageInput`, with the stored image as its preview)
-      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx)
-      - [edit-course-fields.ts](../web/src/features/admin-courses/edit-course/edit-course-fields.ts) (error-list entry for the image)
-      - [admin-courses.ts](../web/src/mocks/fixtures/admin-courses.ts) (a course with an image)
-      - `web/src/features/admin-courses/image/course-image-route.ts` (new; the web app's address for a course's image, moved here from 5b because knip refuses an unused file)
-      - Tests: `edit-course/tests/edit-course-form.image.test.tsx`, `edit-form-prefill.test.ts` and [edit-course.spec.ts](../web/tests/browser/admin-courses/edit-course.spec.ts).
-      - Docs: tick here, the admin-image line in [courses.md](courses.md), and the README status.
-      - Folder counts: `edit-course/tests/` 6 → 7.
-    - *Behaviours*:
-      - Shows the stored image from the route (5b), else "No image yet. A course needs one before it can be published."
-      - A chosen file replaces the stored image in the preview.
-      - Stored `<img>` fails to load: "The stored image couldn't be loaded."
-      - Playwright, save with a new image: the course `PUT` body has no image.
-      - Playwright, save with only a new name on a course that has an image: no request goes to the image endpoint.
-    - *New shared pieces*: none.
-    - *Needs*: 5a, 5b, 5d.
-    - *Done when*: the tests pass and the owner has used the page in `dev:mock`.
-- [ ] **6. Status on edit.** Published, drafted, archived and deleted, with a warning before publishing without an image and a confirmation before deleting.
+  - [x] **5e.** The admin sees the course's current image, or "No image yet", on the edit page and replaces it by choosing a file and saving.
+- [ ] **6. Status on edit.** Published, drafted, archived and deleted, with a warning before publishing without an image and a confirmation before deleting. **Next** (split it into commits with `/plan-create-implementation course-edit`)
 
 ## Principles
 
@@ -251,46 +233,7 @@ Leave the date and time empty to start when you save.
 - Size: 5 commits (5a–5c share create's image input and save logic; 5d the save; 5e the screen). The map said 2 to 3; sharing with create needs two mechanical commits on create's side.
 - Risk: none.
 - Done when: a course with no image gets one in `dev:mock`; the image is not in the PUT body; saving without touching the image sends no upload.
-- Design notes *(temporary)*:
-  - Create's save is "details, then image", and edit follows it through one shared hook. A refused details step sends no image; an image refusal says the details were saved.
-  - Shared with create: the image input, the preview slot, the save hook with its messages, the image schema and the upload action.
-  - Separate on purpose: form types and schemas (image required on create, optional on edit), the details step (create's draft create-or-update against edit's `PUT`), and the stored image with its route.
-  - The stored image is a plain `<img>` with the route as its source. After a replace the page reloads on `/`, so no cache-busting address is needed.
-  - For step 6: publishing goes after the upload, as on create, so the API's "needs an image" rule holds.
-  - Not in this step: sharing the whole basics section (the sections differ only in placeholder text and the stored-image preview).
-  - Flow:
-
-```
-Admin opens the edit page
-└── stored image shown, or "No image yet"            5e (route 5b)
-Admin chooses a file (optional)
-├── fails browser check → message, no request        5d
-└── preview replaces the stored image                5e (slot 5a)
-Admin clicks Save changes
-├── form checks fail → errors, no request            existing
-└── PUT the details                                  5d (hook 5c)
-    ├── refused → API message + field errors, no upload   5c, 5d
-    └── saved
-        ├── no file → home page                      5d
-        └── upload the image                         5c
-            ├── refused → "details were saved, but the image didn't upload" + error on the picker; form kept   5c, 5d
-            └── stored → home page                   5c
-Next click on Save changes → both again              5c
-```
-
-  - Page sketch (after 5e):
-
-```
-Edit course
-Change the course details. Status can't be changed here yet.
-[error list: hidden until a save is refused]
-Basics — What students see when they browse for the course.
-  Image  [Choose file]  JPEG, PNG or WebP, up to 5 MB, at least 800 × 450.
-         [16:9: chosen file, else stored image, else "No image yet. …"]
-  Course name … Summary … Description
-Course material … Schedule … Pricing
-[Save changes]
-```
+- Decisions: the rows on the shared "details, then image" save hook, re-sending both steps after a partly failed save, and the stored image as a plain `<img>` (see *Decisions*).
 
 ## Step 6. Status on edit
 

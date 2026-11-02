@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useWatch, type UseFieldArrayReturn } from "react-hook-form";
 
 import {
@@ -22,6 +23,10 @@ import {
   ScheduleSection,
 } from "../course-form/sections/course-form-sections";
 import { ScheduleProblems } from "../course-form/sections/schedule-problems";
+import { ImageInput } from "../course-form/fields/image-input";
+import type { ChosenImage } from "../image/course-image";
+import { adminCourseImagePath } from "../image/course-image-route";
+import { ImagePreview } from "../image/image-preview";
 import { PriceRow } from "../price/price-row";
 import { PricesInEffect } from "../price/prices-in-effect";
 import { priceSummary } from "../price/price-summary";
@@ -38,10 +43,50 @@ import type {
 
 type EditForm = CourseFormApi<EditCourseFormValues>;
 
-/** Edit's basics: the name, summary and description. */
-export function EditBasicsSection({ form }: { form: EditForm }) {
+/** The course's stored image, loaded through the web app, with a message if it fails. */
+function StoredImagePreview({ courseId }: { courseId: string }) {
+  const [loadFailed, setLoadFailed] = useState(false);
+  if (loadFailed) return <p>The stored image couldn&apos;t be loaded.</p>;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- an admin-only image behind the login cookie, not optimizable
+    <img
+      src={adminCourseImagePath(courseId)}
+      alt="Current course image"
+      onError={() => setLoadFailed(true)}
+      className="aspect-video w-full rounded-lg border object-cover object-center"
+    />
+  );
+}
+
+type EditBasicsSectionProps = {
+  form: EditForm;
+  courseId: string;
+  hasStoredImage: boolean;
+  isSubmitted: boolean;
+};
+
+/** Edit's basics: the image, name, summary and description. */
+export function EditBasicsSection({
+  form,
+  courseId,
+  hasStoredImage,
+  isSubmitted,
+}: EditBasicsSectionProps) {
+  // A readable chosen file wins; otherwise the stored image, or the reason one is needed.
+  function renderImagePreview(image: ChosenImage | null) {
+    if (image && image.width > 0) return <ImagePreview file={image.file} />;
+    if (hasStoredImage) return <StoredImagePreview courseId={courseId} />;
+    return <p>No image yet. A course needs one before it can be published.</p>;
+  }
+
   return (
     <BasicsSection>
+      <ImageInput
+        form={form}
+        name="image"
+        isSubmitted={isSubmitted}
+        renderPreview={renderImagePreview}
+      />
       <InputField
         form={form}
         name="name"

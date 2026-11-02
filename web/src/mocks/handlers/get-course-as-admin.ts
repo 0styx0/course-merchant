@@ -1,6 +1,10 @@
 import type { operations } from "@/lib/api/generated";
+import type { AdminCourse } from "@/lib/types";
 import { http, HttpResponse } from "msw";
-import { adminCourseWithFuturePrice } from "../fixtures/admin-courses";
+import {
+  adminCourseWithFuturePrice,
+  adminCourseWithImage,
+} from "../fixtures/admin-courses";
 import { MOCK_API_BASE_URL } from "../mock-api";
 import { problemResponse } from "../problem-response";
 
@@ -15,9 +19,15 @@ type InternalServerErrorResponse =
 
 const adminCourseByIdUrl = `${MOCK_API_BASE_URL}/v1/admin/courses/:courseId`;
 
-const adminCourseByIdSuccess = http.get(adminCourseByIdUrl, () => {
-  return HttpResponse.json(adminCourseWithFuturePrice);
-});
+function makeAdminCourseByIdHandler(course: AdminCourse) {
+  return http.get(adminCourseByIdUrl, () => HttpResponse.json(course));
+}
+
+const adminCourseByIdSuccess = makeAdminCourseByIdHandler(
+  adminCourseWithFuturePrice,
+);
+const adminCourseByIdWithImage =
+  makeAdminCourseByIdHandler(adminCourseWithImage);
 
 const adminCourseByIdNotFound = http.get(adminCourseByIdUrl, ({ params }) => {
   const body = {
@@ -51,6 +61,7 @@ const adminCourseByIdError = http.get(adminCourseByIdUrl, () => {
 
 export const getCourseAsAdminHandlers = {
   success: adminCourseByIdSuccess,
+  withImage: adminCourseByIdWithImage,
   notFound: adminCourseByIdNotFound,
   invalidId: adminCourseByIdInvalidId,
   error: adminCourseByIdError,

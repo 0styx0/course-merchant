@@ -36,3 +36,9 @@ export const adminCourseWithFuturePrice = {
     },
   ],
 } as const satisfies AdminCourse;
+
+/** A course being edited that already has a stored image. */
+export const adminCourseWithImage = {
+  ...adminCourseWithFuturePrice,
+  image: { updatedAt: "2026-10-16T09:00:00Z", version: "1760605200000" },
+} as const satisfies AdminCourse;

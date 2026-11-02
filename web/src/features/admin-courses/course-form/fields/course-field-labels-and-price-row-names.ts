@@ -3,6 +3,7 @@
  * which is the order of the error list.
  */
 export const courseFieldLabels = {
+  image: "Image",
   name: "Course name",
   summary: "Summary",
   description: "Description",

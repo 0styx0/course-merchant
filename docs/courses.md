@@ -10,7 +10,7 @@ Keep this file current **in the same commit as the work**.
 - [x] API, admin: list, get, create (`POST`) and update (`PUT`).
 - [x] Web: home page with the course list, and the course page.
 - [x] Admin authentication: every admin route requires a login (see [auth.md](auth.md)).
-- [ ] Web admin pages. The create form page is built, with description toolbar and image, but no publish or login (publishing belongs to editing); the course list and edit pages come after.
+- [ ] Web admin pages. The create and edit pages are built, with description toolbar and image; the edit page has no status change yet, and there is no login form or admin course list.
 - [ ] Estimated payout under the admin price field (payments step 7).
 - [ ] **Course images** (design in *Course images* below):
   - [x] **1. API: check and convert an uploaded image** ([course-image.ts](../api/src/courses/images/course-image.ts)). Nothing calls it yet.
@@ -19,7 +19,8 @@ Keep this file current **in the same commit as the work**.
   - [x] **3. API: don't allow publishing a course without an image.** Create accepts only `drafted` and `archived`; an update to `published` needs an image ([course-update-rules.ts](../api/src/courses/validation/course-update-rules.ts)).
   - [x] **4. API: serve the image publicly.** Public course responses (list and get) carry `image: { version }`; `GET /v1/courses/{courseId}/image/{version}` ([courses.controller.ts](../api/src/courses/courses.controller.ts)), visible courses only.
   - [ ] **5. Web: show the image on the home page and the course page.** Starts after [web.md](web.md) steps 1–5, which move the paths below. Same-origin route that forwards to `GET /v1/courses/{courseId}/image/{version}` (200 `image/webp`, `Cache-Control: public, max-age=31536000, immutable`, 404 otherwise), plus `next/image`; details in *Course images → Showing it*. The mock course literals already carry `image: { version }`.
-  - [ ] **Later, with the admin web pages:** the upload form and preview from *Course images → What the admin sees*, and "missing image" in the admin course list.
+  - [x] **Admin upload form and preview** (*Course images → What the admin sees*), built on the create and edit pages.
+  - [ ] **Later, with the admin course list:** "missing image" in that list.
 - [ ] Maybe later: a contract test that checks e2e responses against the OpenAPI schemas with Ajv. It was deferred ("not now").
 
 ## Who sees what

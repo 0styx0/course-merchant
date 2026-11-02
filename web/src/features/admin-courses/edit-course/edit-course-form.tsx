@@ -34,6 +34,28 @@ function useEditCourseFormState(prefill: EditFormPrefill) {
   return { form, priceRows };
 }
 
+/** The save, plus the error list, which also warns before leaving unsaved edits. */
+function useSaveAndErrorList(
+  form: ReturnType<typeof useEditCourseFormState>["form"],
+  priceRowCount: number,
+  courseId: string,
+  prefill: EditFormPrefill,
+) {
+  const { saved, ...saveState } = useSaveEditedCourse(
+    form,
+    courseId,
+    prefill.loadedSchedule,
+    prefill.loadedPrices,
+    prefill.fieldsSentBackUnchanged,
+  );
+  const errorList = useErrorListAndLeaveWarning(
+    form,
+    editCourseFields(priceRowCount),
+    saved,
+  );
+  return { ...saveState, errorList };
+}
+
 type EditCourseFormProps = {
   courseId: string;
   prefill: EditFormPrefill;
@@ -48,19 +70,8 @@ export function EditCourseForm({
   timeZones,
 }: EditCourseFormProps) {
   const { form, priceRows } = useEditCourseFormState(prefill);
-  const { save, saved, serverProblem, clearServerProblem } =
-    useSaveEditedCourse(
-      form,
-      courseId,
-      prefill.loadedSchedule,
-      prefill.loadedPrices,
-      prefill.fieldsSentBackUnchanged,
-    );
-  const errorList = useErrorListAndLeaveWarning(
-    form,
-    editCourseFields(priceRows.fields.length),
-    saved,
-  );
+  const { save, serverProblem, clearServerProblem, errorList } =
+    useSaveAndErrorList(form, priceRows.fields.length, courseId, prefill);
   const { isSubmitting } = form.formState;
 
   return (
@@ -70,7 +81,12 @@ export function EditCourseForm({
       className="flex flex-col gap-8"
     >
       <ErrorSummary {...errorList} serverProblem={serverProblem} />
-      <EditBasicsSection form={form} />
+      <EditBasicsSection
+        form={form}
+        courseId={courseId}
+        hasStoredImage={prefill.storedImageVersion !== null}
+        isSubmitted={form.formState.isSubmitted}
+      />
       <ContentLinkSection form={form} name="contentUrl" />
       <EditScheduleSection form={form} timeZones={timeZones} />
       <EditPricingSection

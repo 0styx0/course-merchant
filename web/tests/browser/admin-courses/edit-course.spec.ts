@@ -1,12 +1,17 @@
 import type { Page } from "@playwright/test";
+import { http, HttpResponse } from "msw";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
+import { adminCourseWithFuturePrice } from "@/mocks/fixtures/admin-courses";
 import { getCourseAsAdminHandlers } from "@/mocks/handlers/get-course-as-admin";
+import { getCourseImageAsAdminHandlers } from "@/mocks/handlers/get-course-image-as-admin";
 import { coursesSuccess } from "@/mocks/handlers/list-courses";
 import {
   makeTwoRoundsRefusalHandler,
   updateCourseHandlers,
+  updateCourseUrl,
 } from "@/mocks/handlers/update-course";
+import { uploadCourseImageUrl } from "@/mocks/handlers/upload-course-image";
 
 const { test, expect } = msw;
 
@@ -106,6 +111,69 @@ test("lists the price in effect and saves a changed future price", async ({
   await page.getByRole("button", { name: "Save changes" }).click();
 
   await expect(page).toHaveURL("/");
+});
+
+/** Handlers that answer the course and image saves with success and keep what each one received. */
+function makeSaveRecordingHandlers() {
+  const courseBodies: Record<string, unknown>[] = [];
+  let imageUploadCount = 0;
+  const handlers = [
+    http.put(updateCourseUrl, async ({ request }) => {
+      courseBodies.push((await request.json()) as Record<string, unknown>);
+      return HttpResponse.json(adminCourseWithFuturePrice);
+    }),
+    http.put(uploadCourseImageUrl, () => {
+      imageUploadCount += 1;
+      return new HttpResponse(null, { status: 204 });
+    }),
+  ];
+  return {
+    handlers,
+    courseBodies,
+    readImageUploadCount: () => imageUploadCount,
+  };
+}
+
+test("saves the details without the image, then uploads the newly chosen image", async ({
+  page,
+  msw,
+}) => {
+  const saves = makeSaveRecordingHandlers();
+  msw.use(getCourseAsAdminHandlers.success, ...saves.handlers);
+  await page.goto(editPath);
+  await expect(page.getByText("No image yet.", { exact: false })).toBeVisible();
+
+  await page
+    .getByLabel("Image")
+    .setInputFiles("src/mocks/fixtures/course-image.png");
+  await expect(page.getByAltText("Preview of the chosen image")).toBeVisible();
+  await page.getByRole("button", { name: "Save changes" }).click();
+
+  await expect(page).toHaveURL("/");
+  expect(saves.courseBodies).toHaveLength(1);
+  expect(saves.courseBodies[0]).not.toHaveProperty("image");
+  expect(saves.readImageUploadCount()).toBe(1);
+});
+
+test("shows the stored image and uploads nothing when only the name changes", async ({
+  page,
+  msw,
+}) => {
+  const saves = makeSaveRecordingHandlers();
+  msw.use(
+    getCourseAsAdminHandlers.withImage,
+    getCourseImageAsAdminHandlers.success,
+    ...saves.handlers,
+  );
+  await page.goto(editPath);
+  await expect(page.getByAltText("Current course image")).toBeVisible();
+
+  await page.getByLabel("Course name", { exact: true }).fill("A better name");
+  await page.getByRole("button", { name: "Save changes" }).click();
+
+  await expect(page).toHaveURL("/");
+  expect(saves.courseBodies).toHaveLength(1);
+  expect(saves.readImageUploadCount()).toBe(0);
 });
 
 for (const scenario of ["notFound", "invalidId"] as const) {

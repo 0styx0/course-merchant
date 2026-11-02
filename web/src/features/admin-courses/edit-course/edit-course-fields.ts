@@ -11,6 +11,7 @@ export function editCourseFields(priceRowCount: number): ProblemField[] {
     priceRowFields(index, priceRowCount),
   ).flat();
   return [
+    ["image", courseFieldLabels.image],
     ["name", courseFieldLabels.name],
     ["summary", courseFieldLabels.summary],
     ["description", courseFieldLabels.description],
