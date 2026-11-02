@@ -205,3 +205,23 @@ test("shows the API's title and detail for any other problem", async ({
     0,
   );
 });
+
+test("asks before deleting, then saves the course as deleted", async ({
+  page,
+  msw,
+}) => {
+  const saves = makeSaveRecordingHandlers();
+  msw.use(getCourseAsAdminHandlers.success, ...saves.handlers);
+  await page.goto(editPath);
+
+  await page.getByRole("radio", { name: "Deleted" }).click();
+  await page.getByRole("button", { name: "Save changes" }).click();
+  const dialog = page.getByRole("alertdialog", { name: "Delete this course?" });
+  await expect(dialog).toBeVisible();
+  expect(saves.courseBodies).toHaveLength(0);
+  await dialog.getByRole("button", { name: "Delete course" }).click();
+
+  await expect(page).toHaveURL("/");
+  expect(saves.courseBodies).toHaveLength(1);
+  expect(saves.courseBodies[0]).toMatchObject({ status: "deleted" });
+});

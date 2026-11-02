@@ -37,26 +37,11 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **5c.** Create's "save the details, then upload the image" logic is a shared hook (`use-save-then-upload-image.ts`); create keeps only its draft create-or-update and draft id, and behaves the same.
   - [x] **5d.** Saving an edited course uploads a newly chosen image after the details (no file chosen: only the `PUT`); the shared save hook works for both forms and skips the upload when no image is chosen. The picker is not on screen yet.
   - [x] **5e.** The admin sees the course's current image, or "No image yet", on the edit page and replaces it by choosing a file and saving.
-- [ ] **6. Status on edit.** Published, drafted, archived and deleted, with a note that publishing needs an image and a confirmation before deleting.
+- [x] **6. Status on edit.** Published, drafted, archived and deleted, with a note that publishing needs an image and a confirmation before deleting.
   - [x] **6a.** Saving an edited course uploads a newly chosen image before its details, so one save can publish a course with its first image; a retry after a refused save skips the image already stored. Create behaves the same.
   - [x] **6b.** The edit code holds the course's status as a form value, prefilled as loaded, and saves it; the API's refusal on the status lands on the status field. Not on screen yet.
   - [x] **6c.** The admin sees the course's status on the edit page and changes it, and the API's refusal to publish without an image shows on the status field.
-  - [ ] **6d.** Deleting asks for confirmation first. **Next**
-    - *Files*:
-      - `components/ui/alert-dialog.tsx` (vendored)
-      - `edit-course/status/delete-confirmation.tsx` (new)
-      - a small hook in `edit-course/status/` that pulls the status logic out of `edit-course-form.tsx`
-      - [edit-course.spec.ts](../web/tests/browser/admin-courses/edit-course.spec.ts)
-      - docs and the README status
-    - *Behaviours*:
-      - Invalid form: the usual errors, no dialog.
-      - The dialog opens only after a valid Save with Deleted chosen.
-      - "Keep the course" or Escape: the dialog closes, nothing is sent, the form is kept.
-      - "Delete course": saves with the checked values, then goes home.
-      - A course already deleted: Save runs with no dialog.
-    - *New shared pieces*: none
-    - *Needs*: 6c
-    - *Done when*: unit and Playwright tests pass and the owner has used the page.
+  - [x] **6d.** Choosing Deleted and saving asks for confirmation first; Keep or Escape leaves the form as it was, and a course already deleted saves with no question.
 
 ## Principles
 
@@ -263,33 +248,7 @@ Leave the date and time empty to start when you save.
 - Size: 4 commits (6a the save order; 6b the status saved; 6c the control on screen; 6d the delete confirmation). The map said 3.
 - Risk: the shared save hook changes order for edit only; create's tests must pass unchanged.
 - Done when: the owner changes a course's status and deletes one in `dev:mock`; publishing a course with a newly chosen first image works in one save.
-- Design notes *(temporary)*:
-  - The API refuses a change to `published` with no stored image (`/status`, "Upload an image before publishing."); an already published course isn't re-checked.
-  - Flow:
-
-```
-Admin picks a status, clicks Save changes
-├── Deleted, not already deleted                    6d
-│   └── dialog: Keep → form kept; Delete → continues
-├── image chosen → upload first                     6a
-│   └── refused → message, no PUT, form kept
-└── PUT with the form's status                      6b
-    ├── API 400 /status → status field, form kept   6b, shown 6c
-    └── success → home                              existing
-```
-
-  - Page sketch (Status section, after 6c):
-
-```
-Status — Who can see the course.
-  (•) Published  Students can find and buy it.
-  ( ) Drafted    Hidden while you work on it.
-  ( ) Archived   Hidden, can be published again.
-  ( ) Deleted    Removed from the admin list.
-[Save changes]
-```
-
-  - Folder counts: `course-form/hooks/` 5 → 6; `edit-course/` stays at 7 files, the new ones go in `status/`.
+- Note: the API refuses a change to `published` with no stored image; an already published course isn't re-checked.
 
 ## Out of scope
 

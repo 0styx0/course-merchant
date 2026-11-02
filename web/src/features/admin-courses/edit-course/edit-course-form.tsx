@@ -19,7 +19,9 @@ import {
   EditScheduleSection,
 } from "./edit-course-sections";
 import type { EditFormPrefill } from "./edit-form-prefill";
+import { DeleteConfirmation } from "./status/delete-confirmation";
 import { StatusSection } from "./status/status-section";
+import { useConfirmBeforeDelete } from "./status/use-confirm-before-delete";
 import { useSaveEditedCourse } from "./use-save-edited-course";
 
 function useEditCourseFormState(prefill: EditFormPrefill) {
@@ -35,14 +37,18 @@ function useEditCourseFormState(prefill: EditFormPrefill) {
   return { form, priceRows };
 }
 
-/** The save, plus the error list, which also warns before leaving unsaved edits. */
-function useSaveAndErrorList(
+/**
+ * The form's submit handler (which asks before deleting), whether a save is
+ * running, the delete dialog and the error list, which also warns before
+ * leaving unsaved edits.
+ */
+function useEditFormSubmit(
   form: ReturnType<typeof useEditCourseFormState>["form"],
   priceRowCount: number,
   courseId: string,
   prefill: EditFormPrefill,
 ) {
-  const { saved, ...saveResult } = useSaveEditedCourse(
+  const { save, saved, serverMessage } = useSaveEditedCourse(
     form,
     courseId,
     prefill.loadedSchedule,
@@ -53,7 +59,17 @@ function useSaveAndErrorList(
     editCourseFields(priceRowCount),
     saved,
   );
-  return { ...saveResult, errorList };
+  const deleteGate = useConfirmBeforeDelete(save, prefill.values.status);
+  return {
+    submitForm: form.handleSubmit(
+      deleteGate.saveOrAskToDelete,
+      serverMessage.clearServerProblem,
+    ),
+    isSaving: form.formState.isSubmitting || deleteGate.isConfirmedSaveRunning,
+    deleteConfirmation: deleteGate.deleteConfirmation,
+    serverProblem: serverMessage.serverProblem,
+    errorList,
+  };
 }
 
 type EditCourseFormProps = {
@@ -70,21 +86,11 @@ export function EditCourseForm({
   timeZones,
 }: EditCourseFormProps) {
   const { form, priceRows } = useEditCourseFormState(prefill);
-  const { save, serverMessage, errorList } = useSaveAndErrorList(
-    form,
-    priceRows.fields.length,
-    courseId,
-    prefill,
-  );
-  const { serverProblem, clearServerProblem } = serverMessage;
-  const { isSubmitting } = form.formState;
+  const { submitForm, isSaving, deleteConfirmation, serverProblem, errorList } =
+    useEditFormSubmit(form, priceRows.fields.length, courseId, prefill);
 
   return (
-    <form
-      noValidate
-      onSubmit={form.handleSubmit(save, clearServerProblem)}
-      className="flex flex-col gap-8"
-    >
+    <form noValidate onSubmit={submitForm} className="flex flex-col gap-8">
       <ErrorSummary {...errorList} serverProblem={serverProblem} />
       <EditBasicsSection
         form={form}
@@ -100,7 +106,8 @@ export function EditCourseForm({
         pricesInEffect={prefill.loadedPrices.inEffect}
       />
       <StatusSection form={form} />
-      <SaveButton label="Save changes" isSubmitting={isSubmitting} />
+      <SaveButton label="Save changes" isSubmitting={isSaving} />
+      <DeleteConfirmation {...deleteConfirmation} />
     </form>
   );
 }

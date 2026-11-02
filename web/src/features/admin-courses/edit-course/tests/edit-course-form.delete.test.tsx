@@ -1,0 +1,180 @@
+import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
+
+import { toEditFormPrefill } from "../edit-form-prefill";
+import {
+  clickSave,
+  prefill,
+  refusal,
+  renderForm,
+  saveAction,
+  setValue,
+} from "./edit-course-form.fixtures";
+import { push } from "./edit-course-form.mocks";
+
+vi.mock(
+  "next/navigation",
+  async () => (await import("./edit-course-form.mocks")).navigationMock,
+);
+vi.mock("../../save-course/edit/save-edited-details.action", () => ({
+  saveEditedDetailsAction: vi.fn(),
+}));
+vi.mock("../../save-course/upload-image/upload-course-image.action", () => ({
+  uploadCourseImageAction: vi.fn(),
+}));
+vi.mock("../../description-editor/description-editor", async () => ({
+  DescriptionEditor: (await import("./edit-course-form.mocks"))
+    .MockDescriptionEditor,
+}));
+
+type TestUser = ReturnType<typeof userEvent.setup>;
+
+function statusOption(name: string) {
+  return screen.getByRole("radio", { name });
+}
+
+async function chooseDeletedAndSave(user: TestUser) {
+  await user.click(statusOption("Deleted"));
+  await clickSave(user);
+}
+
+function findDeleteDialog() {
+  return screen.findByRole("alertdialog", { name: "Delete this course?" });
+}
+
+function mockSaveSucceeds() {
+  saveAction.mockResolvedValue({ state: "success", data: { courseId: "c1" } });
+}
+
+function expectSavedWithStatus(status: string) {
+  return waitFor(() =>
+    expect(saveAction).toHaveBeenCalledWith(
+      draftedAdminCourse.id,
+      expect.objectContaining({ status }),
+      prefill.loadedSchedule,
+      prefill.loadedPrices,
+    ),
+  );
+}
+
+async function openDialogAfterRename(user: TestUser) {
+  renderForm();
+  setValue("Course name", "Renamed");
+  await chooseDeletedAndSave(user);
+  return findDeleteDialog();
+}
+
+async function expectDialogClosedAndFormKept() {
+  await waitFor(() =>
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
+  );
+  expect(saveAction).not.toHaveBeenCalled();
+  expect(screen.getByLabelText("Course name")).toHaveValue("Renamed");
+  expect(statusOption("Deleted")).toBeChecked();
+}
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
+
+describe("EditCourseForm delete confirmation", () => {
+  it("asks before deleting and sends nothing yet", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await chooseDeletedAndSave(user);
+
+    expect(await findDeleteDialog()).toHaveTextContent(
+      "It leaves the admin list, and students can no longer find or buy it.",
+    );
+    expect(saveAction).not.toHaveBeenCalled();
+  });
+
+  it("shows the usual errors and no dialog when the form is invalid", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    setValue("Course name", "");
+
+    await chooseDeletedAndSave(user);
+
+    expect(
+      await screen.findByRole("button", { name: "Course name" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(saveAction).not.toHaveBeenCalled();
+  });
+
+  it("saves a course loaded as deleted with no dialog", async () => {
+    const user = userEvent.setup();
+    mockSaveSucceeds();
+    renderForm(
+      toEditFormPrefill({
+        ...draftedAdminCourse,
+        status: { name: "deleted", changedAt: "2026-10-15T18:30:00Z" },
+      }),
+    );
+
+    await clickSave(user);
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/"));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("keeps the course and the form on Keep the course", async () => {
+    const user = userEvent.setup();
+    await openDialogAfterRename(user);
+
+    await user.click(screen.getByRole("button", { name: "Keep the course" }));
+
+    await expectDialogClosedAndFormKept();
+  });
+
+  it("keeps the course and the form on Escape", async () => {
+    const user = userEvent.setup();
+    await openDialogAfterRename(user);
+
+    await user.keyboard("{Escape}");
+
+    await expectDialogClosedAndFormKept();
+  });
+
+  it("saves with status deleted on Delete course, then goes home", async () => {
+    const user = userEvent.setup();
+    mockSaveSucceeds();
+    await openDialogAfterRename(user);
+
+    await user.click(screen.getByRole("button", { name: "Delete course" }));
+
+    await expectSavedWithStatus("deleted");
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/"));
+  });
+
+  it("shows the API's refusal after Delete course and keeps the form", async () => {
+    const user = userEvent.setup();
+    saveAction.mockResolvedValue(refusal("Course not deletable", []));
+    await openDialogAfterRename(user);
+
+    await user.click(screen.getByRole("button", { name: "Delete course" }));
+
+    expect(
+      await screen.findByText("Course not deletable detail."),
+    ).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Course name")).toHaveValue("Renamed");
+  });
+
+  it("saves another status with no dialog", async () => {
+    const user = userEvent.setup();
+    mockSaveSucceeds();
+    renderForm();
+
+    await user.click(statusOption("Archived"));
+    await clickSave(user);
+
+    await expectSavedWithStatus("archived");
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+});
