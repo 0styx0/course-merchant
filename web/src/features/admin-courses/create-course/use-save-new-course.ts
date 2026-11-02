@@ -1,24 +1,17 @@
-import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
 import {
-  refusalMessage,
-  useServerProblem,
-  type ServerProblem,
-} from "../course-form/hooks/use-server-problem";
-import type { ChosenImage } from "../image/course-image";
+  type CourseDetailsFields,
+  useSaveThenUploadImage,
+} from "../course-form/hooks/use-save-then-upload-image";
 import type {
   CheckedCourseFormWithImageValues,
   CourseFormWithImageValues,
 } from "../validation/course-form-schema";
-import {
-  type CourseActionFailure,
-  type CourseActionResult,
-} from "../save-course/course-action-result";
+import { type CourseActionResult } from "../save-course/course-action-result";
 import { createCourseAction } from "../save-course/create/create-course.action";
 import { retryDraftSaveAction } from "../save-course/create/retry-draft-save.action";
-import { uploadCourseImageAction } from "../save-course/upload-image/upload-course-image.action";
 
 type CourseForm = UseFormReturn<
   CourseFormWithImageValues,
@@ -26,28 +19,10 @@ type CourseForm = UseFormReturn<
   CheckedCourseFormWithImageValues
 >;
 
-const draftSavedNote = " The course was saved as a draft.";
-
-/** Says the draft exists, then gives the API's own reason. */
-function imageUploadFailedMessage({
-  problem,
-}: CourseActionFailure): ServerProblem {
-  return {
-    title: "Image upload failed",
-    detail: `The course was saved as a draft, but the image didn't upload. ${problem.detail}`,
-  };
-}
-
-function toImageFormData(image: ChosenImage): FormData {
-  const formData = new FormData();
-  formData.set("image", image.file);
-  return formData;
-}
-
 /** Creates the draft, or updates it when an earlier try already created it. */
 function saveDraft(
   draftId: string | undefined,
-  fields: Omit<CheckedCourseFormWithImageValues, "image">,
+  fields: CourseDetailsFields,
 ): Promise<CourseActionResult> {
   return draftId
     ? retryDraftSaveAction(draftId, fields)
@@ -55,48 +30,21 @@ function saveDraft(
 }
 
 /**
- * Saves the form in two steps: the draft, then its image. A refused step leaves
- * a message and puts its field errors on the fields. The draft's id is kept, so
- * the next try updates that draft instead of creating a second course.
+ * Saves the form in two steps: the draft, then its image. The draft's id is
+ * kept, so the next try updates that draft instead of creating a second course.
  */
 export function useSaveNewCourse(form: CourseForm) {
-  const router = useRouter();
-  const { serverProblem, showRefusal, showThrownProblem, clearServerProblem } =
-    useServerProblem(form.setError);
-  const [saved, setSaved] = useState(false);
   const draftId = useRef<string>(undefined);
 
-  async function saveDraftThenUploadImage({
-    image,
-    ...fields
-  }: CheckedCourseFormWithImageValues) {
+  async function saveDraftAndRememberItsId(fields: CourseDetailsFields) {
     const draft = await saveDraft(draftId.current, fields);
-    if (draft.state === "failure") {
-      return showRefusal(refusalMessage(draft.error), draft.error);
-    }
-    draftId.current = draft.data.courseId;
-    const upload = await uploadCourseImageAction(
-      draftId.current,
-      toImageFormData(image),
-    );
-    if (upload.state === "failure") {
-      return showRefusal(imageUploadFailedMessage(upload.error), upload.error);
-    }
-    setSaved(true);
-    router.push("/");
+    if (draft.state === "success") draftId.current = draft.data.courseId;
+    return draft;
   }
 
-  async function save(values: CheckedCourseFormWithImageValues) {
-    clearServerProblem();
-    try {
-      await saveDraftThenUploadImage(values);
-    } catch {
-      // A rejected Server Action throws instead of returning a failure.
-      showThrownProblem(
-        draftId.current === undefined ? undefined : draftSavedNote,
-      );
-    }
-  }
-
-  return { save, saved, serverProblem, clearServerProblem };
+  return useSaveThenUploadImage(
+    form,
+    saveDraftAndRememberItsId,
+    "The course was saved as a draft",
+  );
 }

@@ -34,16 +34,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [ ] **5. Image upload on edit.** The page shows the current image, and a newly chosen image uploads when the admin saves, after the details.
   - [x] **5a.** Create's image input and its preview are shared pieces (`ImageInput` takes the name and a preview function; `ImagePreview` is its own file); create behaves the same.
   - [x] **5b.** The web app serves a course's stored image to the admin's browser at `/admin/courses/{courseId}/image` (404 when missing, 502 on other API problems). Nothing uses it yet.
-  - [ ] **5c.** Create's "save the details, then upload the image" logic becomes a shared hook. Create behaves the same. *(mechanical, coverage first)* **Next**
-    - *Files*:
-      - `course-form/hooks/use-save-then-upload-image.ts` (new; takes one function that saves the details, plus the words for "the details are saved")
-      - [use-save-new-course.ts](../web/src/features/admin-courses/create-course/use-save-new-course.ts) (shrinks to the draft create-or-update and the draft id)
-      - Folder counts: `course-form/hooks/` 4 → 5.
-    - *New shared pieces*:
-      - The hook: details first, then the image. Each refusal shows the API's message and puts its errors on the fields. A thrown action shows the usual message plus the "details are saved" note once they were. The route to `/` is its last step.
-      - The form-data builder and the image-failed message, both moved out of create's hook.
-    - *Done when*: the create-form tests pass unchanged, including the image-failed and retry cases.
-  - [ ] **5d.** Saving an edited course can also upload a newly chosen image, after the details. The picker is not on screen yet.
+  - [x] **5c.** Create's "save the details, then upload the image" logic is a shared hook (`use-save-then-upload-image.ts`); create keeps only its draft create-or-update and draft id, and behaves the same.
+  - [ ] **5d.** Saving an edited course can also upload a newly chosen image, after the details. The picker is not on screen yet. **Next**
     - *Files*:
       - [edit-course-form-schema.ts](../web/src/features/admin-courses/validation/edit-course-form-schema.ts) (optional `image`, checked with `courseImageSchema`)
       - [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (image starts empty; carries the stored image version, or null)
