@@ -76,3 +76,4 @@ All web steps are done. The admin create-course form's decisions are in [course-
 
 - Edge rate limits per path: allow request bodies up to 6 MB only for POST `/admin/courses/*`. A Server Action posts to its page's own URL, so the buy-form limit in [payments.md](payments.md) applies to POST `/courses/*` (course pages are otherwise only fetched with GET).
 - The edge sets `Strict-Transport-Security` (HSTS): it only means something over HTTPS, and a wrong value locks the domain to HTTPS for months, so the app doesn't send it.
+- Manual check of the admin create and edit course pages: change every field, then reload the page and confirm each change persists across the reload

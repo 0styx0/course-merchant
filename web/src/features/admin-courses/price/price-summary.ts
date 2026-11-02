@@ -1,8 +1,8 @@
 import {
   amountProblem,
-  normalizeDollars,
   type CourseFormValues,
 } from "../validation/course-form-schema";
+import { normalizeDollars } from "./dollar-amount";
 import { formatMoment } from "../schedule/summary/format-moment";
 import { toUtcMs } from "../schedule/wall-clock-time";
 

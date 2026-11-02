@@ -1,12 +1,14 @@
 import {
   conversionIssues,
   endNotAfterStartIssues,
-  issueAt,
   startInPastIssues,
+} from "./course-form-cross-field-issues";
+import {
+  issueAt,
   toUtcMsOrIssue,
   type Conversion,
   type FormIssue,
-} from "./course-form-cross-field-issues";
+} from "./form-issue-and-time-conversion";
 import type { LoadedSchedule } from "./edit-course-form-schema";
 
 /** The four boxes the admin edits, and the zone they are read in. */

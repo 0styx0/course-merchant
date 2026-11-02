@@ -7,6 +7,7 @@ import {
 } from "@/features/course-description/description-document";
 
 import { courseImageSchema, type ChosenImage } from "../image/course-image";
+import { normalizeDollars, toCents } from "../price/dollar-amount";
 import {
   COURSE_CONTENT_URL_MAX_LENGTH,
   COURSE_DESCRIPTION_MAX_TEXT_LENGTH,
@@ -76,18 +77,13 @@ function descriptionProblem(description: JSONContent): string | undefined {
   return undefined;
 }
 
-/** Reads a comma as the decimal mark, so `79,50` is `79.50`. */
-export function normalizeDollars(dollars: string): string {
-  return dollars.replace(",", ".");
-}
-
 export function amountProblem(typed: string): string | undefined {
   const dollars = normalizeDollars(typed);
   if (!/^\d+(\.\d+)?$/.test(dollars)) return "Enter a price, like 79.50.";
   if (dollars.split(".")[1]?.length > 2) {
     return "Use at most two decimal places.";
   }
-  const cents = Math.round(Number(dollars) * 100);
+  const cents = toCents(dollars);
   if (cents > 0 && cents < MIN_PAID_PRICE_CENTS) {
     return "The payment processor needs a price of at least $0.50. Enter 0 for a free course.";
   }
