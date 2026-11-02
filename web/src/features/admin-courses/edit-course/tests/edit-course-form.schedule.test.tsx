@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -7,6 +7,7 @@ import {
   prefill,
   renderForm,
   saveAction,
+  setValue,
 } from "./edit-course-form.fixtures";
 
 vi.mock(
@@ -68,6 +69,60 @@ describe("EditCourseForm schedule", () => {
     await user.click(screen.getByRole("option", { name: "Europe/Paris" }));
     await clickSave(user);
 
+    expect(saveAction).not.toHaveBeenCalled();
+  });
+
+  it("fills the four boxes from the stored times and shows no problem", () => {
+    renderForm();
+
+    expect(screen.getByLabelText("Start date")).toHaveValue("2026-10-01");
+    expect(screen.getByLabelText("Start time")).toHaveValue("14:00");
+    expect(screen.getByLabelText("End date")).toHaveValue("2026-10-01");
+    expect(screen.getByLabelText("End time")).toHaveValue("16:00");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("shows a changed start in the past on the schedule line and in the error list", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    setValue("Start date", "2026-10-02");
+    await clickSave(user);
+
+    expect(
+      await screen.findAllByText("The start time must be in the future."),
+    ).not.toHaveLength(0);
+    expect(screen.getByRole("alert")).toHaveTextContent("Start time");
+  });
+
+  it("clears the problem once the times are corrected", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    setValue("Start date", "2026-10-02");
+    await clickSave(user);
+    await screen.findAllByText("The start time must be in the future.");
+
+    setValue("Start date", "2030-01-01");
+    setValue("End date", "2030-01-02");
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText("The start time must be in the future."),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("shows an end that is not after the start on the schedule line", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    setValue("Start date", "2030-01-02");
+    setValue("End date", "2030-01-01");
+    await clickSave(user);
+
+    expect(
+      await screen.findAllByText("The end time must be after the start time."),
+    ).not.toHaveLength(0);
     expect(saveAction).not.toHaveBeenCalled();
   });
 });

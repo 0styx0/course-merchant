@@ -65,6 +65,25 @@ test("shows the course's details and saves a new name", async ({
   expect(consoleErrors).toEqual([]);
 });
 
+test("fills the schedule boxes and shows a past start on the schedule line", async ({
+  page,
+  msw,
+}) => {
+  msw.use(getCourseAsAdminHandlers.success);
+  await page.goto(editPath);
+
+  await expect(page.getByLabel("Start date")).toHaveValue("2026-10-01");
+  await expect(page.getByLabel("End time")).toHaveValue("16:00");
+
+  await page.getByLabel("Start date").fill("2026-10-02");
+  await page.getByRole("button", { name: "Save changes" }).click();
+
+  await expect(page.locator("#schedule-problems")).toContainText(
+    "The start time must be in the future.",
+  );
+  await expect(page).toHaveURL(/\/edit$/);
+});
+
 for (const scenario of ["notFound", "invalidId"] as const) {
   test(`shows the 404 page for ${scenario}`, async ({ page, msw }) => {
     msw.use(getCourseAsAdminHandlers[scenario]);

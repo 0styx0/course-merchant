@@ -21,24 +21,12 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **2c.** The edit page's code can now turn a loaded course into the form's starting values and save changes to its name, summary, description, content link and time zone. No page uses it yet.
   - [x] **2d.** The edit form shows a course's details and saves them (no URL yet). It shares the refusal message, the content link section and the error list with the create form. The update mock can refuse twice in a row, for 2e's test.
   - [x] **2e.** The page at `/admin/courses/[courseId]/edit` loads the course and shows the form; a missing or malformed id gives Next's 404, any other problem shows `ProblemAlert`; the mock has `getCourseAsAdmin` scenarios and a `twoRounds` update scenario.
-- [ ] **3. Schedule rules on edit.** The admin can change the start and end date and time. An unchanged start or end time may be in the past; a changed one must be in the future; end is after start.
+- [x] **3. Schedule rules on edit.** The admin can change the start and end date and time. An unchanged start or end time may be in the past; a changed one must be in the future; end is after start.
   - [x] **3a.** The stored start and end are their own item (`loadedSchedule`), no longer among the "fields sent back unchanged"; nothing changes for the admin.
   - [x] **3b.** The code can show a stored time as date and time boxes in a zone, and check an edited schedule (an unchanged time may be in the past, a changed one may not). Nothing uses it yet.
   - [x] **3c.** Saving sends the start and end from the four date and time boxes, and the browser and the action both refuse a broken schedule. The schedule line follows the boxes. The boxes aren't on screen yet.
-  - [ ] **3d.** The admin sees and edits the four boxes, and problems that compare boxes show on the schedule line. **Next**
-    - *Files*:
-      - edit-course-sections.tsx (reuses `ScheduleDateTimeFields` and `ScheduleProblems`; a zone change re-checks the schedule)
-      - edit-course-fields.ts (the error list's labels for the boxes)
-      - tests/edit-course-form.test.tsx
-      - tests/browser/admin-courses/edit-course.spec.ts
-    - *Behaviours*:
-      - first load: every box filled, no errors
-      - a changed start in the past shows on the line after Save
-      - correcting the time clears the problem
-      - end not after start shows on the line
-    - *Done when*: the tests pass and the owner has used the page in `dev:mock`.
-    - *Needs*: 3c
-- [ ] **4. Prices on edit.** Prices in effect are read-only; future prices can be edited, added and removed.
+  - [x] **3d.** The admin sees and edits the four date and time boxes; problems that compare boxes show on the schedule line, and a zone change re-checks the schedule.
+- [ ] **4. Prices on edit.** Prices in effect are read-only; future prices can be edited, added and removed. **Next** (run `/plan-create-implementation course-edit` to split it into commits)
 - [ ] **5. Image upload on edit.** The page shows the current image and uploads a new one in its own step.
 - [ ] **6. Status on edit.** Published, drafted, archived and deleted, with a warning before publishing without an image and a confirmation before deleting.
 

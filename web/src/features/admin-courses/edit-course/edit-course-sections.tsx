@@ -10,9 +10,14 @@ import {
   type CourseFormApi,
 } from "../course-form/fields/course-form-fields";
 import {
+  ScheduleDateTimeFields,
+  type ScheduleDateTimeNames,
+} from "../course-form/sections/course-form-schedule-fields";
+import {
   BasicsSection,
   ScheduleSection,
 } from "../course-form/sections/course-form-sections";
+import { ScheduleProblems } from "../course-form/sections/schedule-problems";
 import { scheduleSummary } from "../schedule/summary/schedule-summary";
 import {
   COURSE_NAME_MAX_LENGTH,
@@ -43,7 +48,14 @@ export function EditBasicsSection({ form }: { form: EditForm }) {
   );
 }
 
-/** Edit's schedule: the zone, and the sentence for the start and end in the boxes. */
+const scheduleNames: ScheduleDateTimeNames<EditCourseFormValues> = {
+  startDate: "schedule.startDate",
+  startTimeOfDay: "schedule.startTimeOfDay",
+  endDate: "schedule.endDate",
+  endTimeOfDay: "schedule.endTimeOfDay",
+};
+
+/** Edit's schedule: the cross-field messages, the zone, the four boxes, and the sentence for them. */
 export function EditScheduleSection({
   form,
   timeZones,
@@ -55,12 +67,17 @@ export function EditScheduleSection({
 
   return (
     <ScheduleSection scheduleText={scheduleSummary(schedule)}>
+      <ScheduleProblems
+        form={form}
+        names={[scheduleNames.startTimeOfDay, scheduleNames.endTimeOfDay]}
+      />
       <TimeZoneField
         form={form}
         name="schedule.timeZone"
-        recheck={[]}
+        recheck={["schedule"]}
         timeZones={timeZones}
       />
+      <ScheduleDateTimeFields form={form} names={scheduleNames} />
     </ScheduleSection>
   );
 }

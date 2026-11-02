@@ -8,4 +8,8 @@ export const editCourseFields: ProblemField[] = [
   ["description", courseFieldLabels.description],
   ["contentUrl", courseFieldLabels.contentUrl],
   ["schedule.timeZone", courseFieldLabels["schedule.timeZone"]],
+  ["schedule.startDate", courseFieldLabels["schedule.startDate"]],
+  ["schedule.startTimeOfDay", courseFieldLabels["schedule.startTimeOfDay"]],
+  ["schedule.endDate", courseFieldLabels["schedule.endDate"]],
+  ["schedule.endTimeOfDay", courseFieldLabels["schedule.endTimeOfDay"]],
 ];
