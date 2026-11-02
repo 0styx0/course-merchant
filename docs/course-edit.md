@@ -21,7 +21,57 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **2c.** The edit page's code can now turn a loaded course into the form's starting values and save changes to its name, summary, description, content link and time zone. No page uses it yet.
   - [x] **2d.** The edit form shows a course's details and saves them (no URL yet). It shares the refusal message, the content link section and the error list with the create form. The update mock can refuse twice in a row, for 2e's test.
   - [x] **2e.** The page at `/admin/courses/[courseId]/edit` loads the course and shows the form; a missing or malformed id gives Next's 404, any other problem shows `ProblemAlert`; the mock has `getCourseAsAdmin` scenarios and a `twoRounds` update scenario.
-- [ ] **3. Schedule rules on edit.** An unchanged start or end time may be in the past; a changed one must be in the future; end is after start. **Next** (not yet split into commits)
+- [ ] **3. Schedule rules on edit.** The admin can change the start and end date and time. An unchanged start or end time may be in the past; a changed one must be in the future; end is after start.
+  - [ ] **3a.** The stored start and end move out of "fields sent back unchanged", because from 3c the save no longer sends them back; they are only compared. Nothing changes for the admin. *(mechanical)* **Next**
+    - *Files*:
+      - [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (+ test): a new `loadedSchedule` (the stored start and end) beside `values`; `fieldsSentBackUnchanged` keeps the status and prices
+      - [edit-course-form-schema.ts](../web/src/features/admin-courses/validation/edit-course-form-schema.ts): holds the loaded-schedule type, so `validation/` never imports from the page folder
+      - [save-edited-details.action.ts](../web/src/features/admin-courses/save-course/edit/save-edited-details.action.ts) (+ test)
+      - [use-save-edited-course.ts](../web/src/features/admin-courses/edit-course/use-save-edited-course.ts)
+      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx)
+      - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx)
+    - *Done when*: the same tests pass, the count is unchanged, and the type check passes. Run coverage on the touched files first.
+  - [ ] **3b.** The code can show a stored time as date and time boxes in a zone, and check an edited schedule. Nothing uses it yet.
+    - *Files*:
+      - [wall-clock-time.ts](../web/src/features/admin-courses/schedule/wall-clock-time.ts) (+ test): turns a stored UTC time into date and time boxes in a zone
+      - [course-form-cross-field-issues.ts](../web/src/features/admin-courses/validation/course-form-cross-field-issues.ts): exports the step that turns boxes into a moment or a message, and the end-after-start check; create's behaviour doesn't change
+      - `validation/edit-schedule-issues.ts` (+ test), new
+      - `validation/` goes from 5 to 7 files
+    - *Behaviours*:
+      - stored UTC becomes date and time boxes in the zone
+      - a start or end that converts to the stored moment, in the past: no problem
+      - a changed start in the past: "The start time must be in the future."
+      - a changed end in the past: "The end time must be in the future." (new message)
+      - end not after start: "The end time must be after the start time." (this message replaces the end-in-the-past one when both apply)
+      - a time in a daylight-saving gap or repeat: the existing daylight-saving message, even if the time is unchanged (accepted)
+    - *Settled*: the rows on unchanged times and the per-course checks below.
+  - [ ] **3c.** Saving sends the start and end from the boxes, and the browser and the action both refuse a broken schedule. The schedule line follows the boxes. The boxes aren't on screen yet.
+    - *Files*:
+      - edit-form-prefill.ts (+ test): the boxes are filled in the course's zone (in UTC when that zone isn't known)
+      - edit-course-form-schema.ts: the four boxes; the schema is built for each course from the loaded schedule
+      - save-edited-details.action.ts (+ test): converts the boxes, then sends them
+      - edit-course-form.tsx: builds the form's checks from the loaded schedule
+      - edit-course-sections.tsx: the sentence comes from the boxes in the chosen zone (reuses `scheduleSummary`)
+      - about 7 files, slightly over the size limit, because the schema type, the action and the form must change together
+    - *Behaviours*:
+      - an unchanged save of a course that has started goes through, with the same UTC times
+      - a zone change moves the times (6 PM EST becomes 6 PM CST in the request)
+      - a changed start in the past: the action refuses it, so the form shows the problem and no request is sent
+      - the schedule line follows a zone change
+    - *Needs*: 3a, 3b
+  - [ ] **3d.** The admin sees and edits the four boxes, and problems that compare boxes show on the schedule line.
+    - *Files*:
+      - edit-course-sections.tsx (reuses `ScheduleDateTimeFields` and `ScheduleProblems`; a zone change re-checks the schedule)
+      - edit-course-fields.ts (the error list's labels for the boxes)
+      - tests/edit-course-form.test.tsx
+      - tests/browser/admin-courses/edit-course.spec.ts
+    - *Behaviours*:
+      - first load: every box filled, no errors
+      - a changed start in the past shows on the line after Save
+      - correcting the time clears the problem
+      - end not after start shows on the line
+    - *Done when*: the tests pass and the owner has used the page in `dev:mock`.
+    - *Needs*: 3c
 - [ ] **4. Prices on edit.** Prices in effect are read-only; future prices can be edited, added and removed.
 - [ ] **5. Image upload on edit.** The page shows the current image and uploads a new one in its own step.
 - [ ] **6. Status on edit.** Published, drafted, archived and deleted, with a warning before publishing without an image and a confirmation before deleting.
@@ -33,7 +83,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - **Create and edit share no form type and no state.** Each owns its `useForm`, resolver, defaults and value type. Shared blocks are generic and take field names from the parent.
 - **Save is a full PUT.** Every field, every time. Strip what the API rejects: the course id, `enrollments`, `status.changedAt` (send status as a plain string) and each price's id.
 - **A failed save changes nothing,** so the form stays as it is and shows the errors. Errors can arrive in two rounds: a format error hides the state errors (past times, schedule) until fixed, so expect a second 400.
-- **The "must be in the future" check applies only to a changed time,** for the schedule and for price times alike. An unchanged time is sent as the original UTC string.
+- **The "must be in the future" check applies only to a changed time,** for the schedule and for price times alike. A schedule time counts as unchanged when the boxes convert to the stored moment; step 4 decides price times.
 - **The browser checks help the admin; the API decides.** Same as the create page.
 - **After saving, the admin goes to `/`,** as on the create page.
 - **Until the web login lands,** admin calls carry no token, so against the real API the page shows a 401. Tests and `yarn dev:mock` use MSW.
@@ -44,11 +94,12 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 | Decision | Why | Rejected |
 |---|---|---|
 | Create and edit are two separate form components, composed from shared sections, fields and hooks | Follows the owner's rule to compose rather than branch. No `mode` prop, and each page holds only its own rules (revisit after use) | One form with a `mode` prop (conditionals everywhere); a fully separate copy (drifts) |
-| An unchanged schedule or price time is sent as the original UTC string, not converted back from the wall-clock value | Converting back can shift a time in a DST-ambiguous hour, which the API would see as a change and refuse if it is in the past | Always converting back from the wall clock (simpler, but breaks the unchanged-past case) |
+| Start and end are always converted from the boxes. The browser compares the result with the stored time only to allow an unchanged time in the past. Price times are decided in step 4 | One path for every save, so nothing tracks changed and unchanged times. The cost: a time in the hour that daylight saving repeats can't be saved; accepted as rare | Sending the stored string when the boxes are unchanged (handles that repeated hour; costs a second path; low) |
 | Unchanged and in-effect prices are sent back as loaded | The API keeps exact matches and their ids, so the page tracks no ids | Leaving them out (also safe, but the form would hold less than the API) |
 | Shared blocks are generic over the form's own value type and take field names from the parent. Sections are layout with the fields as children. There is no shared value type and no cast | Create's form has an extra field, the image, that edit's doesn't. If both pages shared one form type, edit would have to carry a field it never uses, or the code would need a trick that switches off TypeScript's checking (confirmed with `tsc`). Instead each page keeps its own form type, and the shared pieces work with whichever fields the page gives them. An earlier attempt failed because field names were written inside the shared pieces, not because sharing was impossible (an architect review re-tested it). The compiler can't check a field name inside a shared piece, so the page passes the names in. They are expected to match between create and edit; this setup exists to avoid the trick, not to allow different names | A shared `CourseFormValues` with one cast, `savedFieldsForm` (leaks create's extra field into the shared code); `FormProvider` and `useFormContext` (moves the unchecked step into the library; blocks can't render alone); image outside the form (changes create's validation) |
 | Until steps 3, 4 and 6, the edit form holds only name, summary, description, content link and time zone. Start and end times, prices and status go back in the PUT exactly as loaded (the "fields sent back unchanged") | Their boxes need edit's own rules (an unchanged time sent as the original UTC string, in-effect prices read-only), which are steps 3 and 4. Carrying them makes every course savable now, started ones included | Boxes now with no browser time checks (gives a whole form at once; costs most of 3 and 4 pulled forward, or 400s from the API on unchanged past times; high complexity); re-reading the course in the action and merging (gives fresh values; costs a GET per save and is thrown away once those fields move into the form; medium) |
-| On edit, changing the time zone keeps the start and end moments, and the schedule line shows them in the new zone (revisit after use) | The kept times are sent unchanged, so they can't move; the line shows what the change means | Keeping the wall-clock time and moving the moments (gives "9 AM stays 9 AM"; costs changed times, which need step 3's past-time rules; medium) |
+| On edit, until step 3 ships, changing the time zone keeps the start and end moments, and the schedule line shows them in the new zone. From 3c the typed date and time stay and the moment moves (6:00 PM EST becomes 6:00 PM CST) (revisit after use) | Until the boxes exist, the kept times are sent unchanged, so they can't move. After that, a zone change usually fixes a zone entered wrongly. The cost: on a course that has started, the moved time counts as changed and is refused as being in the past | Keeping the moment and re-showing the boxes in the new zone (can fix a started course's zone; costs a hidden recalculation the admin doesn't expect; medium) |
+| The edit checks are built for each course from the stored start and end, which sit beside the form values, not inside them | The checks need the stored times, and the form values stay exactly what the admin edits | Hidden form values (a fixed schema and fewer props; puts data the admin can't edit into the values; low) |
 | The browser gets the form's values and the fields sent back unchanged, never the whole `AdminCourse` | Its `enrollments` hold customers' emails and payment details, and a client component's props are sent to the browser | Passing `AdminCourse` to the form (simpler props; leaks customer data into the page) |
 | The delete confirmation uses shadcn alert-dialog | Matches the existing shadcn/base-ui setup | An inline confirmation step |
 
@@ -114,10 +165,43 @@ Schedule — When the course runs.
 
 - Why here: step 2 sends start and end back as loaded; this step makes them editable, with an unchanged past time allowed.
 - Needs: 2.
-- Size: 2 to 3 commits.
-- Risk: turning the loaded UTC start and end into date and time boxes in the chosen zone, and a DST-ambiguous hour; reuse [wall-clock-time.ts](../web/src/features/admin-courses/schedule/wall-clock-time.ts), no new date library.
-- Done when: tests cover a started course saved with unchanged times, a changed past time refused, end not after start refused, and a DST-ambiguous time.
-- Can wait: once the boxes exist, does changing only the time zone keep the moments (the boxes re-display them, as in step 2) or keep the wall clock (the moments move)? See the step 2 decision row.
+- Size: 4 commits (3a moves code; 3b the checks; 3c the save; 3d the boxes on screen). The map said 2 to 3.
+- Risk: turning the loaded UTC start and end into date and time boxes in the chosen zone; reuse [wall-clock-time.ts](../web/src/features/admin-courses/schedule/wall-clock-time.ts), no new date library.
+- Done when: tests cover a started course saved with unchanged times, a changed past time refused, end not after start refused, and a zone change moving the times.
+- Design notes *(temporary)*:
+  - "Unchanged" means only that the converted moment equals the stored moment, to the millisecond. It is used only to allow a past time.
+  - The API will refuse seconds (separate API work, not this milestone), so the boxes hold minutes only.
+  - Reuse: `wallClockToUtc`, `scheduleSummary`, `ScheduleDateTimeFields`, `ScheduleProblems`, `fieldErrorsFromProblem` (it already puts the API's start and end errors on the time boxes).
+  - Folder counts: `validation/` 5 → 7 in 3b.
+  - Flow:
+
+```
+Admin opens the edit page                                existing (2e)
+└── boxes filled from stored start/end in course zone     3c (helper 3b)
+Admin changes the zone → boxes keep 6:00 PM               3c
+Admin clicks Save changes
+└── per-course schema converts and checks start and end   3c
+    ├── DST gap/repeat → daylight-saving message          existing, 3b
+    ├── equals stored time → may be in the past           3b
+    ├── changed, in the past → "must be in the future"    3b
+    ├── end ≤ start → "must be after the start time"      existing, 3b
+    │   (form kept, no request; shown on the schedule line   3d)
+    └── fine → action re-checks, PUT with converted times   3c
+        ├── API 400 → errors on the time boxes, form kept   existing (2d)
+        └── success → home page                            existing
+```
+
+  - Page sketch (Schedule section, after 3d):
+
+```
+Schedule — When the course runs.
+  [schedule problems line: hidden until a save is refused]
+  Time zone   [America/New_York ▾]
+  Start date  [2026-10-01]   Start time [18:00]
+  End date    [2026-10-01]   End time   [20:00]
+  Runs Oct 1, 2026, 6:00 PM to Oct 1, 2026, 8:00 PM
+  (America/New_York). Lasts 2 hours.
+```
 
 ## Step 4. Prices on edit
 
@@ -157,3 +241,4 @@ Schedule — When the course runs.
 |---|---|
 | 2026-10-30 | Milestone 1: the 2 planned commits became 6 (1a done; 1b split into 1b–1f) after the size check. Two tests are added first because none pinned them. |
 | 2026-10-30 | Milestone 2: split into 5 commits. A course saved from the create page has a price already in effect, so price and time boxes can't be saved before steps 3 and 4. Step 2 therefore edits five fields and sends start, end, prices and status back as loaded; the UTC-to-boxes and cents-to-dollars conversions moved to steps 3 and 4. |
+| 2026-11-02 | Milestone 3: split into 4 commits (the map said 2 to 3), because the stored times must move out of "sent back unchanged" first and the checks are worth reviewing apart from the save. Two decisions changed: a zone change now keeps the typed times and moves the moment, and start and end are always converted from the boxes. |
