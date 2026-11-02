@@ -10,6 +10,7 @@ For each commit line:
 - Is every decision it depends on a decision row or an answered question?
 - Are its files and the folder counts right (re-grep, do not trust memory)?
 - Is its mechanical flag right? Would it still be right if a test were missing?
+- Does the line have the *New shared pieces* field ("none" when empty)?
 - Does the order hold if one commit is delayed?
 
 Across the plan:
@@ -18,4 +19,4 @@ Across the plan:
 
 ## Subagent review (when the milestone has more than 3 commits, adds a decision row, or changes the contract or database schema)
 
-Give a subagent (Sonnet at high effort: the Agent tool's `model` and `effort` options) only the plan and the files it names. Ask for at most 5 problems in 250 words total, in these areas: module boundaries, missed reuse, order and hidden coupling, missing failure cases, and size. For a contract or schema change, keep the reviewer on Sonnet at high effort: it is already a different model from yours (this skill runs on Opus). Report which you accept and fix, and which you reject with a reason. Do not relay the full list.
+Give a subagent (Sonnet at high effort: the Agent tool's `model` and `effort` options) only the plan, the files it names and [.claude/rules/code.md](../../rules/code.md). Ask it to check each piece listed under *New shared pieces* against that file. Ask for at most 5 problems in 250 words total, in these areas: module boundaries, missed reuse, order and hidden coupling, missing failure cases, and size. For a contract or schema change, keep the reviewer on Sonnet at high effort: it is already a different model from yours (this skill runs on Opus). Report which you accept and fix, and which you reject with a reason. Do not relay the full list.

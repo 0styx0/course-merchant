@@ -4,13 +4,13 @@ description: Outline the next commit from a design doc's Status, wait for the ow
 disable-model-invocation: false
 model: opus
 effort: low
-argument-hint: "[module: the name of a docs/<module>.md] [task]"
+argument-hint: "[module: the name of a docs/<module>.md] [go] [task]"
 arguments: [module]
 ---
 
 # Next commit
 
-Module: `$module` — the name of a `docs/<module>.md` that has a Status section. Anything typed after it is a free-text task: `$ARGUMENTS`. Both are optional; with no module, the **Next** items of all docs are listed (step 1). Follow CLAUDE.md's working agreements (especially *When to stop and ask* and *Writing*) throughout; this skill is only the order of work.
+Module: `$module` — the name of a `docs/<module>.md` that has a Status section. Right after it, the word `go` means: build without waiting at the outline when the commit is plan-conformant (step 3). Anything else typed is a free-text task: `$ARGUMENTS`. Both are optional; with no module, the **Next** items of all docs are listed (step 1). Follow CLAUDE.md's working agreements (especially *When to stop and ask* and *Writing*) throughout; this skill is only the order of work.
 
 ## Checklist
 
@@ -19,8 +19,8 @@ Every item below happens, in this order.
 **Exemptions:** only pure moves, renames and doc-only commits skip items 4 and 5 (the tests-first step and `/simplify`) and the reviews in section 3. A commit's size is never an exemption.
 
 1. Read [outline.md](outline.md), [quality.md](quality.md) and [handoff.md](handoff.md) now.
-2. Run the size check, the coverage check (changes that alter no behaviour) and `git status --short` as real tool calls.
-3. Send the outline as [outline.md](outline.md) says, end the turn, and wait for the owner's reply.
+2. Run the size check, the coverage check (changes that alter no behaviour) and `git status --short` as real tool calls. Start the coverage run with `run_in_background` as soon as the touched files are known, keep reading, and read its result before writing the outline.
+3. Send the outline as [outline.md](outline.md) says, end the turn, and wait for the owner's reply. With `go` and a plan-conformant commit, keep working in the same turn instead.
 4. Write the tests first and show them failing.
 5. Run `/simplify` in subagents.
 6. Verify, then hand off as [handoff.md](handoff.md) says.
@@ -41,9 +41,11 @@ Every item below happens, in this order.
 
 ## 2. Outline
 
+With `go` and a plan-conformant commit: post the short outline and continue to step 3 without waiting. If a condition fails, say which, send the full outline and wait.
+
 Use the format in [outline.md](outline.md): start with the `Preflight:` line; short for mechanical and plan-conformant commits, full for everything else. The test table comes from [quality.md](quality.md).
 
-## 3. Implement, after approval
+## 3. Implement, after approval (or at once under `go` for a plan-conformant commit)
 
 - Build exactly what was approved. If something comes up that would change design or behaviour (a deviation from the commit line, a decision row or the contract), stop and ask.
 - **Re-plan trigger.** Stop and invoke `plan-create-implementation` (tell the owner why) when the change needs more than 1.5 times the files the line named, a question that blocks the split appears, or the commit needs something no earlier commit provides. Record it in the doc's *Changes* log.
@@ -55,7 +57,7 @@ Use the format in [outline.md](outline.md): start with the `Preflight:` line; sh
 
 ## 4. Verify
 
-- Run `yarn --cwd <package> check:changed` (type check, lint on the changed files, related unit tests) for each package you touched, in one message. Run a whole suite or coverage run only with `run_in_background`, never twice at once. Re-run after `/simplify`.
+- Run `yarn --cwd <package> check:changed` (type check, lint on the changed files, related unit tests, knip for unused exports) for each package you touched, in one message. Run a whole suite or coverage run only with `run_in_background`, never twice at once. Re-run after `/simplify`.
 - Check the list in [../_shared/definition-of-done.md](../_shared/definition-of-done.md), then the structure checks and failure handling in [quality.md](quality.md).
 
 ## 5. Hand off

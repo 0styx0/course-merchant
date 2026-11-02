@@ -3,8 +3,7 @@
 Used in step 4 of [SKILL.md](SKILL.md). Answer each for the milestone; record only answers other commits depend on.
 
 - **Boundaries:** which module owns each new responsibility? Does anything cross an existing module's edge?
-- **Reuse:** which existing helper, type or component does each piece use (found by grep)? Name it. Add a new one only when none fits.
-- **Shared definitions:** what do two or more commits share (data shape, error codes, names)? Define it in the earliest commit.
+- **Reuse and shared pieces:** which existing helper, type or component does each piece use (found by grep)? Name it. Before adding a shared piece, ask whether each feature could compose existing pieces with no shared state. List each piece two or more commits or features share (data shape, error codes, names, hook, component) in the *New shared pieces* field of the commit line, defined in the earliest commit.
 - **State:** is any value stored that can be derived? Prefer a constraint plus a shared query.
 - **Failure paths:** for each behaviour, how can it fail, and what does the user or caller see? Decide it here if two commits depend on it. In a high-risk area ([../_shared/project.md](../_shared/project.md)) write a failure table, mandatory: `| Actor | Abuse or failure | What the system does | Test that pins it |`, covering at least duplicates and retries, out-of-order events, races, and the outside service being down or slow.
 - **UI states** (UI milestones): for each field or component, decide and record:

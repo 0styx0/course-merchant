@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 # Checks one package against what changed since the last commit: the type
 # check (whole package, because a change can break an importer), lint on the
-# changed files, and only the unit tests related to them.
+# changed files, only the unit tests related to them, and knip (unused
+# exports, which a moved or deleted file can leave behind).
 # Usage, from the repo root: sh .husky/check-changed.sh api|web
 set -e
 package=$1
@@ -18,10 +19,12 @@ changed=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard
 yarn --cwd "$package" tsc --noEmit
 
 if [ -z "$changed" ]; then
-  echo "No changed TypeScript files in $package: type check only."
+  echo "No changed TypeScript files in $package: type check and knip only."
+  yarn --cwd "$package" knip
   exit 0
 fi
 # shellcheck disable=SC2086 # the repo has no spaces in its paths
 yarn --cwd "$package" eslint $changed
 # shellcheck disable=SC2086
 yarn --cwd "$package" test:unit:related $changed
+yarn --cwd "$package" knip

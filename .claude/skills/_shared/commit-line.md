@@ -11,6 +11,7 @@ Written by `/plan-create-implementation`, read by `/next-commit` in its first st
   - *Behaviours*:
     - <one behaviour, with its failure or edge case named; for a failure, the error code or message the caller sees>
     - <next behaviour>
+  - *New shared pieces*: <each new type, hook, component or abstraction that two or more files or features will use, with one reason each; "none" when there are none>
   - *Needs*: <earlier commit, if not the one before>
   - *Settled*: <decision rows or sections that already cover the design>
   - *Done when*: <the check that proves it: tests, count, command>
@@ -22,6 +23,7 @@ Written by `/plan-create-implementation`, read by `/next-commit` in its first st
 - Label: number plus letter (3b). No other scheme.
 - `*(mechanical)*` only when no logic changes; `/next-commit` still checks coverage first.
 - `Behaviours` is the plan's input to the test table, not the table. `/next-commit` adds cases it finds.
-- Omit a sub-bullet that is empty; never pad.
+- *New shared pieces* always appears, as "none" when empty. Any other empty sub-bullet is omitted; never pad.
+- A commit that adds a shared piece its line does not list is not plan-conformant (see `/next-commit`'s outline.md).
 - The same layout applies to the commit lines in the doc and to the presented plan.
 - The outcome line says what the admin, customer or developer can now do, in plain words. It names no function, type or file.

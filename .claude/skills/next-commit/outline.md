@@ -4,6 +4,8 @@ Used in step 2 of [SKILL.md](SKILL.md). The writing rules are in CLAUDE.md (*Wri
 
 **Every outline, short or full, ends the turn: no tool calls after it in the same message. Wait for the owner's reply; a note saying "my pick" is not approval.**
 
+**Exception:** when the owner typed `go` and the commit is plan-conformant, post the short outline and keep working in the same turn (tests first, `/simplify`, checks, hand-off). If it is not plan-conformant, say which condition failed, send the full outline and wait.
+
 ## Opening (every outline, short or full)
 
 Start with a plain-language heading sentence saying what the commit does (for example "Send queued emails automatically"), then three lines. Use no function, file or type names in them; a reader who has not seen the code must follow them.
@@ -18,7 +20,7 @@ Code names appear only from *What* onward. If *Why this way* needs type-system t
 
 A commit is **mechanical** if it changes no logic lines, or existing tests already pin every touched line (the coverage check in step 1). Typical cases: file moves, renames, splits of a file with the same content, doc-only changes, lint-rule fixes that change no behaviour.
 
-It is also eligible if it is **plan-conformant**: all three hold. The plan line has no open question (any user-visible text, error code or error shape the line leaves unstated counts as one); nothing read in step 1 deviates from the line; no decision row will be added. A plan-conformant commit may contain logic.
+It is also eligible if it is **plan-conformant**: all four hold. The plan line has no open question (any user-visible text, error code or error shape the line leaves unstated counts as one); nothing read in step 1 deviates from the line; no decision row will be added; the commit adds no shared piece the line's *New shared pieces* omits (if it does, use the full outline and list the piece under *Questions*). A plan-conformant commit may contain logic.
 
 Give a **short outline** of about 5 lines after the opening.
 - It has: the files (with the per-folder BEFORE/AFTER diagram for moves); the check that proves nothing changed (type check, test count before and after); the doc tick; the file count; the *Preflight* line.
@@ -35,7 +37,7 @@ After the opening:
 
 - **Terms:** define every specialized term the outline uses: what it means here, why use it, the alternatives. Never reuse a domain word (start, schedule, price, status) for something else; a new term is defined where it first appears.
 - **What:** each file to add or change, as a table of links and what changes in it, and the total file count. For each new function longer than about 15 lines, list the small named functions it will be composed of, so the split is reviewed before any code exists. Name the existing helpers you will reuse. For moves, splits and renames, include the per-folder diagrams.
-- **Shared with the sibling:** for a commit that adds files beside a sibling (create and edit, two pages), list what is reused from it and what is copied. A copy needs a reason it cannot be shared; if there is none, extract the shared piece in this commit and list it under *What*.
+- **Differences from *New shared pieces*:** compare the commit line's *New shared pieces* with what this commit reuses and copies beside a sibling (create and edit, two pages). A copy needs a reason it cannot be shared. A shared piece the line does not list goes under *Questions*.
 - **Flow:** for a commit with logic, the diagram in [../_shared/flow-diagram.md](../_shared/flow-diagram.md), so the owner approves the behaviour and not only the files.
 - **Trade-offs:** only alternatives that were strong contenders, one bullet each: what it would give, what it would cost, why you didn't pick it. If no alternative is strong, write "none worth listing"; never add a weak one to fill the section.
 - **Questions:** any design or behaviour change not already decided in the doc, each with your recommendation.
