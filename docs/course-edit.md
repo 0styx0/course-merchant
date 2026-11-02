@@ -37,7 +37,69 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **5c.** Create's "save the details, then upload the image" logic is a shared hook (`use-save-then-upload-image.ts`); create keeps only its draft create-or-update and draft id, and behaves the same.
   - [x] **5d.** Saving an edited course uploads a newly chosen image after the details (no file chosen: only the `PUT`); the shared save hook works for both forms and skips the upload when no image is chosen. The picker is not on screen yet.
   - [x] **5e.** The admin sees the course's current image, or "No image yet", on the edit page and replaces it by choosing a file and saving.
-- [ ] **6. Status on edit.** Published, drafted, archived and deleted, with a warning before publishing without an image and a confirmation before deleting. **Next** (split it into commits with `/plan-create-implementation course-edit`)
+- [ ] **6. Status on edit.** Published, drafted, archived and deleted, with a note that publishing needs an image and a confirmation before deleting.
+  - [ ] **6a.** Saving an edited course uploads a newly chosen image before its details. **Next**
+    - *Files*:
+      - [use-save-then-upload-image.ts](../web/src/features/admin-courses/course-form/hooks/use-save-then-upload-image.ts) (its shared steps move out)
+      - `course-form/hooks/use-save-steps.ts` (new: try/catch, "already saved" note, saved flag, going home, `uploadChosenImage`)
+      - [use-save-edited-course.ts](../web/src/features/admin-courses/edit-course/use-save-edited-course.ts) (image, then details)
+      - folder: `course-form/hooks/` 5 → 6
+    - *Behaviours*:
+      - Image chosen: the upload runs, then the `PUT`; success goes home.
+      - Upload refused: no `PUT`; the API's message and the image field error show; the form is kept.
+      - Upload fine, `PUT` refused: the message says the image was saved, plus the API's detail.
+      - Retry after that: skips the upload, because the image is already stored.
+      - Action throws after the upload: the thrown message mentions the saved image.
+      - No image chosen: only the `PUT`.
+      - Create's order and messages stay unchanged; its tests pass as they are.
+    - *New shared pieces*: `use-save-steps.ts`, used by create's and edit's orders.
+    - *Settled*: the decision row "Edit uploads a newly chosen image before saving the details".
+    - *Done when*: the new tests pass and create's tests pass unchanged.
+  - [ ] **6b.** The edit code holds the course's status as a form value and saves it. Not on screen yet.
+    - *Files*:
+      - [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (status joins the form values; "fields sent back unchanged" goes away)
+      - [edit-course-form-schema.ts](../web/src/features/admin-courses/validation/edit-course-form-schema.ts)
+      - [save-edited-details.action.ts](../web/src/features/admin-courses/save-course/edit/save-edited-details.action.ts)
+      - [field-errors-from-problem.ts](../web/src/features/admin-courses/save-course/field-errors-from-problem.ts)
+    - *Behaviours*:
+      - The loaded status prefills; saving sends it as loaded.
+      - API 400 on `/status` (for example "Upload an image before publishing.") puts its detail on the status field.
+    - *New shared pieces*: none
+    - *Needs*: 6a
+    - *Done when*: prefill, schema, action and error-mapping tests pass.
+  - [ ] **6c.** The admin sees the course's status and changes it.
+    - *Files*:
+      - `components/ui/radio-group.tsx` (vendored)
+      - `edit-course/status/status-section.tsx` (new)
+      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx)
+      - [edit-course-fields.ts](../web/src/features/admin-courses/edit-course/edit-course-fields.ts)
+      - [course-field-labels-and-price-row-names.ts](../web/src/features/admin-courses/course-form/fields/course-field-labels-and-price-row-names.ts)
+      - the page intro in `app/admin/(signed-in)/courses/[courseId]/edit/page.tsx`
+    - *Behaviours*:
+      - First load: the loaded status is chosen.
+      - The Published option says "Needs an image" while the course has none stored.
+      - The API's refusal to publish without an image shows on the status field.
+      - The error list names Status and focuses it.
+      - The arrow keys move between options.
+    - *New shared pieces*: none
+    - *Needs*: 6b
+    - *Done when*: form tests pass and the owner has used the page in `dev:mock`.
+  - [ ] **6d.** Deleting asks for confirmation first.
+    - *Files*:
+      - `components/ui/alert-dialog.tsx` (vendored)
+      - `edit-course/status/delete-confirmation.tsx` (new)
+      - a small hook in `edit-course/status/` that pulls the status logic out of `edit-course-form.tsx`
+      - [edit-course.spec.ts](../web/tests/browser/admin-courses/edit-course.spec.ts)
+      - docs and the README status
+    - *Behaviours*:
+      - Invalid form: the usual errors, no dialog.
+      - The dialog opens only after a valid Save with Deleted chosen.
+      - "Keep the course" or Escape: the dialog closes, nothing is sent, the form is kept.
+      - "Delete course": saves with the checked values, then goes home.
+      - A course already deleted: Save runs with no dialog.
+    - *New shared pieces*: none
+    - *Needs*: 6c
+    - *Done when*: unit and Playwright tests pass and the owner has used the page.
 
 ## Principles
 
@@ -67,7 +129,9 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 | A price row counts as unchanged when its amount equals a loaded future price's and its converted time equals that price's time with the seconds dropped. It is then sent exactly as loaded | Stored price times can hold seconds (create's "when saved" is now + 1 minute), and the boxes show minutes only. An exact comparison would call an untouched row changed and refuse it as too soon, or delete and re-insert it. A one-minute window would treat a row moved by one minute as unchanged and lose the edit. The cost: a time in the hour a daylight-saving change repeats can't be converted, so that price must be moved before the course saves; accepted as rare, as for the schedule | An exact comparison of converted moments, as the schedule does (breaks for prices with seconds; low); comparing the boxes with the loaded price's boxes (also handles the repeated hour; costs a second comparison path; low) |
 | The page splits the loaded prices into those in effect and future ones once, when it renders on the server | The server and the browser would otherwise each use their own clock, so a price starting during the load could render differently in each. The cost: a future price that starts while the page is open stays an editable row; sent untouched, the API keeps it, and removed, the API keeps it anyway | Splitting in the browser on each render (live; risks a mismatch between the two renders and rows that move under the admin; medium) |
 | On edit, an empty price date and time means "when you save" (now + 1 minute, as create's request). The prices in effect show as a read-only list, oldest first, the latest marked "current price", in the chosen zone (revisit after use) | Create's "when the course is published" is wrong for a course that is already published. The full list is what the PUT sends back | Requiring a date and time on every edit row (more typing for an immediate change; low); showing only the current price (shorter; hides prices the PUT keeps; low) |
-| Create and edit share one save hook: save the details, then upload the image | Without it, the "details saved, image failed" message, the retry and the thrown-action note would be written twice and drift apart. The cost: edit can't upload while its details `PUT` is still running, so a save takes the two steps' time | Uploading at the same time as the `PUT` (faster; needs edit's own save code and a message for each of four outcomes, and nothing shared; medium) |
+| Create and edit share the save steps (messages, saved flag, going home); each picks its own order of image and details | Without it, the "details saved, image failed" message, the retry and the thrown-action note would be written twice and drift apart. The cost: edit can't upload while its details `PUT` is still running, so a save takes the two steps' time | Uploading at the same time as the `PUT` (faster; needs edit's own save code and a message for each of four outcomes, and nothing shared; medium) |
+| Edit uploads a newly chosen image before saving the details; create keeps details then image | One Save can publish a course together with its first image, because the API refuses publishing with no stored image. The cost: a refused `PUT` leaves the new image stored anyway, so a retry skips the upload. Create can't upload first, since it needs the new course's id | Details first, then image (publishing a first image takes two saves; low); three steps with a second `PUT` (a new partial-failure case; medium) |
+| The browser doesn't check "publishing needs an image"; the API's refusal shows on the status field, and the Published option says "Needs an image" | The image is stored before the `PUT` runs, so the API's own check is right whenever one is chosen or stored, and the browser would only copy it | A browser check with a `hasImage` value passed to the schema and action (a second copy of the rule; medium) |
 | After a partly failed save, the next Save changes sends both steps again | Create already does this (its draft update repeats). Edit's form always sends what the admin sees. The cost: a time changed and saved by the first click, now compared with the originally loaded time, can be refused as "in the past" if it has since passed; accepted as rare | Remembering which step is stored and redoing only the failed one (extra state, and edits to the stored step are dropped; medium) |
 | The stored image is a plain `<img>` from a web route `/admin/courses/{id}/image` | The API's admin image is never cached, so the admin sees what is stored. `next/image` would cache an old copy and needs an allow-list entry | `next/image` (stale after replacing; low) |
 | The delete confirmation uses shadcn alert-dialog | Matches the existing shadcn/base-ui setup | An inline confirmation step |
@@ -237,11 +301,38 @@ Leave the date and time empty to start when you save.
 
 ## Step 6. Status on edit
 
-- Why here: the publish warning needs to know whether an image exists.
+- Why here: publishing needs an image, which step 5 now provides.
 - Needs: 5.
-- Size: 3 commits.
-- Risk: none.
-- Done when: the page warns before publishing without an image, `deleted` asks for confirmation (shadcn alert-dialog), and the owner has used the page in `dev:mock`.
+- Size: 4 commits (6a the save order; 6b the status saved; 6c the control on screen; 6d the delete confirmation). The map said 3.
+- Risk: the shared save hook changes order for edit only; create's tests must pass unchanged.
+- Done when: the owner changes a course's status and deletes one in `dev:mock`; publishing a course with a newly chosen first image works in one save.
+- Design notes *(temporary)*:
+  - The API refuses a change to `published` with no stored image (`/status`, "Upload an image before publishing."); an already published course isn't re-checked.
+  - Flow:
+
+```
+Admin picks a status, clicks Save changes
+├── Deleted, not already deleted                    6d
+│   └── dialog: Keep → form kept; Delete → continues
+├── image chosen → upload first                     6a
+│   └── refused → message, no PUT, form kept
+└── PUT with the form's status                      6b
+    ├── API 400 /status → status field, form kept   6b, shown 6c
+    └── success → home                              existing
+```
+
+  - Page sketch (Status section, after 6c):
+
+```
+Status — Who can see the course.
+  (•) Published  Students can find and buy it. Needs an image.
+  ( ) Drafted    Hidden while you work on it.
+  ( ) Archived   Hidden, can be published again.
+  ( ) Deleted    Removed from the admin list.
+[Save changes]
+```
+
+  - Folder counts: `course-form/hooks/` 5 → 6; `edit-course/` stays at 7 files, the new ones go in `status/`.
 
 ## Out of scope
 
@@ -261,3 +352,4 @@ Leave the date and time empty to start when you save.
 | 2026-11-02 | 4a: the unchanged rule became "the time equals the loaded one with seconds dropped", because a one-minute window treated a row moved by one minute as unchanged and lost the edit. The dollar conversions moved to `price/dollar-amount.ts`, not the schema file, because the price checks importing the schema file would form an import loop. 4a changed 8 files with the owner's OK. |
 | 2026-11-02 | 4c: built as one commit of 9 files with the owner's OK (the line named 7). Create's price row schema and the "row still holds a loaded future price" match are now exported, so edit reuses them instead of copying the rules. |
 | 2026-11-02 | Milestone 5: split into 5 commits (the map said 2 to 3). Two mechanical commits (5a, 5c) move create's image input and its "details, then image" save into shared pieces, so edit reuses them instead of writing a second copy; the details save and the screen follow as 5d and 5e. The owner chose saving in order, like create, over uploading at the same time as the details. |
+| 2026-11-02 | Milestone 6: split into 4 commits (the map said 3). The owner chose uploading the image before the details on edit, so one save can publish a course with its first image, and dropped the browser check for "publishing needs an image" (the API's refusal shows on the status field). |
