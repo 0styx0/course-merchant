@@ -26,7 +26,74 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3b.** The code can show a stored time as date and time boxes in a zone, and check an edited schedule (an unchanged time may be in the past, a changed one may not). Nothing uses it yet.
   - [x] **3c.** Saving sends the start and end from the four date and time boxes, and the browser and the action both refuse a broken schedule. The schedule line follows the boxes. The boxes aren't on screen yet.
   - [x] **3d.** The admin sees and edits the four date and time boxes; problems that compare boxes show on the schedule line, and a zone change re-checks the schedule.
-- [ ] **4. Prices on edit.** Prices in effect are read-only; future prices can be edited, added and removed. **Next** (run `/plan-create-implementation course-edit` to split it into commits)
+- [ ] **4. Prices on edit.** Prices in effect are read-only; future prices can be edited, added and removed.
+  - [ ] **4a.** The code can check edited price rows and turn stored cents into dollar text. Create's price checks run through the same code and behave the same. Nothing on edit uses it yet. **Next**
+    - *Files*:
+      - `validation/form-issue-and-time-conversion.ts` (new: `issueAt`, `FormIssue` and `toUtcMsOrIssue` move here, so the price checks and the cross-field checks don't import each other)
+      - [course-form-cross-field-issues.ts](../web/src/features/admin-courses/validation/course-form-cross-field-issues.ts) (the price checks move out; create passes no loaded prices)
+      - `validation/price-row-issues.ts` (new, with a unit test: create's price checks plus the unchanged rule and the words for an empty start)
+      - [course-form-schema.ts](../web/src/features/admin-courses/validation/course-form-schema.ts) (cents to dollar text and back, beside `normalizeDollars`; create's `toCents` moves here)
+      - [to-course-request.ts](../web/src/features/admin-courses/save-course/to-course-request.ts) (uses the moved conversion)
+      - [edit-schedule-issues.ts](../web/src/features/admin-courses/validation/edit-schedule-issues.ts) (import path only)
+      - `validation/` 7 → 9 files.
+    - *Behaviours*:
+      - A row whose amount equals a loaded future price's, with a converted time less than a minute from it, may start in the past or less than a minute ahead.
+      - A time moved by a minute or more counts as changed.
+      - A changed row less than a minute ahead gets "Choose a time at least a minute from now, or leave both empty to start …" with the caller's words for an empty start.
+      - A changed amount at an unchanged time counts as changed.
+      - After a zone change the row's time moves with the zone, so the row is checked as changed.
+      - A loaded price with seconds (the boxes show it to the minute) still counts as unchanged when untouched.
+      - A loaded price in an hour a daylight-saving change repeats gets create's daylight-saving message, as the schedule does.
+      - Two rows at the same moment: "Two prices can't take effect at the same time." on the later row.
+      - Half-filled and daylight-saving rows keep create's messages.
+      - 7950 cents read as "79.50", and 0 as "0.00"; the text converts back to the same cents.
+    - *Done when*: the new unit tests pass, and create's schema and form price tests pass unchanged.
+  - [ ] **4b.** The shared price pieces take what create and edit decide differently from the page that uses them: whether a row shows Remove, the section's help line, and the words for an empty start. The price rows' error-list entries become shared. Create behaves the same. *(mechanical, coverage first: no test pins create's help line yet)*
+    - *Files*:
+      - [price-row.tsx](../web/src/features/admin-courses/price/price-row.tsx) (takes whether Remove shows)
+      - [course-form-sections.tsx](../web/src/features/admin-courses/course-form/sections/course-form-sections.tsx) (`PricingSection` takes its help line)
+      - [price-summary.ts](../web/src/features/admin-courses/price/price-summary.ts) (takes the words for an empty start; exports its dollar formatting for 4d)
+      - [price-row-labels.ts](../web/src/features/admin-courses/price/price-row-labels.ts) (receives `priceRowFields`)
+      - [create-course-fields.ts](../web/src/features/admin-courses/create-course/create-course-fields.ts), [create-course-sections.tsx](../web/src/features/admin-courses/create-course/create-course-sections.tsx), [create-course-form.tsx](../web/src/features/admin-courses/create-course/create-course-form.tsx) (pass create's current values)
+    - *Done when*: create's tests and `create-course.spec.ts` pass with the same count, plus the new help-line test.
+  - [ ] **4c.** Saving sends the edited prices. The page splits the loaded prices into those in effect and future ones when it renders. Future ones become price rows, the PUT sends the rows and then the prices in effect as loaded, and the browser and the action refuse broken rows. The rows aren't on screen yet.
+    - *Files*:
+      - [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (the split at render time; rows in the course's zone; the "fields sent back unchanged" keep only the status)
+      - [edit-course-form-schema.ts](../web/src/features/admin-courses/validation/edit-course-form-schema.ts) (create's row schema, 4a's checks with the loaded future prices, "Add at least one price." only when none is in effect)
+      - [save-edited-details.action.ts](../web/src/features/admin-courses/save-course/edit/save-edited-details.action.ts) (an unchanged row goes as the loaded price; others converted, an empty start as now + 1 minute)
+      - [to-course-request.ts](../web/src/features/admin-courses/save-course/to-course-request.ts) (exports the row-to-request-price conversion)
+      - [use-save-edited-course.ts](../web/src/features/admin-courses/edit-course/use-save-edited-course.ts), [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (pass the loaded prices)
+      - [edit-course-fields.ts](../web/src/features/admin-courses/edit-course/edit-course-fields.ts) (price rows in the error list, so a price problem never blocks Save without a message)
+      - `save-course/edit/` 4 → 5 files (a prices test).
+    - *Behaviours*:
+      - A price starting at or before the render moment goes to the prices in effect; a later one becomes a row.
+      - A save with untouched rows sends exactly the loaded prices (test).
+      - A course with a price in effect and a future price, saved untouched, succeeds.
+      - An edited amount sends a new entry in place of the loaded one.
+      - A row with an empty date and time sends now + 1 minute.
+      - The action refuses a changed row in the past with the message on `prices.N.effectiveTimeOfDay`, and sends no request.
+      - No rows and none in effect: the action refuses with "Add at least one price.", and sends no request.
+      - No rows and some in effect: the PUT holds only the prices in effect.
+      - An API 400 at `/prices/N/effectiveAt` shows on row N's time box (existing mapping).
+    - *Needs*: 4a.
+  - [ ] **4d.** The admin sees the prices in effect as a read-only list, latest marked "current price", and edits, adds and removes future price rows. The page intro says only status can't be changed yet.
+    - *Files*:
+      - `price/prices-in-effect.tsx` (new; `price/` 5 → 6 files)
+      - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx) (edit's pricing section; the zone field re-checks the prices)
+      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (the row list and the price summary)
+      - [page.tsx](../web/src/app/admin/(signed-in)/courses/[courseId]/edit/page.tsx) (intro: "Change the course details. Status can't be changed here yet.")
+      - [get-course-as-admin.ts](../web/src/mocks/handlers/get-course-as-admin.ts) and its fixture (a course with one price in effect and one future price)
+      - `edit-course/tests/` 5 → 6 files (a prices test).
+    - *Behaviours*:
+      - The list shows the prices in effect oldest first, the latest with "(current price)", in the chosen zone; it is absent when none is in effect.
+      - A zone change shows the list and the summary in the new zone and re-checks the rows.
+      - The only row shows Remove when a price is in effect, and hides it otherwise.
+      - An added row with an empty date and time reads "from when you save" in the summary, under the help line "Leave the date and time empty to start when you save."
+      - Removing a row clears a same-time error on the other row.
+      - A refused save lists price fields by label ("Price 2 start time").
+      - Playwright: the mocked course shows its list and row; the admin changes the row's amount, saves and lands on `/`.
+    - *Needs*: 4b, 4c.
+    - *Done when*: the tests pass and the owner has used the page in `dev:mock`.
 - [ ] **5. Image upload on edit.** The page shows the current image and uploads a new one in its own step.
 - [ ] **6. Status on edit.** Published, drafted, archived and deleted, with a warning before publishing without an image and a confirmation before deleting.
 
@@ -37,7 +104,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - **Create and edit share no form type and no state.** Each owns its `useForm`, resolver, defaults and value type. Shared blocks are generic and take field names from the parent.
 - **Save is a full PUT.** Every field, every time. Strip what the API rejects: the course id, `enrollments`, `status.changedAt` (send status as a plain string) and each price's id.
 - **A failed save changes nothing,** so the form stays as it is and shows the errors. Errors can arrive in two rounds: a format error hides the state errors (past times, schedule) until fixed, so expect a second 400.
-- **The "must be in the future" check applies only to a changed time,** for the schedule and for price times alike. A schedule time counts as unchanged when the boxes convert to the stored moment; step 4 decides price times.
+- **The "must be in the future" check applies only to a changed time,** for the schedule and for price times alike. A schedule time counts as unchanged when the boxes convert to the stored moment; a price row counts as unchanged when its amount equals a loaded future price's and its converted time is less than a minute from that price's.
 - **The browser checks help the admin; the API decides.** Same as the create page.
 - **After saving, the admin goes to `/`,** as on the create page.
 - **Until the web login lands,** admin calls carry no token, so against the real API the page shows a 401. Tests and `yarn dev:mock` use MSW.
@@ -48,13 +115,16 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 | Decision | Why | Rejected |
 |---|---|---|
 | Create and edit are two separate form components, composed from shared sections, fields and hooks | Follows the owner's rule to compose rather than branch. No `mode` prop, and each page holds only its own rules (revisit after use) | One form with a `mode` prop (conditionals everywhere); a fully separate copy (drifts) |
-| Start and end are always converted from the boxes. The browser compares the result with the stored time only to allow an unchanged time in the past. Price times are decided in step 4 | One path for every save, so nothing tracks changed and unchanged times. The cost: a time in the hour that daylight saving repeats can't be saved; accepted as rare | Sending the stored string when the boxes are unchanged (handles that repeated hour; costs a second path; low) |
+| Start and end are always converted from the boxes. The browser compares the result with the stored time only to allow an unchanged time in the past. Price rows follow their own rule (row below) | One path for every save, so nothing tracks changed and unchanged times. The cost: a time in the hour that daylight saving repeats can't be saved; accepted as rare | Sending the stored string when the boxes are unchanged (handles that repeated hour; costs a second path; low) |
 | Unchanged and in-effect prices are sent back as loaded | The API keeps exact matches and their ids, so the page tracks no ids | Leaving them out (also safe, but the form would hold less than the API) |
 | Shared blocks are generic over the form's own value type and take field names from the parent. Sections are layout with the fields as children. There is no shared value type and no cast | Create's form has an extra field, the image, that edit's doesn't. If both pages shared one form type, edit would have to carry a field it never uses, or the code would need a trick that switches off TypeScript's checking (confirmed with `tsc`). Instead each page keeps its own form type, and the shared pieces work with whichever fields the page gives them. An earlier attempt failed because field names were written inside the shared pieces, not because sharing was impossible (an architect review re-tested it). The compiler can't check a field name inside a shared piece, so the page passes the names in. They are expected to match between create and edit; this setup exists to avoid the trick, not to allow different names | A shared `CourseFormValues` with one cast, `savedFieldsForm` (leaks create's extra field into the shared code); `FormProvider` and `useFormContext` (moves the unchecked step into the library; blocks can't render alone); image outside the form (changes create's validation) |
 | Until steps 3, 4 and 6, the edit form holds only name, summary, description, content link and time zone. Start and end times, prices and status go back in the PUT exactly as loaded (the "fields sent back unchanged") | Their boxes need edit's own rules (an unchanged time sent as the original UTC string, in-effect prices read-only), which are steps 3 and 4. Carrying them makes every course savable now, started ones included | Boxes now with no browser time checks (gives a whole form at once; costs most of 3 and 4 pulled forward, or 400s from the API on unchanged past times; high complexity); re-reading the course in the action and merging (gives fresh values; costs a GET per save and is thrown away once those fields move into the form; medium) |
 | On edit, until step 3 ships, changing the time zone keeps the start and end moments, and the schedule line shows them in the new zone. From 3c the typed date and time stay and the moment moves (6:00 PM EST becomes 6:00 PM CST) (revisit after use) | Until the boxes exist, the kept times are sent unchanged, so they can't move. After that, a zone change usually fixes a zone entered wrongly. The cost: on a course that has started, the moved time counts as changed and is refused as being in the past | Keeping the moment and re-showing the boxes in the new zone (can fix a started course's zone; costs a hidden recalculation the admin doesn't expect; medium) |
 | The edit checks are built for each course from the stored start and end, which sit beside the form values, not inside them | The checks need the stored times, and the form values stay exactly what the admin edits | Hidden form values (a fixed schema and fewer props; puts data the admin can't edit into the values; low) |
 | The browser gets the form's values and the fields sent back unchanged, never the whole `AdminCourse` | Its `enrollments` hold customers' emails and payment details, and a client component's props are sent to the browser | Passing `AdminCourse` to the form (simpler props; leaks customer data into the page) |
+| A price row counts as unchanged when its amount equals a loaded future price's and its converted time is less than a minute from that price's. It is then sent exactly as loaded | Stored price times can hold seconds (create's "when saved" is now + 1 minute), and the boxes show minutes only. An exact comparison would call an untouched row changed, refuse it as too soon, or delete and re-insert it. The cost: a time in the hour a daylight-saving change repeats can't be converted, so that price must be moved before the course saves; accepted as rare, as for the schedule | An exact comparison of converted moments, as the schedule does (breaks for prices with seconds; low); comparing the boxes with the loaded price's boxes (also handles the repeated hour; costs a second comparison path; low) |
+| The page splits the loaded prices into those in effect and future ones once, when it renders on the server | The server and the browser would otherwise each use their own clock, so a price starting during the load could render differently in each. The cost: a future price that starts while the page is open stays an editable row; sent untouched, the API keeps it, and removed, the API keeps it anyway | Splitting in the browser on each render (live; risks a mismatch between the two renders and rows that move under the admin; medium) |
+| On edit, an empty price date and time means "when you save" (now + 1 minute, as create's request). The prices in effect show as a read-only list, oldest first, the latest marked "current price", in the chosen zone (revisit after use) | Create's "when the course is published" is wrong for a course that is already published. The full list is what the PUT sends back | Requiring a date and time on every edit row (more typing for an immediate change; low); showing only the current price (shorter; hides prices the PUT keeps; low) |
 | The delete confirmation uses shadcn alert-dialog | Matches the existing shadcn/base-ui setup | An inline confirmation step |
 
 ## Step 1. Create form rebuilt from shared building blocks
@@ -161,10 +231,55 @@ Schedule — When the course runs.
 
 - Why here: same unchanged-time rule as step 3, applied to price times.
 - Needs: 2.
-- Size: 3 to 4 commits.
-- Risk: turning stored cents into dollar boxes; otherwise none beyond step 3's.
+- Size: 4 commits (4a the checks; 4b shared pieces take create's choices as props; 4c the save; 4d the list and rows on screen).
+- Risk: turning stored cents into dollar boxes, and stored price times with seconds; otherwise none beyond step 3's.
 - Done when: tests cover in-effect prices read-only, a new or edited price in the past refused, duplicate times refused, at least one price required only when none is in effect; the owner has used the page.
-- Can wait: whether the duplicate-time rule already exists in [course-form-cross-field-issues.ts](../web/src/features/admin-courses/validation/course-form-cross-field-issues.ts).
+- Design notes *(temporary)*:
+  - **Prices in effect**: loaded prices starting at or before the moment the page renders. **Loaded future prices**: the rest. Both keep the API's shape without ids and sit beside the form values, like the stored schedule. Only the future ones become rows.
+  - The duplicate-time rule already exists in create's checks; 4a moves it to the shared price checks.
+  - The PUT lists the rows first, in row order, then the prices in effect, so the API's `/prices/N` errors land on row N with the existing mapping.
+  - Remove shows when there are two or more rows, or any price is in effect. So "Add at least one price." can only come from the action or the API.
+  - Rows keep the typed date and time on a zone change, as the schedule does; the row then counts as changed.
+  - The storefront sells only in `COURSE_CURRENCY`, so rows have no currency; a changed row is sent in it.
+  - The action trusts the loaded prices the browser sends back, as it does the status; the API refuses any change to a price in effect.
+  - Test fixtures need a future price at a fixed far date (the shared fixture's only price is already in effect).
+  - Reuse: `utcToWallClock` (via the prefill's stored-time helper), `formatMoment`, `priceRowLabels`, `priceRowNames`, `PriceRow`, `PricingSection`, `PriceSchedule`, `priceSummary`, `TimeZoneField`'s `recheck`, `fieldErrorsFromProblem`.
+  - Flow:
+
+```
+Admin opens the edit page
+├── prices split: in effect / future, at render           4c
+├── in-effect list, latest "current price"                4d
+└── future prices become rows (cents → dollars)           4c, shown 4d
+Admin edits, adds or removes a row; changes the zone      4d (props 4b)
+Admin clicks Save changes
+└── per-course schema checks the rows                     4c (rules 4a)
+    ├── half-filled / daylight-saving                     existing, 4a
+    ├── same amount, time < 1 minute off → may be past    4a
+    ├── changed, < 1 minute ahead → "Choose a time …"     4a
+    ├── two rows same time → "Two prices can't …"         4a
+    ├── no rows, none in effect → "Add at least one price." 4c
+    │   (form kept, no request; listed in the error list  4c)
+    └── fine → action re-checks; PUT rows (untouched as loaded,
+        empty start now + 1 minute), then in-effect as loaded   4c
+        ├── API 400 /prices/N → message on row N, form kept     existing (2d)
+        └── success → home page                                 existing
+```
+
+  - Page sketch (Pricing section, after 4d):
+
+```
+Pricing — What students pay, in US dollars, and when each price starts.
+Enter 0 for a free course.
+Leave the date and time empty to start when you save.
+  Prices in effect (America/New_York)          [absent when none]
+    $79 from Oct 15, 2026, 2:31 PM
+    $99 from Oct 20, 2026, 9:00 AM (current price)
+  Price  [$ 129.00]  Price start date [2027-01-01]  Price start time [09:00]  [Remove]
+  [Add price]
+  Price schedule (America/New_York)            [absent until a row has input]
+    I. $129 from Jan 1, 2027, 9:00 AM
+```
 
 ## Step 5. Image upload on edit
 
@@ -196,3 +311,4 @@ Schedule — When the course runs.
 | 2026-10-30 | Milestone 1: the 2 planned commits became 6 (1a done; 1b split into 1b–1f) after the size check. Two tests are added first because none pinned them. |
 | 2026-10-30 | Milestone 2: split into 5 commits. A course saved from the create page has a price already in effect, so price and time boxes can't be saved before steps 3 and 4. Step 2 therefore edits five fields and sends start, end, prices and status back as loaded; the UTC-to-boxes and cents-to-dollars conversions moved to steps 3 and 4. |
 | 2026-11-02 | Milestone 3: split into 4 commits (the map said 2 to 3), because the stored times must move out of "sent back unchanged" first and the checks are worth reviewing apart from the save. Two decisions changed: a zone change now keeps the typed times and moves the moment, and start and end are always converted from the boxes. |
+| 2026-11-02 | Milestone 4: split into 4 commits. A review found that stored price times can hold seconds, so a price row counts as unchanged when its amount matches and its time is less than a minute from the loaded one. The shared price pieces' props moved into one mechanical commit so the list and rows go on screen together. |
