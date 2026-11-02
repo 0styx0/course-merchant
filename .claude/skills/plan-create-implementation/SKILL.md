@@ -1,7 +1,6 @@
 ---
 name: plan-create-implementation
 description: Second planning pass. Design the Next milestone of a design doc, settle its open questions, and split it into well-formed commit lines in the doc for /next-commit to build. Use when a milestone is Next and isn't split into commits yet, or the owner says "plan the next milestone".
-disable-model-invocation: false
 model: opus
 effort: high
 argument-hint: "[module: the name of a docs/<module>.md]"
@@ -10,20 +9,31 @@ arguments: [module]
 
 # Plan implementation (one milestone)
 
-Module: `$module` (the matching `docs/<module>.md`). Follow CLAUDE.md's working agreements throughout, and the chat rules in [../_shared/chat-rules.md](../_shared/chat-rules.md). This pass designs **one milestone** just before it is built: enough that `/next-commit` can outline and test every commit without reopening a design question, and no more.
+Module: `$module` (the matching `docs/<module>.md`; empty means "find it from the Next marks below"). This pass designs **one milestone** just before it is built: enough that `/next-commit` can outline and test every commit without reopening a design question, and no more.
+
+**Run in plan mode.** The `model` and `effort` lines above last only for the turn that starts the skill; after that the session's settings apply (`opusplan` gives Opus in plan mode and Sonnet outside it). If plan mode is off, tell the owner to switch it on before you continue.
+
+Facts gathered before you start:
+
+- Next marks: !`grep -n '\*\*Next\*\*' docs/*.md`
+- Uncommitted changes: !`git status --short`
+
+## 0. Read now
+
+Read [../_shared/chat-rules.md](../_shared/chat-rules.md), [../_shared/milestone-line.md](../_shared/milestone-line.md), [../_shared/commit-line.md](../_shared/commit-line.md) and [../_shared/commit-size.md](../_shared/commit-size.md). Read [architecture-checklist.md](architecture-checklist.md) at step 4. Follow CLAUDE.md's working agreements throughout.
 
 ## 1. Find the milestone and what it builds on
 
-- A milestone flagged `*(spike)*` is planned as one commit line (see [commit-lines.md](commit-lines.md)).
-- **Confirm before working.** Work out which module and milestone you would plan (the `$module` argument if given, otherwise the docs that have a **Next** milestone not yet split into commits; `grep -n Next docs/*.md`). Then ask through the picker (AskUserQuestion), always, even when only one candidate exists or `$module` was given: the question names the module and the milestone (number and title); options are "Plan this one (Recommended)", one option per other candidate (at most two), and the free-text "Other" for anything else. Do not read the milestone's code or start designing until the owner answers. If there is no candidate, say so and stop.
-- Take the confirmed milestone from `docs/<module>.md` and its `## Step N.` section (format: [../_shared/milestone-line.md](../_shared/milestone-line.md)). If it is already split into commits, stop and suggest `/next-commit $module`.
-- Read its *Builds on* links and open questions, the Principles and Decisions, and the docs and rules it links.
+- A milestone flagged `*(spike)*` is planned as one commit line (see step 5).
+- **Confirm before working,** unless it is already unambiguous. It is unambiguous when `$module` is given and exactly one milestone of that doc is **Next** and not yet split into commits; then say "Planning module X, step N: title" in one line and go on. Otherwise ask through the picker (AskUserQuestion): the question names the module and the milestone (number and title); options are "Plan this one (Recommended)", one option per other candidate (at most two), and the free-text "Other". Do not read the milestone's code or start designing until the owner answers. If there is no candidate, say so and stop.
+- Take the milestone from `docs/<module>.md` and its `## Step N.` section. If it is already split into commits, stop and suggest `/next-commit` with the module name.
+- Read its *Builds on* links and open questions, the Principles, Decisions and *Journeys*, and the docs and rules it links.
 - Read the code it builds on: what earlier milestones added, and one sibling of each kind of file it will add (by line range). Grep for existing helpers before planning a new one; write down each helper you will reuse. Search for specific things. Never read generated files whole.
-- Run `git status --short`; mention uncommitted changes in files this milestone touches.
+- Mention uncommitted changes (above) in files this milestone touches.
 
 ## 2. Check the map still holds
 
-Run each *Re-measure* command and compare with what the section assumes, then look for other new facts since the overview: a library behaving differently than assumed, code that landed differently. For each, say what changed, why the decision may no longer hold, and your recommendation, **before** designing on it. The owner decides. If the map itself is wrong (order, size, a Principle), say so and ask before changing the Status list.
+Run `.claude/hooks/run-remeasure.sh docs/<module>.md` (it runs every *Re-measure* command in the doc) and compare with what the section assumes, then look for other new facts since the overview: a library behaving differently than assumed, code that landed differently. For each, say what changed, why the decision may no longer hold, and your recommendation, **before** designing on it. The owner decides. If the map itself is wrong (order, a Principle), say so and ask before changing the Status list.
 
 ## 3. Settle the open questions
 
@@ -34,27 +44,74 @@ Run each *Re-measure* command and compare with what the section assumes, then lo
 
 ## 4. Design what commits share
 
-Follow [architecture-checklist.md](architecture-checklist.md). Write down only what more than one commit depends on or what is expensive to change: shared data shapes, module and file boundaries, user-visible behaviour, security and limits. Define each new term once.
+Follow architecture-checklist.md. Write down only what more than one commit depends on or what is expensive to change: shared data shapes, module and file boundaries, user-visible behaviour, security and limits. Define each new term once.
 - Draw the milestone's flow as in [../_shared/flow-diagram.md](../_shared/flow-diagram.md), then use it to split the commits in step 5.
 
 ## 5. Split into commits
 
-- Format and rules: [commit-lines.md](commit-lines.md) and the format in [../_shared/commit-line.md](../_shared/commit-line.md).
-- Size: [../_shared/commit-size.md](../_shared/commit-size.md). Say the granularity in one line before the list (for example "7 commits; moves grouped per package"). If unsure how fine to split, ask once.
-- Start from the section's *Size*. If the milestone needs fewer than 2 or more than 5 commits, tell the owner the map was off and ask whether to re-cut it.
-- Number them (3a, 3b, ...), mark the first **Next**.
+Format: commit-line.md. Size: commit-size.md. How to cut:
+
+- **One outcome per commit,** stated first in plain words.
+- **Cut by review unit, not by file.** A commit is what the owner can review and revert in one piece. Same-kind changes (moves, renames, lint fixes, test splits) are one mechanical commit per package, not one per file or folder.
+- **Something on screen early.** In a milestone with a UI, the first or second commit puts a rough version of the result on a page the owner can open; later commits deepen it. A commit that ends with "nothing uses it yet" is allowed only when the next commit uses it.
+- **Order:**
+  1. shared definitions the next commit uses (data shapes, helpers, config). A "refactor to share" commit goes right before the commit that needs it, never earlier;
+  2. then each slice end to end, thinnest first (a slice = one user-visible behaviour, built through every layer it needs, over a layer built across many slices);
+  3. wiring into pages;
+  4. browser tests and docs last.
+- **Every commit is green and shippable alone:** build, lint and tests pass; nothing is left unused or half-wired that a later commit finishes (unless the line says "not used yet").
+- **Tests live in the commit that adds the behaviour.** List the behaviours, naming failure and edge cases, so the outline's table is not invented later. One bullet per behaviour, never a run-on line.
+- **Mechanical flag:** only for commits that change no logic. If existing tests may not pin the touched lines, say "coverage first".
+- **Dependencies:** a line says which commit it needs when the order is not obvious.
+- **Folders:** if the commit adds files to a folder that would pass the files-per-folder limit in CLAUDE.md, the line includes the grouping.
+- **A spike milestone** is one commit line flagged `*(spike)*`: no tests; the code is deleted or kept only if the answer needs it; it ends with the answer written in the doc and a proposed decision row.
+- Leave out exact test code, file contents and names that can be chosen inside one commit.
+
+Say the granularity in one line before the list (for example "7 commits; moves grouped per package"). If unsure how fine to split, ask once. Start from the section's *Size*; a different count is normal (the map sized it before the code was read), so say the new count and why in one line rather than asking, unless the milestone's outcome or order changes. Number the commits (3a, 3b, ...), mark the first **Next**.
 
 ## 6. Check the plan before presenting
 
-Run the self-check in [review.md](review.md): every line dry-run through the size check and the test-table question, folder counts, order. Fix what fails. Check that every branch in the flow diagram has exactly one commit that builds it. Then the subagent review in the same file when it applies.
+For each commit line:
+- Run the size check. Does it pass?
+- Could `/next-commit` write the test table (happy, failure, edge) from the line and the doc alone?
+- Is every decision it depends on a decision row or an answered question?
+- Are its files and the folder counts right (re-grep, do not trust memory)?
+- Is its mechanical flag right? Would it still be right if a test were missing?
+- Does the line have the *New shared pieces* field ("none" when empty)?
+- For each new file, grep its twin for the same job. If the twin has it and the plan doesn't share it, share it or write the reason as a Decision row.
+- Does the order hold if one commit is delayed?
+
+Across the plan:
+- Does the sum of commits deliver the milestone, and nothing else?
+- Does any commit leave unused code until a later one?
+- Does every branch in the flow diagram have exactly one commit that builds it?
+- Is something on screen after the first two commits (UI milestones)?
+
+Fix what fails. Then, when the milestone has more than 3 commits, adds a decision row, or changes the contract or database schema, call the `plan-reviewer` agent (Agent tool, `subagent_type: plan-reviewer`) with the draft plan and the files it names, and say it is a **commit plan**. Report which findings you accept and fix, and which you reject with a reason. Do not relay its full list.
 
 ## 7. Present
 
-Use [present.md](present.md). In plan mode present with ExitPlanMode; otherwise end your reply with it.
+Bullets only, at most ~600 words (this overrides the word cap in chat-rules.md), in this order so the owner can stop after the second section. In plan mode present with ExitPlanMode; otherwise end your reply with it.
+
+1. **Summary:** what the milestone delivers, the commit count and granularity, what changed from the overview.
+2. **Questions for you:** anything open (usually none).
+3. **Commits:** the lines in the format of commit-line.md, with one nested bullet per file and per behaviour.
+4. **Page sketch**, for a milestone that adds or reorders a page, section or field: an ASCII wireframe in one code block with the sections in order (titles and help text), the fields in order, and what shows while the page is empty. It fills in the part of the whole-page sketch in *Journeys*. The owner approves it with the plan.
+5. **Flow diagram** ([../_shared/flow-diagram.md](../_shared/flow-diagram.md)), for a milestone with logic, with the commit line that builds each step.
+6. **Design notes:** bullets by topic, from step 4.
+7. **Proposed decision rows:** the exact `| Decision | Why | Rejected |` text. For each rejected option: what it would give, what it would cost, and its complexity. Only strong contenders. A row deciding what shows, where, or in what order on a page ends its *Why* with "(revisit after use)".
+8. **Review result:** one line per accepted or rejected finding.
+9. **Terms:** only those the owner may not know.
+
+Link and diagram formats: [../_shared/output-format.md](../_shared/output-format.md).
 
 ## 8. After approval, write the doc
 
-- Replace the milestone's Status line with its commit lines (first one **Next**), in the layout of [../_shared/commit-line.md](../_shared/commit-line.md): a sub-bullet per field and one nested bullet per file, behaviour or other item. Every failure behaviour names the error code or message the caller sees; if you cannot name it, it is an open question. Never write a field as a `;`-joined paragraph. Extend the existing `## Step N. <milestone>` section (do not add a second one) with the design notes: keep *Done when* and *Builds on*, delete *Re-measure* and *Blocks the split* once answered, and mark notes that are only for building as *(temporary)* so `/next-commit` can cut them later. Add the approved decision rows. Move settled questions out of *Open questions*.
-- If the plan differs from the overview (an order change, a milestone added, cut or re-sized), add a row to the doc's *Changes* log.
-- Put the flow diagram in the milestone's `## Step N.` section as a design note marked *(temporary)*, so `/next-commit` can reuse it and cut it when the step ships.
-- Docs only. Hand off with the files changed, `` `docs($module): plan step N` `` as the suggested commit message, and a reminder to `/clear` before `/next-commit $module`.
+- Replace the milestone's Status line with its commit lines (first one **Next**), in the layout of commit-line.md: a sub-bullet per field and one nested bullet per file, behaviour or other item. Every failure behaviour names the error code or message the caller sees; if you cannot name it, it is an open question. Never write a field as a `;`-joined paragraph.
+- Extend the existing `## Step N. <milestone>` section (do not add a second one) with the design notes:
+  - keep *Done when* and *Builds on*; delete *Re-measure* and *Blocks the split* once answered;
+  - mark every design note *(temporary)* so `/next-commit` can cut them when the step ships; a lasting choice goes in a Decision row instead, never in both;
+  - put the flow diagram there too, marked *(temporary)*.
+- Add the approved decision rows. Move settled questions out of *Open questions*.
+- Add a row to the doc's *Changes* log only when the plan changes the order, adds or cuts a milestone, or changes a Principle. A different commit count than the overview's *Size* is not logged; the milestone's *Retro* line records it when the milestone ships.
+- Docs only. Hand off with the files changed, `` `docs(<module>): plan step N` `` as the suggested commit message (using the module name), and a reminder to `/clear` before `/next-commit` with the module name.

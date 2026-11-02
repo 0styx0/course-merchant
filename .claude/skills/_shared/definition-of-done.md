@@ -10,6 +10,7 @@ One list, used by `/next-commit` (step 4) and the hand-off. A commit is done whe
 - **Ran it**:
   - API commits: start the app or the browser test, do the behaviour once, and write one line of what you saw (`Ran it: created a course in the form, saw it on /`).
   - UI commits: drive the page in Chrome with the browser tools through the UI states the commit touches (the plan's *UI states* answers). Check that nothing moves or resizes unexpectedly. Record a GIF and name its file in the hand-off.
+  - The last commit of a UI milestone also walks the journey written in the milestone's *Done when*, step by step, and checks each expected screen.
   - A commit that can't be run says why.
 - Reviews done as `/next-commit` step 3 says, and each finding fixed or rejected with a reason.
 - Nothing in the diff the outline didn't name; anything that differed is in *Deviations* in the hand-off.

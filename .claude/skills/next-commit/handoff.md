@@ -24,6 +24,7 @@ Used in step 5 of [SKILL.md](SKILL.md). Keep it short, and write every summary b
 - `Deviations from the plan line: none`, or what differed and why (a file, a behaviour, a decision made on the way).
 - `Reviews:` which of the `/simplify` pass, `/security-review` and the other-model review (SKILL.md step 3) ran.
   - Give each finding as fixed or rejected, with a reason.
+- When this is the last commit of its milestone, a `Retro:` of three lines, also added to the milestone's `## Step N.` section: planned commits against real commits; what the owner changed after using the page; which rule caused friction.
 - A suggested conventional commit message.
   - No body unless it needs one.
   - Written as a copyable command (see CLAUDE.md *Writing*), e.g. `` `refactor(web): split the course form into sections` ``.

@@ -4,10 +4,11 @@ One rule, used by `/plan-create-implementation` (when splitting a milestone) and
 
 Any other commit is too big if any of these is true:
 
-- More than 6 files change, not counting tests, fixtures and test files split out for length, generated files and doc ticks. A plan line that admits more than 6 still fails; split it.
+- More than 6 files change, not counting tests, fixtures and test files split out for length, generated files and doc ticks. A plan line that admits more than 6 still fails; split it. **Exception:** at outline time the owner may approve more when splitting would leave a half-wired commit; the outline states the file count and the reason, and the hand-off repeats them under *Deviations*. The planner never plans on this exception.
+- **Milestone size:** a milestone should split into 2 to 5 commits. This is the single home of that rule; other files link here. A different count found at implementation planning is normal and is recorded in the milestone's *Retro*, not in *Changes*.
 - It spans two separate areas of the codebase (for example `api/` and `web/`).
 - Its one-line description needs "and" to join unrelated parts.
 - More than 2 design questions are still undecided.
 - It adds files to a folder that would pass the files-per-folder limit in CLAUDE.md and its line has no grouping.
 
-Planner: split the commit until none holds. Builder: say which condition holds and the file count, then invoke the `plan-create-implementation` skill (Skill tool, with `$module` as the argument) to split the item. Do not outline or code a commit that fails the check.
+Planner: split the commit until none holds. Builder: say which condition holds and the file count, then invoke the `plan-create-implementation` skill (Skill tool, passing the module name from the doc's file name as the argument) to split the item. Do not outline or code a commit that fails the check.
