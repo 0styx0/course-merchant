@@ -4,7 +4,6 @@ import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
 import { updateCourseUrl } from "@/mocks/handlers/update-course";
 import { server } from "@/mocks/node";
 
-import type { FieldsSentBackUnchanged } from "../../edit-course/edit-form-prefill";
 import type {
   EditedDetailsValues,
   LoadedPrices,
@@ -32,6 +31,7 @@ export const validValues: EditedDetailsValues = {
     endTimeOfDay: "17:00",
   },
   prices: [],
+  status: "published",
 };
 
 export const loadedSchedule: LoadedSchedule = {
@@ -44,10 +44,6 @@ export const loadedPrices: LoadedPrices = {
     { amount: 9900, currency: "USD", effectiveAt: "2019-12-01T00:00:00Z" },
   ],
   future: [],
-};
-
-export const fieldsSentBackUnchanged: FieldsSentBackUnchanged = {
-  status: "published",
 };
 
 export function captureBody() {

@@ -46,7 +46,6 @@ function useSaveAndErrorList(
     courseId,
     prefill.loadedSchedule,
     prefill.loadedPrices,
-    prefill.fieldsSentBackUnchanged,
   );
   const errorList = useErrorListAndLeaveWarning(
     form,

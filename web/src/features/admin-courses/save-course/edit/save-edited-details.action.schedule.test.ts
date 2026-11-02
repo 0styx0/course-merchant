@@ -7,7 +7,6 @@ import type { LoadedSchedule } from "../../validation/edit-course-form-schema";
 import {
   captureBody,
   courseId,
-  fieldsSentBackUnchanged,
   loadedPrices,
   loadedSchedule,
   validValues,
@@ -41,7 +40,6 @@ describe("saveEditedDetailsAction schedule", () => {
       },
       futureLoaded,
       loadedPrices,
-      fieldsSentBackUnchanged,
     );
 
     expect(sent.body).toMatchObject({
@@ -102,7 +100,6 @@ describe("saveEditedDetailsAction schedule", () => {
         },
         loadedSchedule,
         loadedPrices,
-        fieldsSentBackUnchanged,
       );
 
       expect(sent.calls).toBe(0);

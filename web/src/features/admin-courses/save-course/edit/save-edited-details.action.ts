@@ -2,7 +2,6 @@
 
 import { toCourseDescription } from "@/features/course-description/description-document";
 
-import type { FieldsSentBackUnchanged } from "../../edit-course/edit-form-prefill";
 import { wallClockToUtc } from "../../schedule/wall-clock-time";
 import {
   makeEditCourseFormSchema,
@@ -83,17 +82,15 @@ function toEditedRequestPrices(
 }
 
 /**
- * Saves the edited details, the start and end read from the boxes and the
- * edited prices; the fields the form cannot edit yet go back as loaded.
- * The loaded prices come from the browser, as the status does; the API refuses
- * any change to a price in effect.
+ * Saves the edited details, the status, the start and end read from the boxes
+ * and the edited prices. The loaded prices come from the browser; the API
+ * refuses any change to a price in effect.
  */
 export async function saveEditedDetailsAction(
   courseId: string,
   values: EditedDetailsValues,
   loadedSchedule: LoadedSchedule,
   loadedPrices: LoadedPrices,
-  fieldsSentBackUnchanged: FieldsSentBackUnchanged,
 ): Promise<CourseActionResult> {
   // Anyone can call a Server Action with anything, so check again here.
   if (!isUuid(courseId)) return invalidCourseIdFailure();
@@ -111,7 +108,7 @@ export async function saveEditedDetailsAction(
     summary: data.summary,
     description: toCourseDescription(data.description),
     contentUrl: data.contentUrl,
-    status: fieldsSentBackUnchanged.status,
+    status: data.status,
     schedule: toRequestSchedule(data.schedule),
     prices: toEditedRequestPrices(data.prices, timeZone, loadedPrices),
   });

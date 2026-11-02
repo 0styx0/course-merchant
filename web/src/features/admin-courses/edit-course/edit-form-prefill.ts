@@ -1,6 +1,6 @@
 import { toDollarText } from "../price/dollar-amount";
 import { utcToWallClock } from "../schedule/wall-clock-time";
-import type { AdminCourse, UpdateCourseRequest } from "@/lib/types";
+import type { AdminCourse } from "@/lib/types";
 
 import type {
   EditCourseFormValues,
@@ -9,19 +9,10 @@ import type {
   LoadedSchedule,
 } from "../validation/edit-course-form-schema";
 
-/**
- * The parts of the course the edit form doesn't edit yet. They go back in the
- * save as loaded.
- */
-export type FieldsSentBackUnchanged = {
-  status: UpdateCourseRequest["status"];
-};
-
 export type EditFormPrefill = {
   values: EditCourseFormValues;
   loadedSchedule: LoadedSchedule;
   loadedPrices: LoadedPrices;
-  fieldsSentBackUnchanged: FieldsSentBackUnchanged;
   /** The stored image's version, or null when the course has no image yet. */
   storedImageVersion: string | null;
 };
@@ -96,11 +87,11 @@ export function toEditFormPrefill(
       prices: loadedPrices.future.map((price) =>
         toPriceRowValues(price, timeZone),
       ),
+      status: course.status.name,
       image: null,
     },
     loadedSchedule: { startTime, endTime },
     loadedPrices,
-    fieldsSentBackUnchanged: { status: course.status.name },
     storedImageVersion: course.image?.version ?? null,
   };
 }

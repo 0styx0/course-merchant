@@ -15,7 +15,6 @@ import type {
 import {
   captureBody,
   courseId,
-  fieldsSentBackUnchanged,
   loadedPrices,
   loadedSchedule,
   validValues,
@@ -55,7 +54,6 @@ function saveWithPriceRows(
     { ...validValues, prices: priceRows },
     loadedSchedule,
     pricesLoaded,
-    fieldsSentBackUnchanged,
   );
 }
 

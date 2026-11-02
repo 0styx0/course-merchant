@@ -19,7 +19,6 @@ import type {
   LoadedPrices,
   LoadedSchedule,
 } from "../validation/edit-course-form-schema";
-import type { FieldsSentBackUnchanged } from "./edit-form-prefill";
 
 type EditCourseFormApi = UseFormReturn<
   EditCourseFormValues,
@@ -77,9 +76,9 @@ function useUploadImageUnlessStored(
 }
 
 /**
- * Uploads a newly chosen image, then saves the edited details and prices with
- * the fields it cannot edit yet, as loaded. Uploading first lets one save
- * publish a course with its first image. A refusal leaves a message and puts
+ * Uploads a newly chosen image, then saves the edited details, status and
+ * prices. Uploading first lets one save publish a course with its first image.
+ * A refusal leaves a message and puts
  * its field errors on the fields; a save goes to the home page.
  */
 export function useSaveEditedCourse(
@@ -87,7 +86,6 @@ export function useSaveEditedCourse(
   courseId: string,
   loadedSchedule: LoadedSchedule,
   loadedPrices: LoadedPrices,
-  fieldsSentBackUnchanged: FieldsSentBackUnchanged,
 ) {
   const { runSaveSteps, stepReports, saveOutcome } = useSaveSteps(
     form.setError,
@@ -104,7 +102,6 @@ export function useSaveEditedCourse(
       fields,
       loadedSchedule,
       loadedPrices,
-      fieldsSentBackUnchanged,
     );
     if (details.state === "failure") {
       const message = makeDetailsRefusedMessage(

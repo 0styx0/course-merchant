@@ -27,6 +27,7 @@ describe("fieldErrorsFromProblem", () => {
     ["/prices/0/amount", "prices.0.amountDollars"],
     ["/prices/12/effectiveAt", "prices.12.effectiveTimeOfDay"],
     ["/image", "image"],
+    ["/status", "status"],
     ["/description", "description"],
     ["/description/content/0/content/1/marks/0", "description"],
   ])("maps %s to %s", (pointer, path) => {
@@ -38,7 +39,7 @@ describe("fieldErrorsFromProblem", () => {
   it("leaves out pointers the form has no field for", () => {
     expect(
       fieldErrorsFromProblem(
-        problemWith("/status", "/prices/0/currency", "/prices", "/name/x"),
+        problemWith("/status/x", "/prices/0/currency", "/prices", "/name/x"),
       ),
     ).toEqual([]);
   });

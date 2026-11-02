@@ -39,19 +39,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **5e.** The admin sees the course's current image, or "No image yet", on the edit page and replaces it by choosing a file and saving.
 - [ ] **6. Status on edit.** Published, drafted, archived and deleted, with a note that publishing needs an image and a confirmation before deleting.
   - [x] **6a.** Saving an edited course uploads a newly chosen image before its details, so one save can publish a course with its first image; a retry after a refused save skips the image already stored. Create behaves the same.
-  - [ ] **6b.** The edit code holds the course's status as a form value and saves it. Not on screen yet. **Next**
-    - *Files*:
-      - [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (status joins the form values; "fields sent back unchanged" goes away)
-      - [edit-course-form-schema.ts](../web/src/features/admin-courses/validation/edit-course-form-schema.ts)
-      - [save-edited-details.action.ts](../web/src/features/admin-courses/save-course/edit/save-edited-details.action.ts)
-      - [field-errors-from-problem.ts](../web/src/features/admin-courses/save-course/field-errors-from-problem.ts)
-    - *Behaviours*:
-      - The loaded status prefills; saving sends it as loaded.
-      - API 400 on `/status` (for example "Upload an image before publishing.") puts its detail on the status field.
-    - *New shared pieces*: none
-    - *Needs*: 6a
-    - *Done when*: prefill, schema, action and error-mapping tests pass.
-  - [ ] **6c.** The admin sees the course's status and changes it.
+  - [x] **6b.** The edit code holds the course's status as a form value, prefilled as loaded, and saves it; the API's refusal on the status lands on the status field. Not on screen yet.
+  - [ ] **6c.** The admin sees the course's status and changes it. **Next**
     - *Files*:
       - `components/ui/radio-group.tsx` (vendored)
       - `edit-course/status/status-section.tsx` (new)

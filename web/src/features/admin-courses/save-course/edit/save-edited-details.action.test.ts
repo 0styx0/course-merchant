@@ -10,7 +10,6 @@ import { server } from "@/mocks/node";
 import {
   captureBody,
   courseId,
-  fieldsSentBackUnchanged,
   loadedPrices,
   loadedSchedule,
   validValues,
@@ -23,7 +22,7 @@ vi.mock("server-only", () => ({}));
 describe("saveEditedDetailsAction", () => {
   beforeEach(() => server.use(updateCourseSuccess));
 
-  it("sends the checked values and the unchanged fields to the course's id", async () => {
+  it("sends the checked values to the course's id", async () => {
     const sent = captureBody();
 
     await expect(
@@ -32,7 +31,6 @@ describe("saveEditedDetailsAction", () => {
         validValues,
         loadedSchedule,
         loadedPrices,
-        fieldsSentBackUnchanged,
       ),
     ).resolves.toEqual({ state: "success", data: { courseId } });
 
@@ -57,6 +55,37 @@ describe("saveEditedDetailsAction", () => {
     });
   });
 
+  it("sends the status from the values", async () => {
+    const sent = captureBody();
+
+    await saveEditedDetailsAction(
+      courseId,
+      { ...validValues, status: "archived" },
+      loadedSchedule,
+      loadedPrices,
+    );
+
+    expect(sent.body).toMatchObject({ status: "archived" });
+  });
+
+  it("refuses a status the API doesn't know without calling the API", async () => {
+    const sent = captureBody();
+
+    const result = await saveEditedDetailsAction(
+      courseId,
+      // @ts-expect-error a caller can send any value to a Server Action
+      { ...validValues, status: "hidden" },
+      loadedSchedule,
+      loadedPrices,
+    );
+
+    expect(sent.calls).toBe(0);
+    expect(result).toMatchObject({
+      state: "failure",
+      error: { fieldErrors: [{ path: "status" }] },
+    });
+  });
+
   it("refuses an invalid course id without calling the API", async () => {
     const sent = captureBody();
 
@@ -65,7 +94,6 @@ describe("saveEditedDetailsAction", () => {
       validValues,
       loadedSchedule,
       loadedPrices,
-      fieldsSentBackUnchanged,
     );
 
     expect(sent.calls).toBe(0);
@@ -90,7 +118,6 @@ describe("saveEditedDetailsAction", () => {
       { ...validValues, name: "  " },
       loadedSchedule,
       loadedPrices,
-      fieldsSentBackUnchanged,
     );
 
     expect(sent.calls).toBe(0);
@@ -112,7 +139,6 @@ describe("saveEditedDetailsAction", () => {
         validValues,
         loadedSchedule,
         loadedPrices,
-        fieldsSentBackUnchanged,
       ),
     ).resolves.toMatchObject({
       state: "failure",
@@ -137,7 +163,6 @@ describe("saveEditedDetailsAction", () => {
         validValues,
         loadedSchedule,
         loadedPrices,
-        fieldsSentBackUnchanged,
       ),
     ).resolves.toEqual({
       state: "failure",

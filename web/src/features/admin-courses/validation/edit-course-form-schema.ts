@@ -16,6 +16,13 @@ import { editScheduleIssues } from "./edit-schedule-issues";
 import { issueAt, type FormIssue } from "./form-issue-and-time-conversion";
 import { priceRowIssues } from "./price-row-issues";
 
+const courseStatusNames = [
+  "drafted",
+  "published",
+  "archived",
+  "deleted",
+] as const satisfies readonly UpdateCourseRequest["status"][];
+
 const editFieldsSchema = z.object({
   name: nameSchema,
   summary: summarySchema,
@@ -23,6 +30,7 @@ const editFieldsSchema = z.object({
   contentUrl: contentUrlSchema,
   schedule: z.object({ ...scheduleBoxesSchema, timeZone: timeZoneSchema }),
   prices: z.array(priceRowSchema),
+  status: z.enum(courseStatusNames),
   // A new image to upload, or null to keep the stored one.
   image: courseImageSchema.nullable(),
 });

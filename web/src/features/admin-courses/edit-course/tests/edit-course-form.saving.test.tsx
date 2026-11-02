@@ -55,7 +55,6 @@ describe("EditCourseForm saving", () => {
       { ...valuesWithoutImage, name: "Renamed" },
       prefill.loadedSchedule,
       prefill.loadedPrices,
-      prefill.fieldsSentBackUnchanged,
     );
   });
 

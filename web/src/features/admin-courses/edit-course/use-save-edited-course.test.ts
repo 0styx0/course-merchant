@@ -67,7 +67,6 @@ function renderEditSave(image: ChosenImage | null) {
       courseId,
       prefill.loadedSchedule,
       prefill.loadedPrices,
-      prefill.fieldsSentBackUnchanged,
     );
     return { form, saving };
   });

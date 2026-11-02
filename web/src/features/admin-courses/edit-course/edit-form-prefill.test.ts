@@ -55,6 +55,7 @@ describe("toEditFormPrefill", () => {
       },
       // The course's only price is already in effect, so it is no row.
       prices: [],
+      status: "drafted",
       image: null,
     });
   });
@@ -84,10 +85,8 @@ describe("toEditFormPrefill", () => {
     expect(toEditFormPrefill(course).storedImageVersion).toBeNull();
   });
 
-  it("keeps the status as a plain string", () => {
-    expect(toEditFormPrefill(course).fieldsSentBackUnchanged.status).toBe(
-      "drafted",
-    );
+  it("holds the status as loaded, as a form value", () => {
+    expect(toEditFormPrefill(course).values.status).toBe("drafted");
   });
 
   it("keeps the start and end as the loaded UTC strings", () => {
@@ -142,6 +141,5 @@ describe("toEditFormPrefill", () => {
 
     expect(JSON.stringify(start)).not.toContain("ada@example.com");
     expect(start).not.toHaveProperty("enrollments");
-    expect(start.fieldsSentBackUnchanged).not.toHaveProperty("enrollments");
   });
 });
