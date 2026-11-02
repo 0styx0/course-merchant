@@ -76,3 +76,21 @@ export function toUtcMs(date: string, timeOfDay: string, timeZone: string) {
   const result = wallClockToUtc(`${date}T${timeOfDay}`, timeZone);
   return result.state === "success" ? Date.parse(result.data) : undefined;
 }
+
+/**
+ * Turns a UTC ISO string into the date ("2026-01-15") and time of day ("09:00")
+ * a clock in the zone shows, or nothing if the string or zone is not valid.
+ */
+export function utcToWallClock(utc: string, timeZone: string) {
+  try {
+    const dateTime = Temporal.Instant.from(utc)
+      .toZonedDateTimeISO(timeZone)
+      .toPlainDateTime();
+    return {
+      date: dateTime.toPlainDate().toString(),
+      timeOfDay: dateTime.toPlainTime().toString({ smallestUnit: "minute" }),
+    };
+  } catch {
+    return undefined;
+  }
+}

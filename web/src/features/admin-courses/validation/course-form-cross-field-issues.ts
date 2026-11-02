@@ -2,14 +2,17 @@ import { MIN_PRICE_LEAD_MS } from "./course-form-limits";
 import type { CourseFormValues } from "./course-form-schema";
 import { wallClockToUtc } from "../schedule/wall-clock-time";
 
-type FormIssue = { path: (string | number)[]; message: string };
+export type FormIssue = { path: (string | number)[]; message: string };
 
-const issueAt = (path: (string | number)[], message: string): FormIssue => ({
+export const issueAt = (
+  path: (string | number)[],
+  message: string,
+): FormIssue => ({
   path,
   message,
 });
 
-type Conversion =
+export type Conversion =
   | { kind: "ms"; ms: number }
   | { kind: "issue"; message: string }
   | { kind: "skip" };
@@ -21,7 +24,7 @@ type Schedule = CourseFormValues["schedule"];
 type Price = CourseFormValues["prices"][number];
 
 /** Date and time of day to UTC milliseconds, or the message to show instead. */
-function toUtcMsOrIssue(
+export function toUtcMsOrIssue(
   { date, timeOfDay }: DateAndTime,
   timeZone: string,
 ): Conversion {
@@ -75,7 +78,10 @@ function scheduleIssues(schedule: Schedule, nowMs: number): FormIssue[] {
   ];
 }
 
-function conversionIssues(start: Conversion, end: Conversion): FormIssue[] {
+export function conversionIssues(
+  start: Conversion,
+  end: Conversion,
+): FormIssue[] {
   return [
     ...conversionIssue(start, ["schedule", "startTimeOfDay"]),
     ...conversionIssue(end, ["schedule", "endTimeOfDay"]),
@@ -87,7 +93,10 @@ function conversionIssue(conversion: Conversion, path: FormIssue["path"]) {
   return [issueAt(path, conversion.message)];
 }
 
-function startInPastIssues(start: Conversion, nowMs: number): FormIssue[] {
+export function startInPastIssues(
+  start: Conversion,
+  nowMs: number,
+): FormIssue[] {
   if (start.kind !== "ms" || start.ms > nowMs) return [];
   return [
     issueAt(
@@ -97,7 +106,7 @@ function startInPastIssues(start: Conversion, nowMs: number): FormIssue[] {
   ];
 }
 
-function endNotAfterStartIssues(
+export function endNotAfterStartIssues(
   start: Conversion,
   end: Conversion,
 ): FormIssue[] {
