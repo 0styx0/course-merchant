@@ -38,24 +38,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **5d.** Saving an edited course uploads a newly chosen image after the details (no file chosen: only the `PUT`); the shared save hook works for both forms and skips the upload when no image is chosen. The picker is not on screen yet.
   - [x] **5e.** The admin sees the course's current image, or "No image yet", on the edit page and replaces it by choosing a file and saving.
 - [ ] **6. Status on edit.** Published, drafted, archived and deleted, with a note that publishing needs an image and a confirmation before deleting.
-  - [ ] **6a.** Saving an edited course uploads a newly chosen image before its details. **Next**
-    - *Files*:
-      - [use-save-then-upload-image.ts](../web/src/features/admin-courses/course-form/hooks/use-save-then-upload-image.ts) (its shared steps move out)
-      - `course-form/hooks/use-save-steps.ts` (new: try/catch, "already saved" note, saved flag, going home, `uploadChosenImage`)
-      - [use-save-edited-course.ts](../web/src/features/admin-courses/edit-course/use-save-edited-course.ts) (image, then details)
-      - folder: `course-form/hooks/` 5 → 6
-    - *Behaviours*:
-      - Image chosen: the upload runs, then the `PUT`; success goes home.
-      - Upload refused: no `PUT`; the API's message and the image field error show; the form is kept.
-      - Upload fine, `PUT` refused: the message says the image was saved, plus the API's detail.
-      - Retry after that: skips the upload, because the image is already stored.
-      - Action throws after the upload: the thrown message mentions the saved image.
-      - No image chosen: only the `PUT`.
-      - Create's order and messages stay unchanged; its tests pass as they are.
-    - *New shared pieces*: `use-save-steps.ts`, used by create's and edit's orders.
-    - *Settled*: the decision row "Edit uploads a newly chosen image before saving the details".
-    - *Done when*: the new tests pass and create's tests pass unchanged.
-  - [ ] **6b.** The edit code holds the course's status as a form value and saves it. Not on screen yet.
+  - [x] **6a.** Saving an edited course uploads a newly chosen image before its details, so one save can publish a course with its first image; a retry after a refused save skips the image already stored. Create behaves the same.
+  - [ ] **6b.** The edit code holds the course's status as a form value and saves it. Not on screen yet. **Next**
     - *Files*:
       - [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (status joins the form values; "fields sent back unchanged" goes away)
       - [edit-course-form-schema.ts](../web/src/features/admin-courses/validation/edit-course-form-schema.ts)

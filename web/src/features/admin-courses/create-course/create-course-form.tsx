@@ -88,8 +88,8 @@ type CreateCourseFormProps = {
 /** The "create course" form. It saves a draft and goes to the home page. */
 export function CreateCourseForm({ timeZones }: CreateCourseFormProps) {
   const { form, priceRows } = useCourseFormState();
-  const { save, saved, serverProblem, clearServerProblem } =
-    useSaveNewCourse(form);
+  const { save, saved, serverMessage } = useSaveNewCourse(form);
+  const { serverProblem, clearServerProblem } = serverMessage;
   const { isSubmitted, isSubmitting } = form.formState;
   const errorList = useErrorListAndLeaveWarning(
     form,

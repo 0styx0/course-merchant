@@ -41,7 +41,7 @@ function useSaveAndErrorList(
   courseId: string,
   prefill: EditFormPrefill,
 ) {
-  const { saved, ...saveState } = useSaveEditedCourse(
+  const { saved, ...saveResult } = useSaveEditedCourse(
     form,
     courseId,
     prefill.loadedSchedule,
@@ -53,7 +53,7 @@ function useSaveAndErrorList(
     editCourseFields(priceRowCount),
     saved,
   );
-  return { ...saveState, errorList };
+  return { ...saveResult, errorList };
 }
 
 type EditCourseFormProps = {
@@ -70,8 +70,13 @@ export function EditCourseForm({
   timeZones,
 }: EditCourseFormProps) {
   const { form, priceRows } = useEditCourseFormState(prefill);
-  const { save, serverProblem, clearServerProblem, errorList } =
-    useSaveAndErrorList(form, priceRows.fields.length, courseId, prefill);
+  const { save, serverMessage, errorList } = useSaveAndErrorList(
+    form,
+    priceRows.fields.length,
+    courseId,
+    prefill,
+  );
+  const { serverProblem, clearServerProblem } = serverMessage;
   const { isSubmitting } = form.formState;
 
   return (

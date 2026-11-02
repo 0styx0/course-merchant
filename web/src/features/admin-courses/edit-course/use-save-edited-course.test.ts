@@ -98,7 +98,7 @@ describe("useSaveEditedCourse", () => {
     expect(push).toHaveBeenCalledWith("/");
   });
 
-  it("uploads a chosen file after the details, then goes home", async () => {
+  it("uploads a chosen file before the details, then goes home", async () => {
     const image = chosenImage();
     const { result } = renderEditSave(image);
     await submitEditForm(result);
@@ -108,34 +108,20 @@ describe("useSaveEditedCourse", () => {
     const [uploadedFor, formData] = uploadAction.mock.calls[0] ?? [];
     expect(uploadedFor).toBe(courseId);
     expect(formData?.get("image")).toBe(image.file);
-    expect(detailsAction.mock.invocationCallOrder[0]).toBeLessThan(
-      uploadAction.mock.invocationCallOrder[0] ?? 0,
+    expect(uploadAction.mock.invocationCallOrder[0]).toBeLessThan(
+      detailsAction.mock.invocationCallOrder[0] ?? 0,
     );
     expect(push).toHaveBeenCalledWith("/");
   });
 
-  it("sends no upload when the details are refused, and shows the API's message", async () => {
-    detailsAction.mockResolvedValue(refusedAt("name", "The name is taken."));
-    const { result } = renderEditSave(chosenImage());
-    await submitEditForm(result);
-
-    expect(uploadAction).not.toHaveBeenCalled();
-    expect(result.current.saving.serverProblem?.detail).toBe(
-      "The name is taken.",
-    );
-    expect(result.current.form.getFieldState("name").error?.message).toBe(
-      "name refused",
-    );
-    expect(push).not.toHaveBeenCalled();
-  });
-
-  it("says the details were saved when the image is refused, and stays", async () => {
+  it("sends no details save when the image is refused, and shows the API's message", async () => {
     uploadAction.mockResolvedValue(refusedAt("image", "The file is broken."));
     const { result } = renderEditSave(chosenImage());
     await submitEditForm(result);
 
-    expect(result.current.saving.serverProblem?.detail).toBe(
-      "The course details were saved, but the image didn't upload. The file is broken.",
+    expect(detailsAction).not.toHaveBeenCalled();
+    expect(result.current.saving.serverMessage.serverProblem?.detail).toBe(
+      "The file is broken.",
     );
     expect(result.current.form.getFieldState("image").error?.message).toBe(
       "image refused",
@@ -143,25 +129,53 @@ describe("useSaveEditedCourse", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it("says something went wrong when the details action throws", async () => {
-    detailsAction.mockRejectedValue(new Error("offline"));
+  it("says the image was saved when the details are refused, and stays", async () => {
+    detailsAction.mockResolvedValue(refusedAt("name", "The name is taken."));
     const { result } = renderEditSave(chosenImage());
     await submitEditForm(result);
 
-    expect(result.current.saving.serverProblem).toEqual({
+    expect(result.current.saving.serverMessage.serverProblem?.detail).toBe(
+      "The image was saved, but the course details didn't save. The name is taken.",
+    );
+    expect(result.current.form.getFieldState("name").error?.message).toBe(
+      "name refused",
+    );
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("skips the upload on the next save after the details were refused", async () => {
+    detailsAction.mockResolvedValueOnce(
+      refusedAt("name", "The name is taken."),
+    );
+    const { result } = renderEditSave(chosenImage());
+    await submitEditForm(result);
+    await submitEditForm(result);
+
+    expect(uploadAction).toHaveBeenCalledOnce();
+    expect(detailsAction).toHaveBeenCalledTimes(2);
+    expect(push).toHaveBeenCalledOnce();
+  });
+
+  it("says something went wrong when the upload throws", async () => {
+    uploadAction.mockRejectedValue(new Error("offline"));
+    const { result } = renderEditSave(chosenImage());
+    await submitEditForm(result);
+
+    expect(detailsAction).not.toHaveBeenCalled();
+    expect(result.current.saving.serverMessage.serverProblem).toEqual({
       title: "Couldn't save the course",
       detail:
         "Something went wrong while saving. Check your connection and try again.",
     });
   });
 
-  it("adds that the details were saved when the upload throws", async () => {
-    uploadAction.mockRejectedValue(new Error("offline"));
+  it("adds that the image was saved when the details action throws", async () => {
+    detailsAction.mockRejectedValue(new Error("offline"));
     const { result } = renderEditSave(chosenImage());
     await submitEditForm(result);
 
-    expect(result.current.saving.serverProblem?.detail).toBe(
-      "Something went wrong while saving. Check your connection and try again. The course details were saved.",
+    expect(result.current.saving.serverMessage.serverProblem?.detail).toBe(
+      "Something went wrong while saving. Check your connection and try again. The image was saved.",
     );
   });
 
@@ -176,7 +190,7 @@ describe("useSaveEditedCourse", () => {
     );
   });
 
-  it("sends both steps again on the next save after the image was refused", async () => {
+  it("uploads again on the next save after the image was refused", async () => {
     uploadAction.mockResolvedValueOnce(
       refusedAt("image", "The file is broken."),
     );
@@ -184,8 +198,8 @@ describe("useSaveEditedCourse", () => {
     await submitEditForm(result);
     await submitEditForm(result);
 
-    expect(detailsAction).toHaveBeenCalledTimes(2);
     expect(uploadAction).toHaveBeenCalledTimes(2);
+    expect(detailsAction).toHaveBeenCalledOnce();
     expect(push).toHaveBeenCalledOnce();
   });
 });
