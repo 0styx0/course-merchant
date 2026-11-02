@@ -19,7 +19,7 @@ Every item below happens, in this order.
 **Exemptions:** only pure moves, renames and doc-only commits skip items 4 and 5 (the tests-first step and `/simplify`) and the reviews in section 3. A commit's size is never an exemption.
 
 1. Read [outline.md](outline.md), [quality.md](quality.md) and [handoff.md](handoff.md) now.
-2. Run the size check, the coverage check (changes that alter no behaviour) and `git status --short` as real tool calls. Start the coverage run with `run_in_background` as soon as the touched files are known, keep reading, and read its result before writing the outline.
+2. Run the size check and the coverage check (changes that alter no behaviour) as real tool calls. Start the coverage run with `run_in_background` as soon as the touched files are known, keep reading, and read its result before writing the outline.
 3. Settle every open choice: take each recommendation the outline's *Questions* make; when a question has no recommendation or has several equally good options, ask through the picker (AskUserQuestion) before sending the outline.
 4. Send the outline as [outline.md](outline.md) says, then start the build at once in a background subagent (step 3), in the same turn. Tell the owner the build runs while they review.
 5. Wait for the owner's reply. Show nothing of the build (no code, test results or hand-off) until they approve the outline.
@@ -37,8 +37,7 @@ Every item below happens, in this order.
 - Send independent reads in one message and stop reading once the outline can be written. Search for specific things; skip wide surveys. Read a sibling by line range when you only need a pattern. Never read generated files whole.
 - Run the size check in [../_shared/commit-size.md](../_shared/commit-size.md) now that you have read the code. If it fails, stop as it says.
 - Decide whether the commit is **mechanical** (rule in [outline.md](outline.md)); the line's *(mechanical)* flag is only a hint. For a change that alters no behaviour, run `test:coverage` on the files you'll touch (commands in the package CLAUDE.md files). If a touched line or branch is uncovered, the missing test is its own commit first and must pass against the old code; say so in the outline.
-- Run `git status --short`. Leave uncommitted changes from other work alone. If they overlap files you'll touch, stop and ask: hunks can't be split.
-- Choose the outline path (rules in [outline.md](outline.md)): **mechanical**, **plan-conformant** (both defined in [outline.md](outline.md)), or full. Keep the results of this step for the `Preflight:` line; its `git` field is the raw `git status --short` output.
+- Choose the outline path (rules in [outline.md](outline.md)): **mechanical**, **plan-conformant** (both defined in [outline.md](outline.md)), or full. Keep the results of this step for the `Preflight:` line.
 
 ## 2. Outline
 
@@ -46,7 +45,7 @@ Use the format in [outline.md](outline.md): start with the `Preflight:` line; sh
 
 ## 3. Implement, in the background right after the outline
 
-- **Start:** once the outline is sent, launch one background subagent (Agent tool, `run_in_background`, on your own model) that builds the outline with every recommendation applied. Give it the full outline, the settled choices and the rules of this section. It edits the working tree, since `git status` was clean of overlapping changes in step 1.
+- **Start:** once the outline is sent, launch one background subagent (Agent tool, `run_in_background`, on your own model) that builds the outline with every recommendation applied. Give it the full outline, the settled choices and the rules of this section. It edits the working tree.
 - **Questions first:** a recommendation counts only when the outline states one. Without one, or with several equally good options, ask through the picker before the outline goes out, so the subagent never guesses.
 - **While it runs:** the owner reviews the outline. Hold back the build's output until they approve. Relay nothing from the subagent before then, apart from saying it is still running.
 - **If the owner approves:** read the subagent's result, then hand off ([handoff.md](handoff.md)).

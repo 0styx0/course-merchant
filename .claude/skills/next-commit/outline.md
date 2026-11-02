@@ -43,7 +43,7 @@ After the opening:
 - **Questions:** any design or behaviour change not already decided in the doc, each with your recommendation.
 - **Tests:** a table, one row per behaviour (see [quality.md](quality.md)), and which of them will be written first and shown failing. For a refactor, the coverage result instead.
 - **Doc update:** what changes in `docs/<area>.md`. Write out the exact text of any new decision row.
-- **Preflight (last line):** `Preflight: size <n files, ok> | coverage <result, or n/a> | git <the raw `git status --short` output, or `clean` only when the command printed nothing> | siblings read <files> | library API <docs link, only for an API the repo doesn't use yet>`. A missing item is a check that was skipped. The short outline ends with it too.
+- **Preflight (last line):** `Preflight: size <n files, ok> | coverage <result, or n/a> | siblings read <files> | library API <docs link, only for an API the repo doesn't use yet>`. A missing item is a check that was skipped. The short outline ends with it too.
 
 If the owner replies with questions or objections, discuss them first: answer, recommend, ask follow-ups. Don't edit the outline while the discussion is open. Once they agree, present the updated outline, adjust the background build to match (SKILL.md step 3), and wait for the go-ahead again.
 
