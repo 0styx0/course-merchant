@@ -10,7 +10,10 @@ import {
 } from "@/mocks/handlers/update-course";
 import { server } from "@/mocks/node";
 
-import type { EditCourseFormValues } from "../../validation/edit-course-form-schema";
+import type {
+  EditCourseFormValues,
+  LoadedSchedule,
+} from "../../validation/edit-course-form-schema";
 import type { FieldsSentBackUnchanged } from "../../edit-course/edit-form-prefill";
 import { saveEditedDetailsAction } from "./save-edited-details.action";
 
@@ -33,12 +36,13 @@ const validValues: EditCourseFormValues = {
   schedule: { timeZone: "America/New_York" },
 };
 
+const loadedSchedule: LoadedSchedule = {
+  startTime: "2020-01-01T14:00:00Z",
+  endTime: "2020-01-01T22:00:00Z",
+};
+
 const fieldsSentBackUnchanged: FieldsSentBackUnchanged = {
   status: "published",
-  schedule: {
-    startTime: "2020-01-01T14:00:00Z",
-    endTime: "2020-01-01T22:00:00Z",
-  },
   prices: [
     { amount: 9900, currency: "USD", effectiveAt: "2019-12-01T00:00:00Z" },
   ],
@@ -64,7 +68,12 @@ describe("saveEditedDetailsAction", () => {
     const sent = captureBody();
 
     await expect(
-      saveEditedDetailsAction(courseId, validValues, fieldsSentBackUnchanged),
+      saveEditedDetailsAction(
+        courseId,
+        validValues,
+        loadedSchedule,
+        fieldsSentBackUnchanged,
+      ),
     ).resolves.toEqual({ state: "success", data: { courseId } });
 
     expect(sent.id).toBe(courseId);
@@ -94,13 +103,14 @@ describe("saveEditedDetailsAction", () => {
     await saveEditedDetailsAction(
       courseId,
       { ...validValues, schedule: { timeZone: "Asia/Tokyo" } },
+      loadedSchedule,
       fieldsSentBackUnchanged,
     );
 
     expect(sent.body).toMatchObject({
       schedule: {
-        startTime: fieldsSentBackUnchanged.schedule.startTime,
-        endTime: fieldsSentBackUnchanged.schedule.endTime,
+        startTime: loadedSchedule.startTime,
+        endTime: loadedSchedule.endTime,
         timeZone: "Asia/Tokyo",
       },
     });
@@ -112,6 +122,7 @@ describe("saveEditedDetailsAction", () => {
     const result = await saveEditedDetailsAction(
       "not-a-uuid",
       validValues,
+      loadedSchedule,
       fieldsSentBackUnchanged,
     );
 
@@ -135,6 +146,7 @@ describe("saveEditedDetailsAction", () => {
     const result = await saveEditedDetailsAction(
       courseId,
       { ...validValues, name: "  " },
+      loadedSchedule,
       fieldsSentBackUnchanged,
     );
 
@@ -152,7 +164,12 @@ describe("saveEditedDetailsAction", () => {
     server.use(updateCourseValidationFailed);
 
     await expect(
-      saveEditedDetailsAction(courseId, validValues, fieldsSentBackUnchanged),
+      saveEditedDetailsAction(
+        courseId,
+        validValues,
+        loadedSchedule,
+        fieldsSentBackUnchanged,
+      ),
     ).resolves.toMatchObject({
       state: "failure",
       error: {
@@ -171,7 +188,12 @@ describe("saveEditedDetailsAction", () => {
     server.use(updateCourseError);
 
     await expect(
-      saveEditedDetailsAction(courseId, validValues, fieldsSentBackUnchanged),
+      saveEditedDetailsAction(
+        courseId,
+        validValues,
+        loadedSchedule,
+        fieldsSentBackUnchanged,
+      ),
     ).resolves.toEqual({
       state: "failure",
       error: {

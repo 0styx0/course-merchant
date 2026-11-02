@@ -18,8 +18,10 @@ import {
   COURSE_NAME_MAX_LENGTH,
   COURSE_SUMMARY_MAX_LENGTH,
 } from "../validation/course-form-limits";
-import type { EditCourseFormValues } from "../validation/edit-course-form-schema";
-import type { FieldsSentBackUnchanged } from "./edit-form-prefill";
+import type {
+  EditCourseFormValues,
+  LoadedSchedule,
+} from "../validation/edit-course-form-schema";
 
 type EditForm = CourseFormApi<EditCourseFormValues>;
 
@@ -48,11 +50,11 @@ export function EditBasicsSection({ form }: { form: EditForm }) {
 export function EditScheduleSection({
   form,
   timeZones,
-  unchangedSchedule,
+  loadedSchedule,
 }: {
   form: EditForm;
   timeZones: string[];
-  unchangedSchedule: FieldsSentBackUnchanged["schedule"];
+  loadedSchedule: LoadedSchedule;
 }) {
   const timeZone = useWatch({
     control: form.control,
@@ -61,8 +63,8 @@ export function EditScheduleSection({
   // The sentence needs a real zone; a stored one the list lacks is reported on save.
   const scheduleText = timeZones.includes(timeZone)
     ? scheduleSentence(
-        Date.parse(unchangedSchedule.startTime),
-        Date.parse(unchangedSchedule.endTime),
+        Date.parse(loadedSchedule.startTime),
+        Date.parse(loadedSchedule.endTime),
         timeZone,
       )
     : undefined;

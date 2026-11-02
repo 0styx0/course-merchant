@@ -22,16 +22,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **2d.** The edit form shows a course's details and saves them (no URL yet). It shares the refusal message, the content link section and the error list with the create form. The update mock can refuse twice in a row, for 2e's test.
   - [x] **2e.** The page at `/admin/courses/[courseId]/edit` loads the course and shows the form; a missing or malformed id gives Next's 404, any other problem shows `ProblemAlert`; the mock has `getCourseAsAdmin` scenarios and a `twoRounds` update scenario.
 - [ ] **3. Schedule rules on edit.** The admin can change the start and end date and time. An unchanged start or end time may be in the past; a changed one must be in the future; end is after start.
-  - [ ] **3a.** The stored start and end move out of "fields sent back unchanged", because from 3c the save no longer sends them back; they are only compared. Nothing changes for the admin. *(mechanical)* **Next**
-    - *Files*:
-      - [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (+ test): a new `loadedSchedule` (the stored start and end) beside `values`; `fieldsSentBackUnchanged` keeps the status and prices
-      - [edit-course-form-schema.ts](../web/src/features/admin-courses/validation/edit-course-form-schema.ts): holds the loaded-schedule type, so `validation/` never imports from the page folder
-      - [save-edited-details.action.ts](../web/src/features/admin-courses/save-course/edit/save-edited-details.action.ts) (+ test)
-      - [use-save-edited-course.ts](../web/src/features/admin-courses/edit-course/use-save-edited-course.ts)
-      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx)
-      - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx)
-    - *Done when*: the same tests pass, the count is unchanged, and the type check passes. Run coverage on the touched files first.
-  - [ ] **3b.** The code can show a stored time as date and time boxes in a zone, and check an edited schedule. Nothing uses it yet.
+  - [x] **3a.** The stored start and end are their own item (`loadedSchedule`), no longer among the "fields sent back unchanged"; nothing changes for the admin.
+  - [ ] **3b.** The code can show a stored time as date and time boxes in a zone, and check an edited schedule. Nothing uses it yet. **Next**
     - *Files*:
       - [wall-clock-time.ts](../web/src/features/admin-courses/schedule/wall-clock-time.ts) (+ test): turns a stored UTC time into date and time boxes in a zone
       - [course-form-cross-field-issues.ts](../web/src/features/admin-courses/validation/course-form-cross-field-issues.ts): exports the step that turns boxes into a moment or a message, and the end-after-start check; create's behaviour doesn't change

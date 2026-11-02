@@ -106,9 +106,7 @@ describe("EditCourseForm", () => {
     await waitFor(() => expect(saveAction).toHaveBeenCalledOnce());
     expect(saveAction.mock.calls[0][0]).toBe(draftedAdminCourse.id);
     expect(saveAction.mock.calls[0][1].schedule.timeZone).toBe("Europe/Paris");
-    expect(saveAction.mock.calls[0][2].schedule).toEqual(
-      prefill.fieldsSentBackUnchanged.schedule,
-    );
+    expect(saveAction.mock.calls[0][2]).toEqual(prefill.loadedSchedule);
   });
 
   it("saves the edited name with the rest as given, then goes to the home page", async () => {
@@ -126,6 +124,7 @@ describe("EditCourseForm", () => {
     expect(saveAction).toHaveBeenCalledWith(
       draftedAdminCourse.id,
       { ...prefill.values, name: "Renamed" },
+      prefill.loadedSchedule,
       prefill.fieldsSentBackUnchanged,
     );
   });

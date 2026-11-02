@@ -46,7 +46,7 @@ describe("toEditFormPrefill", () => {
   });
 
   it("keeps the start and end as the loaded UTC strings", () => {
-    expect(toEditFormPrefill(course).fieldsSentBackUnchanged.schedule).toEqual({
+    expect(toEditFormPrefill(course).loadedSchedule).toEqual({
       startTime: course.schedule.startTime,
       endTime: course.schedule.endTime,
     });

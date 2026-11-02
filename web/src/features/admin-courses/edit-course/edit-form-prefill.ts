@@ -1,6 +1,9 @@
 import type { AdminCourse, UpdateCourseRequest } from "@/lib/types";
 
-import type { EditCourseFormValues } from "../validation/edit-course-form-schema";
+import type {
+  EditCourseFormValues,
+  LoadedSchedule,
+} from "../validation/edit-course-form-schema";
 
 /**
  * The parts of the course the edit form doesn't edit yet. They go back in the
@@ -8,12 +11,12 @@ import type { EditCourseFormValues } from "../validation/edit-course-form-schema
  */
 export type FieldsSentBackUnchanged = {
   status: UpdateCourseRequest["status"];
-  schedule: Pick<UpdateCourseRequest["schedule"], "startTime" | "endTime">;
   prices: UpdateCourseRequest["prices"];
 };
 
 export type EditFormPrefill = {
   values: EditCourseFormValues;
+  loadedSchedule: LoadedSchedule;
   fieldsSentBackUnchanged: FieldsSentBackUnchanged;
 };
 
@@ -30,12 +33,12 @@ export function toEditFormPrefill(course: AdminCourse): EditFormPrefill {
       contentUrl: course.contentUrl,
       schedule: { timeZone: course.schedule.timeZone },
     },
+    loadedSchedule: {
+      startTime: course.schedule.startTime,
+      endTime: course.schedule.endTime,
+    },
     fieldsSentBackUnchanged: {
       status: course.status.name,
-      schedule: {
-        startTime: course.schedule.startTime,
-        endTime: course.schedule.endTime,
-      },
       // The API keeps a price that matches a stored one exactly, so no ids.
       prices: course.prices.map(({ amount, currency, effectiveAt }) => ({
         amount,

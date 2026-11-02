@@ -7,7 +7,10 @@ import {
   useServerProblem,
 } from "../course-form/hooks/use-server-problem";
 import { saveEditedDetailsAction } from "../save-course/edit/save-edited-details.action";
-import type { EditCourseFormValues } from "../validation/edit-course-form-schema";
+import type {
+  EditCourseFormValues,
+  LoadedSchedule,
+} from "../validation/edit-course-form-schema";
 import type { FieldsSentBackUnchanged } from "./edit-form-prefill";
 
 type EditCourseFormApi = UseFormReturn<
@@ -23,6 +26,7 @@ type EditCourseFormApi = UseFormReturn<
 export function useSaveEditedCourse(
   form: EditCourseFormApi,
   courseId: string,
+  loadedSchedule: LoadedSchedule,
   fieldsSentBackUnchanged: FieldsSentBackUnchanged,
 ) {
   const router = useRouter();
@@ -36,6 +40,7 @@ export function useSaveEditedCourse(
       const result = await saveEditedDetailsAction(
         courseId,
         values,
+        loadedSchedule,
         fieldsSentBackUnchanged,
       );
       if (result.state === "failure") {

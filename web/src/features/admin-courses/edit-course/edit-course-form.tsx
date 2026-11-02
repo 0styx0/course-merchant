@@ -41,7 +41,12 @@ export function EditCourseForm({
 }: EditCourseFormProps) {
   const form = useEditCourseFormState(prefill);
   const { save, saved, serverProblem, clearServerProblem } =
-    useSaveEditedCourse(form, courseId, prefill.fieldsSentBackUnchanged);
+    useSaveEditedCourse(
+      form,
+      courseId,
+      prefill.loadedSchedule,
+      prefill.fieldsSentBackUnchanged,
+    );
   const errorList = useErrorListAndLeaveWarning(form, editCourseFields, saved);
   const { isSubmitting } = form.formState;
 
@@ -57,7 +62,7 @@ export function EditCourseForm({
       <EditScheduleSection
         form={form}
         timeZones={timeZones}
-        unchangedSchedule={prefill.fieldsSentBackUnchanged.schedule}
+        loadedSchedule={prefill.loadedSchedule}
       />
       <SaveButton label="Save changes" isSubmitting={isSubmitting} />
     </form>

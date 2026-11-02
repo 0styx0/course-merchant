@@ -20,5 +20,11 @@ export const editCourseFormSchema = z.object({
   schedule: z.object({ timeZone: timeZoneSchema }),
 });
 
+/** The course's stored start and end, as the UTC strings the API sent. */
+export type LoadedSchedule = {
+  startTime: string;
+  endTime: string;
+};
+
 /** The edited details as typed, before the schema checks and trims them. */
 export type EditCourseFormValues = z.input<typeof editCourseFormSchema>;
