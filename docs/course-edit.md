@@ -32,19 +32,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **4c.** Saving sends the edited prices: the page splits the loaded prices into those in effect and future ones when it renders, future ones become rows, and the browser and the action refuse broken rows. The rows aren't on screen yet.
   - [x] **4d.** The admin sees the prices in effect as a read-only list, latest marked "current price", and edits, adds and removes future price rows; the page intro says only status can't be changed yet.
 - [ ] **5. Image upload on edit.** The page shows the current image, and a newly chosen image uploads when the admin saves, after the details.
-  - [ ] **5a.** Create's image input and its preview become shared pieces that edit can use later. Create behaves the same. *(mechanical, coverage first)* **Next**
-    - *Files*:
-      - [image-field.tsx](../web/src/features/admin-courses/image/image-field.tsx) (a `preview` slot replaces `value`)
-      - `image/image-preview.tsx` (the chosen-file preview moves here)
-      - [course-form-fields.tsx](../web/src/features/admin-courses/course-form/fields/course-form-fields.tsx) (`ImageInput`, the form wrapper, moves out of `create-course-sections.tsx`)
-      - [create-course-sections.tsx](../web/src/features/admin-courses/create-course/create-course-sections.tsx)
-      - [image-field.test.tsx](../web/src/features/admin-courses/image/image-field.test.tsx)
-      - Folder counts: `image/` 4 → 5.
-    - *New shared pieces*:
-      - The `preview` slot: create passes the chosen file, edit passes the chosen file or the stored image.
-      - `ImageInput`: generic over any form with an `image` field.
-    - *Done when*: the image-field and create-form tests pass unchanged.
-  - [ ] **5b.** The web app serves a course's stored image to the admin's browser at `/admin/courses/{courseId}/image`. Nothing uses it yet.
+  - [x] **5a.** Create's image input and its preview are shared pieces (`ImageInput` takes the name and a preview function; `ImagePreview` is its own file); create behaves the same.
+  - [ ] **5b.** The web app serves a course's stored image to the admin's browser at `/admin/courses/{courseId}/image`. Nothing uses it yet. **Next**
     - *Files*:
       - [admin-courses.api.ts](../web/src/features/admin-courses/save-course/admin-courses.api.ts) (new `getCourseImageAsAdmin`, `parseAs: "arrayBuffer"`)
       - `web/src/app/admin/(signed-in)/courses/[courseId]/image/route.ts` and its test

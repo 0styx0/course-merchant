@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { courseImageSchema, type ChosenImage } from "./course-image";
 import { ImageField } from "./image-field";
+import { ImagePreview } from "./image-preview";
 
 const createObjectURL = vi.fn();
 const revokeObjectURL = vi.fn();
@@ -44,7 +45,7 @@ function Harness({ onChange }: { onChange?: (image: ChosenImage) => void }) {
     result && !result.success ? result.error.issues[0].message : undefined;
   return (
     <ImageField
-      value={value}
+      preview={value && value.width > 0 && <ImagePreview file={value.file} />}
       onChange={(image) => {
         setValue(image);
         onChange?.(image);

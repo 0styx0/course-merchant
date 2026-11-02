@@ -1,6 +1,6 @@
 "use client";
 
-import { Controller, type UseFieldArrayReturn } from "react-hook-form";
+import { type UseFieldArrayReturn } from "react-hook-form";
 
 import {
   courseFieldLabels,
@@ -16,13 +16,15 @@ import {
   TimeZoneField,
   type CourseFormApi,
 } from "../course-form/fields/course-form-fields";
+import { ImageInput } from "../course-form/fields/image-input";
 import {
   BasicsSection,
   PricingSection,
   ScheduleSection,
 } from "../course-form/sections/course-form-sections";
 import { ScheduleProblems } from "../course-form/sections/schedule-problems";
-import { ImageField } from "../image/image-field";
+import type { ChosenImage } from "../image/course-image";
+import { ImagePreview } from "../image/image-preview";
 import { PriceRow } from "../price/price-row";
 import type { priceSummary } from "../price/price-summary";
 import {
@@ -33,30 +35,10 @@ import type { CourseFormWithImageValues } from "../validation/course-form-schema
 
 type CreateForm = CourseFormApi<CourseFormWithImageValues>;
 
-function ImageInput({
-  form,
-  isSubmitted,
-}: {
-  form: CreateForm;
-  isSubmitted: boolean;
-}) {
-  return (
-    <Controller
-      control={form.control}
-      name="image"
-      render={({ field, fieldState }) => (
-        <ImageField
-          value={field.value}
-          onChange={field.onChange}
-          onBlur={field.onBlur}
-          fieldRef={field.ref}
-          error={fieldState.error?.message}
-          touched={fieldState.isTouched}
-          submitted={isSubmitted}
-        />
-      )}
-    />
-  );
+/** Create previews only the chosen file, and keeps the preview of a refused one. */
+function renderChosenFilePreview(image: ChosenImage | null) {
+  if (!image || image.width === 0) return null;
+  return <ImagePreview file={image.file} />;
 }
 
 /** Create's basics: the image, name, summary and description. */
@@ -69,7 +51,12 @@ export function CreateBasicsSection({
 }) {
   return (
     <BasicsSection>
-      <ImageInput form={form} isSubmitted={isSubmitted} />
+      <ImageInput
+        form={form}
+        name="image"
+        isSubmitted={isSubmitted}
+        renderPreview={renderChosenFilePreview}
+      />
       <InputField
         form={form}
         name="name"

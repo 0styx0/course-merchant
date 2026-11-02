@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
 
 import {
   ValidatedField,
@@ -15,7 +21,8 @@ import {
 } from "./course-image";
 
 type ImageFieldProps = {
-  value: ChosenImage | null;
+  /** What shows under the picker: the chosen file, a stored image, or nothing. */
+  preview: ReactNode;
   onChange: (image: ChosenImage) => void;
   onBlur: () => void;
   /** react-hook-form's `field.ref`: lets it and the error list focus the input. */
@@ -24,33 +31,6 @@ type ImageFieldProps = {
   touched: boolean;
   submitted: boolean;
 };
-
-/** A temporary address for showing the file; released when the file changes or the field goes. */
-function useObjectUrl(file: File | undefined) {
-  const [url, setUrl] = useState<string>();
-  useEffect(() => {
-    if (!file) return;
-    const objectUrl = URL.createObjectURL(file);
-    // The address exists only in the browser, so it can't be made during render.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [file]);
-  return file ? url : undefined;
-}
-
-function ImagePreview({ file }: { file: File }) {
-  const url = useObjectUrl(file);
-  if (!url) return null;
-  return (
-    // eslint-disable-next-line @next/next/no-img-element -- a local blob, not optimizable
-    <img
-      src={url}
-      alt="Preview of the chosen image"
-      className="aspect-video w-full rounded-lg border object-cover object-center"
-    />
-  );
-}
 
 type FileInputProps = Omit<ValidatedFieldInputProps, "labelId"> &
   Pick<ImageFieldProps, "onChange" | "onBlur" | "fieldRef">;
@@ -97,11 +77,11 @@ function FileInput({
 }
 
 /**
- * The course image's file picker, with a 16:9 preview cropped like the public
- * pages, the state icon and the error message. A refused file keeps its preview.
+ * The course image's file picker, with the page's preview, the state icon and
+ * the error message.
  */
 export function ImageField({
-  value,
+  preview,
   onChange,
   onBlur,
   fieldRef,
@@ -109,7 +89,6 @@ export function ImageField({
   touched,
   submitted,
 }: ImageFieldProps) {
-  const hasPreview = value !== null && value.width > 0;
   return (
     <ValidatedField
       label="Image"
@@ -128,7 +107,7 @@ export function ImageField({
             onBlur={onBlur}
             fieldRef={fieldRef}
           />
-          {hasPreview && <ImagePreview file={value.file} />}
+          {preview}
         </div>
       )}
     </ValidatedField>
