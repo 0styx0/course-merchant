@@ -7,7 +7,7 @@ import { formatMoment } from "../schedule/summary/format-moment";
 import { toUtcMs } from "../schedule/wall-clock-time";
 
 /** "$79.50", "$99" or "Free": the typed amount, with a comma read as the decimal mark. */
-function formatDollars(typed: string): string {
+export function formatDollars(typed: string): string {
   const dollars = normalizeDollars(typed);
   if (Number(dollars) === 0) return "Free";
   const [whole, cents = ""] = dollars.split(".");

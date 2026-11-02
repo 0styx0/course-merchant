@@ -21,8 +21,7 @@ function EditCoursePageLayout({ children }: { children: ReactNode }) {
     <main className="mx-auto max-w-2xl px-6 py-12">
       <h1 className="text-3xl font-bold">Edit course</h1>
       <p className="mt-2 text-muted-foreground">
-        Change the course details. Start and end times, prices and status
-        can&apos;t be changed here yet.
+        Change the course details. Status can&apos;t be changed here yet.
       </p>
       <div className="mt-8">{children}</div>
     </main>

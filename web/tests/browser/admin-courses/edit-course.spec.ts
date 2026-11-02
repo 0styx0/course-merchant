@@ -3,7 +3,10 @@ import msw from "next/experimental/testmode/playwright/msw.js";
 
 import { getCourseAsAdminHandlers } from "@/mocks/handlers/get-course-as-admin";
 import { coursesSuccess } from "@/mocks/handlers/list-courses";
-import { makeTwoRoundsRefusalHandler } from "@/mocks/handlers/update-course";
+import {
+  makeTwoRoundsRefusalHandler,
+  updateCourseHandlers,
+} from "@/mocks/handlers/update-course";
 
 const { test, expect } = msw;
 
@@ -72,16 +75,37 @@ test("fills the schedule boxes and shows a past start on the schedule line", asy
   msw.use(getCourseAsAdminHandlers.success);
   await page.goto(editPath);
 
-  await expect(page.getByLabel("Start date")).toHaveValue("2026-10-01");
+  await expect(page.getByLabel("Start date", { exact: true })).toHaveValue(
+    "2026-10-01",
+  );
   await expect(page.getByLabel("End time")).toHaveValue("16:00");
 
-  await page.getByLabel("Start date").fill("2026-10-02");
+  await page.getByLabel("Start date", { exact: true }).fill("2026-10-02");
   await page.getByRole("button", { name: "Save changes" }).click();
 
   await expect(page.locator("#schedule-problems")).toContainText(
     "The start time must be in the future.",
   );
   await expect(page).toHaveURL(/\/edit$/);
+});
+
+test("lists the price in effect and saves a changed future price", async ({
+  page,
+  msw,
+}) => {
+  msw.use(getCourseAsAdminHandlers.success, updateCourseHandlers.success);
+  await page.goto(editPath);
+
+  await expect(
+    page.getByRole("list", { name: /^Prices in effect/ }),
+  ).toContainText("(current price)");
+  const price = page.getByLabel("Price", { exact: true });
+  await expect(price).toHaveValue("129.00");
+
+  await price.fill("149");
+  await page.getByRole("button", { name: "Save changes" }).click();
+
+  await expect(page).toHaveURL("/");
 });
 
 for (const scenario of ["notFound", "invalidId"] as const) {

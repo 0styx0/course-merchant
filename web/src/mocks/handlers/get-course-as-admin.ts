@@ -1,6 +1,6 @@
 import type { operations } from "@/lib/api/generated";
 import { http, HttpResponse } from "msw";
-import { draftedAdminCourse } from "../fixtures/admin-courses";
+import { adminCourseWithFuturePrice } from "../fixtures/admin-courses";
 import { MOCK_API_BASE_URL } from "../mock-api";
 import { problemResponse } from "../problem-response";
 
@@ -16,7 +16,7 @@ type InternalServerErrorResponse =
 const adminCourseByIdUrl = `${MOCK_API_BASE_URL}/v1/admin/courses/:courseId`;
 
 const adminCourseByIdSuccess = http.get(adminCourseByIdUrl, () => {
-  return HttpResponse.json(draftedAdminCourse);
+  return HttpResponse.json(adminCourseWithFuturePrice);
 });
 
 const adminCourseByIdNotFound = http.get(adminCourseByIdUrl, ({ params }) => {

@@ -26,29 +26,12 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3b.** The code can show a stored time as date and time boxes in a zone, and check an edited schedule (an unchanged time may be in the past, a changed one may not). Nothing uses it yet.
   - [x] **3c.** Saving sends the start and end from the four date and time boxes, and the browser and the action both refuse a broken schedule. The schedule line follows the boxes. The boxes aren't on screen yet.
   - [x] **3d.** The admin sees and edits the four date and time boxes; problems that compare boxes show on the schedule line, and a zone change re-checks the schedule.
-- [ ] **4. Prices on edit.** Prices in effect are read-only; future prices can be edited, added and removed.
+- [x] **4. Prices on edit.** Prices in effect are read-only; future prices can be edited, added and removed.
   - [x] **4a.** The code can check edited price rows (a row still holding a loaded future price may start in the past) and turn stored cents into dollar text; create's price checks run through the same code and behave the same.
   - [x] **4b.** The shared price pieces take from the page whether a row shows Remove, the section's help line and the words for an empty start, and the price rows' error-list entries are shared; create behaves the same.
   - [x] **4c.** Saving sends the edited prices: the page splits the loaded prices into those in effect and future ones when it renders, future ones become rows, and the browser and the action refuse broken rows. The rows aren't on screen yet.
-  - [ ] **4d.** The admin sees the prices in effect as a read-only list, latest marked "current price", and edits, adds and removes future price rows. The page intro says only status can't be changed yet. **Next**
-    - *Files*:
-      - `price/prices-in-effect.tsx` (new; `price/` 5 → 6 files)
-      - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx) (edit's pricing section; the zone field re-checks the prices)
-      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (the row list, the price summary, and the error list counting the live rows instead of the loaded ones)
-      - [page.tsx](../web/src/app/admin/(signed-in)/courses/[courseId]/edit/page.tsx) (intro: "Change the course details. Status can't be changed here yet.")
-      - [get-course-as-admin.ts](../web/src/mocks/handlers/get-course-as-admin.ts) and its fixture (a course with one price in effect and one future price)
-      - `edit-course/tests/` 5 → 6 files (a prices test).
-    - *Behaviours*:
-      - The list shows the prices in effect oldest first, the latest with "(current price)", in the chosen zone; it is absent when none is in effect.
-      - A zone change shows the list and the summary in the new zone and re-checks the rows.
-      - The only row shows Remove when a price is in effect, and hides it otherwise.
-      - An added row with an empty date and time reads "from when you save" in the summary, under the help line "Leave the date and time empty to start when you save."
-      - Removing a row clears a same-time error on the other row.
-      - A refused save lists price fields by label ("Price 2 start time").
-      - Playwright: the mocked course shows its list and row; the admin changes the row's amount, saves and lands on `/`.
-    - *Needs*: 4b, 4c.
-    - *Done when*: the tests pass and the owner has used the page in `dev:mock`.
-- [ ] **5. Image upload on edit.** The page shows the current image and uploads a new one in its own step.
+  - [x] **4d.** The admin sees the prices in effect as a read-only list, latest marked "current price", and edits, adds and removes future price rows; the page intro says only status can't be changed yet.
+- [ ] **5. Image upload on edit.** The page shows the current image and uploads a new one in its own step. **Next** (run `/plan-create-implementation course-edit` to split it into commits)
 - [ ] **6. Status on edit.** Published, drafted, archived and deleted, with a warning before publishing without an image and a confirmation before deleting.
 
 ## Principles

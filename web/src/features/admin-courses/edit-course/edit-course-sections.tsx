@@ -1,8 +1,11 @@
 "use client";
 
-import { useWatch } from "react-hook-form";
+import { useWatch, type UseFieldArrayReturn } from "react-hook-form";
 
-import { courseFieldLabels } from "../course-form/fields/course-field-labels-and-price-row-names";
+import {
+  courseFieldLabels,
+  priceRowNames,
+} from "../course-form/fields/course-field-labels-and-price-row-names";
 import {
   DescriptionField,
   InputField,
@@ -15,15 +18,23 @@ import {
 } from "../course-form/sections/course-form-schedule-fields";
 import {
   BasicsSection,
+  PricingSection,
   ScheduleSection,
 } from "../course-form/sections/course-form-sections";
 import { ScheduleProblems } from "../course-form/sections/schedule-problems";
+import { PriceRow } from "../price/price-row";
+import { PricesInEffect } from "../price/prices-in-effect";
+import { priceSummary } from "../price/price-summary";
 import { scheduleSummary } from "../schedule/summary/schedule-summary";
+import { isKnownTimeZone } from "../validation/course-form-schema";
 import {
   COURSE_NAME_MAX_LENGTH,
   COURSE_SUMMARY_MAX_LENGTH,
 } from "../validation/course-form-limits";
-import type { EditCourseFormValues } from "../validation/edit-course-form-schema";
+import type {
+  EditCourseFormValues,
+  LoadedPrice,
+} from "../validation/edit-course-form-schema";
 
 type EditForm = CourseFormApi<EditCourseFormValues>;
 
@@ -74,10 +85,78 @@ export function EditScheduleSection({
       <TimeZoneField
         form={form}
         name="schedule.timeZone"
-        recheck={["schedule"]}
+        recheck={["schedule", "prices"]}
         timeZones={timeZones}
       />
       <ScheduleDateTimeFields form={form} names={scheduleNames} />
     </ScheduleSection>
+  );
+}
+
+/** What an added price row looks like before anything is typed in it. */
+const emptyEditPrice = {
+  amountDollars: "",
+  effectiveDate: "",
+  effectiveTimeOfDay: "",
+};
+
+/**
+ * The zone the prices are shown in, and the price summary, kept in step with
+ * the boxes. A stored zone the list lacks shows in UTC, as the boxes do.
+ */
+function useZoneAndPriceSummary(form: EditForm) {
+  const chosenZone = useWatch({
+    control: form.control,
+    name: "schedule.timeZone",
+  });
+  const timeZone = isKnownTimeZone(chosenZone) ? chosenZone : "UTC";
+  const prices = useWatch({ control: form.control, name: "prices" });
+  const summary = priceSummary(prices, {
+    timeZone,
+    textForEmptyStart: "when you save",
+  });
+  return { timeZone, summary };
+}
+
+type EditPricingSectionProps = {
+  form: EditForm;
+  priceRows: UseFieldArrayReturn<EditCourseFormValues, "prices">;
+  pricesInEffect: LoadedPrice[];
+};
+
+/** Edit's pricing: the read-only prices in effect, then one row per future price. */
+export function EditPricingSection({
+  form,
+  priceRows,
+  pricesInEffect,
+}: EditPricingSectionProps) {
+  const { timeZone, summary } = useZoneAndPriceSummary(form);
+  function removePriceRow(index: number) {
+    priceRows.remove(index);
+    // A "same time as another row" error may now be gone.
+    void form.trigger("prices");
+  }
+  // A price in effect keeps the course priced, so even the only row may go.
+  const minimumRows = pricesInEffect.length > 0 ? 0 : 1;
+
+  return (
+    <PricingSection
+      help="Leave the date and time empty to start when you save."
+      onAddPrice={() => priceRows.append(emptyEditPrice)}
+      summary={summary}
+    >
+      <PricesInEffect prices={pricesInEffect} timeZone={timeZone} />
+      {priceRows.fields.map((row, index) => (
+        <PriceRow
+          key={row.id}
+          form={form}
+          names={priceRowNames(index)}
+          index={index}
+          rowCount={priceRows.fields.length}
+          showRemove={priceRows.fields.length > minimumRows}
+          onRemove={() => removePriceRow(index)}
+        />
+      ))}
+    </PricingSection>
   );
 }

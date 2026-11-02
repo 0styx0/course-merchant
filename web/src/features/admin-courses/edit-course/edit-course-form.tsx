@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 
 import { ErrorSummary } from "@/components/form/error-summary";
 
@@ -13,12 +13,16 @@ import {
   type EditCourseFormValues,
 } from "../validation/edit-course-form-schema";
 import { editCourseFields } from "./edit-course-fields";
-import { EditBasicsSection, EditScheduleSection } from "./edit-course-sections";
+import {
+  EditBasicsSection,
+  EditPricingSection,
+  EditScheduleSection,
+} from "./edit-course-sections";
 import type { EditFormPrefill } from "./edit-form-prefill";
 import { useSaveEditedCourse } from "./use-save-edited-course";
 
 function useEditCourseFormState(prefill: EditFormPrefill) {
-  return useForm<EditCourseFormValues, unknown, EditCourseFormValues>({
+  const form = useForm<EditCourseFormValues, unknown, EditCourseFormValues>({
     resolver: zodResolver(
       makeEditCourseFormSchema(prefill.loadedSchedule, prefill.loadedPrices),
     ),
@@ -26,6 +30,8 @@ function useEditCourseFormState(prefill: EditFormPrefill) {
     mode: "onTouched",
     shouldFocusError: false,
   });
+  const priceRows = useFieldArray({ control: form.control, name: "prices" });
+  return { form, priceRows };
 }
 
 type EditCourseFormProps = {
@@ -41,7 +47,7 @@ export function EditCourseForm({
   prefill,
   timeZones,
 }: EditCourseFormProps) {
-  const form = useEditCourseFormState(prefill);
+  const { form, priceRows } = useEditCourseFormState(prefill);
   const { save, saved, serverProblem, clearServerProblem } =
     useSaveEditedCourse(
       form,
@@ -52,8 +58,7 @@ export function EditCourseForm({
     );
   const errorList = useErrorListAndLeaveWarning(
     form,
-    // The rows go on screen in the next step; until then their number is fixed.
-    editCourseFields(prefill.values.prices.length),
+    editCourseFields(priceRows.fields.length),
     saved,
   );
   const { isSubmitting } = form.formState;
@@ -68,6 +73,11 @@ export function EditCourseForm({
       <EditBasicsSection form={form} />
       <ContentLinkSection form={form} name="contentUrl" />
       <EditScheduleSection form={form} timeZones={timeZones} />
+      <EditPricingSection
+        form={form}
+        priceRows={priceRows}
+        pricesInEffect={prefill.loadedPrices.inEffect}
+      />
       <SaveButton label="Save changes" isSubmitting={isSubmitting} />
     </form>
   );

@@ -22,3 +22,17 @@ export const draftedAdminCourse = {
     },
   ],
 } as const satisfies AdminCourse;
+
+/** A course being edited: one price in effect and one still to come. */
+export const adminCourseWithFuturePrice = {
+  ...draftedAdminCourse,
+  prices: [
+    ...draftedAdminCourse.prices,
+    {
+      id: "0b7a9c3e-1f2d-4e5a-8b6c-7d8e9f0a1b2c",
+      amount: 12900,
+      currency: "USD",
+      effectiveAt: "2099-03-01T14:00:00Z",
+    },
+  ],
+} as const satisfies AdminCourse;

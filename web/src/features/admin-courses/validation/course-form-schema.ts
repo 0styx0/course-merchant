@@ -44,7 +44,7 @@ function tooLongMessage(label: string, max: number): string {
 // every validation, so build the set once on first use and keep it.
 let knownTimeZones: Set<string> | undefined;
 
-function isKnownTimeZone(timeZone: string): boolean {
+export function isKnownTimeZone(timeZone: string): boolean {
   knownTimeZones ??= new Set(Intl.supportedValuesOf("timeZone"));
   return knownTimeZones.has(timeZone);
 }
