@@ -1,5 +1,5 @@
 import { toCents } from "../price/dollar-amount";
-import { utcToWallClock } from "../schedule/wall-clock-time";
+import { utcToWallClock, wallClockToUtc } from "../schedule/wall-clock-time";
 import { MIN_PRICE_LEAD_MS } from "./course-form-limits";
 import {
   issueAt,
@@ -13,6 +13,51 @@ type PriceRowBoxes = {
   effectiveDate: string;
   effectiveTimeOfDay: string;
 };
+
+/** A price row's start boxes as typed. */
+type PriceStartBoxes = Pick<
+  PriceRowBoxes,
+  "effectiveDate" | "effectiveTimeOfDay"
+>;
+
+/** What is wrong with a price row's start boxes, before any comparison with other times. */
+export type PriceStartProblem =
+  | "needs-time"
+  | "needs-date"
+  | "invalid-time"
+  | "skipped-time"
+  | "unknown-zone";
+
+type HalfFilledStart = Extract<PriceStartProblem, "needs-time" | "needs-date">;
+
+/** Which of a row's date and time boxes is missing while the other has text. */
+function halfFilledStart({
+  effectiveDate: date,
+  effectiveTimeOfDay: timeOfDay,
+}: PriceStartBoxes): HalfFilledStart | undefined {
+  if (date && !timeOfDay) return "needs-time";
+  if (timeOfDay && !date) return "needs-date";
+  return undefined;
+}
+
+/**
+ * The one check of a row's start boxes that both the box messages and the
+ * price list read. The box messages skip "unknown-zone", because the zone box
+ * carries that message.
+ */
+export function priceStartProblem(
+  boxes: PriceStartBoxes,
+  timeZone: string,
+): PriceStartProblem | undefined {
+  const { effectiveDate: date, effectiveTimeOfDay: timeOfDay } = boxes;
+  const halfFilled = halfFilledStart(boxes);
+  if (halfFilled) return halfFilled;
+  if (!date) return undefined;
+  const result = wallClockToUtc(`${date}T${timeOfDay}`, timeZone);
+  if (result.state === "success") return undefined;
+  if (result.error === "daylight-saving") return "skipped-time";
+  return result.error;
+}
 
 /** A price the edit page loaded that started after the page rendered. */
 export type LoadedFuturePrice = { amount: number; effectiveAt: string };
@@ -100,14 +145,14 @@ function halfFilledIssue(
   row: PriceRowBoxes,
   index: number,
 ): FormIssue | undefined {
-  const { effectiveDate: date, effectiveTimeOfDay: timeOfDay } = row;
-  if (date && !timeOfDay) {
+  const problem = halfFilledStart(row);
+  if (problem === "needs-time") {
     return issueAt(
       ["prices", index, "effectiveTimeOfDay"],
       "Enter a time, or clear the date.",
     );
   }
-  if (timeOfDay && !date) {
+  if (problem === "needs-date") {
     return issueAt(
       ["prices", index, "effectiveDate"],
       "Enter a date, or clear the time.",

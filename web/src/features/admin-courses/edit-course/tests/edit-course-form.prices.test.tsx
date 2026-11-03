@@ -150,7 +150,7 @@ describe("EditCourseForm prices", () => {
     const summaryLines = screen
       .getAllByRole("listitem")
       .map((line) => line.textContent);
-    expect(summaryLines).toContain("$150 from when you save");
+    expect(summaryLines).toContain("$150.00 from when you save");
   });
 
   it("clears the same-time error when the duplicate row is removed", async () => {

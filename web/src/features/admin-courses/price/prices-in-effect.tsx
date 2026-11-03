@@ -14,7 +14,7 @@ function startMsOf(price: LoadedPrice): number {
   return Date.parse(price.effectiveAt);
 }
 
-/** "$99 from Oct 15, 2026, 2:31 PM": one stored price as the list shows it. */
+/** "$99.00 from Oct 15, 2026, 2:31 PM": one stored price as the list shows it. */
 function priceInEffectText(price: LoadedPrice, timeZone: string): string {
   const amount = formatDollars(toDollarText(price.amount));
   return `${amount} from ${formatMoment(startMsOf(price), timeZone)}`;

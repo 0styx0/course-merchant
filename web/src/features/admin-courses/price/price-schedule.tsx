@@ -28,7 +28,7 @@ function PriceList({
   return (
     <>
       <p className="font-medium">Price schedule ({summary.timeZone})</p>
-      <ol className="list-[upper-roman] pl-6">
+      <ul className="list-disc pl-6">
         {summary.lines.map((parts, index) => (
           <li key={index}>
             {parts.map(({ text, isError }, partIndex) => (
@@ -41,7 +41,7 @@ function PriceList({
             ))}
           </li>
         ))}
-      </ol>
+      </ul>
     </>
   );
 }

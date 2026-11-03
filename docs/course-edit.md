@@ -52,22 +52,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [ ] **9. Prices in plain words.** A past price start shows on the box to change, the price list says what to fix in words, amounts read $50.00, and the rows line up.
   - [x] **9a.** The schedule's date and time boxes take their "check this box and the boxes it compares with" behaviour from a shared piece; nothing changes for the admin.
   - [x] **9b.** A price start in the past shows under the box to change, on both pages; any price box change re-checks every price box already reached.
-  - [ ] **9c.** The price list under the rows says what to fix, in words, as a plain bulleted list, on both pages. **Next**
-    - *Behaviours*:
-      - A date with no time reads "$50.00 from (needs a time)"; a time with no date reads "… from (needs a date)".
-      - A broken amount reads "(price needs fixing) from …"; a time the zone skips reads "(time doesn't exist in this zone)"; the later of two equal starts reads "(same start as another price)".
-      - The words in parentheses stay red; no "Error" text remains; bullets replace Roman numerals.
-      - A past start shows its date as usual (its box carries the message).
-      - A typed "50" reads "$50.00"; 0 still reads "Free"; the prices in effect keep "$99.00" (pinned by the existing edit prices test).
-    - *New shared pieces*: one check of what is wrong with a row's start, exported from `price-row-issues.ts`, read by both the box messages and the list, so the list stops repeating the checks.
-    - *Files*:
-      - [price-summary.ts](../web/src/features/admin-courses/price/price-summary.ts)
-      - [price-schedule.tsx](../web/src/features/admin-courses/price/price-schedule.tsx)
-      - [price-row-issues.ts](../web/src/features/admin-courses/validation/price-row-issues.ts)
-      - tests: price-summary unit, create fields test ("lists the price schedule…")
-    - *Settled*: the decision row on the price list's wording.
-    - *Done when*: no `Error` text in the price list (re-measure grep); tests pass.
-  - [ ] **9d.** The price rows line up, at 400 px and on desktop.
+  - [x] **9c.** The price list under the rows says what to fix in words (e.g. "$50.00 from (needs a time)"), as a plain bulleted list with amounts read $50.00, on both pages.
+  - [ ] **9d.** The price rows line up, at 400 px and on desktop. **Next**
     - *New shared pieces*: none.
     - *Files*: [price-row.tsx](../web/src/features/admin-courses/price/price-row.tsx) (layout classes only)
     - *Done when*: checked by eye in `dev:mock` at both widths, with and without a message under a box.

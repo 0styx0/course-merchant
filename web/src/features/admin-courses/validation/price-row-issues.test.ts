@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { priceRowIssues, type LoadedFuturePrice } from "./price-row-issues";
+import {
+  priceRowIssues,
+  priceStartProblem,
+  type LoadedFuturePrice,
+} from "./price-row-issues";
 
 // 2026-06-01 12:00 in New York is 16:00 UTC.
 const NOW = Date.parse("2026-06-01T16:00:00Z");
@@ -222,5 +226,37 @@ describe("priceRowIssues", () => {
         },
       ]);
     });
+  });
+});
+
+describe("priceStartProblem", () => {
+  const problemOf = (date: string, timeOfDay: string) =>
+    priceStartProblem(
+      { effectiveDate: date, effectiveTimeOfDay: timeOfDay },
+      ZONE,
+    );
+
+  it.each([
+    ["a date without a time", "2030-02-01", "", "needs-time"],
+    ["a time without a date", "", "09:00", "needs-date"],
+    ["an impossible date", "2030-02-31", "09:00", "invalid-time"],
+    ["a time the zone skips", "2030-03-10", "02:30", "skipped-time"],
+  ])("names the problem for %s", (_name, date, time, problem) => {
+    expect(problemOf(date, time)).toBe(problem);
+  });
+
+  it("finds nothing wrong with a full start, or an empty one", () => {
+    expect(problemOf("2030-02-01", "09:00")).toBeUndefined();
+    expect(problemOf("", "")).toBeUndefined();
+  });
+
+  it("names an unknown zone for a full start, and nothing for an empty one", () => {
+    const inUnknownZone = (date: string, timeOfDay: string) =>
+      priceStartProblem(
+        { effectiveDate: date, effectiveTimeOfDay: timeOfDay },
+        "Mars/Base",
+      );
+    expect(inUnknownZone("2030-02-01", "09:00")).toBe("unknown-zone");
+    expect(inUnknownZone("", "")).toBeUndefined();
   });
 });

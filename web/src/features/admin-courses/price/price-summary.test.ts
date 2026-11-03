@@ -29,7 +29,7 @@ describe("priceSummary", () => {
 
   it("lists one price starting when published", () => {
     expect(texts([price("99")])).toEqual([
-      "$99 from when the course is published",
+      "$99.00 from when the course is published",
     ]);
     expect(summaryOf([price("99")]).timeZone).toBe(zone);
   });
@@ -42,9 +42,9 @@ describe("priceSummary", () => {
         price("59.5", "2030-01-15", "18:00"),
       ]),
     ).toEqual([
-      "$99 from when the course is published",
+      "$99.00 from when the course is published",
       "$59.50 from Jan 15, 2030, 6:00 PM",
-      "$79 from Feb 1, 2030, 9:00 AM",
+      "$79.00 from Feb 1, 2030, 9:00 AM",
     ]);
   });
 
@@ -57,42 +57,68 @@ describe("priceSummary", () => {
 
   it("shows moments in the chosen zone", () => {
     const row = [price("99", "2030-02-01", "09:00")];
-    expect(texts(row, "Asia/Tokyo")).toEqual(["$99 from Feb 1, 2030, 9:00 AM"]);
+    expect(texts(row, "Asia/Tokyo")).toEqual([
+      "$99.00 from Feb 1, 2030, 9:00 AM",
+    ]);
     expect(summaryOf(row, "Asia/Tokyo").timeZone).toBe("Asia/Tokyo");
   });
 
-  it("replaces only the invalid amount with Error", () => {
+  it("says in words that the amount needs fixing", () => {
     const rows = [price("abc", "2030-02-01", "09:00")];
-    expect(texts(rows)).toEqual(["$Error from Feb 1, 2030, 9:00 AM"]);
-    expect(errorTexts(rows)).toEqual([["Error"]]);
+    expect(texts(rows)).toEqual([
+      "(price needs fixing) from Feb 1, 2030, 9:00 AM",
+    ]);
+    expect(errorTexts(rows)).toEqual([["(price needs fixing)"]]);
   });
 
   it.each([
-    ["a date without a time", price("1", "2030-02-01", "")],
-    ["a time without a date", price("1", "", "09:00")],
-    ["an impossible date", price("1", "2030-02-31", "09:00")],
-  ])("replaces only the start with Error for %s", (_name, row) => {
-    expect(texts([row])).toEqual(["$1 from Error"]);
-    expect(errorTexts([row])).toEqual([["Error"]]);
+    ["a date without a time", price("1", "2030-02-01", ""), "needs a time"],
+    ["a time without a date", price("1", "", "09:00"), "needs a date"],
+    [
+      "an impossible date",
+      price("1", "2030-02-31", "09:00"),
+      "date or time isn't valid",
+    ],
+    [
+      "a time the zone skips",
+      price("1", "2030-03-10", "02:30"),
+      "time doesn't exist in this zone",
+    ],
+  ])("says what is wrong with the start for %s", (_name, row, words) => {
+    expect(texts([row])).toEqual([`$1.00 from (${words})`]);
+    expect(errorTexts([row])).toEqual([[`(${words})`]]);
+  });
+
+  it("asks for a valid zone, not a different start, when the zone is unknown", () => {
+    const rows = [price("1", "2030-02-01", "09:00")];
+    expect(texts(rows, "Mars/Base")).toEqual([
+      "$1.00 from (needs a valid zone)",
+    ]);
   });
 
   it("marks the start of the later of two prices starting together", () => {
     expect(texts([price("99"), price("79")])).toEqual([
-      "$99 from when the course is published",
-      "$79 from Error",
+      "$99.00 from when the course is published",
+      "$79.00 from (same start as another price)",
     ]);
   });
 
-  it("puts prices with an Error start after the dated ones", () => {
+  it("reads a typed whole amount with cents", () => {
+    expect(texts([price("50")])).toEqual([
+      "$50.00 from when the course is published",
+    ]);
+  });
+
+  it("puts prices with a broken start after the dated ones", () => {
     expect(
       texts([price("1", "2030-02-01", ""), price("2", "2030-03-01", "09:00")]),
-    ).toEqual(["$2 from Mar 1, 2030, 9:00 AM", "$1 from Error"]);
+    ).toEqual(["$2.00 from Mar 1, 2030, 9:00 AM", "$1.00 from (needs a time)"]);
   });
 
   it("shows an empty line, not an error, for a price not given", () => {
     expect(texts([price(""), price("5")])).toEqual([
       "",
-      "$5 from when the course is published",
+      "$5.00 from when the course is published",
     ]);
     expect(errorTexts([price("", "2030-02-01", "")])).toEqual([[]]);
   });
@@ -121,7 +147,7 @@ describe("priceSummary", () => {
   it("returns the summary when only a later row has text", () => {
     expect(texts([price(""), price("5")])).toEqual([
       "",
-      "$5 from when the course is published",
+      "$5.00 from when the course is published",
     ]);
   });
 });
