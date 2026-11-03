@@ -58,19 +58,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **10a.** Saving on the create page opens the new course's edit page (`?saved=draft`); edit still goes to `/`.
   - [x] **10b.** The error list's sticky box at the top of the form comes from a shared piece; nothing changes for the admin.
   - [x] **10c.** The edit page says "Saved as a draft" when the admin arrives from create, drops the flag from the address, and hides the note at the first change.
-  - [ ] **10d.** In `dev:mock` and the browser tests, a saved course comes back as saved, so the owner can walk create → edit → publish. **Next**
-    - *Behaviours*:
-      - a new `remembered` scenario: create and update store the course they answer with, and get-as-admin returns the stored course (or the sample course before any save)
-      - the stored course takes the request's fields, its status as `{ name, changedAt }`, and its prices with new ids
-      - an image upload in that scenario gives the stored course an image version
-      - each handler set starts empty, so one test's save never leaks into the next
-    - *New shared pieces*: the remembered course (one small store that the create, update, upload and get-as-admin handlers share, so each handler stays in its endpoint's file)
-    - *Files*:
-      - `web/src/mocks/remembered-course.ts` (new, with a test)
-      - [create-course.ts](../web/src/mocks/handlers/create-course.ts), [update-course.ts](../web/src/mocks/handlers/update-course.ts), [upload-course-image.ts](../web/src/mocks/handlers/upload-course-image.ts) and [get-course-as-admin.ts](../web/src/mocks/handlers/get-course-as-admin.ts) (each exports a `remembered` handler)
-      - [node.ts](../web/src/mocks/node.ts) (the scenario name)
-    - *Done when*: the store's tests pass, and with `scenario = "remembered"` a course created in `dev:mock` opens with its own name
-  - [ ] **10e.** Saving on the edit page stays there, says "Saved", and loads the stored course again.
+  - [x] **10d.** In `dev:mock` (with `scenario = "remembered"`), a saved course comes back as saved, and browser tests can use the same handlers, so the owner can walk create → edit → publish.
+  - [ ] **10e.** Saving on the edit page stays there, says "Saved", and loads the stored course again. **Next**
     - *Behaviours*:
       - a successful save shows "Saved" in the sticky box, keeps the URL, and asks Next to load the page again
       - the reloaded course resets the form to the stored values, with no unsaved changes

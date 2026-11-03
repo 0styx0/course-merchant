@@ -7,6 +7,7 @@ import {
 } from "../fixtures/admin-courses";
 import { MOCK_API_BASE_URL } from "../mock-api";
 import { problemResponse } from "../problem-response";
+import type { RememberedCourse } from "../remembered-course";
 
 type InvalidCourseIdResponse =
   operations["getCourseAsAdmin"]["responses"][400]["content"]["application/problem+json"];
@@ -58,6 +59,13 @@ const adminCourseByIdError = http.get(adminCourseByIdUrl, () => {
 
   return problemResponse(500, body);
 });
+
+/** Makes a handler that answers with the stored course. */
+export function makeRememberedGetHandler(remembered: RememberedCourse) {
+  return http.get(adminCourseByIdUrl, () =>
+    HttpResponse.json(remembered.current()),
+  );
+}
 
 export const getCourseAsAdminHandlers = {
   success: adminCourseByIdSuccess,

@@ -1,8 +1,10 @@
+import type { CreateCourseRequest } from "@/lib/types";
 import type { operations } from "@/lib/api/generated";
 import { http, HttpResponse } from "msw";
 import { draftedAdminCourse } from "../fixtures/admin-courses";
 import { MOCK_API_BASE_URL } from "../mock-api";
 import { problemResponse } from "../problem-response";
+import type { RememberedCourse } from "../remembered-course";
 
 type ValidationFailedResponse =
   operations["createCourse"]["responses"][400]["content"]["application/problem+json"];
@@ -47,6 +49,15 @@ export const createCourseError = http.post(createCourseUrl, () => {
 
   return problemResponse(500, body);
 });
+
+/** Makes a handler that stores the created course and answers with it. */
+export function makeRememberedCreateHandler(remembered: RememberedCourse) {
+  return http.post(createCourseUrl, async ({ request }) => {
+    // MSW types the body as `any`; the app sends this request shape.
+    remembered.saveSentCourse((await request.json()) as CreateCourseRequest);
+    return HttpResponse.json(remembered.current(), { status: 201 });
+  });
+}
 
 export const createCourseHandlers = {
   success: createCourseSuccess,

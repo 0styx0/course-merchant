@@ -2,6 +2,7 @@ import type { operations } from "@/lib/api/generated";
 import { http, HttpResponse } from "msw";
 import { MOCK_API_BASE_URL } from "../mock-api";
 import { problemResponse } from "../problem-response";
+import type { RememberedCourse } from "../remembered-course";
 
 type ValidationFailedResponse =
   operations["uploadCourseImage"]["responses"][400]["content"]["application/problem+json"];
@@ -44,6 +45,14 @@ export const uploadCourseImageError = http.put(uploadCourseImageUrl, () => {
 
   return problemResponse(500, body);
 });
+
+/** Makes a handler that gives the stored course an image version. */
+export function makeRememberedUploadHandler(remembered: RememberedCourse) {
+  return http.put(uploadCourseImageUrl, () => {
+    remembered.saveUploadedImage();
+    return new HttpResponse(null, { status: 204 });
+  });
+}
 
 export const uploadCourseImageHandlers = {
   success: uploadCourseImageSuccess,
