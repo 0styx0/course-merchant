@@ -33,6 +33,7 @@ import { priceSummary } from "../price/price-summary";
 import { scheduleSummary } from "../schedule/summary/schedule-summary";
 import type { ScheduleProgress } from "./edit-form-prefill";
 import { ScheduleProgressNote } from "./schedule-notes/schedule-progress-note";
+import { TimeZoneChangeNote } from "./schedule-notes/time-zone-change-note";
 import { isKnownTimeZone } from "../validation/course-form-schema";
 import {
   COURSE_NAME_MAX_LENGTH,
@@ -123,14 +124,16 @@ const scheduleNames: ScheduleDateTimeNames<EditCourseFormValues> = {
   endTimeOfDay: "schedule.endTimeOfDay",
 };
 
-/** Edit's schedule: the note for a course that already ran, the zone, the four boxes, and the sentence for them. */
+/** Edit's schedule: the note for a course that already ran, the zone and its change note, the four boxes, and the sentence for them. */
 export function EditScheduleSection({
   form,
   timeZones,
+  loadedTimeZone,
   scheduleProgress,
 }: {
   form: EditForm;
   timeZones: string[];
+  loadedTimeZone: string;
   scheduleProgress: ScheduleProgress;
 }) {
   const schedule = useWatch({ control: form.control, name: "schedule" });
@@ -143,6 +146,11 @@ export function EditScheduleSection({
         name="schedule.timeZone"
         recheck={["schedule", "prices"]}
         timeZones={timeZones}
+      />
+      <TimeZoneChangeNote
+        form={form}
+        loadedTimeZone={loadedTimeZone}
+        scheduleProgress={scheduleProgress}
       />
       <ScheduleDateTimeFields form={form} names={scheduleNames} />
     </ScheduleSection>

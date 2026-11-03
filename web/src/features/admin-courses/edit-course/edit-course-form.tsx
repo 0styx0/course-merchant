@@ -137,6 +137,7 @@ export function EditCourseForm({
       <EditScheduleSection
         form={form}
         timeZones={timeZones}
+        loadedTimeZone={prefill.values.schedule.timeZone}
         scheduleProgress={prefill.scheduleProgress}
       />
       <EditPricingSection

@@ -215,6 +215,133 @@ describe("EditCourseForm schedule", () => {
     );
   });
 
+  describe("time zone change note", () => {
+    const moveNote =
+      "The dates and times stay as typed, so the course moves to that time in Europe/Paris.";
+    const alreadyRanSentence =
+      "Because it has started or ended, the moved times must be in the future.";
+    const futurePrefill = toEditFormPrefill(
+      {
+        ...draftedAdminCourse,
+        schedule: {
+          ...draftedAdminCourse.schedule,
+          startTime: "2026-11-10T18:00:00Z",
+          endTime: "2026-11-10T20:00:00Z",
+        },
+      },
+      Date.parse("2026-11-03T12:00:00Z"),
+    );
+
+    async function typeZone(
+      user: ReturnType<typeof userEvent.setup>,
+      text: string,
+    ) {
+      const zone = screen.getByRole("combobox", { name: "Time zone" });
+      await user.clear(zone);
+      await user.type(zone, text);
+    }
+
+    async function pickParis(user: ReturnType<typeof userEvent.setup>) {
+      await typeZone(user, "paris");
+      await user.click(screen.getByRole("option", { name: "Europe/Paris" }));
+    }
+
+    it("shows no note for the loaded zone", () => {
+      renderForm();
+      expect(screen.queryByText(/stay as typed/)).not.toBeInTheDocument();
+    });
+
+    it("explains a chosen zone and, on a started course, the future rule", async () => {
+      const user = userEvent.setup();
+      renderForm();
+
+      await pickParis(user);
+
+      expect(
+        screen.getByText(`${moveNote} ${alreadyRanSentence}`),
+      ).toBeVisible();
+    });
+
+    it("adds the future rule for a course that is running", async () => {
+      const user = userEvent.setup();
+      renderForm(
+        toEditFormPrefill(
+          {
+            ...draftedAdminCourse,
+            schedule: {
+              ...draftedAdminCourse.schedule,
+              startTime: "2026-11-03T11:00:00Z",
+              endTime: "2026-11-03T14:00:00Z",
+            },
+          },
+          Date.parse("2026-11-03T12:00:00Z"),
+        ),
+      );
+
+      await pickParis(user);
+
+      expect(
+        screen.getByText(`${moveNote} ${alreadyRanSentence}`),
+      ).toBeVisible();
+    });
+
+    it("leaves out the future rule for a course that starts later", async () => {
+      const user = userEvent.setup();
+      renderForm(futurePrefill);
+
+      await pickParis(user);
+
+      expect(screen.getByText(moveNote)).toBeVisible();
+      expect(
+        screen.queryByText(/has started or ended/),
+      ).not.toBeInTheDocument();
+    });
+
+    it("hides the note when the loaded zone is chosen again", async () => {
+      const user = userEvent.setup();
+      renderForm();
+      await pickParis(user);
+      expect(screen.getByText(/stay as typed/)).toBeVisible();
+
+      await typeZone(user, "york");
+      await user.click(
+        screen.getByRole("option", { name: "America/New_York" }),
+      );
+
+      expect(screen.queryByText(/stay as typed/)).not.toBeInTheDocument();
+    });
+
+    it("shows no note for a half-typed zone", async () => {
+      const user = userEvent.setup();
+      renderForm();
+
+      await typeZone(user, "Europe/Par");
+
+      expect(screen.queryByText(/stay as typed/)).not.toBeInTheDocument();
+    });
+
+    it("hides the note when the reloaded course has the new zone", async () => {
+      const user = userEvent.setup();
+      const view = renderForm();
+      await pickParis(user);
+      expect(screen.getByText(/stay as typed/)).toBeVisible();
+
+      view.rerender(
+        makeEditFormElement({
+          ...prefill,
+          values: {
+            ...prefill.values,
+            schedule: { ...prefill.values.schedule, timeZone: "Europe/Paris" },
+          },
+        }),
+      );
+
+      await waitFor(() =>
+        expect(screen.queryByText(/stay as typed/)).not.toBeInTheDocument(),
+      );
+    });
+  });
+
   describe("progress note", () => {
     const now = Date.parse("2026-11-03T12:00:00Z");
     const prefillWithTimes = (startTime: string, endTime: string) =>

@@ -60,29 +60,12 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **10c.** The edit page says "Saved as a draft" when the admin arrives from create, drops the flag from the address, and hides the note at the first change.
   - [x] **10d.** In `dev:mock` (with `scenario = "remembered"`), a saved course comes back as saved, and browser tests can use the same handlers, so the owner can walk create → edit → publish.
   - [x] **10e.** Saving on the edit page stays there, says "Saved", and loads the stored course again.
-- [ ] **11. Edit page explains itself.** The header shows the course's name, its status and a link to its shop page; notes explain a time zone change and a course that already ran.
+- [x] **11. Edit page explains itself.** The header shows the course's name, its status and a link to its shop page; notes explain a time zone change and a course that already ran.
   - [x] **11a.** The status labels (`courseStatusLabels`) and the shop page's address (`shopCoursePath`) each live in one shared place; nothing changes for the admin.
   - [x] **11b.** The header shows the course's saved name, its status, and a link to its shop page when the shop shows it; otherwise it says "Not in the shop".
   - [x] **11c.** Under the Schedule heading, a note says the course has started or ended, and that its times may stay but a changed time must be in the future.
-  - [ ] **11d.** Changing the time zone shows a note under the box: the dates and times stay as typed, so the course moves to that time in the new zone. **Next**
-    - *Behaviours*:
-      - The loaded zone shows no note.
-      - A different known zone shows "The dates and times stay as typed, so the course moves to that time in <zone>."
-      - Going back to the loaded zone hides the note.
-      - A half-typed or unknown zone shows no note.
-      - On a course that has started, the note adds "Because it has started, the moved times must be in the future."
-      - After a save, the new zone is the loaded one, so the note hides.
-    - *New shared pieces*: none.
-    - *Files*:
-      - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx)
-      - `edit-course/schedule-notes/schedule-progress-note.tsx`
-      - [edit-course-form.schedule.test.tsx](../web/src/features/admin-courses/edit-course/tests/edit-course-form.schedule.test.tsx)
-    - *Needs*: 11c.
-    - *Settled*: the decision row on a zone change keeping the typed times.
-    - *Done when*:
-      - Tests are green.
-      - In `dev:mock`, choosing another zone shows the note and the extra sentence.
-- [ ] **12. Delete only without students.** The API refuses to delete a course with enrollments; the edit page greys out Deleted and says to archive it instead.
+  - [x] **11d.** Choosing a different time zone shows a note under the box: the dates and times stay as typed, so the course moves to that time in the new zone, and on a started course the moved times must be in the future.
+- [ ] **12. Delete only without students.** The API refuses to delete a course with enrollments; the edit page greys out Deleted and says to archive it instead. **Next**
 - [ ] **13. Accessible fields on both pages.** Status circles are visible, the check and cross icons have text, and the date boxes point to the schedule line.
 - [ ] **14. Edit layout.** Status sits near the top and Save stays on screen.
 
@@ -193,19 +176,12 @@ Retro:
 - Builds on: [page.tsx](../web/src/app/admin/(signed-in)/courses/[courseId]/edit/page.tsx), [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (the price split at render), [status-section.tsx](../web/src/features/admin-courses/edit-course/status/status-section.tsx) (the status labels), [course-card.tsx](../web/src/features/courses/list/course-card.tsx) (the shop address), and the Decision rows on a zone change and on the refresh after a save.
 - Risk: "already ran" needs the server's clock, as the price split does.
 - Done when: a past course in `dev:mock` shows its note; the header shows name and status.
-- One clock *(temporary)*: the page reads the server's time once, and the price split, the shop check and the started note all use it, so they can't disagree.
-- Flow *(temporary)*:
 
-```
-page loads (server clock read once)
- ├─ load fails → "Edit course" + problem          (11b)
- └─ load works → header: name, status             (11b)
-      ├─ published + price in effect → shop link  (11b)
-      └─ otherwise → "Not in the shop"            (11b)
-    schedule: start passed? → started/ended note   (11c)
-    zone box ≠ loaded zone → zone note             (11d)
-      └─ started → adds the "future" sentence     (11d)
-```
+Retro:
+
+- Planned 3 commits; shipped 4 (11a–11d).
+- Owner changes after using the page: none known.
+- Rule friction: none known.
 
 ## Step 12. Delete only without students
 
