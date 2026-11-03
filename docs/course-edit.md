@@ -50,13 +50,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **8b.** The edit schedule tests check what the admin sees and run on a fixed clock, the create error-list test checks the whole list, and the schedule boxes and empty price rows are tidied. Nothing changes for the admin.
   - [x] **8c.** An end date before the start date shows on End date as soon as it changes, and on the same day an end time not after the start shows on End time only; the error list links to End date.
 - [ ] **9. Prices in plain words.** A past price start shows on the box to change, the price list says what to fix in words, amounts read $50.00, and the rows line up.
-  - [ ] **9a.** The schedule's date and time boxes take their "check this box and the boxes it compares with" behaviour from a shared piece; nothing changes for the admin. *(mechanical)* **Next**
-    - *New shared pieces*: the change handler that marks a box touched, checks it, and re-checks the other boxes already reached or showing a problem (9b's price rows use it).
-    - *Files*:
-      - `web/src/features/admin-courses/course-form/fields/recheck-on-change.ts` (new; names free of "schedule")
-      - [course-form-schedule-fields.tsx](../web/src/features/admin-courses/course-form/sections/course-form-schedule-fields.tsx)
-    - *Done when*: the create and edit schedule tests pass unchanged.
-  - [ ] **9b.** A price start in the past shows under the box to change, on both pages.
+  - [x] **9a.** The schedule's date and time boxes take their "check this box and the boxes it compares with" behaviour from a shared piece; nothing changes for the admin.
+  - [ ] **9b.** A price start in the past shows under the box to change, on both pages. **Next**
     - *Behaviours*:
       - A day that has passed in the chosen zone shows on Start date: "Choose a date that isn't in the past, or leave both empty to start {words}." ("today" from `utcToWallClock`).
       - A past or too-soon time today stays on Start time with the current message.

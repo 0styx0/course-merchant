@@ -1,8 +1,9 @@
 "use client";
 
-import type { FieldPathByValue, FieldValues, PathValue } from "react-hook-form";
+import type { FieldPathByValue, FieldValues } from "react-hook-form";
 
 import { InputField, type CourseFormApi } from "../fields/course-form-fields";
+import { makeRecheckingChangeHandler } from "../fields/recheck-on-change";
 
 /** The paths of the four boxes, each holding a string. */
 export type ScheduleDateTimeNames<T extends FieldValues> = {
@@ -11,57 +12,6 @@ export type ScheduleDateTimeNames<T extends FieldValues> = {
   endDate: FieldPathByValue<T, string>;
   endTimeOfDay: FieldPathByValue<T, string>;
 };
-
-/** True when the admin has reached the field or it already shows a problem. */
-function isReachedOrInvalid<T extends FieldValues>(
-  form: CourseFormApi<T>,
-  name: FieldPathByValue<T, string>,
-) {
-  const { isTouched, error } = form.getFieldState(name);
-  return isTouched || Boolean(error);
-}
-
-/** Sets the box's value, marks it touched and checks it. */
-function setScheduleBoxValue<T extends FieldValues>(
-  form: CourseFormApi<T>,
-  name: FieldPathByValue<T, string>,
-  newValue: string,
-) {
-  // The library types `setValue`'s value as the field's type, which it can't
-  // narrow to string for a generic `T`, so it needs this cast.
-  form.setValue(name, newValue as PathValue<T, typeof name>, {
-    shouldTouch: true,
-    shouldValidate: true,
-  });
-}
-
-/** Checks again the other schedule boxes the admin has reached or that show a problem. */
-function recheckOtherReachedBoxes<T extends FieldValues>(
-  form: CourseFormApi<T>,
-  changedName: FieldPathByValue<T, string>,
-  allNames: FieldPathByValue<T, string>[],
-) {
-  const others = allNames.filter(
-    (other) => other !== changedName && isReachedOrInvalid(form, other),
-  );
-  if (others.length > 0) void form.trigger(others);
-}
-
-/**
- * A native date picker may never blur its input, so a change marks the field
- * touched and checks it. The other schedule fields are checked too (they
- * compare with it), but only those already reached, so none is flagged early.
- */
-function makeScheduleChangeHandler<T extends FieldValues>(
-  form: CourseFormApi<T>,
-  name: FieldPathByValue<T, string>,
-  allNames: FieldPathByValue<T, string>[],
-) {
-  return (event: { target: { value: string } }) => {
-    setScheduleBoxValue(form, name, event.target.value);
-    recheckOtherReachedBoxes(form, name, allNames);
-  };
-}
 
 function ScheduleDateTimeField<T extends FieldValues>({
   form,
@@ -86,7 +36,7 @@ function ScheduleDateTimeField<T extends FieldValues>({
       type={type}
       min={min}
       registerOptions={{
-        onChange: makeScheduleChangeHandler(form, name, allNames),
+        onChange: makeRecheckingChangeHandler(form, name, allNames),
       }}
     />
   );
