@@ -59,7 +59,9 @@ function useEditFormSubmit(
     editCourseFields(priceRowCount),
     saved,
   );
-  const deleteGate = useConfirmBeforeDelete(save, prefill.values.status);
+  const deleteGate = useConfirmBeforeDelete(save, prefill.values.status, () =>
+    form.setValue("status", prefill.values.status, { shouldDirty: true }),
+  );
   return {
     submitForm: form.handleSubmit(
       deleteGate.saveOrAskToDelete,

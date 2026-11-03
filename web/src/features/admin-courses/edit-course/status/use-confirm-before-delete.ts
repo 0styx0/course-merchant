@@ -15,11 +15,13 @@ function needsDeleteConfirmation(
 
 /**
  * Wraps the save so choosing Deleted asks first. The checked values wait
- * while the dialog is open; Delete saves them, Keep drops them.
+ * while the dialog is open; Delete saves them, Keep drops them and calls
+ * `restoreLoadedStatus` so the form no longer shows Deleted.
  */
 export function useConfirmBeforeDelete(
   save: (values: EditCourseFormValues) => Promise<void>,
   loadedStatus: CourseStatusName,
+  restoreLoadedStatus: () => void,
 ) {
   const [heldValues, setHeldValues] = useState<EditCourseFormValues | null>(
     null,
@@ -45,9 +47,14 @@ export function useConfirmBeforeDelete(
     }
   }
 
+  function keepCourse() {
+    setHeldValues(null);
+    restoreLoadedStatus();
+  }
+
   const deleteConfirmation: DeleteConfirmationProps = {
     open: heldValues !== null,
-    onKeepCourse: () => setHeldValues(null),
+    onKeepCourse: keepCourse,
     onConfirmDelete: () => void confirmDelete(),
   };
   return { saveOrAskToDelete, deleteConfirmation, isConfirmedSaveRunning };

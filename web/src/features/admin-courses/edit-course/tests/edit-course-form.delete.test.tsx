@@ -7,6 +7,7 @@ import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
 import { toEditFormPrefill } from "../edit-form-prefill";
 import {
   clickSave,
+  leaveEvent,
   prefill,
   refusal,
   renderForm,
@@ -73,7 +74,8 @@ async function expectDialogClosedAndFormKept() {
   );
   expect(saveAction).not.toHaveBeenCalled();
   expect(screen.getByLabelText("Course name")).toHaveValue("Renamed");
-  expect(statusOption("Deleted")).toBeChecked();
+  expect(statusOption("Drafted")).toBeChecked();
+  expect(statusOption("Deleted")).not.toBeChecked();
 }
 
 beforeEach(() => {
@@ -139,6 +141,67 @@ describe("EditCourseForm delete confirmation", () => {
     await user.keyboard("{Escape}");
 
     await expectDialogClosedAndFormKept();
+  });
+
+  it("saves the loaded status after Keep the course, with no dialog", async () => {
+    const user = userEvent.setup();
+    mockSaveSucceeds();
+    await openDialogAfterRename(user);
+    await user.click(screen.getByRole("button", { name: "Keep the course" }));
+
+    await clickSave(user);
+
+    await expectSavedWithStatus("drafted");
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("returns a course loaded as archived to Archived on Keep the course", async () => {
+    const user = userEvent.setup();
+    renderForm(
+      toEditFormPrefill({
+        ...draftedAdminCourse,
+        status: { name: "archived", changedAt: "2026-10-15T18:30:00Z" },
+      }),
+    );
+    await chooseDeletedAndSave(user);
+    await findDeleteDialog();
+
+    await user.click(screen.getByRole("button", { name: "Keep the course" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
+    );
+    expect(saveAction).not.toHaveBeenCalled();
+    expect(statusOption("Archived")).toBeChecked();
+    expect(statusOption("Deleted")).not.toBeChecked();
+  });
+
+  it("leaves the form clean after Escape when nothing else changed", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await chooseDeletedAndSave(user);
+    await findDeleteDialog();
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() =>
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
+    );
+    expect(leaveEvent().defaultPrevented).toBe(false);
+  });
+
+  it("leaves the form clean after Keep the course when nothing else changed", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await chooseDeletedAndSave(user);
+    await findDeleteDialog();
+
+    await user.click(screen.getByRole("button", { name: "Keep the course" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
+    );
+    expect(leaveEvent().defaultPrevented).toBe(false);
   });
 
   it("saves with status deleted on Delete course, then goes home", async () => {

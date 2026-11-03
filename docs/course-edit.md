@@ -42,23 +42,10 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **6b.** The edit code holds the course's status as a form value, prefilled as loaded, and saves it; the API's refusal on the status lands on the status field. Not on screen yet.
   - [x] **6c.** The admin sees the course's status on the edit page and changes it, and the API's refusal to publish without an image shows on the status field.
   - [x] **6d.** Choosing Deleted and saving asks for confirmation first; Keep or Escape leaves the form as it was, and a course already deleted saves with no question.
-- [ ] **7. Time zone keys and Keep fixed.** Enter in the Time zone box picks the first matching zone instead of saving the course; Escape keeps the chosen zone in the box; Keep the course in the delete dialog sets the status back to the loaded one.
+- [x] **7. Time zone keys and Keep fixed.** Enter in the Time zone box picks the first matching zone instead of saving the course; Escape keeps the chosen zone in the box; Keep the course in the delete dialog sets the status back to the loaded one.
   - [x] **7a.** Enter in the Time zone box picks the first matching zone and never saves the course; Escape keeps the chosen zone in the box. Both pages.
-  - [ ] **7b.** Keep the course or Escape in the delete dialog sets the status back to the one the course loaded with, and keeps every other edit. **Next**
-    - *Behaviours*:
-      - Keep: the dialog closes, nothing is sent, Drafted (the loaded status) is checked, and the renamed name stays
-      - Escape: same as Keep
-      - Save after Keep saves the loaded status with no dialog
-      - edge: a course loaded as Archived, Deleted chosen, then Keep: Archived is checked
-      - Keep with no other edits leaves the form unchanged, so leaving the page shows no warning
-    - *New shared pieces*: none
-    - *Files*:
-      - [use-confirm-before-delete.ts](../web/src/features/admin-courses/edit-course/status/use-confirm-before-delete.ts) (takes a callback that restores the loaded status and runs it on Keep)
-      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (`useEditFormSubmit` builds the callback with `setValue` and `shouldDirty`)
-      - [edit-course-form.delete.test.tsx](../web/src/features/admin-courses/edit-course/tests/edit-course-form.delete.test.tsx) (replaces the "Deleted stays checked" check)
-    - *Settled*: the decision row "Keep the course and Escape in the delete dialog set the status back"
-    - *Done when*: the delete tests pass; Keep walked in `dev:mock`
-- [ ] **8. Schedule errors on the field to change.** An end date before the start date shows on End date at once; on the same day, an end time not after the start time shows on End time.
+  - [x] **7b.** Keep the course or Escape in the delete dialog sets the status back to the one the course loaded with, and keeps every other edit.
+- [ ] **8. Schedule errors on the field to change.** An end date before the start date shows on End date at once; on the same day, an end time not after the start time shows on End time. **Next**
 - [ ] **9. Prices in plain words.** A past price start shows on its date, the price list says what to fix in words, amounts read $50.00, and the rows line up.
 - [ ] **10. Saving confirms and stays.** Edit stays and says "Saved"; create opens the new course's edit page saying "Saved as a draft".
 - [ ] **11. Edit page explains itself.** The header shows the course's name, its status and a link to its shop page; notes explain a time zone change and a course that already ran.
@@ -321,30 +308,11 @@ Pricing   Prices in effect · price rows · Price schedule in words  ← 9
 - Size: 2 commits (picker keys; Keep). The counter left the milestone: the code and its test already turn it red over the limit (owner, 2026-11-03).
 - Done when: the 7a picker tests and the 7b delete tests pass; J1 on both pages and Keep in `dev:mock`.
 
-Design notes *(temporary)*:
+Retro:
 
-- Base UI 1.9 ([ComboboxInput.mjs](../web/node_modules/@base-ui/react/combobox/input/ComboboxInput.mjs), the Enter branch of `onKeyDown`): with nothing marked, Enter closes the list and lets the key through, so the form submits. `autoHighlight` alone fixes only the case where the text matches a zone.
-- [mergeProps](../web/node_modules/@base-ui/react/merge-props/mergeProps.mjs) runs the picker's `onKeyDown` before Base UI's handlers:
-  - `preventDefault()` on Enter stops the submit, and Base UI still picks the marked zone.
-  - `preventBaseUIHandler()` skips all of Base UI's handlers, so the picker calls it only for Escape with the list closed (Base UI empties the box there).
-  - An Enter that confirms an IME composition (`which === 229`, typing through an input method such as Japanese) is left alone, as Base UI does.
-- Keep runs a callback that the edit form builds. The callback sets the status to the loaded one with `shouldDirty`, so React Hook Form compares the status with its loaded value again and clears its changed mark. 7b adds no new state.
-
-Flow *(temporary)*:
-
-```
-Admin types in Time zone box
-├── text matches zones → first one marked                    7a
-│   ├── Enter → zone picked, box shows it, nothing saved     7a
-│   └── Escape → list closes, box shows chosen zone          7a
-├── text matches nothing → "No time zone found"              existing
-│   └── Enter → list closes, nothing picked, nothing saved   7a
-└── list closed, Escape → box keeps chosen zone              7a
-Admin picks Deleted, clicks Save → dialog                    existing (6d)
-├── Delete course → saves, goes home                         existing (6d)
-└── Keep / Escape → dialog closes, status = loaded,          7b
-    other edits kept, no request sent
-```
+- Planned 2 commits; shipped 2 (7a, 7b).
+- Owner changes after using the page: the counter fix left the milestone, because the code and its test already turn it red over the limit.
+- Rule friction: the background build can't walk the page in `dev:mock`, so 7b's walk of Keep had no step that ran it.
 
 ## Step 8. Schedule errors on the field to change
 
