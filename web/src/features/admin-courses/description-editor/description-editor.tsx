@@ -23,8 +23,8 @@ type DescriptionEditorProps = {
   /** react-hook-form's `field.ref`: lets it and the error list focus the editor. */
   fieldRef: (handle: { focus: () => void } | null) => void;
   error?: string;
-  touched: boolean;
-  submitted: boolean;
+  isTouched: boolean;
+  isSubmitted: boolean;
 };
 
 // No `limit` option: the extension would block typing past it, and the form
@@ -71,8 +71,8 @@ export function DescriptionEditor({
   onBlur,
   fieldRef,
   error,
-  touched,
-  submitted,
+  isTouched,
+  isSubmitted,
 }: DescriptionEditorProps) {
   const { editor, focus } = useDescriptionEditor({
     value,
@@ -94,8 +94,8 @@ export function DescriptionEditor({
         />
       }
       error={error}
-      touched={touched}
-      submitted={submitted}
+      isTouched={isTouched}
+      isSubmitted={isSubmitted}
       onLabelClick={focus}
     >
       {(inputProps) => (
@@ -116,7 +116,7 @@ function EditableArea({
   editor,
   id,
   labelId,
-  "aria-invalid": ariaInvalid,
+  "aria-invalid": isInvalid,
   "aria-describedby": ariaDescribedBy,
 }: EditableAreaProps) {
   useEffect(() => {
@@ -128,12 +128,12 @@ function EditableArea({
           ...(ariaDescribedBy && { "aria-describedby": ariaDescribedBy }),
           role: "textbox",
           "aria-multiline": "true",
-          "aria-invalid": String(Boolean(ariaInvalid)),
+          "aria-invalid": String(Boolean(isInvalid)),
           class: EDITABLE_AREA_CLASSES,
         },
       },
     });
-  }, [editor, id, labelId, ariaInvalid, ariaDescribedBy]);
+  }, [editor, id, labelId, isInvalid, ariaDescribedBy]);
 
   return <EditorContent editor={editor} className="min-w-0 flex-1" />;
 }

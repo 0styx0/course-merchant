@@ -30,6 +30,33 @@ const CURRENT_DATE_CALLS = [
   },
 ];
 
+// a true/false name reads as a question or a fact: isSaved, hasEnded, doesExist.
+// The rule checks the format after it trims the prefix, so `isSaved` is `Saved`.
+const BOOLEAN_NAMING = [
+  {
+    selector: ["variable", "parameter", "typeProperty"],
+    types: ["boolean"],
+    format: ["PascalCase"],
+    prefix: ["is", "has", "should", "can", "did", "will", "does", "was"],
+  },
+  // The two exemptions below name `types` too: a selector with `types` outranks
+  // one without, so the exemptions would lose to the selector above.
+  // a name unpacked from an object keeps the object's field name
+  {
+    selector: ["variable", "parameter"],
+    types: ["boolean"],
+    modifiers: ["destructured"],
+    format: null,
+  },
+  // a quoted name, such as an HTML attribute, keeps its own spelling
+  {
+    selector: "typeProperty",
+    types: ["boolean"],
+    modifiers: ["requiresQuotes"],
+    format: null,
+  },
+];
+
 export default tseslint.config(
   {
     ignores: [
@@ -81,6 +108,7 @@ export default tseslint.config(
       "no-else-return": "error",
       "no-lonely-if": "error",
       "prefer-const": "error",
+      "@typescript-eslint/naming-convention": ["error", ...BOOLEAN_NAMING],
       "no-restricted-syntax": ["error", DOUBLE_CAST],
     },
   },

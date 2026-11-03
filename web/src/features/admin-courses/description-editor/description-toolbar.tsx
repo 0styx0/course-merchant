@@ -70,7 +70,7 @@ const FORMATS: Format[] = [
   },
 ];
 
-type EditorState = { onLink: boolean; hasSelection: boolean } | null;
+type EditorState = { isOnLink: boolean; hasSelection: boolean } | null;
 
 // A mouse press on a button would blur the editor, losing the selection
 const preventBlur = (event: React.MouseEvent) => event.preventDefault();
@@ -82,10 +82,10 @@ function removeLink(editor: Editor | null) {
 type FormatButtonProps = {
   editor: Editor | null;
   format: Format;
-  pressed: boolean;
+  isPressed: boolean;
 };
 
-function FormatButton({ editor, format, pressed }: FormatButtonProps) {
+function FormatButton({ editor, format, isPressed }: FormatButtonProps) {
   return (
     <Toolbar.Button
       disabled={!editor}
@@ -94,7 +94,7 @@ function FormatButton({ editor, format, pressed }: FormatButtonProps) {
         <Toggle
           aria-label={format.label}
           title={format.label}
-          pressed={pressed}
+          pressed={isPressed}
           onPressedChange={() => editor && format.toggle(editor)}
         />
       }
@@ -107,20 +107,20 @@ function FormatButton({ editor, format, pressed }: FormatButtonProps) {
 type LinkButtonProps = {
   editor: Editor | null;
   state: EditorState;
-  open: boolean;
+  isOpen: boolean;
   panelId: string;
   onToggle: () => void;
 };
 
 /** A link needs selected text to wrap, or an existing link to edit. */
 function isLinkButtonDisabled(editor: Editor | null, state: EditorState) {
-  return !editor || !(state?.onLink || state?.hasSelection);
+  return !editor || !(state?.isOnLink || state?.hasSelection);
 }
 
 function LinkButton({
   editor,
   state,
-  open,
+  isOpen,
   panelId,
   onToggle,
 }: LinkButtonProps) {
@@ -132,9 +132,9 @@ function LinkButton({
         <Toggle
           aria-label="Link"
           title="Link (select text first)"
-          aria-expanded={open}
-          aria-controls={open ? panelId : undefined}
-          pressed={open || (state?.onLink ?? false)}
+          aria-expanded={isOpen}
+          aria-controls={isOpen ? panelId : undefined}
+          pressed={isOpen || (state?.isOnLink ?? false)}
           onPressedChange={onToggle}
         />
       }
@@ -146,13 +146,13 @@ function LinkButton({
 
 type RemoveLinkButtonProps = {
   editor: Editor | null;
-  disabled: boolean;
+  isDisabled: boolean;
 };
 
-function RemoveLinkButton({ editor, disabled }: RemoveLinkButtonProps) {
+function RemoveLinkButton({ editor, isDisabled }: RemoveLinkButtonProps) {
   return (
     <Toolbar.Button
-      disabled={disabled}
+      disabled={isDisabled}
       onMouseDown={preventBlur}
       render={
         <Button
@@ -176,7 +176,7 @@ function useToolbarState(editor: Editor | null) {
       active: FORMATS.map((format) =>
         editor ? format.isActive(editor) : false,
       ),
-      onLink: editor?.isActive("link") ?? false,
+      isOnLink: editor?.isActive("link") ?? false,
       hasSelection: editor ? !editor.state.selection.empty : false,
     }),
   });
@@ -194,7 +194,7 @@ function FormatButtons({
       key={format.label}
       editor={editor}
       format={format}
-      pressed={active?.[index] ?? false}
+      isPressed={active?.[index] ?? false}
     />
   ));
 }
@@ -216,7 +216,7 @@ export function DescriptionToolbar({
   controlsId,
 }: DescriptionToolbarProps) {
   const linkFieldId = useId();
-  const [linkFieldOpen, setLinkFieldOpen] = useState(false);
+  const [isLinkFieldOpen, setIsLinkFieldOpen] = useState(false);
   const state = useToolbarState(editor);
 
   return (
@@ -230,20 +230,20 @@ export function DescriptionToolbar({
         <LinkButton
           editor={editor}
           state={state}
-          open={linkFieldOpen}
+          isOpen={isLinkFieldOpen}
           panelId={linkFieldId}
-          onToggle={() => setLinkFieldOpen((open) => !open)}
+          onToggle={() => setIsLinkFieldOpen((isOpen) => !isOpen)}
         />
         <RemoveLinkButton
           editor={editor}
-          disabled={!editor || !state?.onLink}
+          isDisabled={!editor || !state?.isOnLink}
         />
       </Toolbar.Root>
-      {editor && linkFieldOpen && (
+      {editor && isLinkFieldOpen && (
         <DescriptionLinkField
           editor={editor}
           id={linkFieldId}
-          onClose={() => setLinkFieldOpen(false)}
+          onClose={() => setIsLinkFieldOpen(false)}
         />
       )}
     </div>

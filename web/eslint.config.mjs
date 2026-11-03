@@ -4,6 +4,33 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier/flat";
 
+// a true/false name reads as a question or a fact: isSaved, hasEnded, doesExist.
+// The rule checks the format after it trims the prefix, so `isSaved` is `Saved`.
+const BOOLEAN_NAMING = [
+  {
+    selector: ["variable", "parameter", "typeProperty"],
+    types: ["boolean"],
+    format: ["PascalCase"],
+    prefix: ["is", "has", "should", "can", "did", "will", "does", "was"],
+  },
+  // The two exemptions below name `types` too: a selector with `types` outranks
+  // one without, so the exemptions would lose to the selector above.
+  // a name unpacked from an object keeps the object's field name
+  {
+    selector: ["variable", "parameter"],
+    types: ["boolean"],
+    modifiers: ["destructured"],
+    format: null,
+  },
+  // a quoted name, such as an HTML attribute, keeps its own spelling
+  {
+    selector: "typeProperty",
+    types: ["boolean"],
+    modifiers: ["requiresQuotes"],
+    format: null,
+  },
+];
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -21,7 +48,15 @@ const eslintConfig = defineConfig([
     files: ["src/**/*.{ts,tsx}"],
     // generated and vendored (shadcn) code isn't held to the length rules
     ignores: ["src/lib/api/generated.ts", "src/components/ui/**"],
+    // the boolean naming rule reads each name's type
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     rules: {
+      "@typescript-eslint/naming-convention": ["error", ...BOOLEAN_NAMING],
       "max-lines": [
         "error",
         { max: 250, skipBlankLines: true, skipComments: true },

@@ -161,15 +161,16 @@ export class FulfillmentService {
       return DONE;
     }
 
-    const succeeded = await this.paymentsRepository.markPaymentSucceeded(tx, {
-      id: payment.id,
-      providerCheckoutId: checkout.providerCheckoutId,
-      providerPaymentId: providerPayment.id,
-      paidAt: providerPayment.paidAt,
-    });
+    const wasMarkedSucceeded =
+      await this.paymentsRepository.markPaymentSucceeded(tx, {
+        id: payment.id,
+        providerCheckoutId: checkout.providerCheckoutId,
+        providerPaymentId: providerPayment.id,
+        paidAt: providerPayment.paidAt,
+      });
 
     // already fulfilled, or expired, by another caller
-    if (!succeeded) {
+    if (!wasMarkedSucceeded) {
       return DONE;
     }
 

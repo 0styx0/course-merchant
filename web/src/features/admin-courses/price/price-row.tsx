@@ -32,7 +32,7 @@ type PriceRowProps<T extends FieldValues> = {
   boxNamesToRecheck: FieldPathByValue<T, string>[];
   index: number;
   rowCount: number;
-  showRemove: boolean;
+  canRemove: boolean;
   onRemove: () => void;
 };
 
@@ -91,7 +91,7 @@ export function PriceRow<T extends FieldValues>({
   boxNamesToRecheck,
   index,
   rowCount,
-  showRemove,
+  canRemove,
   onRemove,
 }: PriceRowProps<T>) {
   const labels = priceRowLabels(index, rowCount);
@@ -116,7 +116,7 @@ export function PriceRow<T extends FieldValues>({
         label={labels.effectiveTimeOfDay}
         type="time"
       />
-      {showRemove && (
+      {canRemove && (
         <RemoveRowButton label={labels.amountDollars} onRemove={onRemove} />
       )}
     </div>

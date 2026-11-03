@@ -28,8 +28,8 @@ type ImageFieldProps = {
   /** react-hook-form's `field.ref`: lets it and the error list focus the input. */
   fieldRef: (handle: { focus: () => void } | null) => void;
   error?: string;
-  touched: boolean;
-  submitted: boolean;
+  isTouched: boolean;
+  isSubmitted: boolean;
 };
 
 type FileInputProps = Omit<ValidatedFieldInputProps, "labelId"> &
@@ -86,16 +86,16 @@ export function ImageField({
   onBlur,
   fieldRef,
   error,
-  touched,
-  submitted,
+  isTouched,
+  isSubmitted,
 }: ImageFieldProps) {
   return (
     <ValidatedField
       label="Image"
       description="JPEG, PNG or WebP, up to 5 MB, at least 800 × 450 pixels. It is shown at 16:9."
       error={error}
-      touched={touched}
-      submitted={submitted}
+      isTouched={isTouched}
+      isSubmitted={isSubmitted}
     >
       {(inputProps) => (
         <div className="flex min-w-0 flex-1 flex-col gap-2">

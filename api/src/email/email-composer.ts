@@ -65,7 +65,7 @@ export class EmailComposer {
 
     return this.render({
       kind: "already_owned",
-      view: { course, refundIssued: payload.refundIssued },
+      view: { course, wasRefundIssued: payload.refundIssued },
     });
   }
 
@@ -76,7 +76,7 @@ export class EmailComposer {
 
     return this.render({
       kind: "access_suspended",
-      view: { course, refundIssued: payload.refundIssued },
+      view: { course, wasRefundIssued: payload.refundIssued },
     });
   }
 

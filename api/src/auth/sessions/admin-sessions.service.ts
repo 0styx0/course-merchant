@@ -144,12 +144,12 @@ export class AdminSessionsService implements OnModuleInit {
   ): Promise<Admin> {
     const admin = await this.admins.findByEmail(this.prisma.db, request.email);
     const passwordHash = admin?.passwordHash ?? (await getDummyHash());
-    const passwordMatches = await verifyPassword(
+    const doesPasswordMatch = await verifyPassword(
       passwordHash,
       request.password,
     );
 
-    if (!admin || !passwordMatches) {
+    if (!admin || !doesPasswordMatch) {
       throw invalidCredentials();
     }
 

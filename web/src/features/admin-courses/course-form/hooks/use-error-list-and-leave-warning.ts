@@ -20,13 +20,13 @@ export function useErrorListAndLeaveWarning<
 >(
   form: UseFormReturn<TValues, unknown, TChecked>,
   fields: readonly ProblemField[],
-  saved: boolean,
+  isSaved: boolean,
 ) {
   const ref = useRef<HTMLDivElement>(null);
   const { errors, isDirty, isSubmitted, submitCount } = form.formState;
 
   useFocusSummaryOnSubmit(ref, submitCount);
-  useLeaveWarning(isDirty && !saved);
+  useLeaveWarning(isDirty && !isSaved);
 
   return {
     ref,

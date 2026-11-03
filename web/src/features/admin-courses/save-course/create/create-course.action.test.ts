@@ -107,17 +107,17 @@ describe("createCourseAction", () => {
   });
 
   it("refuses invalid input without calling the API", async () => {
-    let called = false;
+    let wasCalled = false;
     server.use(
       http.post(createCourseUrl, () => {
-        called = true;
+        wasCalled = true;
         return new Response(null, { status: 500 });
       }),
     );
 
     const result = await createCourseAction({ ...validValues, name: "  " });
 
-    expect(called).toBe(false);
+    expect(wasCalled).toBe(false);
     expect(result).toMatchObject({
       state: "failure",
       error: {

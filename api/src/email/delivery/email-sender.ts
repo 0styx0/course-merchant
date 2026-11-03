@@ -19,7 +19,7 @@ export const emailTransportProvider = {
   useFactory: (config: EmailConfig) =>
     nodemailer.createTransport({
       url: config.smtpUrl,
-      requireTLS: config.requireTls,
+      requireTLS: config.isTlsRequired,
       connectionTimeout: CONNECTION_TIMEOUT_MS,
       greetingTimeout: GREETING_TIMEOUT_MS,
       socketTimeout: SOCKET_INACTIVITY_TIMEOUT_MS,

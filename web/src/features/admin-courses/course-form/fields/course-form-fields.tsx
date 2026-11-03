@@ -79,10 +79,10 @@ function helpWithCounter<T extends FieldValues>({
 // `labelId` is for inputs that aren't labelable elements; these are.
 function labelableInputProps({
   id,
-  "aria-invalid": invalid,
+  "aria-invalid": isInvalid,
   "aria-describedby": describedBy,
 }: ValidatedFieldInputProps) {
-  return { id, "aria-invalid": invalid, "aria-describedby": describedBy };
+  return { id, "aria-invalid": isInvalid, "aria-describedby": describedBy };
 }
 
 function fieldErrorState<T extends FieldValues>(
@@ -92,8 +92,8 @@ function fieldErrorState<T extends FieldValues>(
   const { errors, touchedFields, isSubmitted } = form.formState;
   return {
     error: fieldErrorMessage(errors, name),
-    touched: Boolean(get(touchedFields, name)),
-    submitted: isSubmitted,
+    isTouched: Boolean(get(touchedFields, name)),
+    isSubmitted,
   };
 }
 
@@ -228,8 +228,8 @@ export function DescriptionField<T extends FieldValues>({
           onBlur={field.onBlur}
           fieldRef={field.ref}
           error={fieldState.error?.message}
-          touched={fieldState.isTouched}
-          submitted={form.formState.isSubmitted}
+          isTouched={fieldState.isTouched}
+          isSubmitted={form.formState.isSubmitted}
         />
       )}
     />

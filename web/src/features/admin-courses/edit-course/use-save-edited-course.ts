@@ -35,10 +35,10 @@ const imageSavedWords = "The image was saved";
 
 /** The API's reason, after saying the image was saved when this try stored one. */
 function makeDetailsRefusedMessage(
-  imageStored: boolean,
+  wasImageStored: boolean,
   failure: CourseActionFailure,
 ): ServerProblem {
-  if (!imageStored) return refusalMessage(failure);
+  if (!wasImageStored) return refusalMessage(failure);
   return makeSecondStepFailedMessage(
     failure.problem.title,
     imageSavedWords,

@@ -35,14 +35,14 @@ export async function uploadChosenImage(
 
 /** The saved flag, and the step that sets it and then runs the caller's next step. */
 function useSavedFlag() {
-  const [saved, setSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   function markSavedThen(goNext: () => void) {
-    setSaved(true);
+    setIsSaved(true);
     goNext();
   }
 
-  return { saved, markSavedThen };
+  return { isSaved, markSavedThen };
 }
 
 /** The note a thrown action adds once a step saved, e.g. " The image was saved." */
@@ -61,14 +61,14 @@ function useStepSavedNote() {
  * The parts every two-step save shares. Returns three things:
  * - `runSaveSteps` runs the steps and shows a message when an action throws;
  * - `stepReports` is what the steps call: `showRefusal`, `noteStepSaved`, `markSavedThen`;
- * - `saveOutcome` is what the form reads: `saved`, `serverProblem`, `clearServerProblem`.
+ * - `saveOutcome` is what the form reads: `isSaved`, `serverProblem`, `clearServerProblem`.
  */
 export function useSaveSteps<TValues extends FieldValues>(
   setError: UseFormSetError<TValues>,
 ) {
   const { serverProblem, showRefusal, showThrownProblem, clearServerProblem } =
     useServerProblem(setError);
-  const { saved, markSavedThen } = useSavedFlag();
+  const { isSaved, markSavedThen } = useSavedFlag();
   const { noteStepSaved, readStepSavedNote } = useStepSavedNote();
 
   async function runSaveSteps(saveSteps: () => Promise<void>) {
@@ -84,21 +84,21 @@ export function useSaveSteps<TValues extends FieldValues>(
   return {
     runSaveSteps,
     stepReports: { showRefusal, noteStepSaved, markSavedThen },
-    saveOutcome: { saved, serverProblem, clearServerProblem },
+    saveOutcome: { isSaved, serverProblem, clearServerProblem },
   };
 }
 
 type SaveOutcome = ReturnType<typeof useSaveSteps>["saveOutcome"];
 
-/** What a save hook gives its form: `save`, `saved`, and the message with its clearer. */
+/** What a save hook gives its form: `save`, `isSaved`, and the message with its clearer. */
 export function makeSaveHookResult<TChecked>(
   runSaveSteps: (saveSteps: () => Promise<void>) => Promise<void>,
   saveSteps: (values: TChecked) => Promise<void>,
-  { saved, serverProblem, clearServerProblem }: SaveOutcome,
+  { isSaved, serverProblem, clearServerProblem }: SaveOutcome,
 ) {
   return {
     save: (values: TChecked) => runSaveSteps(() => saveSteps(values)),
-    saved,
+    isSaved,
     serverMessage: { serverProblem, clearServerProblem },
   };
 }

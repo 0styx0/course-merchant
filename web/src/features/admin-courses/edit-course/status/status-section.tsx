@@ -46,12 +46,12 @@ type StatusChoice = (typeof statusChoices)[number];
 function StatusOption({
   choice,
   focusRef,
-  invalid,
+  isInvalid,
 }: {
   choice: StatusChoice;
   /** Set on the chosen option, so the error list can focus it. */
   focusRef?: (element: HTMLElement | null) => void;
-  invalid: boolean;
+  isInvalid: boolean;
 }) {
   const labelId = `status-${choice.value}-label`;
   const meaningId = `status-${choice.value}-meaning`;
@@ -63,7 +63,7 @@ function StatusOption({
         // Named by the label alone, so the meaning reads as a description.
         aria-labelledby={labelId}
         aria-describedby={meaningId}
-        aria-invalid={invalid}
+        aria-invalid={isInvalid}
         className="mt-0.5"
       />
       <span className="flex flex-col">
@@ -85,10 +85,10 @@ function StatusField({ form }: { form: UseFormReturn<EditCourseFormValues> }) {
     name: "status",
   });
   const error = fieldState.error?.message;
-  const showsError = showsFieldError({
+  const doesShowError = showsFieldError({
     error,
-    touched: fieldState.isTouched,
-    submitted: form.formState.isSubmitted,
+    isTouched: fieldState.isTouched,
+    isSubmitted: form.formState.isSubmitted,
   });
   return (
     <>
@@ -103,11 +103,11 @@ function StatusField({ form }: { form: UseFormReturn<EditCourseFormValues> }) {
             key={choice.value}
             choice={choice}
             focusRef={choice.value === field.value ? field.ref : undefined}
-            invalid={showsError}
+            isInvalid={doesShowError}
           />
         ))}
       </RadioGroup>
-      {showsError && <FieldError>{error}</FieldError>}
+      {doesShowError && <FieldError>{error}</FieldError>}
     </>
   );
 }

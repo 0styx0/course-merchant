@@ -17,11 +17,11 @@ export class HashingSlots {
     }
 
     this.inUse += 1;
-    let released = false;
+    let wasReleased = false;
 
     return () => {
-      if (!released) {
-        released = true;
+      if (!wasReleased) {
+        wasReleased = true;
         this.inUse -= 1;
       }
     };

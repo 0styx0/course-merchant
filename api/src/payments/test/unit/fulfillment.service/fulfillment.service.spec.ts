@@ -40,7 +40,7 @@ describe("FulfillmentService", () => {
   // the scope the service passes to repositories inside its transaction
   let tx: ReturnType<typeof fakePrisma>["tx"];
   // whether each repository call ran inside the transaction
-  let inTransaction: boolean;
+  let isInTransaction: boolean;
   let callsOutsideTransaction: string[];
 
   // a mock resolving to `result` that notes whether it ran in the transaction
@@ -49,7 +49,7 @@ describe("FulfillmentService", () => {
     result: Awaited<ReturnType<Fn>>,
   ) {
     return vi.fn<Fn>((() => {
-      if (!inTransaction) {
+      if (!isInTransaction) {
         callsOutsideTransaction.push(name);
       }
 
@@ -58,7 +58,7 @@ describe("FulfillmentService", () => {
   }
 
   beforeEach(() => {
-    inTransaction = false;
+    isInTransaction = false;
     callsOutsideTransaction = [];
 
     paymentsRepository = {
@@ -97,10 +97,10 @@ describe("FulfillmentService", () => {
 
     fake = fakePrisma({
       onBegin: () => {
-        inTransaction = true;
+        isInTransaction = true;
       },
       onSettle: () => {
-        inTransaction = false;
+        isInTransaction = false;
       },
     });
     tx = fake.tx;

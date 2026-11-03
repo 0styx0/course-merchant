@@ -45,14 +45,14 @@ type EditForm = CourseFormApi<EditCourseFormValues>;
 
 /** The course's stored image, loaded through the web app, with a message if it fails. */
 function StoredImagePreview({ courseId }: { courseId: string }) {
-  const [loadFailed, setLoadFailed] = useState(false);
-  if (loadFailed) return <p>The stored image couldn&apos;t be loaded.</p>;
+  const [hasLoadFailed, setHasLoadFailed] = useState(false);
+  if (hasLoadFailed) return <p>The stored image couldn&apos;t be loaded.</p>;
   return (
     // eslint-disable-next-line @next/next/no-img-element -- an admin-only image behind the login cookie, not optimizable
     <img
       src={adminCourseImagePath(courseId)}
       alt="Current course image"
-      onError={() => setLoadFailed(true)}
+      onError={() => setHasLoadFailed(true)}
       className="aspect-video w-full rounded-lg border object-cover object-center"
     />
   );
@@ -188,7 +188,7 @@ export function EditPricingSection({
           boxNamesToRecheck={allPriceBoxNames(priceRows.fields.length)}
           index={index}
           rowCount={priceRows.fields.length}
-          showRemove={priceRows.fields.length > minimumRows}
+          canRemove={priceRows.fields.length > minimumRows}
           onRemove={() => removePriceRow(index)}
         />
       ))}

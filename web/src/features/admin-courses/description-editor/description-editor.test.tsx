@@ -22,8 +22,8 @@ function renderEditor(
       onChange={vi.fn()}
       onBlur={vi.fn()}
       fieldRef={vi.fn()}
-      touched={false}
-      submitted={false}
+      isTouched={false}
+      isSubmitted={false}
       {...props}
     />,
   );
@@ -66,7 +66,7 @@ describe("DescriptionEditor", () => {
   });
 
   it("shows the error and marks the textbox invalid once touched", async () => {
-    renderEditor({ error: "Enter a description.", touched: true });
+    renderEditor({ error: "Enter a description.", isTouched: true });
 
     const textbox = await screen.findByRole("textbox", { name: "Description" });
     expect(textbox).toHaveAttribute("aria-invalid", "true");

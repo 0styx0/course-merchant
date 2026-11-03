@@ -8,33 +8,33 @@ import { Input } from "@/components/ui/input";
 import { ValidatedField } from "./validated-field";
 
 type HarnessProps = {
-  required?: boolean;
+  isRequired?: boolean;
   description?: string;
-  submitted?: boolean;
+  isSubmitted?: boolean;
 };
 
 /** Mimics a form: the field is touched on blur, and is invalid while empty. */
 function Harness({
-  required = true,
+  isRequired = true,
   description,
-  submitted = false,
+  isSubmitted = false,
 }: HarnessProps) {
   const [value, setValue] = useState("");
-  const [touched, setTouched] = useState(false);
+  const [isTouched, setIsTouched] = useState(false);
   return (
     <ValidatedField
       label="Course name"
       description={description}
-      error={required && !value ? "Enter a course name." : undefined}
-      touched={touched}
-      submitted={submitted}
+      error={isRequired && !value ? "Enter a course name." : undefined}
+      isTouched={isTouched}
+      isSubmitted={isSubmitted}
     >
       {(inputProps) => (
         <Input
           {...inputProps}
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          onBlur={() => setTouched(true)}
+          onBlur={() => setIsTouched(true)}
         />
       )}
     </ValidatedField>
@@ -98,7 +98,7 @@ describe("ValidatedField", () => {
   });
 
   it("shows the problem on an untouched field after the form was submitted", () => {
-    render(<Harness submitted />);
+    render(<Harness isSubmitted />);
 
     expect(screen.getByRole("alert")).toHaveTextContent("Enter a course name.");
     expect(screen.getByLabelText("Course name")).toHaveAttribute(
@@ -127,8 +127,8 @@ describe("ValidatedField", () => {
     render(
       <ValidatedField
         label="Description"
-        touched={false}
-        submitted={false}
+        isTouched={false}
+        isSubmitted={false}
         onLabelClick={onLabelClick}
       >
         {({ labelId }) => <div role="textbox" aria-labelledby={labelId} />}

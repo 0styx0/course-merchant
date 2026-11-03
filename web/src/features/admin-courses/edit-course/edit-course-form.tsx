@@ -48,7 +48,7 @@ function useEditFormSubmit(
   courseId: string,
   prefill: EditFormPrefill,
 ) {
-  const { save, saved, serverMessage } = useSaveEditedCourse(
+  const { save, isSaved, serverMessage } = useSaveEditedCourse(
     form,
     courseId,
     prefill.loadedSchedule,
@@ -57,7 +57,7 @@ function useEditFormSubmit(
   const errorList = useErrorListAndLeaveWarning(
     form,
     editCourseFields(priceRowCount),
-    saved,
+    isSaved,
   );
   const deleteGate = useConfirmBeforeDelete(save, prefill.values.status, () =>
     form.setValue("status", prefill.values.status, { shouldDirty: true }),

@@ -53,8 +53,8 @@ function Harness({ onChange }: { onChange?: (image: ChosenImage) => void }) {
       onBlur={vi.fn()}
       fieldRef={vi.fn()}
       error={error}
-      touched
-      submitted={false}
+      isTouched
+      isSubmitted={false}
     />
   );
 }

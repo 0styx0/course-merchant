@@ -53,7 +53,7 @@ export function useConfirmBeforeDelete(
   }
 
   const deleteConfirmation: DeleteConfirmationProps = {
-    open: heldValues !== null,
+    isOpen: heldValues !== null,
     onKeepCourse: keepCourse,
     onConfirmDelete: () => void confirmDelete(),
   };

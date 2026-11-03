@@ -136,7 +136,7 @@ export function CreatePricingSection({
           boxNamesToRecheck={allPriceBoxNames(priceRows.fields.length)}
           index={index}
           rowCount={priceRows.fields.length}
-          showRemove={priceRows.fields.length > 1}
+          canRemove={priceRows.fields.length > 1}
           onRemove={() => removePriceRow(index)}
         />
       ))}

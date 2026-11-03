@@ -14,10 +14,10 @@ type CourseView = {
 // What each kind needs, already loaded from the ids in the outbox payload.
 export type EmailViews = {
   access_granted: { course: CourseView };
-  already_owned: { course: CourseView; refundIssued: boolean };
+  already_owned: { course: CourseView; wasRefundIssued: boolean };
   access_suspended: {
     course: Pick<CourseView, "title">;
-    refundIssued: boolean;
+    wasRefundIssued: boolean;
   };
   dispute_alert: {
     payment: { id: string; amount: number; currency: string };
@@ -59,7 +59,7 @@ export function alreadyOwned(view: EmailViews["already_owned"]): EmailContent {
     heading: "You already have access",
     paragraphs: [
       `Hello again! You already own ${view.course.title}, so there was nothing new to buy.`,
-      ...(view.refundIssued ? [DOUBLE_CHARGE_REFUNDED] : []),
+      ...(view.wasRefundIssued ? [DOUBLE_CHARGE_REFUNDED] : []),
       schedule(view.course),
     ],
     button: { label: "Open the course", url: view.course.contentUrl },
@@ -74,7 +74,7 @@ export function accessSuspended(
     heading: "Your access is suspended",
     paragraphs: [
       `Hello, thanks for your patience. Your access to ${view.course.title} is currently suspended, so we can't send you the course link.`,
-      ...(view.refundIssued ? [SUSPENDED_CHARGE_REFUNDED] : []),
+      ...(view.wasRefundIssued ? [SUSPENDED_CHARGE_REFUNDED] : []),
       "If you think this is a mistake, reply to this email and we'll look into it.",
     ],
   };

@@ -23,7 +23,7 @@ export type EmailConfig = {
    * between us and the mail server could remove its offer of encryption and
    * read the SMTP password and every email.
    */
-  requireTls: boolean;
+  isTlsRequired: boolean;
   from: string;
   shopName: string;
 };
@@ -50,7 +50,7 @@ export function loadEmailConfig(
 
   return {
     smtpUrl: result.data.SMTP_URL,
-    requireTls: !LOOPBACK_HOSTS.has(new URL(result.data.SMTP_URL).hostname),
+    isTlsRequired: !LOOPBACK_HOSTS.has(new URL(result.data.SMTP_URL).hostname),
     from: result.data.EMAIL_FROM,
     shopName: result.data.EMAIL_SHOP_NAME,
   };

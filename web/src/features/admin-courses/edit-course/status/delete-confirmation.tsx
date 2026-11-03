@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export type DeleteConfirmationProps = {
-  open: boolean;
+  isOpen: boolean;
   /** Runs on "Keep the course" and on Escape. */
   onKeepCourse: () => void;
   onConfirmDelete: () => void;
@@ -20,15 +20,15 @@ export type DeleteConfirmationProps = {
 
 /** Asks the admin to confirm deleting the course before the save runs. */
 export function DeleteConfirmation({
-  open,
+  isOpen,
   onKeepCourse,
   onConfirmDelete,
 }: DeleteConfirmationProps) {
-  function keepCourseWhenClosed(nextOpen: boolean) {
-    if (!nextOpen) onKeepCourse();
+  function keepCourseWhenClosed(isNowOpen: boolean) {
+    if (!isNowOpen) onKeepCourse();
   }
   return (
-    <AlertDialog open={open} onOpenChange={keepCourseWhenClosed}>
+    <AlertDialog open={isOpen} onOpenChange={keepCourseWhenClosed}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete this course?</AlertDialogTitle>

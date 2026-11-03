@@ -62,8 +62,8 @@ describe("CheckoutService", () => {
     let redirect: MockMethods<StripeRedirectService, "redirect">;
     let fake: ReturnType<typeof fakePrisma>;
     // whether a transaction callback is running right now
-    let insideTransaction: boolean;
-    let redirectedInsideTransaction: boolean | undefined;
+    let isInsideTransaction: boolean;
+    let wasRedirectedInsideTransaction: boolean | undefined;
 
     const paymentToComplete = {
       payment: { id: PAYMENT_ID, amount: 9900, currency: "USD" },
@@ -73,8 +73,8 @@ describe("CheckoutService", () => {
     };
 
     beforeEach(() => {
-      insideTransaction = false;
-      redirectedInsideTransaction = undefined;
+      isInsideTransaction = false;
+      wasRedirectedInsideTransaction = undefined;
 
       decision = {
         decide: vi
@@ -83,7 +83,7 @@ describe("CheckoutService", () => {
       };
       redirect = {
         redirect: vi.fn<StripeRedirectService["redirect"]>(() => {
-          redirectedInsideTransaction = insideTransaction;
+          wasRedirectedInsideTransaction = isInsideTransaction;
 
           return Promise.resolve({
             status: "redirect",
@@ -93,10 +93,10 @@ describe("CheckoutService", () => {
       };
       fake = fakePrisma({
         onBegin: () => {
-          insideTransaction = true;
+          isInsideTransaction = true;
         },
         onSettle: () => {
-          insideTransaction = false;
+          isInsideTransaction = false;
         },
       });
 
@@ -189,7 +189,7 @@ describe("CheckoutService", () => {
 
       it("calls Stripe only once the transaction has finished", async () => {
         decision.decide.mockImplementation(() => {
-          expect(insideTransaction).toBe(true);
+          expect(isInsideTransaction).toBe(true);
 
           return Promise.resolve({
             nextStep: CheckoutNextStep.PAY,
@@ -199,7 +199,7 @@ describe("CheckoutService", () => {
 
         await service.startCheckout(request);
 
-        expect(redirectedInsideTransaction).toBe(false);
+        expect(wasRedirectedInsideTransaction).toBe(false);
       });
     });
   });

@@ -115,7 +115,7 @@ describe("AdminSessionsRepository (integration)", () => {
         updatedAt: NOW.subtract({ minutes: 6 }),
       });
 
-      const touched = await repository.touch(
+      const wasTouched = await repository.touch(
         db,
         session.id,
         NOW,
@@ -123,7 +123,7 @@ describe("AdminSessionsRepository (integration)", () => {
       );
       const [reloaded] = await db.orm.public.AdminSession.all();
 
-      expect(touched).toBe(true);
+      expect(wasTouched).toBe(true);
       expect(reloaded?.updatedAt.toString()).toBe(
         toDatabasePrecision(NOW.toString()),
       );
@@ -136,7 +136,7 @@ describe("AdminSessionsRepository (integration)", () => {
         updatedAt: lastUsed,
       });
 
-      const touched = await repository.touch(
+      const wasTouched = await repository.touch(
         db,
         session.id,
         NOW,
@@ -144,7 +144,7 @@ describe("AdminSessionsRepository (integration)", () => {
       );
       const [reloaded] = await db.orm.public.AdminSession.all();
 
-      expect(touched).toBe(false);
+      expect(wasTouched).toBe(false);
       expect(reloaded?.updatedAt.toString()).toBe(lastUsed.toString());
     });
 

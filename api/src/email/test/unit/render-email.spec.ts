@@ -18,9 +18,9 @@ const emails: EmailToRender[] = [
   { kind: "access_granted", view: { course } },
   {
     kind: "already_owned",
-    view: { course, refundIssued: false },
+    view: { course, wasRefundIssued: false },
   },
-  { kind: "access_suspended", view: { course, refundIssued: false } },
+  { kind: "access_suspended", view: { course, wasRefundIssued: false } },
   {
     kind: "dispute_alert",
     view: {
@@ -87,7 +87,7 @@ describe("renderEmail", () => {
     const withRefund = renderEmail(
       {
         kind: "already_owned",
-        view: { course, refundIssued: true },
+        view: { course, wasRefundIssued: true },
       },
       "Course Shop",
     );
@@ -99,7 +99,7 @@ describe("renderEmail", () => {
 
   it("mentions the refund in the suspension email only when one was issued", () => {
     const withRefund = renderEmail(
-      { kind: "access_suspended", view: { course, refundIssued: true } },
+      { kind: "access_suspended", view: { course, wasRefundIssued: true } },
       "Course Shop",
     );
     const withoutRefund = renderEmail(emails[2], "Course Shop");

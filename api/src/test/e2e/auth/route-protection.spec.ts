@@ -20,7 +20,7 @@ type OpenApiFile = {
   paths: Record<string, Partial<Record<Method, Operation>>>;
 };
 
-type Route = { method: Method; path: string; needsLogin: boolean };
+type Route = { method: Method; path: string; doesNeedLogin: boolean };
 
 /** Every operation in the contract, with whether it asks for a login. */
 function routesInContract(): Route[] {
@@ -46,7 +46,7 @@ function routesInContract(): Route[] {
           method,
           // any value will do: authentication is checked before the id is
           path: `/v1${path.replace(/\{[^}]+\}/g, "x")}`,
-          needsLogin: security.some((option) => "bearerAuth" in option),
+          doesNeedLogin: security.some((option) => "bearerAuth" in option),
         },
       ];
     }),
@@ -72,11 +72,11 @@ describe("route protection (e2e)", () => {
   }
 
   it("reads the contract", () => {
-    expect(routes.some((route) => route.needsLogin)).toBe(true);
-    expect(routes.some((route) => !route.needsLogin)).toBe(true);
+    expect(routes.some((route) => route.doesNeedLogin)).toBe(true);
+    expect(routes.some((route) => !route.doesNeedLogin)).toBe(true);
   });
 
-  describe.each(routes.filter((route) => route.needsLogin))(
+  describe.each(routes.filter((route) => route.doesNeedLogin))(
     "$method $path (needs a login)",
     (route) => {
       it("refuses a request without a token", async () => {
@@ -88,7 +88,7 @@ describe("route protection (e2e)", () => {
     },
   );
 
-  describe.each(routes.filter((route) => !route.needsLogin))(
+  describe.each(routes.filter((route) => !route.doesNeedLogin))(
     "$method $path (public)",
     (route) => {
       it("doesn't ask for a login", async () => {

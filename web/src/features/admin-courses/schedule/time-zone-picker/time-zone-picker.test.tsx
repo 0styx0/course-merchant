@@ -142,11 +142,11 @@ describe("TimeZonePicker", () => {
 
   it("leaves an Enter that confirms an input-method composition alone", async () => {
     renderPicker();
-    const notPrevented = fireEvent.keyDown(input(), {
+    const isNotPrevented = fireEvent.keyDown(input(), {
       key: "Enter",
       keyCode: 229,
     });
-    expect(notPrevented).toBe(true);
+    expect(isNotPrevented).toBe(true);
   });
 
   it("closes the list on Escape and shows the chosen zone", async () => {

@@ -36,8 +36,8 @@ export function ImageInput<T extends FieldValues>({
           onBlur={field.onBlur}
           fieldRef={field.ref}
           error={fieldState.error?.message}
-          touched={fieldState.isTouched}
-          submitted={isSubmitted}
+          isTouched={fieldState.isTouched}
+          isSubmitted={isSubmitted}
         />
       )}
     />

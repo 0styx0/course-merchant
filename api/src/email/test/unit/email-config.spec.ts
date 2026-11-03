@@ -12,7 +12,7 @@ describe("loadEmailConfig", () => {
   it("reads the SMTP URL, sender and shop name", () => {
     expect(loadEmailConfig(validEnv)).toEqual({
       smtpUrl: "smtps://user:secret@smtp.example.com",
-      requireTls: true,
+      isTlsRequired: true,
       from: "Course Shop <hello@example.com>",
       shopName: "Course Shop",
     });
@@ -30,7 +30,7 @@ describe("loadEmailConfig", () => {
     "requires encryption for the remote server %s",
     (smtpUrl) => {
       expect(
-        loadEmailConfig({ ...validEnv, SMTP_URL: smtpUrl }).requireTls,
+        loadEmailConfig({ ...validEnv, SMTP_URL: smtpUrl }).isTlsRequired,
       ).toBe(true);
     },
   );
@@ -40,9 +40,9 @@ describe("loadEmailConfig", () => {
     "smtp://127.0.0.1:1025",
     "smtp://[::1]:1025",
   ])("doesn't require encryption to this machine's %s", (smtpUrl) => {
-    expect(loadEmailConfig({ ...validEnv, SMTP_URL: smtpUrl }).requireTls).toBe(
-      false,
-    );
+    expect(
+      loadEmailConfig({ ...validEnv, SMTP_URL: smtpUrl }).isTlsRequired,
+    ).toBe(false);
   });
 
   it("rejects a missing setting by name", () => {

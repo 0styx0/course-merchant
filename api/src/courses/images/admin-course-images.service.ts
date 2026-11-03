@@ -51,12 +51,12 @@ export class AdminCourseImagesService {
   }
 
   private async requireCourse(courseId: string) {
-    const exists = await this.coursesRepository.courseExists(
+    const doesExist = await this.coursesRepository.courseExists(
       this.prisma.db,
       courseId,
     );
 
-    if (!exists) {
+    if (!doesExist) {
       throw courseNotFound(courseId);
     }
   }
