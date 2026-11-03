@@ -49,7 +49,47 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **8a.** Schedule problems show under the box they belong to, on both pages, and the line under the Schedule heading is gone.
   - [x] **8b.** The edit schedule tests check what the admin sees and run on a fixed clock, the create error-list test checks the whole list, and the schedule boxes and empty price rows are tidied. Nothing changes for the admin.
   - [x] **8c.** An end date before the start date shows on End date as soon as it changes, and on the same day an end time not after the start shows on End time only; the error list links to End date.
-- [ ] **9. Prices in plain words.** A past price start shows on its date, the price list says what to fix in words, amounts read $50.00, and the rows line up. **Next**
+- [ ] **9. Prices in plain words.** A past price start shows on the box to change, the price list says what to fix in words, amounts read $50.00, and the rows line up.
+  - [ ] **9a.** The schedule's date and time boxes take their "check this box and the boxes it compares with" behaviour from a shared piece; nothing changes for the admin. *(mechanical)* **Next**
+    - *New shared pieces*: the change handler that marks a box touched, checks it, and re-checks the other boxes already reached or showing a problem (9b's price rows use it).
+    - *Files*:
+      - `web/src/features/admin-courses/course-form/fields/recheck-on-change.ts` (new; names free of "schedule")
+      - [course-form-schedule-fields.tsx](../web/src/features/admin-courses/course-form/sections/course-form-schedule-fields.tsx)
+    - *Done when*: the create and edit schedule tests pass unchanged.
+  - [ ] **9b.** A price start in the past shows under the box to change, on both pages.
+    - *Behaviours*:
+      - A day that has passed in the chosen zone shows on Start date: "Choose a date that isn't in the past, or leave both empty to start {words}." ("today" from `utcToWallClock`).
+      - A past or too-soon time today stays on Start time with the current message.
+      - An unchanged loaded future price may still start in the past (no message).
+      - Just before midnight, the minute of lead time doesn't make today count as a passed day.
+      - A change in any price box re-checks every price box already reached, so a message moves or clears when the other box is fixed, and another row's "Two prices can't take effect at the same time." clears.
+    - *New shared pieces*: none (uses 9a's handler).
+    - *Files*:
+      - [price-row-issues.ts](../web/src/features/admin-courses/validation/price-row-issues.ts)
+      - [price-row.tsx](../web/src/features/admin-courses/price/price-row.tsx)
+      - [create-course-sections.tsx](../web/src/features/admin-courses/create-course/create-course-sections.tsx) and [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx) (pass every price box's name)
+      - tests: price-row-issues unit, create schema prices, edit action prices (the path moves to `effectiveDate`), create price-rows and edit prices UI
+    - *Settled*: the decision row on a past price start.
+    - *Done when*: the tests above pass; `check:changed` for web.
+  - [ ] **9c.** The price list under the rows says what to fix, in words, as a plain bulleted list, on both pages.
+    - *Behaviours*:
+      - A date with no time reads "$50.00 from (needs a time)"; a time with no date reads "… from (needs a date)".
+      - A broken amount reads "(price needs fixing) from …"; a time the zone skips reads "(time doesn't exist in this zone)"; the later of two equal starts reads "(same start as another price)".
+      - The words in parentheses stay red; no "Error" text remains; bullets replace Roman numerals.
+      - A past start shows its date as usual (its box carries the message).
+      - A typed "50" reads "$50.00"; 0 still reads "Free"; the prices in effect keep "$99.00" (pinned by the existing edit prices test).
+    - *New shared pieces*: one check of what is wrong with a row's start, exported from `price-row-issues.ts`, read by both the box messages and the list, so the list stops repeating the checks.
+    - *Files*:
+      - [price-summary.ts](../web/src/features/admin-courses/price/price-summary.ts)
+      - [price-schedule.tsx](../web/src/features/admin-courses/price/price-schedule.tsx)
+      - [price-row-issues.ts](../web/src/features/admin-courses/validation/price-row-issues.ts)
+      - tests: price-summary unit, create fields test ("lists the price schedule…")
+    - *Settled*: the decision row on the price list's wording.
+    - *Done when*: no `Error` text in the price list (re-measure grep); tests pass.
+  - [ ] **9d.** The price rows line up, at 400 px and on desktop.
+    - *New shared pieces*: none.
+    - *Files*: [price-row.tsx](../web/src/features/admin-courses/price/price-row.tsx) (layout classes only)
+    - *Done when*: checked by eye in `dev:mock` at both widths, with and without a message under a box.
 - [ ] **10. Saving confirms and stays.** Edit stays and says "Saved"; create opens the new course's edit page saying "Saved as a draft".
 - [ ] **11. Edit page explains itself.** The header shows the course's name, its status and a link to its shop page; notes explain a time zone change and a course that already ran.
 - [ ] **12. Delete only without students.** The API refuses to delete a course with enrollments; the edit page greys out Deleted and says to archive it instead.
@@ -95,6 +135,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 | A message comparing two schedule boxes shows under the box to change: End date when the date is earlier, End time on the same day. The line under the Schedule heading goes, on both pages (revisit after use) | The UX review found End time named while End date was wrong, and the heading sits far from the box. Replaces create's decision on cross-field schedule messages | Keeping the heading line |
 | The flow is create → edit → publish. After a save, edit stays, refreshes the stored course and shows "Saved"; create opens the new course's edit page through a query flag that shows "Saved as a draft" | Going to the shop proves nothing and leaves no way back. The refresh keeps the "unchanged time" checks right for the next save | Staying on create (a second Save makes a second course); a message, then still going to `/` (no way back; low) |
 | The price list under the rows names the broken part in words, as a plain list, with amounts as $50.00, on both pages (revisit after use) | A red "Error" doesn't say what to fix. Replaces create's U3b wording | Keeping "Error" and Roman numerals |
+| A price start in the past shows under Start date when its day has passed in the chosen zone, otherwise under Start time. A change in any price box re-checks every price box already reached, on both pages (revisit after use) | Follows step 8's rule that a message shows under the box to change. Without the re-check, a message would stay under a box after the admin fixed the other one | Always on the date box (points at a correct date when only today's time is past; low); keeping it on the time box (low) |
 | A course with enrollments can be archived but not deleted. The API refuses it with its own error code, and the page greys out Deleted with the reason | Students who paid keep a course the admin can still find | A page-only check (a direct API call could still delete; low) |
 
 ## Step 1. Create form rebuilt from shared building blocks
@@ -117,12 +158,25 @@ Retro:
 - Why here: follows 8's rule for where an error shows.
 - Needs: 8.
 - Builds on: [price-row-issues.ts](../web/src/features/admin-courses/validation/price-row-issues.ts) (the price checks), the schedule error placement from 8a and 8c (a message shows under the box to change), and the Decision row on the price list's wording.
-- Size: 2 to 3 commits.
+- Size: 4 commits (a shared re-check piece first; the row layout on its own).
 - Risk: none.
 - Done when: a half-filled row reads "$50.00 from (needs a time)", with no "Error" text; rows line up at 400 px.
-- Blocks the split: whether the price list and the row messages come in one commit or two; which price errors move onto a box (the past start) and which stay list-only.
-- Can wait: the exact list wording per error; the row layout breakpoint.
-- Re-measure: `grep -rn "Error" web/src/features/admin-courses --include=*.tsx` for the price list's "Error" text.
+- Can wait: the row layout breakpoint (9d).
+
+Design notes *(temporary)*:
+
+- Only the past start moves onto a box; the half-filled, skipped-time and duplicate messages keep their boxes, and the list words them.
+- The price boxes re-check every price box already reached (not just their own row), because a duplicate start's message sits on another row.
+- The list and the box messages read one shared check of a row's start, so their wording can't drift.
+
+Flow *(temporary)*:
+
+```
+admin changes a price box → re-check every price box already reached (9a, 9b)
+  ├─ day passed in the zone  → message under Start date (9b)
+  ├─ too soon today          → message under Start time (9b)
+  └─ list line → "$50.00 from <start>", or "(needs …)" in red (9c)
+```
 
 ## Step 10. Saving confirms and stays
 
