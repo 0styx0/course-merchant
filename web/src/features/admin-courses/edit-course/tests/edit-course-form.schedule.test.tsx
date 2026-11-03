@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   clickSave,
@@ -27,7 +27,11 @@ vi.mock("../../description-editor/description-editor", async () => ({
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-11-03T12:00:00Z"));
 });
+
+afterEach(() => vi.useRealTimers());
 
 describe("EditCourseForm schedule", () => {
   it("shows the times in the chosen zone, and the line follows a zone change", async () => {
@@ -59,6 +63,10 @@ describe("EditCourseForm schedule", () => {
 
     await clickSave(user);
 
+    await screen.findAllByText("The start time must be in the future.");
+    expect(
+      screen.getByLabelText("Start time").closest("[data-invalid]"),
+    ).toHaveTextContent("The start time must be in the future.");
     expect(saveAction).not.toHaveBeenCalled();
   });
 
@@ -72,6 +80,13 @@ describe("EditCourseForm schedule", () => {
     await user.click(screen.getByRole("option", { name: "Europe/Paris" }));
     await clickSave(user);
 
+    await screen.findAllByText("The start time must be in the future.");
+    expect(
+      screen.getByLabelText("Start time").closest("[data-invalid]"),
+    ).toHaveTextContent("The start time must be in the future.");
+    expect(
+      screen.getByLabelText("End time").closest("[data-invalid]"),
+    ).toHaveTextContent("The end time must be in the future.");
     expect(saveAction).not.toHaveBeenCalled();
   });
 

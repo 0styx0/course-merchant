@@ -17,6 +17,13 @@ type PriceRowNames<T extends FieldValues> = {
   effectiveTimeOfDay: FieldPathByValue<T, string>;
 };
 
+/** What a price row looks like before anything is typed in it. */
+export const emptyPriceRow = {
+  amountDollars: "",
+  effectiveDate: "",
+  effectiveTimeOfDay: "",
+};
+
 type PriceRowProps<T extends FieldValues> = {
   form: CourseFormApi<T>;
   names: PriceRowNames<T>;

@@ -26,7 +26,7 @@ import { ImageInput } from "../course-form/fields/image-input";
 import type { ChosenImage } from "../image/course-image";
 import { adminCourseImagePath } from "../image/course-image-route";
 import { ImagePreview } from "../image/image-preview";
-import { PriceRow } from "../price/price-row";
+import { emptyPriceRow, PriceRow } from "../price/price-row";
 import { PricesInEffect } from "../price/prices-in-effect";
 import { priceSummary } from "../price/price-summary";
 import { scheduleSummary } from "../schedule/summary/schedule-summary";
@@ -133,13 +133,6 @@ export function EditScheduleSection({
   );
 }
 
-/** What an added price row looks like before anything is typed in it. */
-const emptyEditPrice = {
-  amountDollars: "",
-  effectiveDate: "",
-  effectiveTimeOfDay: "",
-};
-
 /**
  * The zone the prices are shown in, and the price summary, kept in step with
  * the boxes. A stored zone the list lacks shows in UTC, as the boxes do.
@@ -182,7 +175,7 @@ export function EditPricingSection({
   return (
     <PricingSection
       help="Leave the date and time empty to start when you save."
-      onAddPrice={() => priceRows.append(emptyEditPrice)}
+      onAddPrice={() => priceRows.append(emptyPriceRow)}
       summary={summary}
     >
       <PricesInEffect prices={pricesInEffect} timeZone={timeZone} />

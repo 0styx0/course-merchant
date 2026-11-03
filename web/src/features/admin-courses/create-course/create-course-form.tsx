@@ -18,7 +18,6 @@ import {
   CreateBasicsSection,
   CreatePricingSection,
   CreateScheduleSection,
-  emptyPrice,
 } from "./create-course-sections";
 import { useBrowserTimeZone } from "./use-browser-time-zone";
 import { useSaveNewCourse } from "./use-save-new-course";
@@ -27,6 +26,7 @@ import {
   type CheckedCourseFormWithImageValues,
   type CourseFormWithImageValues,
 } from "../validation/course-form-schema";
+import { emptyPriceRow } from "../price/price-row";
 import { priceSummary } from "../price/price-summary";
 import { scheduleSummary } from "../schedule/summary/schedule-summary";
 
@@ -46,7 +46,7 @@ const defaultValues: CourseFormWithImageValues = {
     endTimeOfDay: "",
     timeZone: DEFAULT_TIME_ZONE,
   },
-  prices: [emptyPrice],
+  prices: [emptyPriceRow],
 };
 
 function useCourseFormState() {

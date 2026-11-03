@@ -1,8 +1,8 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { renderForm } from "./create-course-form.fixtures";
+import { fillValidForm, renderForm } from "./create-course-form.fixtures";
 
 vi.mock(
   "next/navigation",
@@ -155,13 +155,18 @@ describe("CourseForm schedule fields", () => {
   it("lists a schedule-wide problem in the error list after submit", async () => {
     const user = userEvent.setup();
     renderForm();
+    await fillValidForm(user);
+    await user.clear(screen.getByLabelText("Start date"));
     await user.type(screen.getByLabelText("Start date"), "2000-01-01");
-    await user.type(screen.getByLabelText("Start time"), "09:00");
 
     await user.click(screen.getByRole("button", { name: "Save as draft" }));
 
-    expect(
-      await screen.findByRole("button", { name: "Start time" }),
-    ).toBeInTheDocument();
+    const heading = await screen.findByRole("heading", {
+      name: "Fix 1 problem before saving",
+    });
+    const errorList = heading.closest<HTMLElement>("[role=alert]")!;
+    const entries = within(errorList).getAllByRole("listitem");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toHaveTextContent(`Start time: ${PAST_START}`);
   });
 });

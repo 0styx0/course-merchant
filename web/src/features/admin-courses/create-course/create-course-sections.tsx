@@ -24,7 +24,7 @@ import {
 } from "../course-form/sections/course-form-sections";
 import type { ChosenImage } from "../image/course-image";
 import { ImagePreview } from "../image/image-preview";
-import { PriceRow } from "../price/price-row";
+import { emptyPriceRow, PriceRow } from "../price/price-row";
 import type { priceSummary } from "../price/price-summary";
 import {
   COURSE_NAME_MAX_LENGTH,
@@ -105,13 +105,6 @@ export function CreateScheduleSection({
   );
 }
 
-/** What a price row looks like before anything is typed in it. */
-export const emptyPrice = {
-  amountDollars: "",
-  effectiveDate: "",
-  effectiveTimeOfDay: "",
-};
-
 /** Create's pricing: one row per price, and a removal that checks the rest again. */
 export function CreatePricingSection({
   form,
@@ -131,7 +124,7 @@ export function CreatePricingSection({
   return (
     <PricingSection
       help="Leave the date and time empty to start when the course is published."
-      onAddPrice={() => priceRows.append(emptyPrice)}
+      onAddPrice={() => priceRows.append(emptyPriceRow)}
       summary={summary}
     >
       {priceRows.fields.map((row, index) => (

@@ -21,6 +21,32 @@ function isReachedOrInvalid<T extends FieldValues>(
   return isTouched || Boolean(error);
 }
 
+/** Sets the box's value, marks it touched and checks it. */
+function setScheduleBoxValue<T extends FieldValues>(
+  form: CourseFormApi<T>,
+  name: FieldPathByValue<T, string>,
+  newValue: string,
+) {
+  // The library types `setValue`'s value as the field's type, which it can't
+  // narrow to string for a generic `T`, so it needs this cast.
+  form.setValue(name, newValue as PathValue<T, typeof name>, {
+    shouldTouch: true,
+    shouldValidate: true,
+  });
+}
+
+/** Checks again the other schedule boxes the admin has reached or that show a problem. */
+function recheckOtherReachedBoxes<T extends FieldValues>(
+  form: CourseFormApi<T>,
+  changedName: FieldPathByValue<T, string>,
+  allNames: FieldPathByValue<T, string>[],
+) {
+  const others = allNames.filter(
+    (other) => other !== changedName && isReachedOrInvalid(form, other),
+  );
+  if (others.length > 0) void form.trigger(others);
+}
+
 /**
  * A native date picker may never blur its input, so a change marks the field
  * touched and checks it. The other schedule fields are checked too (they
@@ -32,16 +58,8 @@ function makeScheduleChangeHandler<T extends FieldValues>(
   allNames: FieldPathByValue<T, string>[],
 ) {
   return (event: { target: { value: string } }) => {
-    // The library types `setValue`'s value as the field's type, which it can't
-    // narrow to string for a generic `T`, so it needs this cast.
-    form.setValue(name, event.target.value as PathValue<T, typeof name>, {
-      shouldTouch: true,
-      shouldValidate: true,
-    });
-    const others = allNames.filter(
-      (other) => other !== name && isReachedOrInvalid(form, other),
-    );
-    if (others.length > 0) void form.trigger(others);
+    setScheduleBoxValue(form, name, event.target.value);
+    recheckOtherReachedBoxes(form, name, allNames);
   };
 }
 
@@ -104,7 +122,7 @@ export function ScheduleDateTimeFields<T extends FieldValues>({
         name={names.endDate}
         label="End date"
         type="date"
-        min={String(startDate) || undefined}
+        min={startDate || undefined}
       />
       <ScheduleDateTimeField
         {...shared}
