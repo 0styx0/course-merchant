@@ -4,9 +4,6 @@ import type { FieldPathByValue, FieldValues, PathValue } from "react-hook-form";
 
 import { InputField, type CourseFormApi } from "../fields/course-form-fields";
 
-/** The id of the Schedule line that shows the cross-field messages. */
-export const SCHEDULE_PROBLEMS_ID = "schedule-problems";
-
 /** The paths of the four boxes, each holding a string. */
 export type ScheduleDateTimeNames<T extends FieldValues> = {
   startDate: FieldPathByValue<T, string>;
@@ -70,7 +67,6 @@ function ScheduleDateTimeField<T extends FieldValues>({
       label={label}
       type={type}
       min={min}
-      sharedMessageId={SCHEDULE_PROBLEMS_ID}
       registerOptions={{
         onChange: makeScheduleChangeHandler(form, name, allNames),
       }}

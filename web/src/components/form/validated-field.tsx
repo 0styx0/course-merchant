@@ -26,8 +26,6 @@ type ValidatedFieldProps = {
   touched: boolean;
   /** The form has been submitted at least once. */
   submitted: boolean;
-  /** The id of a message shown elsewhere on the page; the field then draws none. */
-  errorMessageId?: string;
   /** Called when the label is clicked, for inputs a label can't focus itself. */
   onLabelClick?: () => void;
   /** Renders the one input; spread the props it receives onto the input. */
@@ -127,14 +125,13 @@ export function ValidatedField({
   error,
   touched,
   submitted,
-  errorMessageId,
   onLabelClick,
   children,
 }: ValidatedFieldProps) {
   const id = useId();
   const labelId = `${id}-label`;
   const descriptionId = `${id}-description`;
-  const errorId = errorMessageId ?? `${id}-error`;
+  const errorId = `${id}-error`;
   const showsError = showsFieldError({ error, touched, submitted });
   return (
     <Field data-invalid={showsError}>
@@ -154,7 +151,7 @@ export function ValidatedField({
       <FieldNotes
         description={description}
         descriptionId={descriptionId}
-        error={showsError && !errorMessageId ? error : undefined}
+        error={showsError ? error : undefined}
         errorId={errorId}
       />
     </Field>

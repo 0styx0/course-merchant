@@ -20,10 +20,7 @@ import {
 } from "@/components/form/validated-field";
 import { Input } from "@/components/ui/input";
 
-import {
-  fieldErrorMessage,
-  fieldErrorType,
-} from "../problems/course-form-problems";
+import { fieldErrorMessage } from "../problems/course-form-problems";
 import { DescriptionEditor } from "../../description-editor/description-editor";
 import { TimeZonePicker } from "../../schedule/time-zone-picker/time-zone-picker";
 
@@ -100,16 +97,6 @@ function fieldErrorState<T extends FieldValues>(
   };
 }
 
-/** The shared message id, only while the field's problem is a cross-field one. */
-function crossFieldMessageId<T extends FieldValues>(
-  form: CourseFormApi<T>,
-  name: Path<T>,
-  sharedMessageId: string | undefined,
-) {
-  const isCrossField = fieldErrorType(form.formState.errors, name) === "custom";
-  return isCrossField ? sharedMessageId : undefined;
-}
-
 function InputPrefix({ prefix }: { prefix?: string }) {
   if (!prefix) return null;
   return (
@@ -145,7 +132,6 @@ export function InputField<T extends FieldValues>({
   placeholder,
   limit,
   prefix,
-  sharedMessageId,
   min,
   type = "text",
 }: FieldProps<T> & {
@@ -155,8 +141,6 @@ export function InputField<T extends FieldValues>({
   limit?: number;
   /** A symbol shown inside the box before the text, such as "$". */
   prefix?: string;
-  /** Where a cross-field message is shown; "required" messages stay under the box. */
-  sharedMessageId?: string;
   /** The earliest value the date or time picker offers. */
   min?: string;
 }) {
@@ -164,7 +148,6 @@ export function InputField<T extends FieldValues>({
     <ValidatedField
       label={label}
       description={helpWithCounter({ form, name, description, limit })}
-      errorMessageId={crossFieldMessageId(form, name, sharedMessageId)}
       {...fieldErrorState(form, name)}
     >
       {(inputProps) => (

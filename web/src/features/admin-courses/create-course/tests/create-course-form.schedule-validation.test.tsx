@@ -96,7 +96,7 @@ describe("CourseForm schedule fields", () => {
     );
   });
 
-  it("shows a schedule-wide message once, in the Schedule line, not under the time field", async () => {
+  it("shows a schedule-wide message once, under the box it belongs to", async () => {
     const user = userEvent.setup();
     renderForm();
 
@@ -106,7 +106,7 @@ describe("CourseForm schedule fields", () => {
     const message = await screen.findByText(PAST_START);
     const startTime = screen.getByLabelText("Start time");
     expect(screen.getAllByText(PAST_START)).toHaveLength(1);
-    expect(startTime.closest("[data-invalid]")).not.toContainElement(message);
+    expect(startTime.closest("[data-invalid]")).toContainElement(message);
     expect(startTime).toHaveAttribute("aria-invalid", "true");
     expect(startTime).toHaveAccessibleDescription(PAST_START);
   });
@@ -123,8 +123,16 @@ describe("CourseForm schedule fields", () => {
     const start = await screen.findByText(PAST_START);
     const end = await screen.findByText(END_BEFORE_START);
     expect(
-      start.compareDocumentPosition(end) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+      Boolean(
+        start.compareDocumentPosition(end) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true);
+    expect(
+      screen.getByLabelText("Start time").closest("[data-invalid]"),
+    ).toContainElement(start);
+    expect(
+      screen.getByLabelText("End time").closest("[data-invalid]"),
+    ).toContainElement(end);
     expect(screen.getByLabelText("End time")).toHaveAccessibleDescription(
       expect.stringContaining(END_BEFORE_START),
     );

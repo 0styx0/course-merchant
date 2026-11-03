@@ -46,28 +46,30 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **7a.** Enter in the Time zone box picks the first matching zone and never saves the course; Escape keeps the chosen zone in the box. Both pages.
   - [x] **7b.** Keep the course or Escape in the delete dialog sets the status back to the one the course loaded with, and keeps every other edit.
 - [ ] **8. Schedule errors on the field to change.** An end date before the start date shows on End date at once; on the same day, an end time not after the start time shows on End time.
-  - [ ] **8a.** Schedule problems show under the box they belong to, on both pages, and the line under the Schedule heading is gone. **Next**
+  - [x] **8a.** Schedule problems show under the box they belong to, on both pages, and the line under the Schedule heading is gone.
+  - [ ] **8b.** The edit schedule tests check what the admin sees and run on a fixed clock, the create error-list test checks the whole list, and the schedule boxes and empty price rows are tidied. Nothing changes for the admin. *(mechanical, coverage first)* **Next**
     - *Behaviours*:
-      - A start time in the past shows "The start time must be in the future." under Start time.
-      - An end time not after the start time shows "The end time must be after the start time." under End time.
-      - A daylight-saving gap shows its message under the box that holds the bad time.
-      - No schedule heading line exists; other field messages work as before.
-      - On edit, the same messages show under their boxes; an unchanged past time still raises none.
-      - The error list entry for such a problem still focuses that box.
-    - *New shared pieces*: none.
+      - A changed start in the past (edit) shows "The start time must be in the future." under Start time and sends no request.
+      - A zone change that moves a started course into the past (edit) shows "The start time must be in the future." under Start time and "The end time must be in the future." under End time, and sends no request.
+      - The edit schedule tests freeze the date, so the dates they treat as future or past stay that way.
+      - After a save with a start in the past, create's error list holds exactly one entry, Start time, with its message.
+      - The End date picker still offers nothing before the start date once the extra text conversion of the start date is gone (kept with a comment if the type check needs it).
+      - The schedule change handler still sets the value, marks the box touched and re-checks the other reached boxes, each step in its own named function.
+      - Create and edit add the same empty price row from one shared value; create's form still starts with one empty row.
+    - *New shared pieces*: the empty price row value, shared by create and edit beside the price row in `price/`, so the two copies can't drift apart.
     - *Files*:
-      - [course-form-fields.tsx](../web/src/features/admin-courses/course-form/fields/course-form-fields.tsx) (drop the shared-message option)
-      - [course-form-schedule-fields.tsx](../web/src/features/admin-courses/course-form/sections/course-form-schedule-fields.tsx) (drop the line's id)
-      - [schedule-problems.tsx](../web/src/features/admin-courses/course-form/sections/schedule-problems.tsx) (deleted; `sections/` 5 → 4)
+      - [course-form-schedule-fields.tsx](../web/src/features/admin-courses/course-form/sections/course-form-schedule-fields.tsx) (the start date's text conversion, and the change handler's split)
+      - [price-row.tsx](../web/src/features/admin-courses/price/price-row.tsx) (the shared empty row — adds no file to `price/`)
       - [create-course-sections.tsx](../web/src/features/admin-courses/create-course/create-course-sections.tsx)
+      - [create-course-form.tsx](../web/src/features/admin-courses/create-course/create-course-form.tsx)
       - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx)
-      - [course-form-problems.ts](../web/src/features/admin-courses/course-form/problems/course-form-problems.ts) (`fieldErrorType` becomes unused)
-      - [validated-field.tsx](../web/src/components/form/validated-field.tsx) (drop the unused option to show the message elsewhere, and its test)
-      - Over the six-file limit with the owner's OK: the wrapper cleanup was folded in from its own commit (2026-11-03)
-      - Tests: create's fields and schedule-validation tests, edit's schedule test
-    - *Settled*: the Decisions row on where schedule messages show.
-    - *Done when*: the changed tests pass, `check:changed` is clean in `web`, and both pages in `dev:mock` show the start-in-past message under Start time.
-  - [ ] **8b.** An end date before the start date shows on End date at once; on the same day, an end time not after the start time shows on End time.
+      - Tests: `edit-course-form.schedule.test.tsx`, `create-course-form.schedule-validation.test.tsx`
+      - One commit, though it mixes test fixes and tidy-ups, with the owner's OK (2026-11-03); other tests with far-off dates (edit prices, create) stay out of scope
+    - *Settled*:
+      - no decision rows
+      - the fixed clock copies the action tests' `vi.useFakeTimers({ toFake: ["Date"] })`
+    - *Done when*: coverage shows existing tests pin the change handler and the empty row before the refactor, the test count holds or grows, and `check:changed` is clean in `web`.
+  - [ ] **8c.** An end date before the start date shows on End date at once; on the same day, an end time not after the start time shows on End time.
     - *Behaviours*:
       - Picking an end date before the start date puts "The end date must be on or after the start date." on End date, with a cross, as soon as the date changes.
       - Moving the start date past a reached End date flags End date at once; an End date not reached yet stays clean.
@@ -201,7 +203,7 @@ Schedule — When the course runs.
 - Design notes *(temporary)*:
   - "Unchanged" means only that the converted moment equals the stored moment, to the millisecond. It is used only to allow a past time.
   - The API will refuse seconds (separate API work, not this milestone), so the boxes hold minutes only.
-  - Reuse: `wallClockToUtc`, `scheduleSummary`, `ScheduleDateTimeFields`, `ScheduleProblems`, `fieldErrorsFromProblem` (it already puts the API's start and end errors on the time boxes).
+  - Reuse: `wallClockToUtc`, `scheduleSummary`, `ScheduleDateTimeFields`, `fieldErrorsFromProblem` (it already puts the API's start and end errors on the time boxes).
   - Folder counts: `validation/` 5 → 7 in 3b.
   - Flow:
 

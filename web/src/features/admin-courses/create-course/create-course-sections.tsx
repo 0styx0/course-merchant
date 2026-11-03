@@ -22,7 +22,6 @@ import {
   PricingSection,
   ScheduleSection,
 } from "../course-form/sections/course-form-sections";
-import { ScheduleProblems } from "../course-form/sections/schedule-problems";
 import type { ChosenImage } from "../image/course-image";
 import { ImagePreview } from "../image/image-preview";
 import { PriceRow } from "../price/price-row";
@@ -83,7 +82,7 @@ const scheduleNames: ScheduleDateTimeNames<CourseFormWithImageValues> = {
   endTimeOfDay: "schedule.endTimeOfDay",
 };
 
-/** Create's schedule: the cross-field messages, the zone, and the four date and time boxes. */
+/** Create's schedule: the zone, and the four date and time boxes. */
 export function CreateScheduleSection({
   form,
   timeZones,
@@ -95,10 +94,6 @@ export function CreateScheduleSection({
 }) {
   return (
     <ScheduleSection scheduleText={scheduleText}>
-      <ScheduleProblems
-        form={form}
-        names={[scheduleNames.startTimeOfDay, scheduleNames.endTimeOfDay]}
-      />
       <TimeZoneField
         form={form}
         name="schedule.timeZone"

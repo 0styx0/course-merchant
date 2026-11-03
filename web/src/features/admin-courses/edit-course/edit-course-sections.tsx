@@ -22,7 +22,6 @@ import {
   PricingSection,
   ScheduleSection,
 } from "../course-form/sections/course-form-sections";
-import { ScheduleProblems } from "../course-form/sections/schedule-problems";
 import { ImageInput } from "../course-form/fields/image-input";
 import type { ChosenImage } from "../image/course-image";
 import { adminCourseImagePath } from "../image/course-image-route";
@@ -111,7 +110,7 @@ const scheduleNames: ScheduleDateTimeNames<EditCourseFormValues> = {
   endTimeOfDay: "schedule.endTimeOfDay",
 };
 
-/** Edit's schedule: the cross-field messages, the zone, the four boxes, and the sentence for them. */
+/** Edit's schedule: the zone, the four boxes, and the sentence for them. */
 export function EditScheduleSection({
   form,
   timeZones,
@@ -123,10 +122,6 @@ export function EditScheduleSection({
 
   return (
     <ScheduleSection scheduleText={scheduleSummary(schedule)}>
-      <ScheduleProblems
-        form={form}
-        names={[scheduleNames.startTimeOfDay, scheduleNames.endTimeOfDay]}
-      />
       <TimeZoneField
         form={form}
         name="schedule.timeZone"

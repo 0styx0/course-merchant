@@ -62,14 +62,11 @@ describe("CourseForm", () => {
     expect(isBefore(image, screen.getByLabelText("Course name"))).toBe(true);
   });
 
-  it("puts the time zone first in Schedule, under the schedule-wide message", () => {
+  it("puts the time zone first in Schedule, across both columns", () => {
     renderForm();
     const zone = screen.getByText("Time zone");
 
     expect(isBefore(zone, screen.getByLabelText("Start date"))).toBe(true);
-    expect(isBefore(document.getElementById("schedule-problems")!, zone)).toBe(
-      true,
-    );
     expect(zone.closest(".sm\\:col-span-2")).not.toBeNull();
   });
 

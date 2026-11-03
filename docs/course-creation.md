@@ -39,7 +39,7 @@ Each step is one commit, outlined in detail before it starts. Every step's tests
 
 - [x] **6. Form behaviour fixes**, in four commits:
   - [x] **6a.** A change to a schedule date or time marks the field touched and re-checks it, plus the other schedule fields already touched or showing an error.
-  - [x] **6b.** Schedule-wide messages (`type === "custom"`) show in a line under the Schedule heading (`schedule-problems.tsx`); the time field keeps its border and X and points `aria-describedby` at the line.
+  - [x] **6b.** Schedule-wide messages (`type === "custom"`) first showed in a line under the Schedule heading; since course-edit 8a they show under the box they belong to, like every other field message.
   - [x] **6c.** The end date input's `min` is the start date (none while it is empty), so the picker opens near it.
   - [x] **6d.** `StatusIcon` always renders a fixed `size-4` slot, so the X and the check no longer shift the input.
 - [x] **7. Layout and wording**, in three commits (design in *Step 7* below):

@@ -12,14 +12,6 @@ export function fieldErrorMessage(
   return typeof message === "string" ? message : undefined;
 }
 
-/** The kind of error at a field's path ("custom" for a cross-field check). */
-export function fieldErrorType(
-  errors: FieldErrors,
-  fieldName: string,
-): string | undefined {
-  return (get(errors, fieldName) as { type?: string } | undefined)?.type;
-}
-
 /** A field's name and the label the error list shows for it. */
 export type ProblemField = readonly [fieldName: string, label: string];
 

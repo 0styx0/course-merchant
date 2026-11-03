@@ -85,17 +85,20 @@ describe("EditCourseForm schedule", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("shows a changed start in the past on the schedule line and in the error list", async () => {
+  it("shows a changed start in the past under Start time and in the error list", async () => {
     const user = userEvent.setup();
     renderForm();
 
     setValue("Start date", "2026-10-02");
     await clickSave(user);
 
+    await screen.findAllByText("The start time must be in the future.");
     expect(
-      await screen.findAllByText("The start time must be in the future."),
-    ).not.toHaveLength(0);
-    expect(screen.getByRole("alert")).toHaveTextContent("Start time");
+      screen.getByLabelText("Start time").closest("[data-invalid]"),
+    ).toHaveTextContent("The start time must be in the future.");
+    expect(
+      screen.getByRole("button", { name: "Start time" }),
+    ).toBeInTheDocument();
   });
 
   it("clears the problem once the times are corrected", async () => {
@@ -115,7 +118,7 @@ describe("EditCourseForm schedule", () => {
     );
   });
 
-  it("shows an end that is not after the start on the schedule line", async () => {
+  it("shows an end that is not after the start under End time", async () => {
     const user = userEvent.setup();
     renderForm();
 
@@ -123,9 +126,10 @@ describe("EditCourseForm schedule", () => {
     setValue("End date", "2030-01-01");
     await clickSave(user);
 
+    await screen.findAllByText("The end time must be after the start time.");
     expect(
-      await screen.findAllByText("The end time must be after the start time."),
-    ).not.toHaveLength(0);
+      screen.getByLabelText("End time").closest("[data-invalid]"),
+    ).toHaveTextContent("The end time must be after the start time.");
     expect(saveAction).not.toHaveBeenCalled();
   });
 });
