@@ -42,6 +42,11 @@ const endAfterStartMessage = {
   message: "The end time must be after the start time.",
 };
 
+const endDateMessage = {
+  path: ["schedule", "endDate"],
+  message: "The end date must be on or after the start date.",
+};
+
 describe("editScheduleIssues", () => {
   it("allows unchanged times that are in the past", () => {
     expect(editScheduleIssues(pastBoxes, pastLoaded, NOW)).toEqual([]);
@@ -91,6 +96,20 @@ describe("editScheduleIssues", () => {
     const boxes = { ...futureBoxes, endTimeOfDay: "09:00" };
     expect(editScheduleIssues(boxes, futureLoaded, NOW)).toEqual([
       endAfterStartMessage,
+    ]);
+  });
+
+  it("shows only the end-date message when the end date is earlier, even if it is in the past", () => {
+    const boxes = { ...pastBoxes, endDate: "2026-04-30" };
+    expect(editScheduleIssues(boxes, pastLoaded, NOW)).toEqual([
+      endDateMessage,
+    ]);
+  });
+
+  it("shows only the end-date message when the end date is earlier and in the future", () => {
+    const boxes = { ...futureBoxes, endDate: "2026-06-30" };
+    expect(editScheduleIssues(boxes, futureLoaded, NOW)).toEqual([
+      endDateMessage,
     ]);
   });
 

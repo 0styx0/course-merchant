@@ -33,6 +33,9 @@ beforeEach(() => {
 
 afterEach(() => vi.useRealTimers());
 
+const END_DATE_BEFORE_START =
+  "The end date must be on or after the start date.";
+
 describe("EditCourseForm schedule", () => {
   it("shows the times in the chosen zone, and the line follows a zone change", async () => {
     const user = userEvent.setup();
@@ -133,18 +136,78 @@ describe("EditCourseForm schedule", () => {
     );
   });
 
-  it("shows an end that is not after the start under End time", async () => {
+  it("shows an end date before the start date on End date at once, with no request", async () => {
     const user = userEvent.setup();
     renderForm();
 
     setValue("Start date", "2030-01-02");
     setValue("End date", "2030-01-01");
-    await clickSave(user);
 
-    await screen.findAllByText("The end time must be after the start time.");
+    const endDate = screen.getByLabelText("End date");
+    expect(await screen.findByText(END_DATE_BEFORE_START)).toBeVisible();
+    expect(endDate).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("End time")).not.toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+
+    await clickSave(user);
     expect(
-      screen.getByLabelText("End time").closest("[data-invalid]"),
-    ).toHaveTextContent("The end time must be after the start time.");
+      await screen.findByRole("button", { name: "End date" }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "End date" }));
+    expect(endDate).toHaveFocus();
     expect(saveAction).not.toHaveBeenCalled();
+  });
+
+  it("replaces the in-the-future message with the end-date one when the end date is earlier", async () => {
+    renderForm();
+
+    setValue("End date", "2026-09-30");
+
+    expect(await screen.findByText(END_DATE_BEFORE_START)).toBeVisible();
+    expect(
+      screen.queryByText("The end time must be in the future."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("flags a reached End date when the start date moves past it, and a later end date clears it", async () => {
+    renderForm();
+    setValue("End date", "2030-01-05");
+    setValue("Start date", "2030-01-06");
+    expect(await screen.findByText(END_DATE_BEFORE_START)).toBeVisible();
+
+    setValue("End date", "2030-01-07");
+    await waitFor(() =>
+      expect(screen.queryByText(END_DATE_BEFORE_START)).not.toBeInTheDocument(),
+    );
+  });
+
+  it("leaves End date clean when the start date moves and the end date was never reached", () => {
+    renderForm();
+
+    setValue("Start date", "2030-01-06");
+
+    expect(screen.queryByText(END_DATE_BEFORE_START)).not.toBeInTheDocument();
+    expect(screen.getByLabelText("End date")).not.toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+  });
+
+  it("shows a same-day end not after the start on End time only", async () => {
+    renderForm();
+
+    setValue("Start date", "2030-01-02");
+    setValue("End date", "2030-01-02");
+    setValue("End time", "13:00");
+
+    expect(
+      await screen.findByText("The end time must be after the start time."),
+    ).toBeVisible();
+    expect(screen.getByLabelText("End date")).not.toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
   });
 });

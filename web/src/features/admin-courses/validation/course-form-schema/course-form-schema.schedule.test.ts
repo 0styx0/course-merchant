@@ -73,6 +73,34 @@ describe("courseFormSchema", () => {
       });
     });
 
+    it("refuses an end date before the start date, on End date only", () => {
+      expect(withValues((v) => endAt(v, "2026-06-30T20:00"))).toEqual({
+        "schedule.endDate": [
+          "The end date must be on or after the start date.",
+        ],
+      });
+    });
+
+    it("refuses an end time not after the start on the same day, on End time only", () => {
+      expect(withValues((v) => endAt(v, "2026-07-01T08:00"))).toEqual({
+        "schedule.endTimeOfDay": ["The end time must be after the start time."],
+      });
+    });
+
+    it("refuses an earlier end date even when the start time falls in a daylight-saving gap", () => {
+      expect(
+        withValues((v) => {
+          startAt(v, "2027-03-14T02:30");
+          endAt(v, "2027-03-13T05:00");
+        }),
+      ).toEqual({
+        "schedule.startTimeOfDay": [dstMessage],
+        "schedule.endDate": [
+          "The end date must be on or after the start date.",
+        ],
+      });
+    });
+
     it("reports only the zone when it is empty", () => {
       const result = withValues((v) => {
         v.schedule.timeZone = "";
@@ -97,7 +125,7 @@ describe("courseFormSchema", () => {
     });
 
     it("refuses a date that does not exist", () => {
-      expect(withValues((v) => (v.schedule.endDate = "2026-02-30"))).toEqual({
+      expect(withValues((v) => (v.schedule.endDate = "2026-09-31"))).toEqual({
         "schedule.endTimeOfDay": ["Enter a valid date and time."],
       });
     });

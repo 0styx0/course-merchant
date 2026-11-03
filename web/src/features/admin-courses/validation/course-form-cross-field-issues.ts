@@ -42,7 +42,7 @@ function scheduleIssues(schedule: Schedule, nowMs: number): FormIssue[] {
   return [
     ...conversionIssues(start, end),
     ...startInPastIssues(start, nowMs),
-    ...endNotAfterStartIssues(start, end),
+    ...endOrderIssues(start, end, schedule),
   ];
 }
 
@@ -74,7 +74,39 @@ export function startInPastIssues(
   ];
 }
 
-export function endNotAfterStartIssues(
+/**
+ * An end date before the start date shows on End date. That check compares the
+ * two date texts, so it runs even when a time can't convert. On the same day,
+ * an end time not after the start time shows on End time.
+ */
+export function endOrderIssues(
+  start: Conversion,
+  end: Conversion,
+  dates: Pick<Schedule, "startDate" | "endDate">,
+): FormIssue[] {
+  if (isEndDateBeforeStartDate(dates)) {
+    return [
+      issueAt(
+        ["schedule", "endDate"],
+        "The end date must be on or after the start date.",
+      ),
+    ];
+  }
+  return endTimeNotAfterStartIssues(start, end);
+}
+
+// Date boxes hold zero-padded YYYY-MM-DD text, so text order is date order.
+function isEndDateBeforeStartDate(
+  dates: Pick<Schedule, "startDate" | "endDate">,
+): boolean {
+  return (
+    dates.startDate !== "" &&
+    dates.endDate !== "" &&
+    dates.endDate < dates.startDate
+  );
+}
+
+function endTimeNotAfterStartIssues(
   start: Conversion,
   end: Conversion,
 ): FormIssue[] {

@@ -1,6 +1,6 @@
 import {
   conversionIssues,
-  endNotAfterStartIssues,
+  endOrderIssues,
   startInPastIssues,
 } from "./course-form-cross-field-issues";
 import {
@@ -41,21 +41,22 @@ function endInPastIssues(end: Conversion, nowMs: number): FormIssue[] {
   ];
 }
 
-/** The end-after-start issue if there is one, otherwise the end-in-the-past one. */
-function endIssues(
+/** The end-order issue if there is one, otherwise the end-in-the-past one. */
+function endOrderOrEndInPastIssues(
   start: Conversion,
-  changedEnd: Conversion,
   end: Conversion,
+  changedEnd: Conversion,
+  boxes: EditScheduleBoxes,
   nowMs: number,
 ): FormIssue[] {
-  const notAfterStart = endNotAfterStartIssues(start, end);
-  if (notAfterStart.length > 0) return notAfterStart;
+  const outOfOrder = endOrderIssues(start, end, boxes);
+  if (outOfOrder.length > 0) return outOfOrder;
   return endInPastIssues(changedEnd, nowMs);
 }
 
 /**
  * Checks an edited schedule. An unchanged start or end may be in the past, a
- * changed one may not, and the end must come after the start. The end-after-start
+ * changed one may not, and the end must come after the start. The end-order
  * message replaces the end-in-the-past one when both apply.
  */
 export function editScheduleIssues(
@@ -74,6 +75,12 @@ export function editScheduleIssues(
   return [
     ...conversionIssues(start, end),
     ...startInPastIssues(onlyWhenChanged(start, loaded.startTime), nowMs),
-    ...endIssues(start, onlyWhenChanged(end, loaded.endTime), end, nowMs),
+    ...endOrderOrEndInPastIssues(
+      start,
+      end,
+      onlyWhenChanged(end, loaded.endTime),
+      boxes,
+      nowMs,
+    ),
   ];
 }
