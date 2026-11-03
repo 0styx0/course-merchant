@@ -73,7 +73,7 @@ test("shows the course's details and saves a new name", async ({
   expect(consoleErrors).toEqual([]);
 });
 
-test("fills the schedule boxes and shows a past start on the schedule line", async ({
+test("fills the schedule boxes and shows a past start under the start time box", async ({
   page,
   msw,
 }) => {
@@ -88,9 +88,11 @@ test("fills the schedule boxes and shows a past start on the schedule line", asy
   await page.getByLabel("Start date", { exact: true }).fill("2026-10-02");
   await page.getByRole("button", { name: "Save changes" }).click();
 
-  await expect(page.locator("#schedule-problems")).toContainText(
-    "The start time must be in the future.",
-  );
+  await expect(
+    page
+      .getByLabel("Start time", { exact: true })
+      .locator("xpath=ancestor::*[@data-invalid][1]"),
+  ).toContainText("The start time must be in the future.");
   await expect(page).toHaveURL(/\/edit$/);
 });
 

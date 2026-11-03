@@ -28,7 +28,7 @@ const eslintConfig = defineConfig([
       ],
       "max-statements": ["error", 10],
       "max-depth": ["error", 3],
-      complexity: ["error", 10],
+      complexity: ["error", 7],
       "no-nested-ternary": "error",
       "no-else-return": "error",
       "no-lonely-if": "error",

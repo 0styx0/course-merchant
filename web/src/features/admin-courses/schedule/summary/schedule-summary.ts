@@ -3,13 +3,21 @@ import { formatCourseLength } from "./format-course-length";
 import { formatMoment } from "./format-moment";
 import { toUtcMs } from "../wall-clock-time";
 
+type Schedule = CourseFormValues["schedule"];
+
+/** True when the admin has filled both dates and both times. */
+function hasEveryScheduleBox(
+  schedule: Schedule,
+): schedule is Schedule & Record<keyof Schedule, string> {
+  const { startDate, startTimeOfDay, endDate, endTimeOfDay } = schedule;
+  return Boolean(startDate && startTimeOfDay && endDate && endTimeOfDay);
+}
+
 /** The start and end as UTC times, or nothing until both are complete, convertible and in order. */
-function scheduleBounds(schedule: CourseFormValues["schedule"]) {
+function scheduleBounds(schedule: Schedule) {
+  if (!hasEveryScheduleBox(schedule)) return undefined;
   const { startDate, startTimeOfDay, endDate, endTimeOfDay, timeZone } =
     schedule;
-  if (!startDate || !startTimeOfDay || !endDate || !endTimeOfDay) {
-    return undefined;
-  }
   const startMs = toUtcMs(startDate, startTimeOfDay, timeZone);
   const endMs = toUtcMs(endDate, endTimeOfDay, timeZone);
   if (startMs === undefined || endMs === undefined || endMs <= startMs) {

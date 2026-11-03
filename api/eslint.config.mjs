@@ -76,7 +76,7 @@ export default tseslint.config(
       ],
       "max-statements": ["error", MAX_STATEMENTS],
       "max-depth": ["error", 3],
-      complexity: ["error", 10],
+      complexity: ["error", 7],
       "no-nested-ternary": "error",
       "no-else-return": "error",
       "no-lonely-if": "error",

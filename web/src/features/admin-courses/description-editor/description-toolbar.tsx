@@ -112,6 +112,11 @@ type LinkButtonProps = {
   onToggle: () => void;
 };
 
+/** A link needs selected text to wrap, or an existing link to edit. */
+function isLinkButtonDisabled(editor: Editor | null, state: EditorState) {
+  return !editor || !(state?.onLink || state?.hasSelection);
+}
+
 function LinkButton({
   editor,
   state,
@@ -121,7 +126,7 @@ function LinkButton({
 }: LinkButtonProps) {
   return (
     <Toolbar.Button
-      disabled={!editor || !(state?.onLink || state?.hasSelection)}
+      disabled={isLinkButtonDisabled(editor, state)}
       onMouseDown={preventBlur}
       render={
         <Toggle
