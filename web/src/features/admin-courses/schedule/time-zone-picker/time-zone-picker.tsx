@@ -39,20 +39,20 @@ function stopEnterFromSubmittingForm(event: TimeZoneKeyEvent) {
   }
 }
 
-function useTimeZoneListOpenStateAndKeys() {
-  const [isListOpen, setIsListOpen] = useState(false);
-
+/**
+ * The input's key handler: Enter never submits the form, and Escape with the
+ * list closed keeps the chosen zone.
+ */
+function makeChosenZoneKeyDownHandler(isListOpen: boolean) {
   // Base UI empties the box on Escape with the list closed; keep the zone.
   function keepChosenZoneOnEscapeWithListClosed(event: TimeZoneKeyEvent) {
     if (event.key === "Escape" && !isListOpen) event.preventBaseUIHandler();
   }
 
-  function protectChosenZoneOnKeyDown(event: TimeZoneKeyEvent) {
+  return (event: TimeZoneKeyEvent) => {
     stopEnterFromSubmittingForm(event);
     keepChosenZoneOnEscapeWithListClosed(event);
-  }
-
-  return { isListOpen, setIsListOpen, protectChosenZoneOnKeyDown };
+  };
 }
 
 /**
@@ -67,8 +67,8 @@ export function TimeZonePicker({
   inputRef,
   ...inputProps
 }: TimeZonePickerProps) {
-  const { isListOpen, setIsListOpen, protectChosenZoneOnKeyDown } =
-    useTimeZoneListOpenStateAndKeys();
+  const [isListOpen, setIsListOpen] = useState(false);
+  const protectChosenZoneOnKeyDown = makeChosenZoneKeyDownHandler(isListOpen);
 
   return (
     <Combobox

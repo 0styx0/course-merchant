@@ -38,7 +38,7 @@ function statusOption(name: string) {
   return screen.getByRole("radio", { name });
 }
 
-async function chooseDeletedAndSave(user: TestUser) {
+async function saveAsDeleted(user: TestUser) {
   await user.click(statusOption("Deleted"));
   await clickSave(user);
 }
@@ -65,11 +65,11 @@ function expectSavedWithStatus(status: string) {
 async function openDialogAfterRename(user: TestUser) {
   renderForm();
   setValue("Course name", "Renamed");
-  await chooseDeletedAndSave(user);
+  await saveAsDeleted(user);
   return findDeleteDialog();
 }
 
-async function expectDialogClosedAndFormKept() {
+async function expectDeleteDeclined() {
   await waitFor(() =>
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
   );
@@ -88,7 +88,7 @@ describe("EditCourseForm delete confirmation", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await chooseDeletedAndSave(user);
+    await saveAsDeleted(user);
 
     expect(await findDeleteDialog()).toHaveTextContent(
       "It leaves the admin list, and students can no longer find or buy it.",
@@ -101,7 +101,7 @@ describe("EditCourseForm delete confirmation", () => {
     renderForm();
     setValue("Course name", "");
 
-    await chooseDeletedAndSave(user);
+    await saveAsDeleted(user);
 
     expect(
       await screen.findByRole("button", { name: "Course name" }),
@@ -130,7 +130,7 @@ describe("EditCourseForm delete confirmation", () => {
     const user = userEvent.setup();
     mockSaveSucceeds();
     const view = renderForm();
-    await chooseDeletedAndSave(user);
+    await saveAsDeleted(user);
     await user.click(
       await screen.findByRole("button", { name: "Delete course" }),
     );
@@ -156,7 +156,7 @@ describe("EditCourseForm delete confirmation", () => {
 
     await user.click(screen.getByRole("button", { name: "Keep the course" }));
 
-    await expectDialogClosedAndFormKept();
+    await expectDeleteDeclined();
   });
 
   it("keeps the course and the form on Escape", async () => {
@@ -165,7 +165,7 @@ describe("EditCourseForm delete confirmation", () => {
 
     await user.keyboard("{Escape}");
 
-    await expectDialogClosedAndFormKept();
+    await expectDeleteDeclined();
   });
 
   it("saves the loaded status after Keep the course, with no dialog", async () => {
@@ -188,7 +188,7 @@ describe("EditCourseForm delete confirmation", () => {
         status: { name: "archived", changedAt: "2026-10-15T18:30:00Z" },
       }),
     );
-    await chooseDeletedAndSave(user);
+    await saveAsDeleted(user);
     await findDeleteDialog();
 
     await user.click(screen.getByRole("button", { name: "Keep the course" }));
@@ -204,7 +204,7 @@ describe("EditCourseForm delete confirmation", () => {
   it("leaves the form clean after Escape when nothing else changed", async () => {
     const user = userEvent.setup();
     renderForm();
-    await chooseDeletedAndSave(user);
+    await saveAsDeleted(user);
     await findDeleteDialog();
 
     await user.keyboard("{Escape}");
@@ -218,7 +218,7 @@ describe("EditCourseForm delete confirmation", () => {
   it("leaves the form clean after Keep the course when nothing else changed", async () => {
     const user = userEvent.setup();
     renderForm();
-    await chooseDeletedAndSave(user);
+    await saveAsDeleted(user);
     await findDeleteDialog();
 
     await user.click(screen.getByRole("button", { name: "Keep the course" }));

@@ -10,7 +10,8 @@ import {
 
 import { ErrorSummary } from "@/components/form/error-summary";
 
-import { useErrorListAndLeaveWarning } from "../course-form/hooks/use-error-list-and-leave-warning";
+import { useErrorList } from "../course-form/hooks/use-error-list";
+import { useLeaveWarning } from "../course-form/hooks/use-leave-warning";
 import { ContentLinkSection } from "../course-form/sections/content-link-section";
 import { SaveButton } from "../course-form/sections/save-button";
 import { createCourseFields } from "./create-course-fields";
@@ -65,7 +66,7 @@ function useCourseFormState() {
 }
 
 /** The schedule's and the price list's summary lines, kept in step with the inputs. */
-function useScheduleAndPriceText(
+function useSectionSummaries(
   control: Control<
     CourseFormWithImageValues,
     unknown,
@@ -90,13 +91,13 @@ export function CreateCourseForm({ timeZones }: CreateCourseFormProps) {
   const { form, priceRows } = useCourseFormState();
   const { save, isSaved, serverMessage } = useSaveNewCourse(form);
   const { serverProblem, clearServerProblem } = serverMessage;
-  const { isSubmitted, isSubmitting } = form.formState;
-  const errorList = useErrorListAndLeaveWarning(
+  const { isDirty, isSubmitted, isSubmitting } = form.formState;
+  const errorList = useErrorList(
     form,
     createCourseFields(priceRows.fields.length),
-    isSaved,
   );
-  const { scheduleText, prices } = useScheduleAndPriceText(form.control);
+  useLeaveWarning(isDirty && !isSaved);
+  const { scheduleText, prices } = useSectionSummaries(form.control);
 
   useBrowserTimeZone(form.reset, timeZones, defaultValues);
 

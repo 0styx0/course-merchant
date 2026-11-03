@@ -40,7 +40,7 @@ export function useSaveNewCourse(form: CourseForm) {
   const router = useRouter();
   const draftId = useRef<string>(undefined);
 
-  async function saveDraftAndRememberItsId(fields: CourseDetailsFields) {
+  async function saveDraftKeepingItsId(fields: CourseDetailsFields) {
     const draft = await saveDraft(draftId.current, fields);
     if (draft.state === "success") draftId.current = draft.data.courseId;
     return draft;
@@ -48,7 +48,7 @@ export function useSaveNewCourse(form: CourseForm) {
 
   return useSaveThenUploadImage(
     form,
-    saveDraftAndRememberItsId,
+    saveDraftKeepingItsId,
     "The course was saved as a draft",
     (courseId) => router.push(editCoursePath(courseId, "draft")),
   );

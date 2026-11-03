@@ -148,7 +148,7 @@ export function EditScheduleSection({
  * The zone the prices are shown in, and the price summary, kept in step with
  * the boxes. A stored zone the list lacks shows in UTC, as the boxes do.
  */
-function useZoneAndPriceSummary(form: EditForm) {
+function usePriceSummaryInChosenZone(form: EditForm) {
   const chosenZone = useWatch({
     control: form.control,
     name: "schedule.timeZone",
@@ -174,7 +174,7 @@ export function EditPricingSection({
   priceRows,
   pricesInEffect,
 }: EditPricingSectionProps) {
-  const { timeZone, summary } = useZoneAndPriceSummary(form);
+  const { timeZone, summary } = usePriceSummaryInChosenZone(form);
   function removePriceRow(index: number) {
     priceRows.remove(index);
     // A "same time as another row" error may now be gone.

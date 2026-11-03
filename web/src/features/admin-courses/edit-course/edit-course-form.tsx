@@ -7,7 +7,8 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { ErrorSummary } from "@/components/form/error-summary";
 import { SavedNote } from "@/components/form/saved-note";
 
-import { useErrorListAndLeaveWarning } from "../course-form/hooks/use-error-list-and-leave-warning";
+import { useErrorList } from "../course-form/hooks/use-error-list";
+import { useLeaveWarning } from "../course-form/hooks/use-leave-warning";
 import { ContentLinkSection } from "../course-form/sections/content-link-section";
 import { SaveButton } from "../course-form/sections/save-button";
 import {
@@ -54,8 +55,8 @@ function useDropSavedFlag(courseId: string, startingSavedNote?: string) {
 
 /**
  * The form's submit handler (which asks before deleting), whether a save is
- * running, the delete dialog, the saved note and the error list, which also warns before
- * leaving unsaved edits.
+ * running, the delete dialog, the saved note and the error list. It also warns
+ * before leaving unsaved edits.
  */
 function useEditFormSubmit(
   form: ReturnType<typeof useEditCourseFormState>["form"],
@@ -71,11 +72,8 @@ function useEditFormSubmit(
     prefill.loadedPrices,
     startingSavedNote,
   );
-  const errorList = useErrorListAndLeaveWarning(
-    form,
-    editCourseFields(priceRowCount),
-    isSaved,
-  );
+  const errorList = useErrorList(form, editCourseFields(priceRowCount));
+  useLeaveWarning(form.formState.isDirty && !isSaved);
   const deleteGate = useConfirmBeforeDelete(save, prefill.values.status, () =>
     form.setValue("status", prefill.values.status, { shouldDirty: true }),
   );

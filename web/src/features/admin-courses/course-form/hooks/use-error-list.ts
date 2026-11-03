@@ -7,26 +7,19 @@ import {
 } from "../problems/course-form-problems";
 import { focusField } from "../problems/focus-field";
 import { useFocusSummaryOnSubmit } from "./use-focus-summary-on-submit";
-import { useLeaveWarning } from "./use-leave-warning";
 
 /**
  * What a form needs around its error list: the entries (none until the first
- * submit), the focus moves, and the leave warning, which is off once saved.
- * The returned props go on `ErrorSummary`.
+ * submit) and the focus moves. The returned props go on `ErrorSummary`.
  */
-export function useErrorListAndLeaveWarning<
-  TValues extends FieldValues,
-  TChecked,
->(
+export function useErrorList<TValues extends FieldValues, TChecked>(
   form: UseFormReturn<TValues, unknown, TChecked>,
   fields: readonly ProblemField[],
-  isSaved: boolean,
 ) {
   const ref = useRef<HTMLDivElement>(null);
-  const { errors, isDirty, isSubmitted, submitCount } = form.formState;
+  const { errors, isSubmitted, submitCount } = form.formState;
 
   useFocusSummaryOnSubmit(ref, submitCount);
-  useLeaveWarning(isDirty && !isSaved);
 
   return {
     ref,

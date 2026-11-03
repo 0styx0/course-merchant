@@ -11,8 +11,12 @@ function isReachedOrInvalid<T extends FieldValues>(
   return isTouched || Boolean(error);
 }
 
-/** Sets the field's value, marks it touched and checks it. */
-function setFieldValueTouchedAndChecked<T extends FieldValues>(
+/**
+ * Sets the field's value as a leave-the-field event would: a native date or
+ * time picker may never fire one, so this call marks the field touched and
+ * checks it.
+ */
+function setValueAsIfBlurred<T extends FieldValues>(
   form: CourseFormApi<T>,
   name: FieldPathByValue<T, string>,
   newValue: string,
@@ -49,7 +53,7 @@ export function makeRecheckingChangeHandler<T extends FieldValues>(
   namesToRecheck: FieldPathByValue<T, string>[],
 ) {
   return (event: { target: { value: string } }) => {
-    setFieldValueTouchedAndChecked(form, name, event.target.value);
+    setValueAsIfBlurred(form, name, event.target.value);
     recheckOtherReachedFields(form, name, namesToRecheck);
   };
 }

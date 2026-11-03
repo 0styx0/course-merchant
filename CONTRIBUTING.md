@@ -99,6 +99,7 @@ ESLint and Prettier handle formatting. The rest is up to you:
 - **Write small functions.** A top-level method should read as a short list of well-named steps, with one method per outcome (ESLint caps a function at 10 statements). A `switch` should only dispatch, one line per case.
 - **Name things by their owner**: `customer.name`, not a bare `name` beside `courseId`.
 - **Start a true/false name with `is`, `has`, `should`, `can`, `did`, `will`, `does` or `was`**: `isSaved`, not `saved`. ESLint checks variables, parameters and the fields of types we write. A name unpacked from an object (`const { disabled } = props`) and a quoted name (`"aria-invalid"`) keep the spelling of their source.
+- **Give each function one job, and a name without `And`**: `useErrorList` plus `useLeaveWarning`, not `useErrorListAndLeaveWarning`. ESLint refuses `And` followed by a capital letter in function, method and function-variable names.
 - **Don't add abstractions for hypothetical needs.** A thin wrapper around an SDK is fine. An interface for a second payment provider that doesn't exist isn't.
 
 ## Dependency audit

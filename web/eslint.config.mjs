@@ -31,6 +31,26 @@ const BOOLEAN_NAMING = [
   },
 ];
 
+// A function does one job, so its name never joins two with "And".
+const NO_AND_IN_FUNCTION_NAMES = [
+  {
+    selector: "function",
+    format: null,
+    custom: { regex: "And[A-Z]", match: false },
+  },
+  {
+    selector: "variable",
+    types: ["function"],
+    format: null,
+    custom: { regex: "And[A-Z]", match: false },
+  },
+  {
+    selector: "classMethod",
+    format: null,
+    custom: { regex: "And[A-Z]", match: false },
+  },
+];
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -56,7 +76,11 @@ const eslintConfig = defineConfig([
       },
     },
     rules: {
-      "@typescript-eslint/naming-convention": ["error", ...BOOLEAN_NAMING],
+      "@typescript-eslint/naming-convention": [
+        "error",
+        ...BOOLEAN_NAMING,
+        ...NO_AND_IN_FUNCTION_NAMES,
+      ],
       "max-lines": [
         "error",
         { max: 250, skipBlankLines: true, skipComments: true },
