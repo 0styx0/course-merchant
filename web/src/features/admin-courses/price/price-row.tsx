@@ -48,7 +48,7 @@ function RemoveRowButton({
       type="button"
       variant="outline"
       onClick={onRemove}
-      className="self-start sm:mt-6"
+      className="self-start sm:mt-8"
       aria-label={`Remove ${label.toLowerCase()}`}
     >
       Remove
@@ -97,7 +97,7 @@ export function PriceRow<T extends FieldValues>({
   const labels = priceRowLabels(index, rowCount);
   const boxProps = { form, boxNamesToRecheck };
   return (
-    <div className="grid gap-4 sm:grid-cols-[1fr_1fr_1fr_5rem]">
+    <div className="grid gap-4 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto] sm:items-start">
       <PriceRowBox
         {...boxProps}
         name={names.amountDollars}

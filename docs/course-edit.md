@@ -49,15 +49,12 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **8a.** Schedule problems show under the box they belong to, on both pages, and the line under the Schedule heading is gone.
   - [x] **8b.** The edit schedule tests check what the admin sees and run on a fixed clock, the create error-list test checks the whole list, and the schedule boxes and empty price rows are tidied. Nothing changes for the admin.
   - [x] **8c.** An end date before the start date shows on End date as soon as it changes, and on the same day an end time not after the start shows on End time only; the error list links to End date.
-- [ ] **9. Prices in plain words.** A past price start shows on the box to change, the price list says what to fix in words, amounts read $50.00, and the rows line up.
+- [x] **9. Prices in plain words.** A past price start shows on the box to change, the price list says what to fix in words, amounts read $50.00, and the rows line up.
   - [x] **9a.** The schedule's date and time boxes take their "check this box and the boxes it compares with" behaviour from a shared piece; nothing changes for the admin.
   - [x] **9b.** A price start in the past shows under the box to change, on both pages; any price box change re-checks every price box already reached.
   - [x] **9c.** The price list under the rows says what to fix in words (e.g. "$50.00 from (needs a time)"), as a plain bulleted list with amounts read $50.00, on both pages.
-  - [ ] **9d.** The price rows line up, at 400 px and on desktop. **Next**
-    - *New shared pieces*: none.
-    - *Files*: [price-row.tsx](../web/src/features/admin-courses/price/price-row.tsx) (layout classes only)
-    - *Done when*: checked by eye in `dev:mock` at both widths, with and without a message under a box.
-- [ ] **10. Saving confirms and stays.** Edit stays and says "Saved"; create opens the new course's edit page saying "Saved as a draft".
+  - [x] **9d.** The price rows line up on desktop, with Remove level with the boxes, and stack in one column at 400 px.
+- [ ] **10. Saving confirms and stays.** Edit stays and says "Saved"; create opens the new course's edit page saying "Saved as a draft". **Next**
 - [ ] **11. Edit page explains itself.** The header shows the course's name, its status and a link to its shop page; notes explain a time zone change and a course that already ran.
 - [ ] **12. Delete only without students.** The API refuses to delete a course with enrollments; the edit page greys out Deleted and says to archive it instead.
 - [ ] **13. Accessible fields on both pages.** Status circles are visible, the check and cross icons have text, and the date boxes point to the schedule line.
@@ -130,20 +127,11 @@ Retro:
 - Done when: a half-filled row reads "$50.00 from (needs a time)", with no "Error" text; rows line up at 400 px.
 - Can wait: the row layout breakpoint (9d).
 
-Design notes *(temporary)*:
+Retro:
 
-- Only the past start moves onto a box; the half-filled, skipped-time and duplicate messages keep their boxes, and the list words them.
-- The price boxes re-check every price box already reached (not just their own row), because a duplicate start's message sits on another row.
-- The list and the box messages read one shared check of a row's start, so their wording can't drift.
-
-Flow *(temporary)*:
-
-```
-admin changes a price box → re-check every price box already reached (9a, 9b)
-  ├─ day passed in the zone  → message under Start date (9b)
-  ├─ too soon today          → message under Start time (9b)
-  └─ list line → "$50.00 from <start>", or "(needs …)" in red (9c)
-```
+- Planned 4 commits; shipped 4 (9a–9d).
+- Owner changes after using the page: none known.
+- Remove's offset is a fixed `mt-8` matching the label height; a wrapping label would misalign it.
 
 ## Step 10. Saving confirms and stays
 
