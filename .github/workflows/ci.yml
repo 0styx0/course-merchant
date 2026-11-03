@@ -18,6 +18,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  repo-scripts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - run: sh .husky/check-folder-file-count.sh
+      - run: bash .husky/check-folder-file-count.test.sh
+      - run: bash .claude/hooks/lint-design-doc.test.sh
+      - run: bash .claude/skills/usage-review/measure.test.sh
+
   api:
     runs-on: ubuntu-latest
     timeout-minutes: 20

@@ -15,6 +15,7 @@ import {
 } from "@/common/errors/error-codes.js";
 import { ProblemDetailsFilter } from "@/common/errors/problem-details.filter.js";
 import { ValidationException } from "@/common/errors/validation.exception.js";
+import { asPartialFake } from "@/test/test-helpers.js";
 
 function run(exception: unknown) {
   const res = {
@@ -28,9 +29,9 @@ function run(exception: unknown) {
   res.type.mockReturnValue(res);
   res.json.mockReturnValue(res);
 
-  const host = {
+  const host = asPartialFake<ArgumentsHost>({
     switchToHttp: () => ({ getResponse: () => res }),
-  } as unknown as ArgumentsHost;
+  });
 
   new ProblemDetailsFilter().catch(exception, host);
 

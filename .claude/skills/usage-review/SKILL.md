@@ -9,12 +9,8 @@ Compare against the previous review in the memory file `usage-reviews.md` (the o
 
 ## 1. Measure
 
-- Sources: every transcript `~/.claude/projects/-home-styx-Documents-projects-course-merchant/*.jsonl` (and subagent transcripts), calls after the time the last review ended. Transcript times are UTC, file times local. Count each model call once (dedupe by message id) and read its `usage` fields.
-- Fields, the same every time:
-  - model calls (main / subagent), owner turns, about how many commits;
-  - cached tokens re-read, cache writes, output, re-read per call, and per commit;
-  - context size at each session's first call (the fixed overhead) and last call; outliers and why;
-  - quality: outline approved first time or not, correction rounds, questions asked.
+- Run `bash .claude/skills/usage-review/measure.sh <after>` with the previous review's "next review starts after" time. It prints calls (main and subagent), owner turns, re-read, cache-write and output tokens, re-read per call, each session's first and last context size, sessions ending above 100k, and subagent cost by kind. Transcript times are UTC. A change to the script needs a test in `measure.test.sh` first.
+- By hand, from the script's output and `git log`: about how many commits, per-commit calls and re-read, outliers and why, and quality (outline approved first time or not, correction rounds, questions asked).
 
 ## 2. Report
 

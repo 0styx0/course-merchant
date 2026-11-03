@@ -4,6 +4,7 @@ import { MIN_PRICE_LEAD_MS } from "./course-form-limits";
 import {
   issueAt,
   toUtcMsOrIssue,
+  type Conversion,
   type FormIssue,
 } from "./form-issue-and-time-conversion";
 
@@ -124,16 +125,25 @@ function checkPriceRow(
 
   // Both empty means "when saved", which the request builder sets to now + 1 minute.
   const { effectiveDate: date, effectiveTimeOfDay: timeOfDay } = row;
-  const { nowMs, timeZone, loadedFuturePrices } = options;
-  if (!date) return { issues: [], ms: nowMs + MIN_PRICE_LEAD_MS };
+  if (!date) return { issues: [], ms: options.nowMs + MIN_PRICE_LEAD_MS };
 
-  const time = toUtcMsOrIssue({ date, timeOfDay }, timeZone);
+  const time = toUtcMsOrIssue({ date, timeOfDay }, options.timeZone);
+  return checkStartTime(row, index, time, options);
+}
+
+function checkStartTime(
+  row: PriceRowBoxes,
+  index: number,
+  time: Conversion,
+  options: PriceRowCheckOptions,
+): CheckedPriceRow {
   const path = ["prices", index, "effectiveTimeOfDay"];
   if (time.kind === "issue") {
     return { issues: [issueAt(path, time.message)] };
   }
   // An unknown zone has its own message on the zone box; this row waits for it.
   if (time.kind === "skip") return { issues: [] };
+  const { nowMs, loadedFuturePrices } = options;
   if (findLoadedFuturePrice(row.amountDollars, time.ms, loadedFuturePrices)) {
     return { issues: [], ms: time.ms };
   }

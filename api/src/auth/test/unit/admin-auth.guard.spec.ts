@@ -7,7 +7,11 @@ import { AdminSessionsService } from "@/auth/sessions/admin-sessions.service.js"
 import { Public } from "@/auth/public.decorator.js";
 import { createSessionToken } from "@/auth/sessions/session-token.js";
 import { ApiException } from "@/common/errors/api.exception.js";
-import { asDependency, type MockMethods } from "@/test/test-helpers.js";
+import {
+  asDependency,
+  asPartialFake,
+  type MockMethods,
+} from "@/test/test-helpers.js";
 
 class ProtectedController {
   protectedHandler(this: void) {}
@@ -23,14 +27,14 @@ function contextFor(handler: () => void, headers: Record<string, string> = {}) {
     headers,
   };
   const response = { setHeader: vi.fn() };
-  const context = {
+  const context = asPartialFake<ExecutionContext>({
     getHandler: () => handler,
     getClass: () => ProtectedController,
     switchToHttp: () => ({
       getRequest: () => request,
       getResponse: () => response,
     }),
-  } as unknown as ExecutionContext;
+  });
 
   return { context, request, response };
 }

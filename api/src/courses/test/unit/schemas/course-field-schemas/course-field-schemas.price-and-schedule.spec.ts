@@ -94,13 +94,11 @@ describe("courseScheduleFieldsSchema", () => {
 
       expect(result.success).toBe(false);
 
-      if (!result.success) {
-        expect(
-          result.error.issues.some(
-            (issue) => issue.path.length === 1 && issue.path[0] === field,
-          ),
-        ).toBe(true);
-      }
+      expect(
+        result.error?.issues.some(
+          (issue) => issue.path.length === 1 && issue.path[0] === field,
+        ),
+      ).toBe(true);
     },
   );
 
@@ -125,13 +123,11 @@ describe("courseScheduleFieldsSchema", () => {
 
     expect(result.success).toBe(false);
 
-    if (!result.success) {
-      expect(
-        result.error.issues.some(
-          (issue) => issue.path.length === 1 && issue.path[0] === field,
-        ),
-      ).toBe(true);
-    }
+    expect(
+      result.error?.issues.some(
+        (issue) => issue.path.length === 1 && issue.path[0] === field,
+      ),
+    ).toBe(true);
   });
 });
 
@@ -165,13 +161,11 @@ describe("scheduledPriceFieldsSchema", () => {
 
       expect(result.success).toBe(false);
 
-      if (!result.success) {
-        expect(
-          result.error.issues.some(
-            (issue) => issue.path.length === 1 && issue.path[0] === field,
-          ),
-        ).toBe(true);
-      }
+      expect(
+        result.error?.issues.some(
+          (issue) => issue.path.length === 1 && issue.path[0] === field,
+        ),
+      ).toBe(true);
     },
   );
 
@@ -196,13 +190,11 @@ describe("scheduledPriceFieldsSchema", () => {
 
     expect(result.success).toBe(false);
 
-    if (!result.success) {
-      expect(
-        result.error.issues.some(
-          (issue) => issue.path.length === 1 && issue.path[0] === field,
-        ),
-      ).toBe(true);
-    }
+    expect(
+      result.error?.issues.some(
+        (issue) => issue.path.length === 1 && issue.path[0] === field,
+      ),
+    ).toBe(true);
   });
 });
 
@@ -227,10 +219,8 @@ describe("courseDetailsShape", () => {
 
     expect(result.success).toBe(false);
 
-    if (!result.success) {
-      expect(result.error.issues.map((issue) => issue.path)).toEqual(
-        expect.arrayContaining([["name"], ["description"]]),
-      );
-    }
+    expect(result.error?.issues.map((issue) => issue.path)).toEqual(
+      expect.arrayContaining([["name"], ["description"]]),
+    );
   });
 });

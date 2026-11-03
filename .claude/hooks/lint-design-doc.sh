@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # After an Edit or Write of docs/*.md, warns about design-doc format slips that the
 # planning skills forbid (_shared/milestone-line.md, _shared/commit-line.md).
+# Tests: lint-design-doc.test.sh.
 # Exit 2 sends the message back to Claude; the doc is already saved, so it is a warning.
 file=$(jq -r '.tool_input.file_path // empty')
 case "$file" in
@@ -29,11 +30,19 @@ if printf '%s\n' "$status" | grep -E '^- \[[ x]\] \*\*[0-9]+\.' | grep -q '`'; t
   add "A milestone Status line names code in backticks; say what the user can now do in plain words."
 fi
 
-# Commit lines that are still open need a New shared pieces field.
-if printf '%s\n' "$status" | grep -E '^\s*- \[ \] \*\*[0-9]+[a-z]\.' >/dev/null &&
-  ! grep -q 'New shared pieces' "$file"; then
-  add "Open commit lines exist but no *New shared pieces* field appears in the doc."
-fi
+# Each open commit line needs its own New shared pieces field (the lines of one
+# commit run until the next Status line).
+without_shared_pieces=$(printf '%s\n' "$status" | awk '
+  function finish_commit() { if (open && !seen) missing = missing (missing ? ", " : "") label; open = 0 }
+  /^[[:space:]]*- \[[ x]\] \*\*[0-9]+/ { finish_commit() }
+  /^[[:space:]]*- \[ \] \*\*[0-9]+[a-z]\./ {
+    open = 1; seen = 0
+    match($0, /\*\*[0-9]+[a-z]\./); label = substr($0, RSTART + 2, RLENGTH - 3)
+  }
+  /New shared pieces/ { seen = 1 }
+  END { finish_commit(); print missing }')
+[ -z "$without_shared_pieces" ] ||
+  add "Open commit line(s) $without_shared_pieces have no *New shared pieces* field (write \"none\" when empty)."
 
 # Fields joined with semicolons inside one commit-line field.
 if printf '%s\n' "$status" | grep -E '^\s+- \*(Files|Behaviours|Needs|Settled)\*:.*;' >/dev/null; then

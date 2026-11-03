@@ -4,6 +4,11 @@
 yarn --cwd api format:check
 yarn --cwd web format:check
 
+# The tests of the shell scripts that check the repo's layout and design docs and measure its usage
+bash .husky/check-folder-file-count.test.sh
+bash .claude/skills/usage-review/measure.test.sh
+bash .claude/hooks/lint-design-doc.test.sh
+
 # Unused files, exports and dependencies (whole-project, so not on commit)
 yarn --cwd api knip
 yarn --cwd web knip

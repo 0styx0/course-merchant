@@ -41,17 +41,28 @@ export class AdminAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean | undefined>(
-      IS_PUBLIC,
-      [context.getHandler(), context.getClass()],
-    );
-
-    if (isPublic) {
+    if (this.isPublicRoute(context)) {
       return true;
     }
 
     const http = context.switchToHttp();
     const request = http.getRequest<AdminSessionRequest>();
+    request.adminSession = await this.activeSessionOf(request);
+    // set before the handler runs, so error responses to a logged-in caller
+    // are covered too
+    http.getResponse<Response>().setHeader("Cache-Control", "no-store");
+
+    return true;
+  }
+
+  private isPublicRoute(context: ExecutionContext): boolean | undefined {
+    return this.reflector.getAllAndOverride<boolean | undefined>(IS_PUBLIC, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+  }
+
+  private async activeSessionOf(request: AdminSessionRequest) {
     const token = bearerToken(request.headers.authorization);
     const session = token ? await this.sessions.findActiveSession(token) : null;
 
@@ -59,11 +70,6 @@ export class AdminAuthGuard implements CanActivate {
       throw unauthorized();
     }
 
-    request.adminSession = session;
-    // set before the handler runs, so error responses to a logged-in caller
-    // are covered too
-    http.getResponse<Response>().setHeader("Cache-Control", "no-store");
-
-    return true;
+    return session;
   }
 }

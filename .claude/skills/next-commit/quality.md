@@ -18,12 +18,8 @@ One row per behaviour the commit adds or changes:
 
 ## Structure
 
-- Folders are named for their job; a file name states the file's main job; function names state what they return (CLAUDE.md *Conventions*).
-- No cast exists only to make one caller's type fit another's, and no shared type forces sibling features to conform ([code.md](../../rules/code.md)). A comment-justified cast for a library type limit is fine.
-- Reuse the helpers found in *Find the work*; don't add a second copy.
-- Count the files in every folder you touched; if it passes the limit in CLAUDE.md, group them in this commit.
 - The diff holds only files the outline named. If it needs more, stop and ask. Exception: files added or moved to fix a newcomer-reader finding.
-- If the commit changes a contract or schema that generated code comes from, regenerate it (commands in CLAUDE.md). Never hand-edit generated files.
+- If the commit changes a contract or schema that generated code comes from, regenerate it (commands in CLAUDE.md).
 
 ## When verification fails
 

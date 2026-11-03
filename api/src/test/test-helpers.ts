@@ -36,6 +36,15 @@ export function asDependency<T>(
   return mocks as unknown as T;
 }
 
+/**
+ * Hands a partial fake to code that expects the full type `T`. The fake holds
+ * only the members a test reads (a Stripe event's `data.object`, an Express
+ * response's `status`), so any other access fails at run time.
+ */
+export function asPartialFake<T>(fake: object): T {
+  return fake as unknown as T;
+}
+
 type TransactionHooks = {
   /** Runs when a transaction callback starts. */
   onBegin?: () => void;

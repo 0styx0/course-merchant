@@ -29,14 +29,19 @@ function isTooSmall({ width, height }: ChosenImage) {
   return width < MIN_WIDTH || height < MIN_HEIGHT;
 }
 
-/** The first problem with the chosen image, or undefined when it is fine. */
-function imageProblem(image: ChosenImage): string | undefined {
-  if (!ACCEPTED_IMAGE_TYPES.includes(image.file.type)) {
+/** The first problem with the chosen file's type or size, or undefined when it is fine. */
+function fileProblem({ type, size }: File): string | undefined {
+  if (!ACCEPTED_IMAGE_TYPES.includes(type)) {
     return "The image must be a JPEG, PNG or WebP file.";
   }
-  if (image.file.size > MAX_IMAGE_BYTES) {
+  if (size > MAX_IMAGE_BYTES) {
     return "The image must be 5 MB or smaller.";
   }
+  return undefined;
+}
+
+/** The first problem with the chosen image's pixels, or undefined when it is fine. */
+function pixelProblem(image: ChosenImage): string | undefined {
   if (image.width === 0 || image.height === 0) {
     return "This file couldn't be read as an image. Choose another.";
   }
@@ -47,6 +52,11 @@ function imageProblem(image: ChosenImage): string | undefined {
     return "The image must be 25 megapixels or fewer.";
   }
   return undefined;
+}
+
+/** The first problem with the chosen image, or undefined when it is fine. */
+function imageProblem(image: ChosenImage): string | undefined {
+  return fileProblem(image.file) ?? pixelProblem(image);
 }
 
 export const courseImageSchema = z

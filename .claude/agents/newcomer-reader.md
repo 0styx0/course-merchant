@@ -27,13 +27,12 @@ Try four jobs, in this order, and report what blocked you:
 3. **Tests**
    - For each new or changed test, say in one sentence what behaviour it proves, using only its title and assertions. Report a test whose title you cannot match to an assertion.
    - Name one wrong implementation the test would still pass on (returns a constant, skips the check, returns the wrong status or error code). Report the test when you can name one.
-   - Report these patterns:
+   - Lint already rejects `.only`, `.skip`, `.todo`, an `expect` inside a conditional or a `catch`, and a test with no assertion; skip those. Report these patterns:
      - an assertion on a mock alone (`toHaveBeenCalled` without arguments);
      - `toBeDefined`, `toBeTruthy` or `not.toThrow` as the only check of a failure case;
      - a failure case that checks the status but not the error code or message;
      - an expected value imported from the source file or computed with the function under test;
      - `expect.any(...)` or `objectContaining` that leaves out the field the test is about;
-     - a `try/catch` without `expect.assertions`; `.skip`, `.only`, `.todo`;
      - a mock that returns exactly the value the test then asserts.
 
 4. **Understand**

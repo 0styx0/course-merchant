@@ -1,8 +1,34 @@
 // @ts-check
 import eslint from "@eslint/js";
+import vitest from "@vitest/eslint-plugin";
 import eslintConfigPrettier from "eslint-config-prettier";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+
+const MAX_STATEMENTS = 10;
+
+// `value as unknown as T` silences the compiler instead of fixing a type
+const DOUBLE_CAST = {
+  selector:
+    "TSAsExpression[expression.type='TSAsExpression'][expression.typeAnnotation.type='TSUnknownKeyword']",
+  message:
+    "Don't cast through unknown. Use asDependency or asPartialFake from src/test/test-helpers.ts in tests, or fix the type.",
+};
+
+// `Date.now()` and `new Date()` read the current time
+const CURRENT_DATE_CALLS = [
+  {
+    selector:
+      "CallExpression[callee.object.name='Date'][callee.property.name='now']",
+    message:
+      "Read the current time with Temporal.Now.instant() or DatabaseClock.",
+  },
+  {
+    selector: "NewExpression[callee.name='Date'][arguments.length=0]",
+    message:
+      "Read the current time with Temporal.Now.instant() or DatabaseClock.",
+  },
+];
 
 export default tseslint.config(
   {
@@ -48,20 +74,48 @@ export default tseslint.config(
         "error",
         { max: 250, skipBlankLines: true, skipComments: true },
       ],
-      "max-lines-per-function": [
-        "error",
-        { max: 40, skipBlankLines: true, skipComments: true },
-      ],
+      "max-statements": ["error", MAX_STATEMENTS],
       "max-depth": ["error", 3],
       complexity: ["error", 10],
       "no-nested-ternary": "error",
+      "no-else-return": "error",
+      "no-lonely-if": "error",
+      "prefer-const": "error",
+      "no-restricted-syntax": ["error", DOUBLE_CAST],
     },
   },
   {
+    // the current time comes from Temporal (or DatabaseClock), never from Date;
+    // tests may build dates freely
+    files: ["src/**/*.ts"],
+    ignores: ["**/test/**", "**/*.spec.ts"],
+    rules: {
+      "no-restricted-syntax": ["error", DOUBLE_CAST, ...CURRENT_DATE_CALLS],
+    },
+  },
+  {
+    // the one place a test turns a partial fake into the full type
+    files: ["src/test/test-helpers.ts"],
+    rules: { "no-restricted-syntax": "off" },
+  },
+  {
     // describe callbacks are long by design, and a test file may grow with its
-    // behaviours, so tests skip the function and file length limits
+    // behaviours, so tests skip the function and file size limits
     files: ["**/*.spec.ts", "src/test/**", "**/test/**"],
-    rules: { "max-lines-per-function": "off", "max-lines": "off" },
+    plugins: { vitest },
+    rules: {
+      "max-statements": "off",
+      "max-lines": "off",
+      // an expect… helper holds the assertions of the tests that call it, and supertest's .expect(status) asserts
+      "vitest/expect-expect": [
+        "error",
+        { assertFunctionNames: ["expect", "expect*", "**.expect"] },
+      ],
+      "vitest/valid-expect": "error",
+      "vitest/no-focused-tests": "error",
+      "vitest/no-disabled-tests": "error",
+      "vitest/no-conditional-expect": "error",
+    },
   },
   {
     // vitest's asymmetric matchers (expect.any, expect.objectContaining, ...)

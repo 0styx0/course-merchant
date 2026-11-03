@@ -26,9 +26,7 @@ describe("createCourseRequestSchema", () => {
 
       expect(result.success).toBe(true);
 
-      if (result.success) {
-        expect(result.data.name).toBe("TypeScript Fundamentals");
-      }
+      expect(result.data?.name).toBe("TypeScript Fundamentals");
     });
 
     it("accepts a zero-priced course", () => {

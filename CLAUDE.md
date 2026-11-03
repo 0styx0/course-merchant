@@ -52,17 +52,14 @@ Hooks refuse hand-edits of generated files and whole-file reads of them (they're
 - **After a rename, grep for the old name in file names** (tests, siblings, folders) and rename those too.
 - **A function name states what it returns.** A function that returns a formatter is `makeDateFormatter`, not `formatDate`.
 - **Every function, variable, parameter and type has a specific name.** A reader who sees only the name and its call site must know what it does, when it runs and what it works on.
-  - Name the trigger or the object, not a bare verb or noun: `showThrownProblem`, not `showRejected`; `removePriceRow`, not `removeRow`; `extraDetail`, not `note`.
-  - Replace a name generic enough to fit half the functions in the repo (for example `edit`, `apply`, `close`, `convert`, `part`, `failure`, `pick`, `when`, `warn`, `check`, `handle`, `data`, `result`, `item`, `value`) with the object or trigger it works on.
+  - Never use a name generic enough to fit half the functions in the repo (`edit`, `apply`, `close`, `convert`, `part`, `failure`, `pick`, `when`, `warn`, `check`, `handle`, `data`, `result`, `item`, `value`); name the object or trigger instead (`showThrownProblem`, `removePriceRow`, `extraDetail`).
   - Two things in one codebase never share a name (a type and a component, two `isKnownTimeZone` checks).
-  - Before finishing code, reread each new name as a stranger would and rename what needs a comment to be understood.
-  - Keep the descriptive name even when it makes a line wider than Prettier's 80 characters. Restructure around it instead: put the parameter list on several lines, or break the line after the `=`. If the wrapped lines push the function past the 40-line lint limit, split the function.
-- **At most 10 files per folder**, not counting sub-folders; spec files count. Generated and vendored code (`generated.ts`, `migrations/`, `components/ui/`) doesn't. A hook warns right after you write a file that pushes a folder past it, and the pre-commit hook ([check-folder-file-count.sh](.husky/check-folder-file-count.sh)) fails on it; group the files by job in the same commit that adds the 11th. Split by the feature or flow that uses the files first (for example create, edit, shared), then by topic. Name the folder for its job (`stripe/`, `fulfillment/`), never `utils/` or `misc/`.
+  - Keep the descriptive name even when it makes a line wider than Prettier's 80 characters. Restructure around it: put the parameter list on several lines, or break the line after the `=`.
+- **At most 10 files per folder**, not counting sub-folders; spec files count, generated and vendored code doesn't. A hook warns when you write the 11th and the pre-commit hook and `check:changed` fail on it ([check-folder-file-count.sh](.husky/check-folder-file-count.sh) lists the exemptions). Group the files by job in the same commit that adds the 11th: by the feature or flow that uses them first (create, edit, shared), then by topic, in a folder named for its job (`stripe/`, `fulfillment/`), never `utils/` or `misc/`.
 - **Folders group files by topic, so a newcomer can find things by name.**
   - Group files that change together or share a job (the form, the schedule summary, the time zone picker), not by file type or by "what was left over".
   - Don't leave loose files at a feature's root next to its sub-folders; every file belongs to a topic folder.
   - When you add a file, put it in the folder for its topic. If none fits, create one named for the job, and split a full folder by topic, not alphabetically.
-- **Step labels:** milestone `3`, commit `3b`; never a deeper level (`3b-i`). Split a commit by re-lettering the rest.
 - To move files, move parent folders before their children; steps are in [api/CLAUDE.md](api/CLAUDE.md#moving-and-renaming-files).
 
 ## Working agreements
@@ -70,8 +67,8 @@ Hooks refuse hand-edits of generated files and whole-file reads of them (they're
 How the owner wants Claude to work on this repo.
 
 **Workflow**
-- **One commit at a time.** For each commit, give an outline, then build it in the background at once with the outline's recommendations applied. Claude shows the result only after the owner approves the outline. Outline formats (full, and the short one for **mechanical** and **plan-conformant** commits, both defined there) are in [outline.md](.claude/skills/next-commit/outline.md). Then implement, verify (type check and the relevant tests), and stop with a suggested conventional commit message. The owner makes the commits. Finish one commit's changes before starting the next: interactive `git add -p` isn't available, so mixed hunks can't be split. `/next-commit` ([skill](.claude/skills/next-commit/SKILL.md)) runs this routine from the **Next** item in `docs/`.
-- **Planning a new area.** `/plan-create-overview` ([skill](.claude/skills/plan-create-overview/SKILL.md)) writes a one-page map of milestones; when a milestone is **Next**, `/plan-create-implementation` ([skill](.claude/skills/plan-create-implementation/SKILL.md)) designs it and splits it into commits; `/next-commit` builds each commit. The overview ends with a self-check against its own Principles and a subagent review when the map has a decision row; repo-specific facts the skills use are in [.claude/skills/_shared/project.md](.claude/skills/_shared/project.md); milestones follow [.claude/skills/_shared/milestone-line.md](.claude/skills/_shared/milestone-line.md).
+- **One commit at a time.** `/next-commit` ([skill](.claude/skills/next-commit/SKILL.md)) runs the routine for the **Next** item in `docs/`: outline, background build, your approval, then a hand-off with a suggested conventional commit message. The owner makes the commits. Finish one commit's changes before starting the next, because interactive `git add -p` isn't available.
+- **Planning a new area.** `/plan-create-overview`, then `/plan-create-implementation` once per milestone, then `/next-commit` per commit ([skills](.claude/skills/); repo facts they use are in [.claude/skills/_shared/project.md](.claude/skills/_shared/project.md)).
 - **Usage reviews.** About once a month, or when the owner asks about usage or token cost, run `/usage-review`.
 - **Keep the design docs current** in the same commit (see *Design docs*).
 

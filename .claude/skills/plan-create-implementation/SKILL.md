@@ -70,23 +70,14 @@ Say the granularity in one line before the list (for example "7 commits; moves g
 
 ## 6. Check the plan before presenting
 
-For each commit line:
-- Run the size check. Does it pass?
-- Could `/next-commit` write the test table (happy, failure, edge) from the line and the doc alone?
-- Is every decision it depends on a decision row or an answered question?
+Call the `plan-reviewer` agent (Agent tool, `subagent_type: plan-reviewer`) with the draft plan and the files it names, and say it is a **commit plan**. It checks module boundaries, missed reuse against twins, order and hidden coupling, missing failure cases, commit size and whether something is on screen early. Report which findings you accept and fix, and which you reject with a reason. Do not relay its full list.
+
+Check what the reviewer cannot see:
+- Could `/next-commit` write the test table (happy, failure, edge) from each line and the doc alone?
+- Is every decision a line depends on a decision row or an answered question?
 - Are its files and the folder counts right (re-grep, do not trust memory)?
 - Is its mechanical flag right? Would it still be right if a test were missing?
-- Does the line have the *New shared pieces* field ("none" when empty)?
-- For each new file, grep its twin for the same job. If the twin has it and the plan doesn't share it, share it or write the reason as a Decision row.
-- Does the order hold if one commit is delayed?
-
-Across the plan:
-- Does the sum of commits deliver the milestone, and nothing else?
-- Does any commit leave unused code until a later one?
-- Does every branch in the flow diagram have exactly one commit that builds it?
-- Is something on screen after the first two commits (UI milestones)?
-
-Fix what fails. Then, when the milestone has more than 3 commits, adds a decision row, or changes the contract or database schema, call the `plan-reviewer` agent (Agent tool, `subagent_type: plan-reviewer`) with the draft plan and the files it names, and say it is a **commit plan**. Report which findings you accept and fix, and which you reject with a reason. Do not relay its full list.
+- Does every branch in the flow diagram have exactly one commit that builds it, and does the sum of commits deliver the milestone and nothing else?
 
 ## 7. Present
 
@@ -106,7 +97,7 @@ Link and diagram formats: [../_shared/output-format.md](../_shared/output-format
 
 ## 8. After approval, write the doc
 
-- Replace the milestone's Status line with its commit lines (first one **Next**), in the layout of commit-line.md: a sub-bullet per field and one nested bullet per file, behaviour or other item. Every failure behaviour names the error code or message the caller sees; if you cannot name it, it is an open question. Never write a field as a `;`-joined paragraph.
+- Replace the milestone's Status line with its commit lines (first one **Next**), in the layout of commit-line.md. A failure behaviour whose error code or message you cannot name is an open question.
 - Extend the existing `## Step N. <milestone>` section (do not add a second one) with the design notes:
   - keep *Done when* and *Builds on*; delete *Re-measure* and *Blocks the split* once answered;
   - mark every design note *(temporary)* so `/next-commit` can cut them when the step ships; a lasting choice goes in a Decision row instead, never in both;

@@ -20,10 +20,10 @@ Written by `/plan-create-implementation`, read by `/next-commit` in its first st
 - A note that qualifies an item goes in parentheses after it, or as a deeper bullet under it when it is long. Keep each bullet to one idea.
 - A single short item (*Needs*, *Settled*, *Done when*) may stay on the field's own line; with two or more items, nest them.
 
-- Label: number plus letter (3b). No other scheme.
+- Label: number plus letter (3b); never a deeper level (`3b-i`). Split a commit by re-lettering the rest.
 - `*(mechanical)*` when the commit should change no behaviour (definition in [outline.md](../next-commit/outline.md)); `/next-commit` confirms it with the coverage check.
 - `Behaviours` is the plan's input to the test table, not the table. `/next-commit` adds cases it finds.
-- *New shared pieces* always appears, as "none" when empty. Any other empty sub-bullet is omitted; never pad.
+- *New shared pieces* appears on every commit line, as "none" when empty (a hook checks each open line). Any other empty sub-bullet is omitted; never pad.
 - A commit that adds a shared piece its line does not list is not plan-conformant (see `/next-commit`'s outline.md).
 - The same layout applies to the commit lines in the doc and to the presented plan.
 - The outcome line says what the admin, customer or developer can now do, in plain words. It names no function, type or file.

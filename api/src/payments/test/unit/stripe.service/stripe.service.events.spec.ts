@@ -6,6 +6,7 @@ import {
   expiredCheckoutFromEvent,
   retrievedCheckoutFromSession,
 } from "@/payments/stripe/stripe-events.js";
+import { asPartialFake } from "@/test/test-helpers.js";
 
 describe("completedCheckoutFromEvent", () => {
   // 2026-10-21T12:00:00Z, in the seconds Stripe uses
@@ -15,7 +16,7 @@ describe("completedCheckoutFromEvent", () => {
   function makeEvent(
     session: Partial<Stripe.Checkout.Session> = {},
   ): Stripe.CheckoutSessionCompletedEvent {
-    return {
+    return asPartialFake<Stripe.CheckoutSessionCompletedEvent>({
       id: "evt_test_1",
       type: "checkout.session.completed",
       created: CREATED,
@@ -28,7 +29,7 @@ describe("completedCheckoutFromEvent", () => {
           ...session,
         },
       },
-    } as unknown as Stripe.CheckoutSessionCompletedEvent;
+    });
   }
 
   it("reads a paid checkout in our terms", () => {
@@ -82,13 +83,13 @@ describe("expiredCheckoutFromEvent", () => {
   function makeEvent(
     clientReferenceId: string | null,
   ): Stripe.CheckoutSessionExpiredEvent {
-    return {
+    return asPartialFake<Stripe.CheckoutSessionExpiredEvent>({
       id: "evt_test_2",
       type: "checkout.session.expired",
       data: {
         object: { id: "cs_test_1", client_reference_id: clientReferenceId },
       },
-    } as unknown as Stripe.CheckoutSessionExpiredEvent;
+    });
   }
 
   it("reads an expired checkout in our terms", () => {
@@ -119,7 +120,7 @@ describe("retrievedCheckoutFromSession", () => {
   function makeSession(
     session: Partial<Stripe.Checkout.Session> = {},
   ): Stripe.Checkout.Session {
-    return {
+    return asPartialFake<Stripe.Checkout.Session>({
       id: "cs_test_1",
       status: "complete",
       client_reference_id: "8b0e1f5c-0000-4000-8000-000000000004",
@@ -129,7 +130,7 @@ describe("retrievedCheckoutFromSession", () => {
         latest_charge: { id: "ch_test_1", created: CHARGED },
       },
       ...session,
-    } as unknown as Stripe.Checkout.Session;
+    });
   }
 
   it("reads a completed checkout, paid when the buyer was charged", () => {

@@ -49,12 +49,12 @@ The OpenAPI spec is the source of truth, so a change starts there:
 
 | Hook | Runs |
 |---|---|
-| `pre-commit` | ESLint and Prettier on staged files, then a check that no folder under `src/` or `tests/` holds more than 10 files. Then only for the projects the staged files can affect: regenerates the API types when the OpenAPI file is staged, type-checks (the web also when the OpenAPI file changes, since its types come from it), and runs only the unit tests that import a staged file. A deleted file, or a staged file that isn't TypeScript (config, lockfile, `.env.test`), runs that project's whole unit suite instead. |
-| `pre-push` | Prettier's check on both projects (as CI does), knip (finds unused files, exports and dependencies) on both projects, the full unit suites for both projects, then integration tests for the API, browser tests for the web app, then the API's end-to-end tests. Needs Docker running. |
+| `pre-commit` | ESLint and Prettier on staged files, then a check that no folder under `src/` or `tests/` holds more than 10 files, that no API spec file sits beside its source, and that no API `test/unit/` folder holds more than 7 entries. Then only for the projects the staged files can affect: regenerates the API types when the OpenAPI file is staged, type-checks (the web also when the OpenAPI file changes, since its types come from it), and runs only the unit tests that import a staged file. A deleted file, or a staged file that isn't TypeScript (config, lockfile, `.env.test`), runs that project's whole unit suite instead. |
+| `pre-push` | The tests of the shell scripts that check the repo itself (folder layout, design docs, usage measuring), Prettier's check on both projects (as CI does), knip (finds unused files, exports and dependencies) on both projects, the full unit suites for both projects, then integration tests for the API, browser tests for the web app, then the API's end-to-end tests. Needs Docker running. |
 
 ## What CI runs
 
-[ci.yml](.github/workflows/ci.yml) runs on every pull request and every push to `main`. It repeats everything the hooks run, on a clean machine, plus ESLint, knip, the API build, and a check that the generated API types are committed and up to date. The `api`, `web` and `web-playwright` jobs run in parallel; the Playwright tests have their own job so their browser install overlaps with the web checks. If CI fails but your hooks passed, run the failing command from the workflow locally. The usual causes are a forgotten `yarn generate:api-types` or a file that was never committed. CI uses no secrets: tests run against the fake values in `api/.env.test`.
+[ci.yml](.github/workflows/ci.yml) runs on every pull request and every push to `main`. It repeats everything the hooks run, on a clean machine, plus ESLint, knip, the API build, the folder layout check and the tests of the repo's shell scripts (their own job), and a check that the generated API types are committed and up to date. The `api`, `web` and `web-playwright` jobs run in parallel; the Playwright tests have their own job so their browser install overlaps with the web checks. If CI fails but your hooks passed, run the failing command from the workflow locally. The usual causes are a forgotten `yarn generate:api-types` or a file that was never committed. CI uses no secrets: tests run against the fake values in `api/.env.test`.
 
 ## Writing tests
 
@@ -96,7 +96,7 @@ ESLint and Prettier handle formatting. The rest is up to you:
 - **No Stripe or other network calls inside a transaction.**
 - **Use only public, documented library APIs.** No undocumented error fields, private members, or packages you only get through another dependency. In particular, don't catch database errors by driver error code.
 - **Use `Temporal.Instant` for timestamps**, not `Date`.
-- **Write small functions.** A top-level method should read as a short list of well-named steps, with one method per outcome. A `switch` should only dispatch, one line per case.
+- **Write small functions.** A top-level method should read as a short list of well-named steps, with one method per outcome (ESLint caps a function at 10 statements). A `switch` should only dispatch, one line per case.
 - **Name things by their owner**: `customer.name`, not a bare `name` beside `courseId`.
 - **Don't add abstractions for hypothetical needs.** A thin wrapper around an SDK is fine. An interface for a second payment provider that doesn't exist isn't.
 

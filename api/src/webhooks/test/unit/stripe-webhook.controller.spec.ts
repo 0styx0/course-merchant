@@ -10,7 +10,11 @@ import {
   InvalidWebhookSignatureError,
   StripeService,
 } from "@/payments/stripe/stripe.service.js";
-import { asDependency, type MockMethods } from "@/test/test-helpers.js";
+import {
+  asDependency,
+  asPartialFake,
+  type MockMethods,
+} from "@/test/test-helpers.js";
 import { StripeWebhookController } from "@/webhooks/stripe-webhook.controller.js";
 
 const PAYMENT_ID = "8b0e1f5c-0000-4000-8000-000000000004";
@@ -21,7 +25,7 @@ const request = { rawBody } as RawBodyRequest<Request>;
 function sessionEvent(
   type: "checkout.session.completed" | "checkout.session.expired",
 ): Stripe.Event {
-  return {
+  return asPartialFake<Stripe.Event>({
     id: "evt_test_1",
     type,
     created: 1_761_000_000,
@@ -33,7 +37,7 @@ function sessionEvent(
         payment_intent: "pi_test_1",
       },
     },
-  } as unknown as Stripe.Event;
+  });
 }
 
 describe("StripeWebhookController", () => {

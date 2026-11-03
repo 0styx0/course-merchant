@@ -1,6 +1,6 @@
 # Outline formats
 
-Used in the *Outline* section of [SKILL.md](SKILL.md). The writing rules are in CLAUDE.md (*Writing*), the diagram, flow and link formats in [../_shared/output-format.md](../_shared/output-format.md); follow them here. Every section of an outline follows the *Bullets, not blocks* rule: sub-bullets for joined steps, never a paragraph.
+Used in the *Outline* section of [SKILL.md](SKILL.md). The writing rules are in CLAUDE.md (*Writing*), the diagram, flow and link formats in [../_shared/output-format.md](../_shared/output-format.md); follow them here.
 
 **Every outline, short or full, is followed by exactly one tool call: the one that starts the background build (SKILL.md *Build*). Then end the turn and wait for the owner's reply. Approval is a reply that says go, approve, OK or build it and leaves no question open.**
 
@@ -44,14 +44,3 @@ After the opening:
 - **Preflight (last line):** `Preflight: size <n files, ok> | coverage <result, or n/a> | siblings read <files> | library API <docs link, only for an API the repo doesn't use yet>`. A missing item is a check that was skipped. The short outline ends with it too.
 
 If the owner replies with questions or objections, discuss them first: answer, recommend, ask follow-ups. Keep the outline as sent while the discussion is open. Once they agree, present the updated outline, adjust the background build to match (SKILL.md *Build*), and wait for the go-ahead again.
-
-## Before you send (outline)
-
-- It opens with Today / After this commit / Why this way, and those lines name no code.
-- Every new noun is defined where it first appears; no domain word is reused for something else.
-- Each "why" says what would go wrong without it, in plain words.
-- Each bullet keeps its "because"; joined steps are sub-bullets.
-- Each file is linked once, with a line number checked by grep.
-- A commit with logic has the flow diagram; a move has the folder diagrams.
-- It ends with the `Preflight:` line; the only tool call after it starts the background build.
-- Every question in it carries a recommendation (the rest went through the picker).

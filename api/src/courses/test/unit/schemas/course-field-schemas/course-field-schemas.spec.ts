@@ -48,9 +48,7 @@ describe("courseNameSchema", () => {
 
     expect(result.success).toBe(true);
 
-    if (result.success) {
-      expect(result.data).toBe("TypeScript Fundamentals");
-    }
+    expect(result.data).toBe("TypeScript Fundamentals");
   });
 
   it.each([
