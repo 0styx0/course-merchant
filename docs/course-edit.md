@@ -43,22 +43,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **6c.** The admin sees the course's status on the edit page and changes it, and the API's refusal to publish without an image shows on the status field.
   - [x] **6d.** Choosing Deleted and saving asks for confirmation first; Keep or Escape leaves the form as it was, and a course already deleted saves with no question.
 - [ ] **7. Time zone keys and Keep fixed.** Enter in the Time zone box picks the first matching zone instead of saving the course; Escape keeps the chosen zone in the box; Keep the course in the delete dialog sets the status back to the loaded one.
-  - [ ] **7a.** Enter in the Time zone box picks the first matching zone and never saves the course; Escape keeps the chosen zone in the box. Both pages. **Next**
-    - *Behaviours*:
-      - typing "paris" marks Europe/Paris; Enter picks it, the box shows it, and the form isn't submitted
-      - Enter with no match: the list closes, nothing is picked, and the form isn't submitted
-      - Enter with the list closed and the box untouched: the form isn't submitted
-      - ArrowDown then Enter still picks the marked zone
-      - an Enter that confirms an IME composition is left to the browser, as Base UI does
-      - Escape with the list open after typing: the list closes, the box shows the chosen zone, and no change is reported
-      - Escape again with the list closed: the box still shows the chosen zone (Base UI would empty it)
-    - *New shared pieces*: none
-    - *Files*:
-      - [time-zone-picker.tsx](../web/src/features/admin-courses/schedule/time-zone-picker/time-zone-picker.tsx) (`autoHighlight`, a key handler on the input)
-      - [time-zone-picker.test.tsx](../web/src/features/admin-courses/schedule/time-zone-picker/time-zone-picker.test.tsx) (renders the picker inside a form with a submit spy)
-    - *Settled*: the decision row "The time zone picker marks the first match"
-    - *Done when*: the picker tests pass; J1 walked on both pages in `dev:mock`
-  - [ ] **7b.** Keep the course or Escape in the delete dialog sets the status back to the one the course loaded with, and keeps every other edit.
+  - [x] **7a.** Enter in the Time zone box picks the first matching zone and never saves the course; Escape keeps the chosen zone in the box. Both pages.
+  - [ ] **7b.** Keep the course or Escape in the delete dialog sets the status back to the one the course loaded with, and keeps every other edit. **Next**
     - *Behaviours*:
       - Keep: the dialog closes, nothing is sent, Drafted (the loaded status) is checked, and the renamed name stays
       - Escape: same as Keep
