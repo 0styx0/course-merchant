@@ -2,7 +2,6 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { refresh } from "./edit-course-form.mocks";
 import {
   clickSave,
   leaveEvent,
@@ -98,7 +97,7 @@ describe("EditCourseForm", () => {
       renderForm();
       setValue("Course name", "Renamed");
       await clickSave(user);
-      await waitFor(() => expect(refresh).toHaveBeenCalled());
+      expect(await screen.findByRole("status")).toHaveTextContent("Saved");
       expect(leaveEvent().defaultPrevented).toBe(false);
     });
   });

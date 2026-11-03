@@ -17,8 +17,7 @@ import { toEditFormPrefill } from "./edit-form-prefill";
 import { useSaveEditedCourse } from "./use-save-edited-course";
 
 const push = vi.fn();
-const refresh = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("../save-course/edit/save-edited-details.action", () => ({
   saveEditedDetailsAction: vi.fn(),
 }));
@@ -88,18 +87,17 @@ beforeEach(() => {
 });
 
 describe("useSaveEditedCourse", () => {
-  it("saves only the details when no file is chosen, then loads the page again", async () => {
+  it("saves only the details when no file is chosen, then shows Saved", async () => {
     const { result } = renderEditSave(null);
     await submitEditForm(result);
 
     expect(detailsAction).toHaveBeenCalledOnce();
     expect(detailsAction.mock.calls[0]?.[1]).not.toHaveProperty("image");
     expect(uploadAction).not.toHaveBeenCalled();
-    expect(refresh).toHaveBeenCalledOnce();
     expect(push).not.toHaveBeenCalled();
   });
 
-  it("uploads a chosen file before the details, then loads the page again", async () => {
+  it("uploads a chosen file before the details, then shows Saved", async () => {
     const image = chosenImage();
     const { result } = renderEditSave(image);
     await submitEditForm(result);
@@ -112,7 +110,6 @@ describe("useSaveEditedCourse", () => {
     expect(uploadAction.mock.invocationCallOrder[0]).toBeLessThan(
       detailsAction.mock.invocationCallOrder[0] ?? 0,
     );
-    expect(refresh).toHaveBeenCalledOnce();
     expect(push).not.toHaveBeenCalled();
   });
 
@@ -128,7 +125,6 @@ describe("useSaveEditedCourse", () => {
     expect(result.current.form.getFieldState("image").error?.message).toBe(
       "image refused",
     );
-    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("says the image was saved when the details are refused, and stays", async () => {
@@ -142,7 +138,6 @@ describe("useSaveEditedCourse", () => {
     expect(result.current.form.getFieldState("name").error?.message).toBe(
       "name refused",
     );
-    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("skips the upload on the next save after the details were refused", async () => {
@@ -155,7 +150,6 @@ describe("useSaveEditedCourse", () => {
 
     expect(uploadAction).toHaveBeenCalledOnce();
     expect(detailsAction).toHaveBeenCalledTimes(2);
-    expect(refresh).toHaveBeenCalledOnce();
   });
 
   it("says something went wrong when the upload throws", async () => {
@@ -202,7 +196,6 @@ describe("useSaveEditedCourse", () => {
 
     expect(uploadAction).toHaveBeenCalledTimes(2);
     expect(detailsAction).toHaveBeenCalledOnce();
-    expect(refresh).toHaveBeenCalledOnce();
   });
 
   it("shows the note Saved after a full success", async () => {
@@ -218,7 +211,6 @@ describe("useSaveEditedCourse", () => {
     await submitEditForm(result);
 
     expect(result.current.saving.savedNote).toBeUndefined();
-    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("loads nothing again and shows no Saved note when the details action throws", async () => {
@@ -226,7 +218,6 @@ describe("useSaveEditedCourse", () => {
     const { result } = renderEditSave(null);
     await submitEditForm(result);
 
-    expect(refresh).not.toHaveBeenCalled();
     expect(result.current.saving.savedNote).toBeUndefined();
   });
 

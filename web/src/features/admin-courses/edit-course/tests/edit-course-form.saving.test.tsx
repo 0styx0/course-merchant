@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
 
 import type { CourseActionResult } from "../../save-course/course-action-result";
-import { push, refresh } from "./edit-course-form.mocks";
+import { push } from "./edit-course-form.mocks";
 import { toEditFormPrefill } from "../edit-form-prefill";
 import {
   clickSave,
@@ -64,7 +64,7 @@ function loadCourseStartingAt(startTime: string, renderMs: number) {
 }
 
 describe("EditCourseForm saving", () => {
-  it("saves the edited name with the rest as given, then loads the page again", async () => {
+  it("saves the edited name with the rest as given, then says Saved", async () => {
     const user = userEvent.setup();
     saveAction.mockResolvedValue({
       state: "success",
@@ -75,7 +75,7 @@ describe("EditCourseForm saving", () => {
     setValue("Course name", "Renamed");
     await clickSave(user);
 
-    await waitFor(() => expect(refresh).toHaveBeenCalledOnce());
+    expect(await screen.findByRole("status")).toHaveTextContent("Saved");
     expect(saveAction).toHaveBeenCalledWith(
       draftedAdminCourse.id,
       { ...valuesWithoutImage, name: "Renamed" },
@@ -117,7 +117,7 @@ describe("EditCourseForm saving", () => {
     );
 
     await clickSave(user);
-    await waitFor(() => expect(refresh).toHaveBeenCalledOnce());
+    expect(await screen.findByRole("status")).toHaveTextContent("Saved");
   });
 
   it("shows an error on a field the form lacks only above the form, and the next save goes through", async () => {
@@ -136,7 +136,7 @@ describe("EditCourseForm saving", () => {
     expect(screen.queryByText("Start is in the past.")).not.toBeInTheDocument();
 
     await clickSave(user);
-    await waitFor(() => expect(refresh).toHaveBeenCalledOnce());
+    expect(await screen.findByRole("status")).toHaveTextContent("Saved");
   });
 
   it("shows a server problem that has no field errors, and keeps the form", async () => {
@@ -150,7 +150,7 @@ describe("EditCourseForm saving", () => {
     await screen.findByRole("heading", { name: "Internal server error" });
     expect(screen.getByText("Internal server error detail.")).toBeVisible();
     expect(screen.getByLabelText("Course name")).toHaveValue("Renamed");
-    expect(refresh).not.toHaveBeenCalled();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
   it("says the save couldn't happen when the action throws, without a draft note", async () => {
@@ -176,7 +176,7 @@ describe("EditCourseForm saving", () => {
       await screen.findByRole("button", { name: "Saving…" }),
     ).toBeDisabled();
     finish({ state: "success", data: { courseId: "c1" } });
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    expect(await screen.findByRole("status")).toHaveTextContent("Saved");
   });
 
   it("shows Saved after a save and keeps the address", async () => {
@@ -200,7 +200,7 @@ describe("EditCourseForm saving", () => {
 
     await screen.findByRole("heading", { name: "Refused" });
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
-    expect(refresh).not.toHaveBeenCalled();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
   it("resets the fields to the reloaded course", () => {

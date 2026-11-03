@@ -60,12 +60,16 @@ function useSavedNote({
     if (isDirty) setSavedNote(undefined);
   }
 
-  function markSavedThen(goNext: () => void) {
+  function markSaved() {
     setSavedNote("Saved");
+  }
+
+  function markSavedThen(goNext: () => void) {
+    markSaved();
     goNext();
   }
 
-  return { savedNote, markSavedThen };
+  return { savedNote, markSaved, markSavedThen };
 }
 
 /** The note a thrown action adds once a step saved, e.g. " The image was saved." */
@@ -83,7 +87,7 @@ function useThrownStepNote() {
 /**
  * The parts every two-step save shares. Returns three things:
  * - `runSaveSteps` runs the steps and shows a message when an action throws;
- * - `stepReports` is what the steps call: `showRefusal`, `noteStepSaved`, `markSavedThen`;
+ * - `stepReports` is what the steps call: `showRefusal`, `noteStepSaved`, `markSaved`, `markSavedThen`;
  * - `saveOutcome` is what the form reads: `savedNote`, `serverProblem`, `clearServerProblem`.
  */
 export function useSaveSteps<TValues extends FieldValues>(
@@ -92,7 +96,7 @@ export function useSaveSteps<TValues extends FieldValues>(
 ) {
   const { serverProblem, showRefusal, showThrownProblem, clearServerProblem } =
     useServerProblem(setError);
-  const { savedNote, markSavedThen } = useSavedNote(options);
+  const { savedNote, markSaved, markSavedThen } = useSavedNote(options);
   const { noteStepSaved, readStepSavedNote } = useThrownStepNote();
 
   async function runSaveSteps(saveSteps: () => Promise<void>) {
@@ -107,7 +111,7 @@ export function useSaveSteps<TValues extends FieldValues>(
 
   return {
     runSaveSteps,
-    stepReports: { showRefusal, noteStepSaved, markSavedThen },
+    stepReports: { showRefusal, noteStepSaved, markSaved, markSavedThen },
     saveOutcome: { savedNote, serverProblem, clearServerProblem },
   };
 }

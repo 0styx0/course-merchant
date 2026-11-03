@@ -1,5 +1,4 @@
-import { useRouter } from "next/navigation";
-import { useRef } from "react";
+import { useRef, useTransition } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
 import type { ChosenImage } from "../image/course-image";
@@ -83,8 +82,8 @@ function useUploadImageUnlessStored(
  * Uploads a newly chosen image, then saves the edited details, status and
  * prices. Uploading first lets one save publish a course with its first image.
  * A refusal leaves a message and puts its field errors on the fields. A save
- * shows "Saved", empties the image choice and asks Next to load the page again,
- * so the form holds the stored course. `startingSavedNote` shows until the form
+ * empties the image choice and shows "Saved" once the details action's reply
+ * has reloaded the page, so the form holds the stored course. `startingSavedNote` shows until the form
  * first holds an unsaved change.
  */
 export function useSaveEditedCourse(
@@ -94,12 +93,12 @@ export function useSaveEditedCourse(
   loadedPrices: LoadedPrices,
   startingSavedNote?: string,
 ) {
-  const router = useRouter();
   const { runSaveSteps, stepReports, saveOutcome } = useSaveSteps(
     form.setError,
     { startingSavedNote, isDirty: form.formState.isDirty },
   );
   const imageUpload = useUploadImageUnlessStored(courseId, stepReports);
+  const [, startTransition] = useTransition();
 
   async function uploadImageThenSaveDetails({
     image,
@@ -120,7 +119,7 @@ export function useSaveEditedCourse(
       return stepReports.showRefusal(message, details.error);
     }
     clearImage();
-    stepReports.markSavedThen(() => router.refresh());
+    startTransition(() => stepReports.markSaved());
   }
 
   // Clearing the stored and chosen files empties the file box, and a later

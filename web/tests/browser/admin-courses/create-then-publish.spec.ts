@@ -2,6 +2,7 @@ import msw from "next/experimental/testmode/playwright/msw.js";
 
 import { makeRememberedCreateHandler } from "@/mocks/handlers/create-course";
 import { makeRememberedGetHandler } from "@/mocks/handlers/get-course-as-admin";
+import { getCourseImageAsAdminHandlers } from "@/mocks/handlers/get-course-image-as-admin";
 import { coursesSuccess } from "@/mocks/handlers/list-courses";
 import { makeRememberedUpdateHandler } from "@/mocks/handlers/update-course";
 import { makeRememberedUploadHandler } from "@/mocks/handlers/upload-course-image";
@@ -25,6 +26,7 @@ test("creates a draft, publishes it, and saves again after its start has passed"
     makeRememberedUploadHandler(remembered),
     makeRememberedUpdateHandler(remembered),
     makeRememberedGetHandler(remembered),
+    getCourseImageAsAdminHandlers.success,
   );
   const consoleErrors = collectConsoleErrors(page);
 

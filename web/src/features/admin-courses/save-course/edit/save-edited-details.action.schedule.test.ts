@@ -15,6 +15,8 @@ import { saveEditedDetailsAction } from "./save-edited-details.action";
 
 // Its default export throws outside a React Server Component build
 vi.mock("server-only", () => ({}));
+// `refresh` throws outside a running Server Action
+vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 
 describe("saveEditedDetailsAction schedule", () => {
   beforeEach(() => server.use(updateCourseSuccess));

@@ -1,5 +1,7 @@
 "use server";
 
+import { refresh } from "next/cache";
+
 import { toCourseDescription } from "@/features/course-description/description-document";
 
 import { wallClockToUtc } from "../../schedule/wall-clock-time";
@@ -83,8 +85,8 @@ function toEditedRequestPrices(
 
 /**
  * Saves the edited details, the status, the start and end read from the boxes
- * and the edited prices. The loaded prices come from the browser; the API
- * refuses any change to a price in effect.
+ * and the edited prices, then refreshes the page. The loaded prices come from
+ * the browser; the API refuses any change to a price in effect.
  */
 export async function saveEditedDetailsAction(
   courseId: string,
@@ -113,5 +115,8 @@ export async function saveEditedDetailsAction(
     prices: toEditedRequestPrices(data.prices, timeZone, loadedPrices),
   });
   if (result.state === "failure") return problemFailure(result.error);
+  // The reply carries the reloaded page, so the form holds the stored course
+  // before the browser shows "Saved".
+  refresh();
   return successWithCourseId(result.data.id);
 }
