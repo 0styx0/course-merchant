@@ -81,16 +81,19 @@ function useUploadImageUnlessStored(
  * prices. Uploading first lets one save publish a course with its first image.
  * A refusal leaves a message and puts
  * its field errors on the fields; a save goes to the home page.
+ * `startingSavedNote` shows until the form first holds an unsaved change.
  */
 export function useSaveEditedCourse(
   form: EditCourseFormApi,
   courseId: string,
   loadedSchedule: LoadedSchedule,
   loadedPrices: LoadedPrices,
+  startingSavedNote?: string,
 ) {
   const router = useRouter();
   const { runSaveSteps, stepReports, saveOutcome } = useSaveSteps(
     form.setError,
+    { startingSavedNote, isDirty: form.formState.isDirty },
   );
   const imageUpload = useUploadImageUnlessStored(courseId, stepReports);
 

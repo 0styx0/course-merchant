@@ -227,3 +227,22 @@ test("asks before deleting, then saves the course as deleted", async ({
   expect(saves.courseBodies).toHaveLength(1);
   expect(saves.courseBodies[0]).toMatchObject({ status: "deleted" });
 });
+
+test("says the course was saved as a draft on arrival from create, once", async ({
+  page,
+  msw,
+}) => {
+  msw.use(getCourseAsAdminHandlers.success);
+
+  await page.goto(`${editPath}?saved=draft`);
+
+  await expect(page.getByRole("status")).toHaveText("Saved as a draft");
+  await expect(page).toHaveURL(editPath);
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Edit course" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Saved" }),
+  ).toHaveCount(0);
+});

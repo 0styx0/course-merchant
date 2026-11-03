@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 
 type EditCoursePageProps = {
   params: Promise<{ courseId: string }>;
+  searchParams: Promise<{ saved?: string | string[] }>;
 };
 
 function EditCoursePageLayout({ children }: { children: ReactNode }) {
@@ -30,8 +31,12 @@ function isCourseMissingCode(code: string): boolean {
   return code === "COURSE_NOT_FOUND" || code === "INVALID_COURSE_ID";
 }
 
-export default async function EditCoursePage({ params }: EditCoursePageProps) {
+export default async function EditCoursePage({
+  params,
+  searchParams,
+}: EditCoursePageProps) {
   const { courseId } = await params;
+  const { saved } = await searchParams;
   const result = await getCourseAsAdmin(courseId);
 
   if (result.state === "failure" && isCourseMissingCode(result.error.code)) {
@@ -53,6 +58,8 @@ export default async function EditCoursePage({ params }: EditCoursePageProps) {
         prefill={toEditFormPrefill(result.data)}
         // The list is built here so the server and the browser render the same one.
         timeZones={Intl.supportedValuesOf("timeZone")}
+        // Create opens this page with `?saved=draft` after saving the draft.
+        startingSavedNote={saved === "draft" ? "Saved as a draft" : undefined}
       />
     </EditCoursePageLayout>
   );

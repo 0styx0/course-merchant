@@ -57,24 +57,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [ ] **10. Saving confirms and stays.** Edit stays and says "Saved"; create opens the new course's edit page saying "Saved as a draft".
   - [x] **10a.** Saving on the create page opens the new course's edit page (`?saved=draft`); edit still goes to `/`.
   - [x] **10b.** The error list's sticky box at the top of the form comes from a shared piece; nothing changes for the admin.
-  - [ ] **10c.** The edit page says "Saved as a draft" when the admin arrives from create. **Next**
-    - *Behaviours*:
-      - with `?saved=draft`, the edit page shows "Saved as a draft" (`role="status"`) in the sticky box
-      - without the flag, or with any other value, nothing shows there
-      - the page drops the flag from the address once shown, so a reload shows no note
-      - the note goes away once the form first holds an unsaved change (the form's "dirty" state turns on), and the leave warning turns on at the same moment
-    - *New shared pieces*:
-      - the saved note (edit's "Saved as a draft" and, in 10e, "Saved")
-      - one saved state in the shared save steps: a starting note, cleared when the form turns dirty. The note and the leave warning both read it, so "saved" is stored once.
-    - *Files*:
-      - [edit/page.tsx](../web/src/app/admin/(signed-in)/courses/[courseId]/edit/page.tsx) (reads `searchParams`)
-      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx)
-      - [use-save-steps.ts](../web/src/features/admin-courses/course-form/hooks/use-save-steps.ts)
-      - [use-save-edited-course.ts](../web/src/features/admin-courses/edit-course/use-save-edited-course.ts)
-      - `components/form/saved-note.tsx` (new, with a test; `components/form/` reaches the folder limit, so no further file fits)
-    - *Needs*: 10a, 10b
-    - *Done when*: tests pass, and J3's first half works in `dev:mock`
-  - [ ] **10d.** In `dev:mock` and the browser tests, a saved course comes back as saved, so the owner can walk create → edit → publish.
+  - [x] **10c.** The edit page says "Saved as a draft" when the admin arrives from create, drops the flag from the address, and hides the note at the first change.
+  - [ ] **10d.** In `dev:mock` and the browser tests, a saved course comes back as saved, so the owner can walk create → edit → publish. **Next**
     - *Behaviours*:
       - a new `remembered` scenario: create and update store the course they answer with, and get-as-admin returns the stored course (or the sample course before any save)
       - the stored course takes the request's fields, its status as `{ name, changedAt }`, and its prices with new ids

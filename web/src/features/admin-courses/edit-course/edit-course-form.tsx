@@ -1,9 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 
 import { ErrorSummary } from "@/components/form/error-summary";
+import { SavedNote } from "@/components/form/saved-note";
 
 import { useErrorListAndLeaveWarning } from "../course-form/hooks/use-error-list-and-leave-warning";
 import { ContentLinkSection } from "../course-form/sections/content-link-section";
@@ -13,6 +15,7 @@ import {
   type EditCourseFormValues,
 } from "../validation/edit-course-form-schema";
 import { editCourseFields } from "./edit-course-fields";
+import { editCoursePath } from "./edit-course-path";
 import {
   EditBasicsSection,
   EditPricingSection,
@@ -38,8 +41,19 @@ function useEditCourseFormState(prefill: EditFormPrefill) {
 }
 
 /**
+ * Drops the `?saved=draft` flag from the address once the note shows, so a
+ * reload shows no note. `replaceState` keeps Next's router in step.
+ */
+function useDropSavedFlag(courseId: string, startingSavedNote?: string) {
+  useEffect(() => {
+    if (startingSavedNote === undefined) return;
+    window.history.replaceState(null, "", editCoursePath(courseId));
+  }, [courseId, startingSavedNote]);
+}
+
+/**
  * The form's submit handler (which asks before deleting), whether a save is
- * running, the delete dialog and the error list, which also warns before
+ * running, the delete dialog, the saved note and the error list, which also warns before
  * leaving unsaved edits.
  */
 function useEditFormSubmit(
@@ -47,12 +61,14 @@ function useEditFormSubmit(
   priceRowCount: number,
   courseId: string,
   prefill: EditFormPrefill,
+  startingSavedNote?: string,
 ) {
-  const { save, isSaved, serverMessage } = useSaveEditedCourse(
+  const { save, savedNote, isSaved, serverMessage } = useSaveEditedCourse(
     form,
     courseId,
     prefill.loadedSchedule,
     prefill.loadedPrices,
+    startingSavedNote,
   );
   const errorList = useErrorListAndLeaveWarning(
     form,
@@ -70,6 +86,7 @@ function useEditFormSubmit(
     isSaving: form.formState.isSubmitting || deleteGate.isConfirmedSaveRunning,
     deleteConfirmation: deleteGate.deleteConfirmation,
     serverProblem: serverMessage.serverProblem,
+    savedNote,
     errorList,
   };
 }
@@ -79,6 +96,8 @@ type EditCourseFormProps = {
   prefill: EditFormPrefill;
   /** Built on the server so the server and browser list the same zones. */
   timeZones: string[];
+  /** Shown until the first change, e.g. "Saved as a draft" on arrival from create. */
+  startingSavedNote?: string;
 };
 
 /** The "edit course" form. It saves the details and goes to the home page. */
@@ -86,14 +105,29 @@ export function EditCourseForm({
   courseId,
   prefill,
   timeZones,
+  startingSavedNote,
 }: EditCourseFormProps) {
   const { form, priceRows } = useEditCourseFormState(prefill);
-  const { submitForm, isSaving, deleteConfirmation, serverProblem, errorList } =
-    useEditFormSubmit(form, priceRows.fields.length, courseId, prefill);
+  const submit = useEditFormSubmit(
+    form,
+    priceRows.fields.length,
+    courseId,
+    prefill,
+    startingSavedNote,
+  );
+  useDropSavedFlag(courseId, startingSavedNote);
 
   return (
-    <form noValidate onSubmit={submitForm} className="flex flex-col gap-8">
-      <ErrorSummary {...errorList} serverProblem={serverProblem} />
+    <form
+      noValidate
+      onSubmit={submit.submitForm}
+      className="flex flex-col gap-8"
+    >
+      <SavedNote note={submit.savedNote} />
+      <ErrorSummary
+        {...submit.errorList}
+        serverProblem={submit.serverProblem}
+      />
       <EditBasicsSection
         form={form}
         courseId={courseId}
@@ -108,8 +142,8 @@ export function EditCourseForm({
         pricesInEffect={prefill.loadedPrices.inEffect}
       />
       <StatusSection form={form} />
-      <SaveButton label="Save changes" isSubmitting={isSaving} />
-      <DeleteConfirmation {...deleteConfirmation} />
+      <SaveButton label="Save changes" isSubmitting={submit.isSaving} />
+      <DeleteConfirmation {...submit.deleteConfirmation} />
     </form>
   );
 }

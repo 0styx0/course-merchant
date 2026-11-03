@@ -33,20 +33,43 @@ export async function uploadChosenImage(
   return uploadCourseImageAction(courseId, formData);
 }
 
-/** The saved flag, and the step that sets it and then runs the caller's next step. */
-function useSavedFlag() {
-  const [isSaved, setIsSaved] = useState(false);
+/** Options a save hook passes to `useSaveSteps`. */
+export type SaveStepsOptions = {
+  /** The note shown before any save, e.g. "Saved as a draft" on arrival from create. */
+  startingSavedNote?: string;
+  /** The form's dirty state; the note goes when it turns on. */
+  isDirty?: boolean;
+};
+
+/**
+ * The saved note, and the step that sets it and then runs the caller's next
+ * step. The note clears when the form turns dirty, not on a value change,
+ * because a reset to the stored values also reports a value change.
+ */
+function useSavedNote({
+  startingSavedNote,
+  isDirty = false,
+}: SaveStepsOptions) {
+  const [savedNote, setSavedNote] = useState(startingSavedNote);
+  const [wasDirty, setWasDirty] = useState(isDirty);
+
+  // Clears during render, so the note never shows for a render after the
+  // change (an effect would leave it up for one render).
+  if (isDirty !== wasDirty) {
+    setWasDirty(isDirty);
+    if (isDirty) setSavedNote(undefined);
+  }
 
   function markSavedThen(goNext: () => void) {
-    setIsSaved(true);
+    setSavedNote("Saved");
     goNext();
   }
 
-  return { isSaved, markSavedThen };
+  return { savedNote, markSavedThen };
 }
 
 /** The note a thrown action adds once a step saved, e.g. " The image was saved." */
-function useStepSavedNote() {
+function useThrownStepNote() {
   const stepSavedNote = useRef<string>(undefined);
 
   return {
@@ -61,15 +84,16 @@ function useStepSavedNote() {
  * The parts every two-step save shares. Returns three things:
  * - `runSaveSteps` runs the steps and shows a message when an action throws;
  * - `stepReports` is what the steps call: `showRefusal`, `noteStepSaved`, `markSavedThen`;
- * - `saveOutcome` is what the form reads: `isSaved`, `serverProblem`, `clearServerProblem`.
+ * - `saveOutcome` is what the form reads: `savedNote`, `serverProblem`, `clearServerProblem`.
  */
 export function useSaveSteps<TValues extends FieldValues>(
   setError: UseFormSetError<TValues>,
+  options: SaveStepsOptions = {},
 ) {
   const { serverProblem, showRefusal, showThrownProblem, clearServerProblem } =
     useServerProblem(setError);
-  const { isSaved, markSavedThen } = useSavedFlag();
-  const { noteStepSaved, readStepSavedNote } = useStepSavedNote();
+  const { savedNote, markSavedThen } = useSavedNote(options);
+  const { noteStepSaved, readStepSavedNote } = useThrownStepNote();
 
   async function runSaveSteps(saveSteps: () => Promise<void>) {
     clearServerProblem();
@@ -84,21 +108,22 @@ export function useSaveSteps<TValues extends FieldValues>(
   return {
     runSaveSteps,
     stepReports: { showRefusal, noteStepSaved, markSavedThen },
-    saveOutcome: { isSaved, serverProblem, clearServerProblem },
+    saveOutcome: { savedNote, serverProblem, clearServerProblem },
   };
 }
 
 type SaveOutcome = ReturnType<typeof useSaveSteps>["saveOutcome"];
 
-/** What a save hook gives its form: `save`, `isSaved`, and the message with its clearer. */
+/** What a save hook gives its form: `save`, the saved note and whether one shows, and the message with its clearer. */
 export function makeSaveHookResult<TChecked>(
   runSaveSteps: (saveSteps: () => Promise<void>) => Promise<void>,
   saveSteps: (values: TChecked) => Promise<void>,
-  { isSaved, serverProblem, clearServerProblem }: SaveOutcome,
+  { savedNote, serverProblem, clearServerProblem }: SaveOutcome,
 ) {
   return {
     save: (values: TChecked) => runSaveSteps(() => saveSteps(values)),
-    isSaved,
+    savedNote,
+    isSaved: savedNote !== undefined,
     serverMessage: { serverProblem, clearServerProblem },
   };
 }
