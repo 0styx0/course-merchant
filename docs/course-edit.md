@@ -42,7 +42,36 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **6b.** The edit code holds the course's status as a form value, prefilled as loaded, and saves it; the API's refusal on the status lands on the status field. Not on screen yet.
   - [x] **6c.** The admin sees the course's status on the edit page and changes it, and the API's refusal to publish without an image shows on the status field.
   - [x] **6d.** Choosing Deleted and saving asks for confirmation first; Keep or Escape leaves the form as it was, and a course already deleted saves with no question.
-- [ ] **7. Time zone keys and Keep fixed.** Enter in the Time zone box picks the first matching zone instead of saving the course; Escape puts back the zone chosen before typing; Keep the course in the delete dialog sets the status back to the one chosen before Deleted; a character count over its limit turns red. **Next**
+- [ ] **7. Time zone keys and Keep fixed.** Enter in the Time zone box picks the first matching zone instead of saving the course; Escape keeps the chosen zone in the box; Keep the course in the delete dialog sets the status back to the loaded one.
+  - [ ] **7a.** Enter in the Time zone box picks the first matching zone and never saves the course; Escape keeps the chosen zone in the box. Both pages. **Next**
+    - *Behaviours*:
+      - typing "paris" marks Europe/Paris; Enter picks it, the box shows it, and the form isn't submitted
+      - Enter with no match: the list closes, nothing is picked, and the form isn't submitted
+      - Enter with the list closed and the box untouched: the form isn't submitted
+      - ArrowDown then Enter still picks the marked zone
+      - an Enter that confirms an IME composition is left to the browser, as Base UI does
+      - Escape with the list open after typing: the list closes, the box shows the chosen zone, and no change is reported
+      - Escape again with the list closed: the box still shows the chosen zone (Base UI would empty it)
+    - *New shared pieces*: none
+    - *Files*:
+      - [time-zone-picker.tsx](../web/src/features/admin-courses/schedule/time-zone-picker/time-zone-picker.tsx) (`autoHighlight`, a key handler on the input)
+      - [time-zone-picker.test.tsx](../web/src/features/admin-courses/schedule/time-zone-picker/time-zone-picker.test.tsx) (renders the picker inside a form with a submit spy)
+    - *Settled*: the decision row "The time zone picker marks the first match"
+    - *Done when*: the picker tests pass; J1 walked on both pages in `dev:mock`
+  - [ ] **7b.** Keep the course or Escape in the delete dialog sets the status back to the one the course loaded with, and keeps every other edit.
+    - *Behaviours*:
+      - Keep: the dialog closes, nothing is sent, Drafted (the loaded status) is checked, and the renamed name stays
+      - Escape: same as Keep
+      - Save after Keep saves the loaded status with no dialog
+      - edge: a course loaded as Archived, Deleted chosen, then Keep: Archived is checked
+      - Keep with no other edits leaves the form unchanged, so leaving the page shows no warning
+    - *New shared pieces*: none
+    - *Files*:
+      - [use-confirm-before-delete.ts](../web/src/features/admin-courses/edit-course/status/use-confirm-before-delete.ts) (takes a callback that restores the loaded status and runs it on Keep)
+      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (`useEditFormSubmit` builds the callback with `setValue` and `shouldDirty`)
+      - [edit-course-form.delete.test.tsx](../web/src/features/admin-courses/edit-course/tests/edit-course-form.delete.test.tsx) (replaces the "Deleted stays checked" check)
+    - *Settled*: the decision row "Keep the course and Escape in the delete dialog set the status back"
+    - *Done when*: the delete tests pass; Keep walked in `dev:mock`
 - [ ] **8. Schedule errors on the field to change.** An end date before the start date shows on End date at once; on the same day, an end time not after the start time shows on End time.
 - [ ] **9. Prices in plain words.** A past price start shows on its date, the price list says what to fix in words, amounts read $50.00, and the rows line up.
 - [ ] **10. Saving confirms and stays.** Edit stays and says "Saved"; create opens the new course's edit page saying "Saved as a draft".
@@ -85,7 +114,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 | After a partly failed save, the next Save changes sends both steps again | Create already does this (its draft update repeats). Edit's form always sends what the admin sees. The cost: a time changed and saved by the first click, now compared with the originally loaded time, can be refused as "in the past" if it has since passed; accepted as rare | Remembering which step is stored and redoing only the failed one (extra state, and edits to the stored step are dropped; medium) |
 | The stored image is a plain `<img>` from a web route `/admin/courses/{id}/image` | The API's admin image is never cached, so the admin sees what is stored. `next/image` would cache an old copy and needs an allow-list entry | `next/image` (stale after replacing; low) |
 | The delete confirmation uses shadcn alert-dialog | Matches the existing shadcn/base-ui setup | An inline confirmation step |
-| The time zone picker marks the first match as the admin types ([Base UI Combobox](https://base-ui.com/react/components/combobox) `autoHighlight`) | Enter with nothing marked submits the form and saves the course | Blocking Enter in the box (Enter then does nothing; low) |
+| The time zone picker marks the first match as the admin types ([Base UI Combobox](https://base-ui.com/react/components/combobox) `autoHighlight`), and Enter in the box never saves the course | When nothing is marked (no match, or the list is closed), Base UI lets Enter through, and the form saves the course while the admin is still choosing a zone | Base UI's default (Enter with no match saves the course; none); blocking Enter only when nothing matches (Enter on a closed list still saves; low) |
+| Keep the course and Escape in the delete dialog set the status back to the one the course loaded with; other edits stay | Otherwise Deleted stays chosen after the admin said keep. The loaded status is never Deleted, because a course loaded as Deleted never asks (revisit after use) | The last status chosen before Deleted (matches Drafted→Archived→Deleted; costs remembered state; low); leaving Deleted chosen (6d's behaviour; the next Save asks again; none) |
 | A message comparing two schedule boxes shows under the box to change: End date when the date is earlier, End time on the same day. The line under the Schedule heading goes, on both pages (revisit after use) | The UX review found End time named while End date was wrong, and the heading sits far from the box. Replaces create's decision on cross-field schedule messages | Keeping the heading line |
 | The flow is create → edit → publish. After a save, edit stays, refreshes the stored course and shows "Saved"; create opens the new course's edit page through a query flag that shows "Saved as a draft" | Going to the shop proves nothing and leaves no way back. The refresh keeps the "unchanged time" checks right for the next save | Staying on create (a second Save makes a second course); a message, then still going to `/` (no way back; low) |
 | The price list under the rows names the broken part in words, as a plain list, with amounts as $50.00, on both pages (revisit after use) | A red "Error" doesn't say what to fix. Replaces create's U3b wording | Keeping "Error" and Roman numerals |
@@ -268,7 +298,7 @@ Leave the date and time empty to start when you save.
 Findings from using the edit page in Chrome (`yarn --cwd web dev:mock`, 2026-11-03). Fixes in pieces create shares go to both pages. Not checked: phone width, image upload, server error replies.
 
 - **Bugs:** Enter in the Time zone box saves the course; Escape empties the box but shows a check; an end date before the start shows a check and the schedule line vanishes; on Save that error lands on End time; a past price start lands on the time; the price list prints "Error"; Keep the course leaves Deleted chosen.
-- **Guidance:** no "Saved" message and a jump to the shop; no course name or status on screen; nothing says the course already ran; a zone change keeps the typed times without saying so; a counter over its limit stays grey.
+- **Guidance:** no "Saved" message and a jump to the shop; no course name or status on screen; nothing says the course already ran; a zone change keeps the typed times without saying so. (A counter over its limit staying grey was also noted; dropped from step 7, since the code and its test already turn it red.)
 - **Accessibility:** faint status circles; check and cross icons without text; the date boxes aren't linked to the schedule line.
 - **Layout:** status last on the page; Save only at the bottom; price columns shift between rows; price errors wrap into five lines.
 - **Not a page bug:** saving Published with no image works in `dev:mock` only because the update mock always succeeds.
@@ -301,12 +331,34 @@ Pricing   Prices in effect · price rows · Price schedule in words  ← 9
 
 - Why here: these are bugs, and later milestones touch the same pieces.
 - Needs: none.
-- Builds on: [time-zone-picker.tsx](../web/src/features/admin-courses/schedule/time-zone-picker/time-zone-picker.tsx) ([Base UI Combobox](https://base-ui.com/react/components/combobox) `autoHighlight`), [delete-confirmation.tsx](../web/src/features/admin-courses/edit-course/status/delete-confirmation.tsx), [character-count.tsx](../web/src/components/form/character-count.tsx); the picker decision in [course-creation.md](course-creation.md) (pick-only).
-- Size: 2 to 3 commits (picker keys; Keep and the counter colour).
-- Risk: Base UI's behaviour for Escape and for Enter with no match is unchecked; the first commit's tests settle it.
-- Done when: tests cover Enter, Enter with no match, Escape and Keep; J1 on both pages.
-- Can wait: the counter's colour token.
-- Re-measure: `grep -rln "autoHighlight" web/node_modules/@base-ui/react/combobox/root`
+- Builds on: [time-zone-picker.tsx](../web/src/features/admin-courses/schedule/time-zone-picker/time-zone-picker.tsx) ([Base UI Combobox](https://base-ui.com/react/components/combobox) `autoHighlight`), [delete-confirmation.tsx](../web/src/features/admin-courses/edit-course/status/delete-confirmation.tsx), [use-confirm-before-delete.ts](../web/src/features/admin-courses/edit-course/status/use-confirm-before-delete.ts); the picker decision in [course-creation.md](course-creation.md) (pick-only).
+- Size: 2 commits (picker keys; Keep). The counter left the milestone: the code and its test already turn it red over the limit (owner, 2026-11-03).
+- Done when: the 7a picker tests and the 7b delete tests pass; J1 on both pages and Keep in `dev:mock`.
+
+Design notes *(temporary)*:
+
+- Base UI 1.9 ([ComboboxInput.mjs](../web/node_modules/@base-ui/react/combobox/input/ComboboxInput.mjs), the Enter branch of `onKeyDown`): with nothing marked, Enter closes the list and lets the key through, so the form submits. `autoHighlight` alone fixes only the case where the text matches a zone.
+- [mergeProps](../web/node_modules/@base-ui/react/merge-props/mergeProps.mjs) runs the picker's `onKeyDown` before Base UI's handlers:
+  - `preventDefault()` on Enter stops the submit, and Base UI still picks the marked zone.
+  - `preventBaseUIHandler()` skips all of Base UI's handlers, so the picker calls it only for Escape with the list closed (Base UI empties the box there).
+  - An Enter that confirms an IME composition (`which === 229`, typing through an input method such as Japanese) is left alone, as Base UI does.
+- Keep runs a callback that the edit form builds. The callback sets the status to the loaded one with `shouldDirty`, so React Hook Form compares the status with its loaded value again and clears its changed mark. 7b adds no new state.
+
+Flow *(temporary)*:
+
+```
+Admin types in Time zone box
+├── text matches zones → first one marked                    7a
+│   ├── Enter → zone picked, box shows it, nothing saved     7a
+│   └── Escape → list closes, box shows chosen zone          7a
+├── text matches nothing → "No time zone found"              existing
+│   └── Enter → list closes, nothing picked, nothing saved   7a
+└── list closed, Escape → box keeps chosen zone              7a
+Admin picks Deleted, clicks Save → dialog                    existing (6d)
+├── Delete course → saves, goes home                         existing (6d)
+└── Keep / Escape → dialog closes, status = loaded,          7b
+    other edits kept, no request sent
+```
 
 ## Step 8. Schedule errors on the field to change
 
