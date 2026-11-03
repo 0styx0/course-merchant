@@ -42,6 +42,14 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **6b.** The edit code holds the course's status as a form value, prefilled as loaded, and saves it; the API's refusal on the status lands on the status field. Not on screen yet.
   - [x] **6c.** The admin sees the course's status on the edit page and changes it, and the API's refusal to publish without an image shows on the status field.
   - [x] **6d.** Choosing Deleted and saving asks for confirmation first; Keep or Escape leaves the form as it was, and a course already deleted saves with no question.
+- [ ] **7. Time zone keys and Keep fixed.** Enter in the Time zone box picks the first matching zone instead of saving the course; Escape puts back the zone chosen before typing; Keep the course in the delete dialog sets the status back to the one chosen before Deleted; a character count over its limit turns red. **Next**
+- [ ] **8. Schedule errors on the field to change.** An end date before the start date shows on End date at once; on the same day, an end time not after the start time shows on End time.
+- [ ] **9. Prices in plain words.** A past price start shows on its date, the price list says what to fix in words, amounts read $50.00, and the rows line up.
+- [ ] **10. Saving confirms and stays.** Edit stays and says "Saved"; create opens the new course's edit page saying "Saved as a draft".
+- [ ] **11. Edit page explains itself.** The header shows the course's name, its status and a link to its shop page; notes explain a time zone change and a course that already ran.
+- [ ] **12. Delete only without students.** The API refuses to delete a course with enrollments; the edit page greys out Deleted and says to archive it instead.
+- [ ] **13. Accessible fields on both pages.** Status circles are visible, the check and cross icons have text, and the date boxes point to the schedule line.
+- [ ] **14. Edit layout.** Status sits near the top and Save stays on screen.
 
 ## Principles
 
@@ -52,7 +60,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - **A failed save changes nothing,** so the form stays as it is and shows the errors. Errors can arrive in two rounds: a format error hides the state errors (past times, schedule) until fixed, so expect a second 400.
 - **The "must be in the future" check applies only to a changed time,** for the schedule and for price times alike. A schedule time counts as unchanged when the boxes convert to the stored moment; a price row counts as unchanged when its amount equals a loaded future price's and its converted time equals that price's time with the seconds dropped.
 - **The browser checks help the admin; the API decides.** Same as the create page.
-- **After saving, the admin goes to `/`,** as on the create page.
+- **After saving, the admin goes to `/`,** as on the create page. Replaced by milestone 10: the flow is create → edit → publish (see *Decisions*).
 - **Until the web login lands,** admin calls carry no token, so against the real API the page shows a 401. Tests and `yarn dev:mock` use MSW.
 - **Every library mentioned links to its docs.**
 
@@ -77,6 +85,11 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 | After a partly failed save, the next Save changes sends both steps again | Create already does this (its draft update repeats). Edit's form always sends what the admin sees. The cost: a time changed and saved by the first click, now compared with the originally loaded time, can be refused as "in the past" if it has since passed; accepted as rare | Remembering which step is stored and redoing only the failed one (extra state, and edits to the stored step are dropped; medium) |
 | The stored image is a plain `<img>` from a web route `/admin/courses/{id}/image` | The API's admin image is never cached, so the admin sees what is stored. `next/image` would cache an old copy and needs an allow-list entry | `next/image` (stale after replacing; low) |
 | The delete confirmation uses shadcn alert-dialog | Matches the existing shadcn/base-ui setup | An inline confirmation step |
+| The time zone picker marks the first match as the admin types ([Base UI Combobox](https://base-ui.com/react/components/combobox) `autoHighlight`) | Enter with nothing marked submits the form and saves the course | Blocking Enter in the box (Enter then does nothing; low) |
+| A message comparing two schedule boxes shows under the box to change: End date when the date is earlier, End time on the same day. The line under the Schedule heading goes, on both pages (revisit after use) | The UX review found End time named while End date was wrong, and the heading sits far from the box. Replaces create's decision on cross-field schedule messages | Keeping the heading line |
+| The flow is create → edit → publish. After a save, edit stays, refreshes the stored course and shows "Saved"; create opens the new course's edit page through a query flag that shows "Saved as a draft" | Going to the shop proves nothing and leaves no way back. The refresh keeps the "unchanged time" checks right for the next save | Staying on create (a second Save makes a second course); a message, then still going to `/` (no way back; low) |
+| The price list under the rows names the broken part in words, as a plain list, with amounts as $50.00, on both pages (revisit after use) | A red "Error" doesn't say what to fix. Replaces create's U3b wording | Keeping "Error" and Roman numerals |
+| A course with enrollments can be archived but not deleted. The API refuses it with its own error code, and the page greys out Deleted with the reason | Students who paid keep a course the admin can still find | A page-only check (a direct API call could still delete; low) |
 
 ## Step 1. Create form rebuilt from shared building blocks
 
@@ -250,9 +263,111 @@ Leave the date and time empty to start when you save.
 - Done when: the owner changes a course's status and deletes one in `dev:mock`; publishing a course with a newly chosen first image works in one save.
 - Note: the API refuses a change to `published` with no stored image; an already published course isn't re-checked.
 
+## UX pass (milestones 7–14)
+
+Findings from using the edit page in Chrome (`yarn --cwd web dev:mock`, 2026-11-03). Fixes in pieces create shares go to both pages. Not checked: phone width, image upload, server error replies.
+
+- **Bugs:** Enter in the Time zone box saves the course; Escape empties the box but shows a check; an end date before the start shows a check and the schedule line vanishes; on Save that error lands on End time; a past price start lands on the time; the price list prints "Error"; Keep the course leaves Deleted chosen.
+- **Guidance:** no "Saved" message and a jump to the shop; no course name or status on screen; nothing says the course already ran; a zone change keeps the typed times without saying so; a counter over its limit stays grey.
+- **Accessibility:** faint status circles; check and cross icons without text; the date boxes aren't linked to the schedule line.
+- **Layout:** status last on the page; Save only at the bottom; price columns shift between rows; price errors wrap into five lines.
+- **Not a page bug:** saving Published with no image works in `dev:mock` only because the update mock always succeeds.
+
+Journeys (each milestone's *Done when* walks its own in `dev:mock`):
+
+- J1 (7): the admin types "berlin" in Time zone and presses Enter; the box shows Europe/Berlin and nothing saves.
+- J2 (8): the admin picks an end date before the start date; End date turns red right away.
+- J3 (10): the admin creates a course, lands on its edit page with "Saved as a draft", then publishes it there.
+- J4 (12): on a course with students, Deleted is greyed out with "Students are enrolled. Archive it instead."
+
+Page sketch after milestone 14:
+
+```
+Edit course: React Fundamentals        [Draft]   View on site (published only)
+[Saved. 2:31 PM]                       ← 10, hidden until a save
+[error list: hidden until a refused save]
+This course ran on Oct 1, 2026.        ← 11, only for a past course
+Status    ( ) Published ( ) Draft ( ) Archived  ( ) Deleted   ← 14 (12: greyed + note with students)
+Basics    Image [Choose file]  Name  Summary  Description
+Course material   Content link
+Schedule  Time zone  (Changing it keeps the typed times; the course moves.)  ← 11
+          Start date/time   End date/time  (error under the box to change)  ← 8
+          Runs … Lasts 2 hours.
+Pricing   Prices in effect · price rows · Price schedule in words  ← 9
+┌ bar that stays on screen ─────────────────── [Save changes] ┐  ← 14
+```
+
+## Step 7. Time zone keys and Keep fixed
+
+- Why here: these are bugs, and later milestones touch the same pieces.
+- Needs: none.
+- Builds on: [time-zone-picker.tsx](../web/src/features/admin-courses/schedule/time-zone-picker/time-zone-picker.tsx) ([Base UI Combobox](https://base-ui.com/react/components/combobox) `autoHighlight`), [delete-confirmation.tsx](../web/src/features/admin-courses/edit-course/status/delete-confirmation.tsx), [character-count.tsx](../web/src/components/form/character-count.tsx); the picker decision in [course-creation.md](course-creation.md) (pick-only).
+- Size: 2 to 3 commits (picker keys; Keep and the counter colour).
+- Risk: Base UI's behaviour for Escape and for Enter with no match is unchecked; the first commit's tests settle it.
+- Done when: tests cover Enter, Enter with no match, Escape and Keep; J1 on both pages.
+- Can wait: the counter's colour token.
+- Re-measure: `grep -rln "autoHighlight" web/node_modules/@base-ui/react/combobox/root`
+
+## Step 8. Schedule errors on the field to change
+
+- Why here: the error placement must settle before the price errors copy it.
+- Needs: 7.
+- Size: 2 commits.
+- Risk: the API's start and end errors map to the same boxes (field-errors-from-problem.ts), for both pages.
+- Done when: J2 on both pages; the error list link focuses the same box.
+
+## Step 9. Prices in plain words
+
+- Why here: follows 8's rule for where an error shows.
+- Needs: 8.
+- Size: 2 to 3 commits.
+- Risk: none.
+- Done when: a half-filled row reads "$50.00 from (needs a time)", with no "Error" text; rows line up at 400 px.
+
+## Step 10. Saving confirms and stays
+
+- Why here: the header in 11 shows the saved state.
+- Needs: none.
+- Size: 2 to 3 commits (shared save steps; create's destination; edit's message and refresh).
+- Risk: after a save that stays, the stored schedule and loaded prices are stale unless the page refreshes them; the leave warning must reset.
+- Done when: J3; a second Save after a past time was saved is not refused; browser tests updated.
+
+## Step 11. Edit page explains itself
+
+- Why here: needs 10's saved state for the header.
+- Needs: 10.
+- Size: 2 to 3 commits.
+- Risk: "already ran" needs the server's clock, as the price split does.
+- Done when: a past course in `dev:mock` shows its note; the header shows name and status.
+
+## Step 12. Delete only without students
+
+- Why here: the status section must be right before 14 moves it.
+- Needs: 7.
+- Size: 3 commits (contract and API; mock; page).
+- Risk: none.
+- Done when: an API test refuses deleting a course with enrollments; J4.
+
+## Step 13. Accessible fields on both pages
+
+- Why here: independent of 8 to 12; touches shared field pieces.
+- Needs: 7.
+- Size: 2 commits.
+- Risk: none.
+- Done when: the accessibility tree names each icon; the status circles reach 3:1 contrast.
+
+## Step 14. Edit layout
+
+- Why here: layout last, after the content it moves exists.
+- Needs: 11, 12.
+- Size: 2 commits.
+- Risk: none.
+- Done when: at 400 px and desktop, Save stays visible while scrolling; status sits above Basics.
+
 ## Out of scope
 
 - The admin course list and navigation to the edit page.
+- Drag-and-drop for the image (the native file input stays).
 - The web login.
 - The payout estimate under the price.
 - A Playwright test comparing the image preview with the saved image.
@@ -268,4 +383,5 @@ Leave the date and time empty to start when you save.
 | 2026-11-02 | 4a: the unchanged rule became "the time equals the loaded one with seconds dropped", because a one-minute window treated a row moved by one minute as unchanged and lost the edit. The dollar conversions moved to `price/dollar-amount.ts`, not the schema file, because the price checks importing the schema file would form an import loop. 4a changed 8 files with the owner's OK. |
 | 2026-11-02 | 4c: built as one commit of 9 files with the owner's OK (the line named 7). Create's price row schema and the "row still holds a loaded future price" match are now exported, so edit reuses them instead of copying the rules. |
 | 2026-11-02 | Milestone 5: split into 5 commits (the map said 2 to 3). Two mechanical commits (5a, 5c) move create's image input and its "details, then image" save into shared pieces, so edit reuses them instead of writing a second copy; the details save and the screen follow as 5d and 5e. The owner chose saving in order, like create, over uploading at the same time as the details. |
+| 2026-11-03 | Milestones 7–14 added from a UX review of the edit page. Three earlier decisions reopened: where Save goes (now create → edit → publish), where schedule comparison errors show, and the price list's "Error" wording. New rule: a course with enrollments can only be archived. |
 | 2026-11-02 | Milestone 6: split into 4 commits (the map said 3). The owner chose uploading the image before the details on edit, so one save can publish a course with its first image, and dropped the browser check for "publishing needs an image" (the API's refusal shows on the status field). |
