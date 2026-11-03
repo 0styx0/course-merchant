@@ -9,10 +9,14 @@ import type {
   LoadedSchedule,
 } from "../validation/edit-course-form-schema";
 
+export type ScheduleProgress = "notStarted" | "running" | "ended";
+
 export type EditFormPrefill = {
   values: EditCourseFormValues;
   loadedSchedule: LoadedSchedule;
   loadedPrices: LoadedPrices;
+  /** Whether the stored schedule had started or ended when the page rendered. */
+  scheduleProgress: ScheduleProgress;
   /** The stored image's version, or null when the course has no image yet. */
   storedImageVersion: string | null;
 };
@@ -45,6 +49,15 @@ function splitLoadedPrices(
     inEffect: withoutIds.filter(hasStarted),
     future: withoutIds.filter((price) => !hasStarted(price)),
   };
+}
+
+function scheduleProgressAt(
+  { startTime, endTime }: LoadedSchedule,
+  renderMs: number,
+): ScheduleProgress {
+  if (Date.parse(startTime) > renderMs) return "notStarted";
+  if (Date.parse(endTime) <= renderMs) return "ended";
+  return "running";
 }
 
 function toPriceRowValues(
@@ -92,6 +105,7 @@ export function toEditFormPrefill(
     },
     loadedSchedule: { startTime, endTime },
     loadedPrices,
+    scheduleProgress: scheduleProgressAt({ startTime, endTime }, renderMs),
     storedImageVersion: course.image?.version ?? null,
   };
 }

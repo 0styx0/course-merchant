@@ -2,8 +2,12 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
+
+import { toEditFormPrefill } from "../edit-form-prefill";
 import {
   clickSave,
+  makeEditFormElement,
   prefill,
   renderForm,
   saveAction,
@@ -209,5 +213,59 @@ describe("EditCourseForm schedule", () => {
       "aria-invalid",
       "true",
     );
+  });
+
+  describe("progress note", () => {
+    const now = Date.parse("2026-11-03T12:00:00Z");
+    const prefillWithTimes = (startTime: string, endTime: string) =>
+      toEditFormPrefill(
+        {
+          ...draftedAdminCourse,
+          schedule: { ...draftedAdminCourse.schedule, startTime, endTime },
+        },
+        now,
+      );
+    const futurePrefill = prefillWithTimes(
+      "2026-11-10T18:00:00Z",
+      "2026-11-10T20:00:00Z",
+    );
+
+    it("says an ended course has ended", () => {
+      renderForm();
+      expect(
+        screen.getByText(
+          "This course has ended. You can keep its times, but a changed time must be in the future.",
+        ),
+      ).toBeVisible();
+    });
+
+    it("says a running course has started", () => {
+      renderForm(
+        prefillWithTimes("2026-11-03T11:00:00Z", "2026-11-03T14:00:00Z"),
+      );
+      expect(
+        screen.getByText(
+          "This course has started. You can keep its times, but a changed time must be in the future.",
+        ),
+      ).toBeVisible();
+    });
+
+    it("shows no note for a course that starts later", () => {
+      renderForm(futurePrefill);
+      expect(
+        screen.queryByText(/a changed time must be in the future/),
+      ).not.toBeInTheDocument();
+    });
+
+    it("hides the note when the reloaded course has its times ahead", () => {
+      const view = renderForm();
+      expect(screen.getByText(/This course has ended/)).toBeVisible();
+
+      view.rerender(makeEditFormElement(futurePrefill));
+
+      expect(
+        screen.queryByText(/a changed time must be in the future/),
+      ).not.toBeInTheDocument();
+    });
   });
 });

@@ -63,27 +63,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [ ] **11. Edit page explains itself.** The header shows the course's name, its status and a link to its shop page; notes explain a time zone change and a course that already ran.
   - [x] **11a.** The status labels (`courseStatusLabels`) and the shop page's address (`shopCoursePath`) each live in one shared place; nothing changes for the admin.
   - [x] **11b.** The header shows the course's saved name, its status, and a link to its shop page when the shop shows it; otherwise it says "Not in the shop".
-  - [ ] **11c.** Under the Schedule heading, a note says the course has started or ended, and that its times may stay but a changed time must be in the future. **Next**
-    - *Behaviours*:
-      - A start in the future shows no note.
-      - A passed start with an end ahead shows "This course has started. You can keep its times, but a changed time must be in the future."
-      - A passed end shows the same with "has ended".
-      - A start equal to the render time counts as started.
-      - After a save that moves the times into the future, the refresh hides the note.
-    - *New shared pieces*: none.
-    - *Files*:
-      - [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (with its test; adds whether the course has started or ended, from the same render time as the price split)
-      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (passes the schedule parts of the prefill to the schedule section once, so 11d adds no prop)
-      - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx)
-      - a new `edit-course/schedule-notes/schedule-notes.tsx`
-      - [edit-course-form.schedule.test.tsx](../web/src/features/admin-courses/edit-course/tests/edit-course-form.schedule.test.tsx)
-    - *Settled*:
-      - The decision row on the header link and the started note.
-      - The Principle that an unchanged time may be in the past.
-    - *Done when*:
-      - Tests are green.
-      - In `dev:mock`, the sample course (dated October 2026) shows "has ended".
-  - [ ] **11d.** Changing the time zone shows a note under the box: the dates and times stay as typed, so the course moves to that time in the new zone.
+  - [x] **11c.** Under the Schedule heading, a note says the course has started or ended, and that its times may stay but a changed time must be in the future.
+  - [ ] **11d.** Changing the time zone shows a note under the box: the dates and times stay as typed, so the course moves to that time in the new zone. **Next**
     - *Behaviours*:
       - The loaded zone shows no note.
       - A different known zone shows "The dates and times stay as typed, so the course moves to that time in <zone>."
@@ -94,7 +75,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
     - *New shared pieces*: none.
     - *Files*:
       - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx)
-      - `edit-course/schedule-notes/schedule-notes.tsx`
+      - `edit-course/schedule-notes/schedule-progress-note.tsx`
       - [edit-course-form.schedule.test.tsx](../web/src/features/admin-courses/edit-course/tests/edit-course-form.schedule.test.tsx)
     - *Needs*: 11c.
     - *Settled*: the decision row on a zone change keeping the typed times.

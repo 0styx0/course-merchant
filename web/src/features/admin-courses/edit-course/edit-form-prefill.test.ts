@@ -136,6 +136,48 @@ describe("toEditFormPrefill", () => {
     ]);
   });
 
+  describe("scheduleProgress", () => {
+    const renderMs = Date.parse("2026-11-03T12:00:00Z");
+    const progressFor = (startTime: string, endTime: string) =>
+      toEditFormPrefill(
+        {
+          ...course,
+          schedule: { ...course.schedule, startTime, endTime },
+        },
+        renderMs,
+      ).scheduleProgress;
+
+    it("is notStarted when the start is ahead", () => {
+      expect(progressFor("2026-11-04T12:00:00Z", "2026-11-04T14:00:00Z")).toBe(
+        "notStarted",
+      );
+    });
+
+    it("is started when the start has passed and the end is ahead", () => {
+      expect(progressFor("2026-11-03T11:00:00Z", "2026-11-03T14:00:00Z")).toBe(
+        "running",
+      );
+    });
+
+    it("is ended when the end has passed", () => {
+      expect(progressFor("2026-11-03T09:00:00Z", "2026-11-03T10:00:00Z")).toBe(
+        "ended",
+      );
+    });
+
+    it("counts a start equal to the render time as started", () => {
+      expect(progressFor("2026-11-03T12:00:00Z", "2026-11-03T14:00:00Z")).toBe(
+        "running",
+      );
+    });
+
+    it("counts an end equal to the render time as ended", () => {
+      expect(progressFor("2026-11-03T10:00:00Z", "2026-11-03T12:00:00Z")).toBe(
+        "ended",
+      );
+    });
+  });
+
   it("never carries the enrollments", () => {
     const start = toEditFormPrefill(course);
 

@@ -134,7 +134,11 @@ export function EditCourseForm({
         isSubmitted={form.formState.isSubmitted}
       />
       <ContentLinkSection form={form} name="contentUrl" />
-      <EditScheduleSection form={form} timeZones={timeZones} />
+      <EditScheduleSection
+        form={form}
+        timeZones={timeZones}
+        scheduleProgress={prefill.scheduleProgress}
+      />
       <EditPricingSection
         form={form}
         priceRows={priceRows}
