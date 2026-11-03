@@ -1,4 +1,3 @@
-import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import type { FieldValues, UseFormSetError } from "react-hook-form";
 
@@ -34,17 +33,16 @@ export async function uploadChosenImage(
   return uploadCourseImageAction(courseId, formData);
 }
 
-/** The saved flag, and the step that sets it and goes to the home page. */
-function useSavedFlagAndGoHome() {
-  const router = useRouter();
+/** The saved flag, and the step that sets it and then runs the caller's next step. */
+function useSavedFlag() {
   const [saved, setSaved] = useState(false);
 
-  function goHomeAfterSave() {
+  function markSavedThen(goNext: () => void) {
     setSaved(true);
-    router.push("/");
+    goNext();
   }
 
-  return { saved, goHomeAfterSave };
+  return { saved, markSavedThen };
 }
 
 /** The note a thrown action adds once a step saved, e.g. " The image was saved." */
@@ -62,7 +60,7 @@ function useStepSavedNote() {
 /**
  * The parts every two-step save shares. Returns three things:
  * - `runSaveSteps` runs the steps and shows a message when an action throws;
- * - `stepReports` is what the steps call: `showRefusal`, `noteStepSaved`, `goHomeAfterSave`;
+ * - `stepReports` is what the steps call: `showRefusal`, `noteStepSaved`, `markSavedThen`;
  * - `saveOutcome` is what the form reads: `saved`, `serverProblem`, `clearServerProblem`.
  */
 export function useSaveSteps<TValues extends FieldValues>(
@@ -70,7 +68,7 @@ export function useSaveSteps<TValues extends FieldValues>(
 ) {
   const { serverProblem, showRefusal, showThrownProblem, clearServerProblem } =
     useServerProblem(setError);
-  const { saved, goHomeAfterSave } = useSavedFlagAndGoHome();
+  const { saved, markSavedThen } = useSavedFlag();
   const { noteStepSaved, readStepSavedNote } = useStepSavedNote();
 
   async function runSaveSteps(saveSteps: () => Promise<void>) {
@@ -85,7 +83,7 @@ export function useSaveSteps<TValues extends FieldValues>(
 
   return {
     runSaveSteps,
-    stepReports: { showRefusal, noteStepSaved, goHomeAfterSave },
+    stepReports: { showRefusal, noteStepSaved, markSavedThen },
     saveOutcome: { saved, serverProblem, clearServerProblem },
   };
 }

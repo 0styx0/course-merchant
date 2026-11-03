@@ -30,6 +30,8 @@ vi.mock("../../description-editor/description-editor", async () => ({
     .MockDescriptionEditor,
 }));
 
+const editAddress = "/admin/courses/c1/edit?saved=draft";
+
 const created: CourseActionResult = {
   state: "success",
   data: { courseId: "c1" },
@@ -41,7 +43,7 @@ beforeEach(() => {
 });
 
 describe("CourseForm", () => {
-  it("saves a valid form and goes to the home page", async () => {
+  it("saves a valid form and opens the new course's edit page", async () => {
     const user = userEvent.setup();
     action.mockResolvedValue({ state: "success", data: { courseId: "c1" } });
     renderForm();
@@ -49,7 +51,7 @@ describe("CourseForm", () => {
     await fillValidForm(user);
     await user.click(screen.getByRole("button", { name: "Save as draft" }));
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith(editAddress));
     expect(action).toHaveBeenCalledOnce();
     expect(action.mock.calls[0][0]).toMatchObject({
       name: "Intro to Emptiness",
@@ -74,7 +76,7 @@ describe("CourseForm", () => {
     expect(saving).toBeDisabled();
 
     finish({ state: "success", data: { courseId: "c1" } });
-    await waitFor(() => expect(push).toHaveBeenCalled());
+    await waitFor(() => expect(push).toHaveBeenCalledWith(editAddress));
   });
 
   it("shows the server's field errors and problem, and enables the button again", async () => {

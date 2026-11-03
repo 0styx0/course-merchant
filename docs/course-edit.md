@@ -55,25 +55,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **9c.** The price list under the rows says what to fix in words (e.g. "$50.00 from (needs a time)"), as a plain bulleted list with amounts read $50.00, on both pages.
   - [x] **9d.** The price rows line up on desktop, with Remove level with the boxes, and stack in one column at 400 px.
 - [ ] **10. Saving confirms and stays.** Edit stays and says "Saved"; create opens the new course's edit page saying "Saved as a draft".
-  - [ ] **10a.** Saving on the create page opens the new course's edit page. **Next**
-    - *Behaviours*:
-      - a save with details and image opens `/admin/courses/{id}/edit?saved=draft` (nothing reads the flag until 10c)
-      - a save with no image opens the same page after the draft save alone
-      - a failed image upload stays on create with today's "saved as a draft, but the image didn't upload" message, and the retry then opens the edit page
-      - edit still goes to `/` after a save
-    - *New shared pieces*:
-      - each save hook passes its own after-save step to the shared save steps, which keep only the saved flag (create and edit now go to different places)
-      - the edit page's address with the optional flag (create builds it and the edit page reads it in 10c, so the flag's name lives in one place)
-    - *Files*:
-      - [use-save-steps.ts](../web/src/features/admin-courses/course-form/hooks/use-save-steps.ts)
-      - [use-save-then-upload-image.ts](../web/src/features/admin-courses/course-form/hooks/use-save-then-upload-image.ts)
-      - [use-save-new-course.ts](../web/src/features/admin-courses/create-course/use-save-new-course.ts)
-      - [use-save-edited-course.ts](../web/src/features/admin-courses/edit-course/use-save-edited-course.ts)
-      - `edit-course/edit-course-path.ts` (new; `edit-course/` stays under the folder limit)
-      - [create-course.spec.ts](../web/tests/browser/admin-courses/create-course.spec.ts) (expects the edit page, not `/`)
-    - *Settled*: the Decision rows "The flow is create → edit → publish" and "Create and edit share the save steps"
-    - *Done when*: tests pass, and in `dev:mock` saving on create lands on an edit page
-  - [ ] **10b.** The error list's sticky box at the top of the form becomes a shared piece; nothing changes for the admin. *(mechanical)*
+  - [x] **10a.** Saving on the create page opens the new course's edit page (`?saved=draft`); edit still goes to `/`.
+  - [ ] **10b.** The error list's sticky box at the top of the form becomes a shared piece; nothing changes for the admin. *(mechanical)* **Next**
     - *Behaviours*:
       - the error list looks and behaves the same on both pages (the existing tests pass unchanged)
     - *New shared pieces*: the sticky notice box (10c's saved note uses it too, so the sticky styling lives in one place)

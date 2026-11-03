@@ -18,8 +18,9 @@ type SaveCourseDetails<TChecked> = (
 /**
  * Saves the form in two steps: the details, then the image when one is chosen.
  * A refused step leaves a message and puts its field errors on the fields.
- * `saveDetails` is the caller's own save (create); `detailsSavedWords`
+ * `saveDetails` is the caller's own save; `detailsSavedWords`
  * says that the details are saved, for the messages shown when the image step fails.
+ * `afterSave` runs with the course's id once both steps saved.
  */
 export function useSaveThenUploadImage<
   TValues extends FieldValues,
@@ -28,6 +29,7 @@ export function useSaveThenUploadImage<
   form: UseFormReturn<TValues, unknown, TChecked>,
   saveDetails: SaveCourseDetails<TChecked>,
   detailsSavedWords: string,
+  afterSave: (courseId: string) => void,
 ) {
   const { runSaveSteps, stepReports, saveOutcome } = useSaveSteps(
     form.setError,
@@ -52,7 +54,7 @@ export function useSaveThenUploadImage<
       );
       return stepReports.showRefusal(message, upload.error);
     }
-    stepReports.goHomeAfterSave();
+    stepReports.markSavedThen(() => afterSave(details.data.courseId));
   }
 
   return makeSaveHookResult(

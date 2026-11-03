@@ -1,3 +1,4 @@
+import { useRouter } from "next/navigation";
 import { useRef } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
@@ -9,6 +10,7 @@ import type {
 import { type CourseActionResult } from "../save-course/course-action-result";
 import { createCourseAction } from "../save-course/create/create-course.action";
 import { retryDraftSaveAction } from "../save-course/create/retry-draft-save.action";
+import { editCoursePath } from "../edit-course/edit-course-path";
 
 type CourseForm = UseFormReturn<
   CourseFormWithImageValues,
@@ -32,8 +34,10 @@ function saveDraft(
 /**
  * Saves the form in two steps: the draft, then its image. The draft's id is
  * kept, so the next try updates that draft instead of creating a second course.
+ * A save opens the draft's edit page.
  */
 export function useSaveNewCourse(form: CourseForm) {
+  const router = useRouter();
   const draftId = useRef<string>(undefined);
 
   async function saveDraftAndRememberItsId(fields: CourseDetailsFields) {
@@ -46,5 +50,6 @@ export function useSaveNewCourse(form: CourseForm) {
     form,
     saveDraftAndRememberItsId,
     "The course was saved as a draft",
+    (courseId) => router.push(editCoursePath(courseId, "draft")),
   );
 }

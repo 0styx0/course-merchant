@@ -1,3 +1,4 @@
+import { useRouter } from "next/navigation";
 import { useRef } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
@@ -87,6 +88,7 @@ export function useSaveEditedCourse(
   loadedSchedule: LoadedSchedule,
   loadedPrices: LoadedPrices,
 ) {
+  const router = useRouter();
   const { runSaveSteps, stepReports, saveOutcome } = useSaveSteps(
     form.setError,
   );
@@ -110,7 +112,7 @@ export function useSaveEditedCourse(
       );
       return stepReports.showRefusal(message, details.error);
     }
-    stepReports.goHomeAfterSave();
+    stepReports.markSavedThen(() => router.push("/"));
   }
 
   return makeSaveHookResult(

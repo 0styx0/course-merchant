@@ -6,6 +6,7 @@ import {
   createCourseSuccess,
   createCourseValidationFailed,
 } from "@/mocks/handlers/create-course";
+import { getCourseAsAdminHandlers } from "@/mocks/handlers/get-course-as-admin";
 import { coursesSuccess } from "@/mocks/handlers/list-courses";
 import { updateCourseSuccess } from "@/mocks/handlers/update-course";
 import {
@@ -14,6 +15,8 @@ import {
 } from "@/mocks/handlers/upload-course-image";
 
 const { test, expect } = msw;
+
+const editPageUrl = /\/admin\/courses\/[^/]+\/edit\?saved=draft$/;
 
 test.use({
   mswHandlers: [[coursesSuccess], { scope: "test" }],
@@ -70,8 +73,12 @@ async function fillValidForm(page: Page) {
   await chooseImage(page);
 }
 
-test("saves a new course and goes to the home page", async ({ page, msw }) => {
-  msw.use(createCourseSuccess, uploadCourseImageSuccess);
+test("saves a new course and opens its edit page", async ({ page, msw }) => {
+  msw.use(
+    createCourseSuccess,
+    uploadCourseImageSuccess,
+    getCourseAsAdminHandlers.success,
+  );
   const consoleErrors = collectConsoleErrors(page);
 
   await page.goto("/admin/courses/new");
@@ -83,7 +90,7 @@ test("saves a new course and goes to the home page", async ({ page, msw }) => {
 
   await page.getByRole("button", { name: "Save as draft" }).click();
 
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL(editPageUrl);
   expect(consoleErrors).toEqual([]);
 });
 
@@ -135,10 +142,14 @@ test("keeps the draft when the image upload fails and uploads on retry", async (
   await expect(page).toHaveURL(/\/admin\/courses\/new$/);
 
   // The retry updates the saved draft, then uploads
-  msw.use(updateCourseSuccess, uploadCourseImageSuccess);
+  msw.use(
+    updateCourseSuccess,
+    uploadCourseImageSuccess,
+    getCourseAsAdminHandlers.success,
+  );
   await save.click();
 
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL(editPageUrl);
   expect(consoleErrors).toEqual([]);
 });
 

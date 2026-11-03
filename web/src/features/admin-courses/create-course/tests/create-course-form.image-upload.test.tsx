@@ -32,6 +32,8 @@ vi.mock("../../description-editor/description-editor", async () => ({
     .MockDescriptionEditor,
 }));
 
+const editAddress = "/admin/courses/c1/edit?saved=draft";
+
 const created: CourseActionResult = {
   state: "success",
   data: { courseId: "c1" },
@@ -118,7 +120,7 @@ describe("CourseForm image", () => {
       await user.type(screen.getByLabelText("Course name"), "Renamed");
       await submit(user);
 
-      await waitFor(() => expect(push).toHaveBeenCalledWith("/"));
+      await waitFor(() => expect(push).toHaveBeenCalledWith(editAddress));
       expect(action).toHaveBeenCalledOnce();
       expect(updateAction).toHaveBeenCalledOnce();
       expect(updateAction.mock.calls[0][0]).toBe("c1");
@@ -155,7 +157,7 @@ describe("CourseForm image", () => {
 
       action.mockResolvedValue(created);
       await submit(user);
-      await waitFor(() => expect(push).toHaveBeenCalledWith("/"));
+      await waitFor(() => expect(push).toHaveBeenCalledWith(editAddress));
       expect(action).toHaveBeenCalledTimes(2);
       expect(updateAction).not.toHaveBeenCalled();
     });
@@ -175,7 +177,7 @@ describe("CourseForm image", () => {
 
       updateAction.mockResolvedValue(created);
       await submit(user);
-      await waitFor(() => expect(push).toHaveBeenCalledWith("/"));
+      await waitFor(() => expect(push).toHaveBeenCalledWith(editAddress));
       expect(action).toHaveBeenCalledOnce();
     });
   });
