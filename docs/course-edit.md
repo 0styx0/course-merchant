@@ -66,7 +66,43 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **11c.** Under the Schedule heading, a note says the course has started or ended, and that its times may stay but a changed time must be in the future.
   - [x] **11d.** Choosing a different time zone shows a note under the box: the dates and times stay as typed, so the course moves to that time in the new zone, and on a started course the moved times must be in the future.
 - [x] **12. Delete only without students.** The API refuses to delete a course with enrollments; the edit page greys out Deleted and says to archive it instead.
-- [ ] **13. Accessible fields on both pages.** Status circles are visible, the check and cross icons have text, and the date boxes point to the schedule line. **Next**
+- [ ] **13. Accessible fields on both pages.** Status circles, field borders and focused borders are easy to see, and the check and cross marks have names a screen reader reads.
+  - [ ] **13a.** A screen reader names the mark beside each field: the cross reads "Needs a fix" and the check reads "Looks good", on both pages. **Next**
+    - *Behaviours*:
+      - a touched field with a problem shows an image named "Needs a fix"
+      - a touched valid field shows an image named "Looks good"
+      - an untouched field shows no image
+      - an untouched field with a problem shows "Needs a fix" once the form has been submitted
+      - the mark stays out of the input's own name and description, so the input still reads "Course name" with only its help and message
+      - the time zone and image fields get the same names, because they use the same shared field
+    - *New shared pieces*: none
+    - *Files*:
+      - [validated-field.tsx](../web/src/components/form/validated-field.tsx) (the mark gets `role="img"` and an `aria-label` in place of `aria-hidden`; [lucide](https://lucide.dev/guide/advanced/accessibility) drops its own `aria-hidden` when it receives an aria prop)
+      - [validated-field.test.tsx](../web/src/components/form/validated-field.test.tsx) (role queries replace the `.lucide-x` and `.lucide-check` selectors)
+      - [image-field.test.tsx](../web/src/features/admin-courses/image/image-field.test.tsx) (its unnamed `findByRole("img")` queries now name the preview, because a touched image field shows a second image)
+    - *Settled*: Decision row on the mark's names
+    - *Done when*:
+      - `yarn --cwd web check:changed` passes
+      - after Tab out of an empty Course name, the browser's accessibility tree shows "Needs a fix"
+  - [ ] **13b.** Every field's border, each status circle and a focused field's border reach 3:1 contrast against the form section, on both pages.
+    - *Behaviours*:
+      - an unchecked status circle's border measures at least 3:1 against the section background
+      - the borders of the Course name box, a date box and the description editor measure at least 3:1
+      - a focused box's border measures at least 3:1
+      - the cross (red) and the check (green) measure at least 3:1
+      - the checked circle keeps its primary colour
+      - the greyed-out Deleted circle stays at half opacity, and the test skips it, because WCAG exempts disabled controls
+    - *New shared pieces*: none
+    - *Files*:
+      - [globals.css](../web/src/app/globals.css) (changes `--input` and `--ring` in the light theme only, aiming for about 3.2:1 or more so a later tint change keeps a margin; the commit picks the exact greys; the app never sets a `dark` class)
+      - `web/tests/browser/admin-courses/field-border-contrast.spec.ts` (new; measures each colour against the section's own background composited over the page white)
+      - `web/package.json` (adds `culori` and `@types/culori` as dev dependencies, but only if [culori](https://culorijs.org/api/)'s parser reads the colours Chromium computes; otherwise the spec turns each colour into sRGB through a 1×1 canvas, with a comment saying why)
+      - folder count: `tests/browser/admin-courses` gains one file; the folder-count command must print nothing
+    - *Needs*: 13a is not required, but 13a's test changes land first so the images' names stay stable
+    - *Settled*: Decision row on field border contrast, and the owner's answer "every field border"
+    - *Done when*:
+      - the new browser spec passes
+      - "Ran it" walks create and edit at desktop and at 400 px
 - [ ] **14. Edit layout.** Status sits near the top and Save stays on screen.
 
 ## Journeys
@@ -121,6 +157,9 @@ Each milestone's *Done when* walks its own in `dev:mock`.
 | "Saved" and "Saved as a draft" show in the sticky box at the top of the form, where the error list shows, until the form holds an unsaved change (revisit after use) | The admin sees every answer to a save in one place, from anywhere on the page | Beside Save (misses "Saved as a draft" on arrival; low); one note under the heading plus one by Save (two spots; low) |
 | The header links to the shop only when the shop shows the course (published, with a price in effect); a course whose start has passed shows a note under Schedule, worded "started" or "ended" (revisit after use) | A draft's link would open a 404, and a refused past time would come with no explanation | Always linking (a 404 for every draft; none); a note only for ended courses (no explanation while a course runs; low) |
 | `dev:mock` and the browser tests have a `remembered` scenario: create, update and upload store the course, and get-as-admin returns it | Without it, a save reloads the sample course and the form snaps back | Changing the default success handlers (Vitest shares the server, so state would leak between tests; low) |
+| The mark beside each field is a named image: the cross reads "Needs a fix", the check "Looks good" (revisit after use) | A screen-reader user gets the same "fixed" or "still wrong" signal that a sighted admin gets from the mark. The field's own message still says what to fix | Adding the words to the input's description (heard on focus; repeats the error message on every invalid box; low); keeping the marks hidden (the check's signal reaches only sighted admins; none) |
+| Every field border, status circle and focused border reaches 3:1 against the form section. The light theme's `--input` and `--ring` colours darken, and the boxes, the description editor and the circles all use them | WCAG 1.4.11 asks for 3:1 on the edge that shows a control, and every field used one faint colour (1.19:1 on the section). Focus would otherwise make the edge lighter than at rest | A class on the status circles only (the boxes stay faint; low); editing the shadcn radio (a local change in generated code; low); keeping `--ring` (focus would lighten the edge; none) |
+| The date and time boxes keep their own description, and the "Runs … Lasts …" line under Schedule stays a live announcement only | Step 8 moved the cross-box errors under each box, and the boxes already point to them. The line now only restates the boxes | Pointing the four boxes at the line (heard on focus; costs a new prop through `ValidatedField` and two shared schedule files; low) |
 
 ## Step 1. Create form rebuilt from shared building blocks
 
@@ -202,9 +241,18 @@ Retro:
 
 - Why here: independent of 8 to 12; touches shared field pieces.
 - Needs: 7.
-- Size: 2 commits.
+- Builds on: [validated-field.tsx](../web/src/components/form/validated-field.tsx) (the mark beside every field), [form-section.tsx](../web/src/components/form/form-section.tsx) (the tint every field sits on), [globals.css](../web/src/app/globals.css) (the `--input` and `--ring` colours), [status-section.tsx](../web/src/features/admin-courses/edit-course/status/status-section.tsx) (the status circles), and the Decision rows on the marks' names, field border contrast and the schedule line.
+- Size: 2 commits (the map said 2).
 - Risk: none.
-- Done when: the accessibility tree names each icon; the status circles reach 3:1 contrast.
+- Done when: the accessibility tree names each mark ("Needs a fix", "Looks good"); field borders, status circles, focused borders and the marks measure 3:1 or more against the section tint.
+- Design notes *(temporary)*:
+  - Both commits change only shared pieces (`ValidatedField` and the theme tokens), so create and edit change together and no page code changes.
+  - The fields sit on the section tint (`bg-muted/30` in `FormSection`), not on white; the inputs have see-through backgrounds, so the tint is what each border is measured against.
+  - Contrast against that tint (WCAG formula, from the oklch values): `--input` 1.19:1, `--ring` 2.26:1, `--muted-foreground` 4.14:1, `--destructive` 4.63:1, green-600 (the check) 3.12:1, a grey at lightness 0.62 with the same hue 3.52:1.
+  - `--ring` also colours the focus halo on buttons and links, so every focus halo gets a bit darker.
+  - `--input` also colours the shadcn toggle's outline variant (unused) and some dark-only button styles; neither changes.
+  - Only a browser test can measure contrast, because jsdom computes no Tailwind styles.
+  - The schedule line's link to the date boxes was dropped; step 8 moved the cross-box errors under each box.
 
 ## Step 14. Edit layout
 
