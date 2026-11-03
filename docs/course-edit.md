@@ -60,7 +60,75 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **10c.** The edit page says "Saved as a draft" when the admin arrives from create, drops the flag from the address, and hides the note at the first change.
   - [x] **10d.** In `dev:mock` (with `scenario = "remembered"`), a saved course comes back as saved, and browser tests can use the same handlers, so the owner can walk create → edit → publish.
   - [x] **10e.** Saving on the edit page stays there, says "Saved", and loads the stored course again.
-- [ ] **11. Edit page explains itself. Next** (run `/plan-create-implementation course-edit` first). The header shows the course's name, its status and a link to its shop page; notes explain a time zone change and a course that already ran.
+- [ ] **11. Edit page explains itself.** The header shows the course's name, its status and a link to its shop page; notes explain a time zone change and a course that already ran.
+  - [ ] **11a.** The status labels and the shop page's address each live in one shared place; nothing changes for the admin. *(mechanical)* **Next**
+    - *Behaviours*:
+      - The course card links to the same address as before (its existing test pins it).
+      - The status options show the same labels as before.
+    - *New shared pieces*:
+      - The status labels, because the header (11b) needs them and only the status section has them.
+      - A shop course address helper in `features/courses/`, because the course card and the header both link there.
+    - *Files*:
+      - [edit-course-fields.ts](../web/src/features/admin-courses/edit-course/edit-course-fields.ts) (takes the labels)
+      - [status-section.tsx](../web/src/features/admin-courses/edit-course/status/status-section.tsx)
+      - a new address helper file in `web/src/features/courses/`
+      - [course-card.tsx](../web/src/features/courses/list/course-card.tsx)
+    - *Done when*:
+      - The test count is unchanged and green.
+      - Knip reports nothing.
+  - [ ] **11b.** The header shows the course's saved name, its status, and a link to its shop page when the shop shows it; otherwise it says "Not in the shop".
+    - *Behaviours*:
+      - The header shows the loaded name and status label.
+      - A published course with a price in effect shows the link.
+      - A drafted, archived or deleted course, or a published one with only future prices, shows "Not in the shop" and no link.
+      - A course that fails to load keeps the "Edit course" heading above the problem.
+      - After a save, the refresh shows the stored name and status.
+    - *New shared pieces*: none.
+    - *Files*:
+      - a new `edit-course/header/edit-page-header.tsx` (with its test)
+      - [page.tsx](../web/src/app/admin/(signed-in)/courses/[courseId]/edit/page.tsx) (reads the clock once and passes it to the prefill; the shop check reuses the prefill's prices in effect)
+    - *Settled*: the decision row on the header link and the started note.
+    - *Done when*:
+      - Tests are green.
+      - In `dev:mock`, the sample course shows its name, status and link.
+  - [ ] **11c.** Under the Schedule heading, a note says the course has started or ended, and that its times may stay but a changed time must be in the future.
+    - *Behaviours*:
+      - A start in the future shows no note.
+      - A passed start with an end ahead shows "This course has started. You can keep its times, but a changed time must be in the future."
+      - A passed end shows the same with "has ended".
+      - A start equal to the render time counts as started.
+      - After a save that moves the times into the future, the refresh hides the note.
+    - *New shared pieces*: none.
+    - *Files*:
+      - [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (with its test; adds whether the course has started or ended, from the same render time as the price split)
+      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (passes the schedule parts of the prefill to the schedule section once, so 11d adds no prop)
+      - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx)
+      - a new `edit-course/schedule-notes/schedule-notes.tsx`
+      - [edit-course-form.schedule.test.tsx](../web/src/features/admin-courses/edit-course/tests/edit-course-form.schedule.test.tsx)
+    - *Settled*:
+      - The decision row on the header link and the started note.
+      - The Principle that an unchanged time may be in the past.
+    - *Done when*:
+      - Tests are green.
+      - In `dev:mock`, the sample course (dated October 2026) shows "has ended".
+  - [ ] **11d.** Changing the time zone shows a note under the box: the dates and times stay as typed, so the course moves to that time in the new zone.
+    - *Behaviours*:
+      - The loaded zone shows no note.
+      - A different known zone shows "The dates and times stay as typed, so the course moves to that time in <zone>."
+      - Going back to the loaded zone hides the note.
+      - A half-typed or unknown zone shows no note.
+      - On a course that has started, the note adds "Because it has started, the moved times must be in the future."
+      - After a save, the new zone is the loaded one, so the note hides.
+    - *New shared pieces*: none.
+    - *Files*:
+      - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx)
+      - `edit-course/schedule-notes/schedule-notes.tsx`
+      - [edit-course-form.schedule.test.tsx](../web/src/features/admin-courses/edit-course/tests/edit-course-form.schedule.test.tsx)
+    - *Needs*: 11c.
+    - *Settled*: the decision row on a zone change keeping the typed times.
+    - *Done when*:
+      - Tests are green.
+      - In `dev:mock`, choosing another zone shows the note and the extra sentence.
 - [ ] **12. Delete only without students.** The API refuses to delete a course with enrollments; the edit page greys out Deleted and says to archive it instead.
 - [ ] **13. Accessible fields on both pages.** Status circles are visible, the check and cross icons have text, and the date boxes point to the schedule line.
 - [ ] **14. Edit layout.** Status sits near the top and Save stays on screen.
@@ -115,6 +183,7 @@ Each milestone's *Done when* walks its own in `dev:mock`.
 | A course with enrollments can be archived but not deleted. The API refuses it with its own error code, and the page greys out Deleted with the reason | Students who paid keep a course the admin can still find | A page-only check (a direct API call could still delete; low) |
 | After a save, edit loads the page again with Next's router refresh, and the form takes the reloaded course as React Hook Form's `values` | The "unchanged time" checks and the price split stay right for the next save. The cost: a change typed during the reload is lost; accepted as rare | Building the new form values in the action from the `PUT` answer (no second request; costs a second place that splits prices in effect, beside the page's; medium); Next's `refresh()` inside the action (one round trip; puts navigation in the action, which tests also call; low) |
 | "Saved" and "Saved as a draft" show in the sticky box at the top of the form, where the error list shows, until the form holds an unsaved change (revisit after use) | The admin sees every answer to a save in one place, from anywhere on the page | Beside Save (misses "Saved as a draft" on arrival; low); one note under the heading plus one by Save (two spots; low) |
+| The header links to the shop only when the shop shows the course (published, with a price in effect); a course whose start has passed shows a note under Schedule, worded "started" or "ended" (revisit after use) | A draft's link would open a 404, and a refused past time would come with no explanation | Always linking (a 404 for every draft; none); a note only for ended courses (no explanation while a course runs; low) |
 | `dev:mock` and the browser tests have a `remembered` scenario: create, update and upload store the course, and get-as-admin returns it | Without it, a save reloads the sample course and the form snaps back | Changing the default success handlers (Vitest shares the server, so state would leak between tests; low) |
 
 ## Step 1. Create form rebuilt from shared building blocks
@@ -168,8 +237,22 @@ Retro:
 - Why here: needs 10's saved state for the header.
 - Needs: 10.
 - Size: 2 to 3 commits.
+- Builds on: [page.tsx](../web/src/app/admin/(signed-in)/courses/[courseId]/edit/page.tsx), [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (the price split at render), [status-section.tsx](../web/src/features/admin-courses/edit-course/status/status-section.tsx) (the status labels), [course-card.tsx](../web/src/features/courses/list/course-card.tsx) (the shop address), and the Decision rows on a zone change and on the refresh after a save.
 - Risk: "already ran" needs the server's clock, as the price split does.
 - Done when: a past course in `dev:mock` shows its note; the header shows name and status.
+- One clock *(temporary)*: the page reads the server's time once, and the price split, the shop check and the started note all use it, so they can't disagree.
+- Flow *(temporary)*:
+
+```
+page loads (server clock read once)
+ ├─ load fails → "Edit course" + problem          (11b)
+ └─ load works → header: name, status             (11b)
+      ├─ published + price in effect → shop link  (11b)
+      └─ otherwise → "Not in the shop"            (11b)
+    schedule: start passed? → started/ended note   (11c)
+    zone box ≠ loaded zone → zone note             (11d)
+      └─ started → adds the "future" sentence     (11d)
+```
 
 ## Step 12. Delete only without students
 
