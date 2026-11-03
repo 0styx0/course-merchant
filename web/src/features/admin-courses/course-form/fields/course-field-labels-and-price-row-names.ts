@@ -26,3 +26,10 @@ export function priceRowNames(index: number) {
     effectiveTimeOfDay: `prices.${index}.effectiveTimeOfDay`,
   } as const;
 }
+
+/** Every price box's path across `rowCount` rows, in page order. */
+export function allPriceBoxNames(rowCount: number) {
+  return Array.from({ length: rowCount }, (_, index) =>
+    Object.values(priceRowNames(index)),
+  ).flat();
+}

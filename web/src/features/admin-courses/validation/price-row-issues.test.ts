@@ -29,6 +29,11 @@ const tooSoonAt = (index: number, words = EDIT_WORDS) => ({
   message: `Choose a time at least a minute from now, or leave both empty to start ${words}.`,
 });
 
+const pastDayAt = (index: number, words = EDIT_WORDS) => ({
+  path: ["prices", index, "effectiveDate"],
+  message: `Choose a date that isn't in the past, or leave both empty to start ${words}.`,
+});
+
 // Loaded when the page rendered, and since passed: 09:00 in New York today.
 const passedPrice = { amount: 7950, effectiveAt: "2026-06-01T13:00:00Z" };
 // 15 seconds ago; the boxes show it as 11:59.
@@ -49,6 +54,79 @@ describe("priceRowIssues", () => {
     it("matches the amount typed with a comma", () => {
       const rows = [row("79,5", "2026-06-01T09:00")];
       expect(issuesFor(rows, [passedPrice])).toEqual([]);
+    });
+  });
+
+  describe("which box a past start shows on", () => {
+    it("shows the message on the date box", () => {
+      expect(issuesFor([row("10", "2026-05-31T15:00")])).toEqual([
+        pastDayAt(0),
+      ]);
+    });
+
+    it("uses the caller's words", () => {
+      const issues = priceRowIssues([row("10", "2026-05-31T15:00")], {
+        timeZone: ZONE,
+        nowMs: NOW,
+        loadedFuturePrices: [],
+        emptyStartWords: "when the course is published",
+      });
+      expect(issues).toEqual([pastDayAt(0, "when the course is published")]);
+    });
+
+    it("shows a changed amount on a loaded price from a passed day on the date box", () => {
+      const loaded = { amount: 7950, effectiveAt: "2026-05-30T13:00:00Z" };
+      expect(issuesFor([row("80", "2026-05-30T09:00")], [loaded])).toEqual([
+        pastDayAt(0),
+      ]);
+    });
+
+    it("leaves an unchanged loaded price from a passed day alone", () => {
+      const loaded = { amount: 7950, effectiveAt: "2026-05-30T13:00:00Z" };
+      expect(issuesFor([row("79.50", "2026-05-30T09:00")], [loaded])).toEqual(
+        [],
+      );
+    });
+
+    it("judges the day in the course's zone, not in UTC", () => {
+      // 2026-06-01 02:00 UTC is still May 31 in New York (22:00).
+      const lateNow = Date.parse("2026-06-01T02:00:00Z");
+      const options = {
+        timeZone: ZONE,
+        nowMs: lateNow,
+        loadedFuturePrices: [],
+        emptyStartWords: EDIT_WORDS,
+      };
+      expect(priceRowIssues([row("10", "2026-05-31T09:00")], options)).toEqual([
+        tooSoonAt(0),
+      ]);
+      expect(priceRowIssues([row("10", "2026-05-30T09:00")], options)).toEqual([
+        pastDayAt(0),
+      ]);
+    });
+
+    it("keeps a time 30 seconds ahead today on the time box", () => {
+      const options = {
+        timeZone: "UTC",
+        nowMs: Date.parse("2026-06-01T12:00:30Z"),
+        loadedFuturePrices: [],
+        emptyStartWords: EDIT_WORDS,
+      };
+      expect(priceRowIssues([row("10", "2026-06-01T12:01")], options)).toEqual([
+        tooSoonAt(0),
+      ]);
+    });
+
+    it("does not count today as passed at 23:59:30", () => {
+      const options = {
+        timeZone: "UTC",
+        nowMs: Date.parse("2026-06-01T23:59:30Z"),
+        loadedFuturePrices: [],
+        emptyStartWords: EDIT_WORDS,
+      };
+      expect(priceRowIssues([row("10", "2026-06-01T23:59")], options)).toEqual([
+        tooSoonAt(0),
+      ]);
     });
   });
 
@@ -74,7 +152,7 @@ describe("priceRowIssues", () => {
       expect(issuesFor([row("10", "2026-06-01T12:02")])).toEqual([]);
     });
 
-    it("refuses a time under a minute ahead, in the caller's words", () => {
+    it("refuses a time under a minute ahead, in edit's words", () => {
       expect(issuesFor([row("10", "2026-06-01T12:00")])).toEqual([
         tooSoonAt(0),
       ]);
@@ -85,13 +163,13 @@ describe("priceRowIssues", () => {
         timeZone: ZONE,
         nowMs: NOW,
         loadedFuturePrices: [],
-        emptyStartWords: "when the course is saved",
+        emptyStartWords: "when the course is published",
       });
-      expect(issues).toEqual([tooSoonAt(0, "when the course is saved")]);
+      expect(issues).toEqual([tooSoonAt(0, "when the course is published")]);
     });
   });
 
-  it("gives create's daylight-saving message for a loaded price in a repeated hour", () => {
+  it("gives the daylight-saving message for a loaded price in a repeated hour", () => {
     // 01:30 happens twice in New York on 2026-11-01.
     const loaded = { amount: 7950, effectiveAt: "2026-11-01T05:30:00Z" };
     expect(issuesFor([row("79.50", "2026-11-01T01:30")], [loaded])).toEqual([

@@ -24,7 +24,7 @@ export function crossFieldIssues(
       timeZone: values.schedule.timeZone,
       nowMs,
       loadedFuturePrices: [],
-      emptyStartWords: "when the course is saved",
+      emptyStartWords: "when the course is published",
     }),
   ];
 }

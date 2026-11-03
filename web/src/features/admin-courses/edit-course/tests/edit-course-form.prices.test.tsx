@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -190,5 +190,54 @@ describe("EditCourseForm prices", () => {
     expect(
       await screen.findByRole("button", { name: "Price 2 start time" }),
     ).toBeVisible();
+  });
+
+  describe("a price start in the past", () => {
+    const PAST_DAY_MESSAGE =
+      "Choose a date that isn't in the past, or leave both empty to start when you save.";
+
+    it("shows the message under Start date, and fixing the date clears it", async () => {
+      renderForm(prefillWithOnlyFuturePrice);
+
+      setValue("Price start date", "2020-01-01");
+
+      await screen.findByText(PAST_DAY_MESSAGE);
+      expect(
+        screen.getByLabelText("Price start date"),
+      ).toHaveAccessibleDescription(PAST_DAY_MESSAGE);
+      expect(
+        screen.getByLabelText("Price start time"),
+      ).not.toHaveAccessibleDescription(PAST_DAY_MESSAGE);
+
+      setValue("Price start date", "2099-03-02");
+
+      await waitFor(() =>
+        expect(screen.queryByText(PAST_DAY_MESSAGE)).not.toBeInTheDocument(),
+      );
+    });
+
+    it("clears another row's same-time error when one row's start changes", async () => {
+      const user = userEvent.setup();
+      renderForm(prefillWithOnlyFuturePrice);
+      await user.click(screen.getByRole("button", { name: "Add price" }));
+      setValue("Price 2", "10");
+      setValue("Price 2 start date", "2099-03-01");
+      setValue("Price 2 start time", "09:00");
+      setValue("Price 1 start time", "09:00");
+      await clickSave(user);
+      expect(
+        await screen.findAllByText(
+          "Two prices can't take effect at the same time.",
+        ),
+      ).not.toEqual([]);
+
+      setValue("Price 1 start date", "2099-03-02");
+
+      await waitFor(() =>
+        expect(
+          screen.queryByText("Two prices can't take effect at the same time."),
+        ).not.toBeInTheDocument(),
+      );
+    });
   });
 });

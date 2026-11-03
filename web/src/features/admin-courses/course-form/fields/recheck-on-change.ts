@@ -25,13 +25,13 @@ function setFieldValueTouchedAndChecked<T extends FieldValues>(
   });
 }
 
-/** Checks again the other compared fields the admin has reached or that show a problem. */
+/** Checks again the other fields in namesToRecheck the admin has reached or that show a problem. */
 function recheckOtherReachedFields<T extends FieldValues>(
   form: CourseFormApi<T>,
   changedName: FieldPathByValue<T, string>,
-  comparedNames: FieldPathByValue<T, string>[],
+  namesToRecheck: FieldPathByValue<T, string>[],
 ) {
-  const others = comparedNames.filter(
+  const others = namesToRecheck.filter(
     (other) => other !== changedName && isReachedOrInvalid(form, other),
   );
   if (others.length > 0) void form.trigger(others);
@@ -39,17 +39,17 @@ function recheckOtherReachedFields<T extends FieldValues>(
 
 /**
  * A native date or time picker may never blur its input, so a change marks
- * the field touched and checks it. The fields it compares with are checked
+ * the field touched and checks it. The fields in namesToRecheck are checked
  * too, but only those already reached or showing a problem, so none is
  * flagged early.
  */
 export function makeRecheckingChangeHandler<T extends FieldValues>(
   form: CourseFormApi<T>,
   name: FieldPathByValue<T, string>,
-  comparedNames: FieldPathByValue<T, string>[],
+  namesToRecheck: FieldPathByValue<T, string>[],
 ) {
   return (event: { target: { value: string } }) => {
     setFieldValueTouchedAndChecked(form, name, event.target.value);
-    recheckOtherReachedFields(form, name, comparedNames);
+    recheckOtherReachedFields(form, name, namesToRecheck);
   };
 }

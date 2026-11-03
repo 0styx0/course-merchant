@@ -4,6 +4,7 @@ import type { FieldPathByValue, FieldValues } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 
+import { makeRecheckingChangeHandler } from "../course-form/fields/recheck-on-change";
 import {
   InputField,
   type CourseFormApi,
@@ -27,6 +28,8 @@ export const emptyPriceRow = {
 type PriceRowProps<T extends FieldValues> = {
   form: CourseFormApi<T>;
   names: PriceRowNames<T>;
+  /** Every price box of every row, so a change re-checks the ones already reached. */
+  boxNamesToRecheck: FieldPathByValue<T, string>[];
   index: number;
   rowCount: number;
   showRemove: boolean;
@@ -53,32 +56,62 @@ function RemoveRowButton({
   );
 }
 
+type PriceRowBoxProps<T extends FieldValues> = {
+  form: CourseFormApi<T>;
+  name: FieldPathByValue<T, string>;
+  label: string;
+  boxNamesToRecheck: FieldPathByValue<T, string>[];
+  type?: "date" | "time";
+  prefix?: string;
+};
+
+/** One box of a price row; a change re-checks every price box already reached. */
+function PriceRowBox<T extends FieldValues>({
+  form,
+  name,
+  boxNamesToRecheck,
+  ...inputProps
+}: PriceRowBoxProps<T>) {
+  return (
+    <InputField
+      form={form}
+      name={name}
+      registerOptions={{
+        onChange: makeRecheckingChangeHandler(form, name, boxNamesToRecheck),
+      }}
+      {...inputProps}
+    />
+  );
+}
+
 /** One line of the price schedule: an amount and when it takes effect. */
 export function PriceRow<T extends FieldValues>({
   form,
   names,
+  boxNamesToRecheck,
   index,
   rowCount,
   showRemove,
   onRemove,
 }: PriceRowProps<T>) {
   const labels = priceRowLabels(index, rowCount);
+  const boxProps = { form, boxNamesToRecheck };
   return (
     <div className="grid gap-4 sm:grid-cols-[1fr_1fr_1fr_5rem]">
-      <InputField
-        form={form}
+      <PriceRowBox
+        {...boxProps}
         name={names.amountDollars}
         label={labels.amountDollars}
         prefix="$"
       />
-      <InputField
-        form={form}
+      <PriceRowBox
+        {...boxProps}
         name={names.effectiveDate}
         label={labels.effectiveDate}
         type="date"
       />
-      <InputField
-        form={form}
+      <PriceRowBox
+        {...boxProps}
         name={names.effectiveTimeOfDay}
         label={labels.effectiveTimeOfDay}
         type="time"

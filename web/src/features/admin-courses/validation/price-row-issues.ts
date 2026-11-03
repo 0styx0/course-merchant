@@ -1,4 +1,5 @@
 import { toCents } from "../price/dollar-amount";
+import { utcToWallClock } from "../schedule/wall-clock-time";
 import { MIN_PRICE_LEAD_MS } from "./course-form-limits";
 import {
   issueAt,
@@ -21,7 +22,7 @@ type PriceRowCheckOptions = {
   nowMs: number;
   /** A row that still holds one of these may start in the past. Create has none. */
   loadedFuturePrices: LoadedFuturePrice[];
-  /** What an empty start means to the admin, e.g. "when the course is saved". */
+  /** What an empty start means to the admin, e.g. "when the course is published". */
   emptyStartWords: string;
 };
 
@@ -86,11 +87,13 @@ function checkPriceRow(
   if (time.kind === "issue") {
     return { issues: [issueAt(path, time.message)] };
   }
+  // An unknown zone has its own message on the zone box; this row waits for it.
   if (time.kind === "skip") return { issues: [] };
   if (findLoadedFuturePrice(row.amountDollars, time.ms, loadedFuturePrices)) {
     return { issues: [], ms: time.ms };
   }
-  return { issues: tooSoonIssues(time.ms, path, options), ms: time.ms };
+  if (time.ms >= nowMs + MIN_PRICE_LEAD_MS) return { issues: [], ms: time.ms };
+  return { issues: [tooSoonIssue(row, index, options)], ms: time.ms };
 }
 
 function halfFilledIssue(
@@ -113,18 +116,32 @@ function halfFilledIssue(
   return undefined;
 }
 
-function tooSoonIssues(
-  ms: number,
-  path: FormIssue["path"],
-  { nowMs, emptyStartWords }: PriceRowCheckOptions,
-): FormIssue[] {
-  if (ms >= nowMs + MIN_PRICE_LEAD_MS) return [];
-  return [
-    issueAt(
-      path,
-      `Choose a time at least a minute from now, or leave both empty to start ${emptyStartWords}.`,
-    ),
-  ];
+/** Today's date in the zone, or nothing when the zone is not valid. */
+function todayInZone(nowMs: number, timeZone: string) {
+  return utcToWallClock(new Date(nowMs).toISOString(), timeZone)?.date;
+}
+
+/**
+ * A passed day belongs on the date box; a time that is too soon today belongs
+ * on the time box. Today comes from the clock alone, so the minute of lead time
+ * never turns the last minute of today into a passed day. ISO dates compare as text.
+ */
+function tooSoonIssue(
+  row: PriceRowBoxes,
+  index: number,
+  { nowMs, timeZone, emptyStartWords }: PriceRowCheckOptions,
+): FormIssue {
+  const today = todayInZone(nowMs, timeZone);
+  if (today !== undefined && row.effectiveDate < today) {
+    return issueAt(
+      ["prices", index, "effectiveDate"],
+      `Choose a date that isn't in the past, or leave both empty to start ${emptyStartWords}.`,
+    );
+  }
+  return issueAt(
+    ["prices", index, "effectiveTimeOfDay"],
+    `Choose a time at least a minute from now, or leave both empty to start ${emptyStartWords}.`,
+  );
 }
 
 function duplicateTimeIssues(

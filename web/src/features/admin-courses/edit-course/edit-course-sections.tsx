@@ -5,6 +5,7 @@ import { useWatch, type UseFieldArrayReturn } from "react-hook-form";
 
 import {
   courseFieldLabels,
+  allPriceBoxNames,
   priceRowNames,
 } from "../course-form/fields/course-field-labels-and-price-row-names";
 import {
@@ -184,6 +185,7 @@ export function EditPricingSection({
           key={row.id}
           form={form}
           names={priceRowNames(index)}
+          boxNamesToRecheck={allPriceBoxNames(priceRows.fields.length)}
           index={index}
           rowCount={priceRows.fields.length}
           showRemove={priceRows.fields.length > minimumRows}

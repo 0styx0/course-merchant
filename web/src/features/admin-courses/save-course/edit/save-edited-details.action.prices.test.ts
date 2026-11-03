@@ -132,9 +132,9 @@ describe("saveEditedDetailsAction prices", () => {
         problem: { code: "VALIDATION_FAILED" },
         fieldErrors: [
           {
-            path: "prices.0.effectiveTimeOfDay",
+            path: "prices.0.effectiveDate",
             message:
-              "Choose a time at least a minute from now, or leave both empty to start when you save.",
+              "Choose a date that isn't in the past, or leave both empty to start when you save.",
           },
         ],
       },

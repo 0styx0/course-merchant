@@ -70,7 +70,15 @@ describe("courseFormSchema", () => {
     it("refuses a set time under a minute ahead", () => {
       expect(priceRows("2026-06-01T12:00")).toEqual({
         "prices.0.effectiveTimeOfDay": [
-          "Choose a time at least a minute from now, or leave both empty to start when the course is saved.",
+          "Choose a time at least a minute from now, or leave both empty to start when the course is published.",
+        ],
+      });
+    });
+
+    it("refuses a set day that has passed, on the date box", () => {
+      expect(priceRows("2026-05-31T15:00")).toEqual({
+        "prices.0.effectiveDate": [
+          "Choose a date that isn't in the past, or leave both empty to start when the course is published.",
         ],
       });
     });

@@ -51,22 +51,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **8c.** An end date before the start date shows on End date as soon as it changes, and on the same day an end time not after the start shows on End time only; the error list links to End date.
 - [ ] **9. Prices in plain words.** A past price start shows on the box to change, the price list says what to fix in words, amounts read $50.00, and the rows line up.
   - [x] **9a.** The schedule's date and time boxes take their "check this box and the boxes it compares with" behaviour from a shared piece; nothing changes for the admin.
-  - [ ] **9b.** A price start in the past shows under the box to change, on both pages. **Next**
-    - *Behaviours*:
-      - A day that has passed in the chosen zone shows on Start date: "Choose a date that isn't in the past, or leave both empty to start {words}." ("today" from `utcToWallClock`).
-      - A past or too-soon time today stays on Start time with the current message.
-      - An unchanged loaded future price may still start in the past (no message).
-      - Just before midnight, the minute of lead time doesn't make today count as a passed day.
-      - A change in any price box re-checks every price box already reached, so a message moves or clears when the other box is fixed, and another row's "Two prices can't take effect at the same time." clears.
-    - *New shared pieces*: none (uses 9a's handler).
-    - *Files*:
-      - [price-row-issues.ts](../web/src/features/admin-courses/validation/price-row-issues.ts)
-      - [price-row.tsx](../web/src/features/admin-courses/price/price-row.tsx)
-      - [create-course-sections.tsx](../web/src/features/admin-courses/create-course/create-course-sections.tsx) and [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx) (pass every price box's name)
-      - tests: price-row-issues unit, create schema prices, edit action prices (the path moves to `effectiveDate`), create price-rows and edit prices UI
-    - *Settled*: the decision row on a past price start.
-    - *Done when*: the tests above pass; `check:changed` for web.
-  - [ ] **9c.** The price list under the rows says what to fix, in words, as a plain bulleted list, on both pages.
+  - [x] **9b.** A price start in the past shows under the box to change, on both pages; any price box change re-checks every price box already reached.
+  - [ ] **9c.** The price list under the rows says what to fix, in words, as a plain bulleted list, on both pages. **Next**
     - *Behaviours*:
       - A date with no time reads "$50.00 from (needs a time)"; a time with no date reads "… from (needs a date)".
       - A broken amount reads "(price needs fixing) from …"; a time the zone skips reads "(time doesn't exist in this zone)"; the later of two equal starts reads "(same start as another price)".
