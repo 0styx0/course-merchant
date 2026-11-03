@@ -44,13 +44,19 @@ import type {
 type EditForm = CourseFormApi<EditCourseFormValues>;
 
 /** The course's stored image, loaded through the web app, with a message if it fails. */
-function StoredImagePreview({ courseId }: { courseId: string }) {
+function StoredImagePreview({
+  courseId,
+  version,
+}: {
+  courseId: string;
+  version: string;
+}) {
   const [hasLoadFailed, setHasLoadFailed] = useState(false);
   if (hasLoadFailed) return <p>The stored image couldn&apos;t be loaded.</p>;
   return (
     // eslint-disable-next-line @next/next/no-img-element -- an admin-only image behind the login cookie, not optimizable
     <img
-      src={adminCourseImagePath(courseId)}
+      src={adminCourseImagePath(courseId, version)}
       alt="Current course image"
       onError={() => setHasLoadFailed(true)}
       className="aspect-video w-full rounded-lg border object-cover object-center"
@@ -61,7 +67,8 @@ function StoredImagePreview({ courseId }: { courseId: string }) {
 type EditBasicsSectionProps = {
   form: EditForm;
   courseId: string;
-  hasStoredImage: boolean;
+  /** The stored image's version, or null when the course has no image. */
+  storedImageVersion: string | null;
   isSubmitted: boolean;
 };
 
@@ -69,13 +76,16 @@ type EditBasicsSectionProps = {
 export function EditBasicsSection({
   form,
   courseId,
-  hasStoredImage,
+  storedImageVersion,
   isSubmitted,
 }: EditBasicsSectionProps) {
   // A readable chosen file wins; otherwise the stored image, or the reason one is needed.
   function renderImagePreview(image: ChosenImage | null) {
     if (image && image.width > 0) return <ImagePreview file={image.file} />;
-    if (hasStoredImage) return <StoredImagePreview courseId={courseId} />;
+    if (storedImageVersion !== null)
+      return (
+        <StoredImagePreview courseId={courseId} version={storedImageVersion} />
+      );
     return <p>No image yet. A course needs one before it can be published.</p>;
   }
 

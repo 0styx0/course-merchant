@@ -21,6 +21,8 @@ import {
 } from "./course-image";
 
 type ImageFieldProps = {
+  /** False once the form holds no chosen file; the picker then empties itself. */
+  hasChosenFile: boolean;
   /** What shows under the picker: the chosen file, a stored image, or nothing. */
   preview: ReactNode;
   onChange: (image: ChosenImage) => void;
@@ -77,10 +79,27 @@ function FileInput({
 }
 
 /**
+ * Counts the times the form dropped its chosen file. A native file box keeps
+ * its file until it is replaced, so the picker takes this count as its `key`
+ * and starts again empty. A file picked before the form reports it keeps its
+ * box, because only a change from chosen to dropped counts.
+ */
+function useEmptiedFileBoxCount(hasChosenFile: boolean) {
+  const [wasChosenFile, setWasChosenFile] = useState(hasChosenFile);
+  const [emptiedCount, setEmptiedCount] = useState(0);
+  if (hasChosenFile !== wasChosenFile) {
+    setWasChosenFile(hasChosenFile);
+    if (!hasChosenFile) setEmptiedCount(emptiedCount + 1);
+  }
+  return emptiedCount;
+}
+
+/**
  * The course image's file picker, with the page's preview, the state icon and
  * the error message.
  */
 export function ImageField({
+  hasChosenFile,
   preview,
   onChange,
   onBlur,
@@ -89,6 +108,7 @@ export function ImageField({
   isTouched,
   isSubmitted,
 }: ImageFieldProps) {
+  const emptiedFileBoxCount = useEmptiedFileBoxCount(hasChosenFile);
   return (
     <ValidatedField
       label="Image"
@@ -100,6 +120,7 @@ export function ImageField({
       {(inputProps) => (
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <FileInput
+            key={emptiedFileBoxCount}
             id={inputProps.id}
             aria-invalid={inputProps["aria-invalid"]}
             aria-describedby={inputProps["aria-describedby"]}

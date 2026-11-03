@@ -8,13 +8,14 @@ import { toEditFormPrefill } from "../edit-form-prefill";
 import {
   clickSave,
   leaveEvent,
+  makeEditFormElement,
   prefill,
   refusal,
   renderForm,
   saveAction,
   setValue,
 } from "./edit-course-form.fixtures";
-import { push } from "./edit-course-form.mocks";
+import { refresh } from "./edit-course-form.mocks";
 
 vi.mock(
   "next/navigation",
@@ -121,7 +122,31 @@ describe("EditCourseForm delete confirmation", () => {
 
     await clickSave(user);
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(refresh).toHaveBeenCalledOnce());
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("saves again with no dialog once the reload shows the course as deleted", async () => {
+    const user = userEvent.setup();
+    mockSaveSucceeds();
+    const view = renderForm();
+    await chooseDeletedAndSave(user);
+    await user.click(
+      await screen.findByRole("button", { name: "Delete course" }),
+    );
+    await waitFor(() => expect(refresh).toHaveBeenCalledOnce());
+
+    view.rerender(
+      makeEditFormElement(
+        toEditFormPrefill({
+          ...draftedAdminCourse,
+          status: { name: "deleted", changedAt: "2026-11-03T12:00:00Z" },
+        }),
+      ),
+    );
+    await clickSave(user);
+
+    await waitFor(() => expect(saveAction).toHaveBeenCalledTimes(2));
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
 
@@ -204,7 +229,7 @@ describe("EditCourseForm delete confirmation", () => {
     expect(leaveEvent().defaultPrevented).toBe(false);
   });
 
-  it("saves with status deleted on Delete course, then goes home", async () => {
+  it("saves with status deleted on Delete course, then loads the page again", async () => {
     const user = userEvent.setup();
     mockSaveSucceeds();
     await openDialogAfterRename(user);
@@ -212,7 +237,7 @@ describe("EditCourseForm delete confirmation", () => {
     await user.click(screen.getByRole("button", { name: "Delete course" }));
 
     await expectSavedWithStatus("deleted");
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(refresh).toHaveBeenCalledOnce());
   });
 
   it("shows the API's refusal after Delete course and keeps the form", async () => {
@@ -225,7 +250,7 @@ describe("EditCourseForm delete confirmation", () => {
     expect(
       await screen.findByText("Course not deletable detail."),
     ).toBeInTheDocument();
-    expect(push).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
     expect(screen.getByLabelText("Course name")).toHaveValue("Renamed");
   });
 

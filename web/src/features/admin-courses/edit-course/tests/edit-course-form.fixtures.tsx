@@ -13,14 +13,18 @@ export const saveAction = vi.mocked(saveEditedDetailsAction);
 export const prefill = toEditFormPrefill(draftedAdminCourse);
 const timeZones = ["America/New_York", "Europe/Paris"];
 
-export function renderForm(prefillOverride = prefill) {
-  return render(
+export function makeEditFormElement(prefillOverride = prefill) {
+  return (
     <EditCourseForm
       courseId={draftedAdminCourse.id}
       prefill={prefillOverride}
       timeZones={timeZones}
-    />,
+    />
   );
+}
+
+export function renderForm(prefillOverride = prefill) {
+  return render(makeEditFormElement(prefillOverride));
 }
 
 export function refusal(

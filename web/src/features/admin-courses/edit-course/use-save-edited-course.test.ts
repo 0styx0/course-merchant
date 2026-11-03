@@ -17,7 +17,8 @@ import { toEditFormPrefill } from "./edit-form-prefill";
 import { useSaveEditedCourse } from "./use-save-edited-course";
 
 const push = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+const refresh = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh }) }));
 vi.mock("../save-course/edit/save-edited-details.action", () => ({
   saveEditedDetailsAction: vi.fn(),
 }));
@@ -87,17 +88,18 @@ beforeEach(() => {
 });
 
 describe("useSaveEditedCourse", () => {
-  it("saves only the details when no file is chosen, then goes home", async () => {
+  it("saves only the details when no file is chosen, then loads the page again", async () => {
     const { result } = renderEditSave(null);
     await submitEditForm(result);
 
     expect(detailsAction).toHaveBeenCalledOnce();
     expect(detailsAction.mock.calls[0]?.[1]).not.toHaveProperty("image");
     expect(uploadAction).not.toHaveBeenCalled();
-    expect(push).toHaveBeenCalledWith("/");
+    expect(refresh).toHaveBeenCalledOnce();
+    expect(push).not.toHaveBeenCalled();
   });
 
-  it("uploads a chosen file before the details, then goes home", async () => {
+  it("uploads a chosen file before the details, then loads the page again", async () => {
     const image = chosenImage();
     const { result } = renderEditSave(image);
     await submitEditForm(result);
@@ -110,7 +112,8 @@ describe("useSaveEditedCourse", () => {
     expect(uploadAction.mock.invocationCallOrder[0]).toBeLessThan(
       detailsAction.mock.invocationCallOrder[0] ?? 0,
     );
-    expect(push).toHaveBeenCalledWith("/");
+    expect(refresh).toHaveBeenCalledOnce();
+    expect(push).not.toHaveBeenCalled();
   });
 
   it("sends no details save when the image is refused, and shows the API's message", async () => {
@@ -125,7 +128,7 @@ describe("useSaveEditedCourse", () => {
     expect(result.current.form.getFieldState("image").error?.message).toBe(
       "image refused",
     );
-    expect(push).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("says the image was saved when the details are refused, and stays", async () => {
@@ -139,7 +142,7 @@ describe("useSaveEditedCourse", () => {
     expect(result.current.form.getFieldState("name").error?.message).toBe(
       "name refused",
     );
-    expect(push).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("skips the upload on the next save after the details were refused", async () => {
@@ -152,7 +155,7 @@ describe("useSaveEditedCourse", () => {
 
     expect(uploadAction).toHaveBeenCalledOnce();
     expect(detailsAction).toHaveBeenCalledTimes(2);
-    expect(push).toHaveBeenCalledOnce();
+    expect(refresh).toHaveBeenCalledOnce();
   });
 
   it("says something went wrong when the upload throws", async () => {
@@ -199,6 +202,53 @@ describe("useSaveEditedCourse", () => {
 
     expect(uploadAction).toHaveBeenCalledTimes(2);
     expect(detailsAction).toHaveBeenCalledOnce();
-    expect(push).toHaveBeenCalledOnce();
+    expect(refresh).toHaveBeenCalledOnce();
+  });
+
+  it("shows the note Saved after a full success", async () => {
+    const { result } = renderEditSave(null);
+    await submitEditForm(result);
+
+    expect(result.current.saving.savedNote).toBe("Saved");
+  });
+
+  it("shows no Saved note after a refused save", async () => {
+    detailsAction.mockResolvedValue(refusedAt("name", "The name is taken."));
+    const { result } = renderEditSave(null);
+    await submitEditForm(result);
+
+    expect(result.current.saving.savedNote).toBeUndefined();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("loads nothing again and shows no Saved note when the details action throws", async () => {
+    detailsAction.mockRejectedValue(new Error("offline"));
+    const { result } = renderEditSave(null);
+    await submitEditForm(result);
+
+    expect(refresh).not.toHaveBeenCalled();
+    expect(result.current.saving.savedNote).toBeUndefined();
+  });
+
+  it("clears the chosen image after a full success, even when only the image changed", async () => {
+    const { result } = renderEditSave(chosenImage());
+    await submitEditForm(result);
+
+    expect(result.current.form.getValues("image")).toBeNull();
+  });
+
+  it("gives the API's plain refusal on a later save with no new image", async () => {
+    detailsAction.mockResolvedValueOnce(saved);
+    const { result } = renderEditSave(chosenImage());
+    await submitEditForm(result);
+    detailsAction.mockResolvedValueOnce(
+      refusedAt("name", "The name is taken."),
+    );
+    await submitEditForm(result);
+
+    expect(result.current.saving.serverMessage.serverProblem?.detail).toBe(
+      "The name is taken.",
+    );
+    expect(uploadAction).toHaveBeenCalledOnce();
   });
 });

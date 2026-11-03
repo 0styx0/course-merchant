@@ -44,18 +44,24 @@ function Harness({ onChange }: { onChange?: (image: ChosenImage) => void }) {
   const error =
     result && !result.success ? result.error.issues[0].message : undefined;
   return (
-    <ImageField
-      preview={value && value.width > 0 && <ImagePreview file={value.file} />}
-      onChange={(image) => {
-        setValue(image);
-        onChange?.(image);
-      }}
-      onBlur={vi.fn()}
-      fieldRef={vi.fn()}
-      error={error}
-      isTouched
-      isSubmitted={false}
-    />
+    <>
+      <button type="button" onClick={() => setValue(null)}>
+        Clear the image value
+      </button>
+      <ImageField
+        hasChosenFile={value !== null}
+        preview={value && value.width > 0 && <ImagePreview file={value.file} />}
+        onChange={(image) => {
+          setValue(image);
+          onChange?.(image);
+        }}
+        onBlur={vi.fn()}
+        fieldRef={vi.fn()}
+        error={error}
+        isTouched
+        isSubmitted={false}
+      />
+    </>
   );
 }
 
@@ -65,6 +71,33 @@ async function choose(file: File) {
 }
 
 describe("ImageField", () => {
+  it("keeps the picked file in the file box", async () => {
+    render(<Harness />);
+    const file = fileOf("image/png");
+
+    await choose(file);
+    await screen.findByRole("img");
+
+    expect(screen.getByLabelText<HTMLInputElement>("Image").files?.[0]).toBe(
+      file,
+    );
+  });
+
+  it("empties the file box when the form drops the chosen file", async () => {
+    const user = userEvent.setup({ applyAccept: false });
+    render(<Harness />);
+    await choose(fileOf("image/png"));
+    await screen.findByRole("img");
+
+    await user.click(
+      screen.getByRole("button", { name: "Clear the image value" }),
+    );
+
+    expect(screen.getByLabelText<HTMLInputElement>("Image").files).toHaveLength(
+      0,
+    );
+  });
+
   it("shows no preview before a file is chosen", () => {
     render(<Harness />);
     expect(screen.queryByRole("img")).not.toBeInTheDocument();

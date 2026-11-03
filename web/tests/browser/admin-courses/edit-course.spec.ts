@@ -31,6 +31,12 @@ function collectConsoleErrors(page: Page) {
   return errors;
 }
 
+/** A save keeps the admin on the edit page, which says "Saved". */
+async function expectStayedWithSavedNote(page: Page) {
+  await expect(page).toHaveURL(editPath);
+  await expect(page.getByRole("status")).toContainText("Saved");
+}
+
 test("shows the course's details and saves a new name", async ({
   page,
   msw,
@@ -69,7 +75,7 @@ test("shows the course's details and saves a new name", async ({
   await expect(name).toHaveValue("A better name");
 
   await save.click();
-  await expect(page).toHaveURL("/");
+  await expectStayedWithSavedNote(page);
   expect(consoleErrors).toEqual([]);
 });
 
@@ -112,7 +118,7 @@ test("lists the price in effect and saves a changed future price", async ({
   await price.fill("149");
   await page.getByRole("button", { name: "Save changes" }).click();
 
-  await expect(page).toHaveURL("/");
+  await expectStayedWithSavedNote(page);
 });
 
 /** Handlers that answer the course and image saves with success and keep what each one received. */
@@ -151,7 +157,7 @@ test("saves the details without the image, then uploads the newly chosen image",
   await expect(page.getByAltText("Preview of the chosen image")).toBeVisible();
   await page.getByRole("button", { name: "Save changes" }).click();
 
-  await expect(page).toHaveURL("/");
+  await expectStayedWithSavedNote(page);
   expect(saves.courseBodies).toHaveLength(1);
   expect(saves.courseBodies[0]).not.toHaveProperty("image");
   expect(saves.readImageUploadCount()).toBe(1);
@@ -173,7 +179,7 @@ test("shows the stored image and uploads nothing when only the name changes", as
   await page.getByLabel("Course name", { exact: true }).fill("A better name");
   await page.getByRole("button", { name: "Save changes" }).click();
 
-  await expect(page).toHaveURL("/");
+  await expectStayedWithSavedNote(page);
   expect(saves.courseBodies).toHaveLength(1);
   expect(saves.readImageUploadCount()).toBe(0);
 });
@@ -223,7 +229,7 @@ test("asks before deleting, then saves the course as deleted", async ({
   expect(saves.courseBodies).toHaveLength(0);
   await dialog.getByRole("button", { name: "Delete course" }).click();
 
-  await expect(page).toHaveURL("/");
+  await expectStayedWithSavedNote(page);
   expect(saves.courseBodies).toHaveLength(1);
   expect(saves.courseBodies[0]).toMatchObject({ status: "deleted" });
 });

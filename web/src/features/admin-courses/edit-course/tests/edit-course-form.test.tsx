@@ -2,7 +2,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { push } from "./edit-course-form.mocks";
+import { refresh } from "./edit-course-form.mocks";
 import {
   clickSave,
   leaveEvent,
@@ -98,7 +98,7 @@ describe("EditCourseForm", () => {
       renderForm();
       setValue("Course name", "Renamed");
       await clickSave(user);
-      await waitFor(() => expect(push).toHaveBeenCalled());
+      await waitFor(() => expect(refresh).toHaveBeenCalled());
       expect(leaveEvent().defaultPrevented).toBe(false);
     });
   });

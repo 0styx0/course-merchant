@@ -73,15 +73,19 @@ function useUploadImageUnlessStored(
   return {
     uploadImageUnlessStored,
     isImageStored: () => storedImage.current !== undefined,
+    forgetStoredImage: () => {
+      storedImage.current = undefined;
+    },
   };
 }
 
 /**
  * Uploads a newly chosen image, then saves the edited details, status and
  * prices. Uploading first lets one save publish a course with its first image.
- * A refusal leaves a message and puts
- * its field errors on the fields; a save goes to the home page.
- * `startingSavedNote` shows until the form first holds an unsaved change.
+ * A refusal leaves a message and puts its field errors on the fields. A save
+ * shows "Saved", empties the image choice and asks Next to load the page again,
+ * so the form holds the stored course. `startingSavedNote` shows until the form
+ * first holds an unsaved change.
  */
 export function useSaveEditedCourse(
   form: EditCourseFormApi,
@@ -115,7 +119,15 @@ export function useSaveEditedCourse(
       );
       return stepReports.showRefusal(message, details.error);
     }
-    stepReports.markSavedThen(() => router.push("/"));
+    clearImage();
+    stepReports.markSavedThen(() => router.refresh());
+  }
+
+  // Clearing the stored and chosen files empties the file box, and a later
+  // refusal with no new image reads as the API's plain refusal.
+  function clearImage() {
+    imageUpload.forgetStoredImage();
+    form.setValue("image", null);
   }
 
   return makeSaveHookResult(

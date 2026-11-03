@@ -31,6 +31,7 @@ export function ImageInput<T extends FieldValues>({
       name={name}
       render={({ field, fieldState }) => (
         <ImageField
+          hasChosenFile={field.value !== null}
           preview={renderPreview(field.value)}
           onChange={field.onChange}
           onBlur={field.onBlur}

@@ -49,12 +49,15 @@ beforeEach(() => {
 });
 
 describe("EditCourseForm image", () => {
-  it("shows the stored image through the web app's image route", () => {
+  it("shows the stored image through the web app's image route, by its version", () => {
     renderForm(prefillWithImage);
 
     expect(
       screen.getByRole("img", { name: "Current course image" }),
-    ).toHaveAttribute("src", `/admin/courses/${draftedAdminCourse.id}/image`);
+    ).toHaveAttribute(
+      "src",
+      `/admin/courses/${draftedAdminCourse.id}/image?v=${adminCourseWithImage.image.version}`,
+    );
   });
 
   it("says the course needs an image when none is stored", () => {

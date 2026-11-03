@@ -33,6 +33,7 @@ function useEditCourseFormState(prefill: EditFormPrefill) {
       makeEditCourseFormSchema(prefill.loadedSchedule, prefill.loadedPrices),
     ),
     defaultValues: prefill.values,
+    values: prefill.values,
     mode: "onTouched",
     shouldFocusError: false,
   });
@@ -100,7 +101,7 @@ type EditCourseFormProps = {
   startingSavedNote?: string;
 };
 
-/** The "edit course" form. It saves the details and goes to the home page. */
+/** The "edit course" form. It saves the details, stays on the page and takes the reloaded course as its values. */
 export function EditCourseForm({
   courseId,
   prefill,
@@ -131,7 +132,7 @@ export function EditCourseForm({
       <EditBasicsSection
         form={form}
         courseId={courseId}
-        hasStoredImage={prefill.storedImageVersion !== null}
+        storedImageVersion={prefill.storedImageVersion}
         isSubmitted={form.formState.isSubmitted}
       />
       <ContentLinkSection form={form} name="contentUrl" />

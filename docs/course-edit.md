@@ -54,37 +54,13 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **9b.** A price start in the past shows under the box to change, on both pages; any price box change re-checks every price box already reached.
   - [x] **9c.** The price list under the rows says what to fix in words (e.g. "$50.00 from (needs a time)"), as a plain bulleted list with amounts read $50.00, on both pages.
   - [x] **9d.** The price rows line up on desktop, with Remove level with the boxes, and stack in one column at 400 px.
-- [ ] **10. Saving confirms and stays.** Edit stays and says "Saved"; create opens the new course's edit page saying "Saved as a draft".
-  - [x] **10a.** Saving on the create page opens the new course's edit page (`?saved=draft`); edit still goes to `/`.
+- [x] **10. Saving confirms and stays.** Edit stays and says "Saved"; create opens the new course's edit page saying "Saved as a draft".
+  - [x] **10a.** Saving on the create page opens the new course's edit page (`?saved=draft`); edit went to `/` until 10e.
   - [x] **10b.** The error list's sticky box at the top of the form comes from a shared piece; nothing changes for the admin.
   - [x] **10c.** The edit page says "Saved as a draft" when the admin arrives from create, drops the flag from the address, and hides the note at the first change.
   - [x] **10d.** In `dev:mock` (with `scenario = "remembered"`), a saved course comes back as saved, and browser tests can use the same handlers, so the owner can walk create → edit → publish.
-  - [ ] **10e.** Saving on the edit page stays there, says "Saved", and loads the stored course again. **Next**
-    - *Behaviours*:
-      - a successful save shows "Saved" in the sticky box, keeps the URL, and asks Next to load the page again
-      - the reloaded course resets the form to the stored values, with no unsaved changes
-      - "Saved" still shows after the reload and goes away at the next change, when the leave warning turns back on
-      - the next save checks against the reloaded start, end and prices: a start saved two minutes ahead, now in the past, saves again with no "in the past" refusal
-      - a row saved with an empty start ("when you save") comes back as a row with its stored date and time
-      - a refused save shows the error list as it does today, and no "Saved"
-      - after a new image saves:
-        - the preview shows the new stored image (the image address carries its version)
-        - the file box empties
-        - a later refused save with no new image gives the API's plain refusal, not "The image was saved, but…"
-      - a course saved as Deleted reloads as Deleted, and the next save asks no question
-      - a reload that fails to load the course shows the load problem in place of the form, as a plain visit does
-    - *New shared pieces*: none (uses 10c's saved note and saved state)
-    - *Files*:
-      - [use-save-edited-course.ts](../web/src/features/admin-courses/edit-course/use-save-edited-course.ts) (refresh; forgets the stored file after a full success)
-      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (passes the prefill as React Hook Form's `values`)
-      - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx) (the stored image address with its version)
-      - [course-image-route.ts](../web/src/features/admin-courses/image/course-image-route.ts)
-      - [image-field.tsx](../web/src/features/admin-courses/image/image-field.tsx) (today the file box keeps its file after a form reset; create never resets, so create behaves the same)
-      - [edit-course.spec.ts](../web/tests/browser/admin-courses/edit-course.spec.ts) (stays and says "Saved" where it expected `/`)
-      - `web/tests/browser/admin-courses/create-then-publish.spec.ts` (new: J3, and the second save after a past time, using the `remembered` handlers and Playwright's clock)
-    - *Needs*: 10c, 10d
-    - *Done when*: tests pass, and J3 works in `dev:mock` with `scenario = "remembered"`
-- [ ] **11. Edit page explains itself.** The header shows the course's name, its status and a link to its shop page; notes explain a time zone change and a course that already ran.
+  - [x] **10e.** Saving on the edit page stays there, says "Saved", and loads the stored course again.
+- [ ] **11. Edit page explains itself. Next** (run `/plan-create-implementation course-edit` first). The header shows the course's name, its status and a link to its shop page; notes explain a time zone change and a course that already ran.
 - [ ] **12. Delete only without students.** The API refuses to delete a course with enrollments; the edit page greys out Deleted and says to archive it instead.
 - [ ] **13. Accessible fields on both pages.** Status circles are visible, the check and cross icons have text, and the date boxes point to the schedule line.
 - [ ] **14. Edit layout.** Status sits near the top and Save stays on screen.
@@ -105,7 +81,7 @@ Each milestone's *Done when* walks its own in `dev:mock`.
 - **A failed save changes nothing,** so the form stays as it is and shows the errors. Errors can arrive in two rounds: a format error hides the state errors (past times, schedule) until fixed, so expect a second 400.
 - **The "must be in the future" check applies only to a changed time,** for the schedule and for price times alike. A schedule time counts as unchanged when the boxes convert to the stored moment; a price row counts as unchanged when its amount equals a loaded future price's and its converted time equals that price's time with the seconds dropped.
 - **The browser checks help the admin; the API decides.** Same as the create page.
-- **After saving, the admin goes to `/`,** as on the create page. Replaced by milestone 10: the flow is create → edit → publish (see *Decisions*).
+- **After saving, the admin goes to `/`,** as on the create page. Replaced by milestone 10: create opens the edit page and edit stays on it (see *Decisions*).
 - **Until the web login lands,** admin calls carry no token, so against the real API the page shows a 401. Tests and `yarn dev:mock` use MSW.
 - **Every library mentioned links to its docs.**
 
@@ -181,39 +157,11 @@ Retro:
 - Risk: after a save that stays, the stored schedule and loaded prices are stale unless the page refreshes them; the leave warning must reset.
 - Done when: J3; a second Save after a past time was saved is not refused; browser tests updated.
 
-Design notes *(temporary)*:
+Retro:
 
-- **Reload:** the edit save hook calls `router.refresh()` ([Next `useRouter`](../web/node_modules/next/dist/docs/01-app/03-api-reference/04-functions/use-router.md)), which renders the server page again and keeps client state.
-- **Reset:** the form takes the prefill as React Hook Form's `values` ([useForm `values`](https://react-hook-form.com/docs/useform#values)). Version 7.91 resets only when `values` differ deeply from the last ones, and it reads the resolver from props on every render (checked in its source), so the checks use the new stored times.
-- **Saved state:** it clears when "dirty" turns from off to on, never on a watched value change, because the reset itself reports a value change.
-- **Race:** a field typed between the save's answer and the reload gets reset to the stored value; accepted as rare.
-- **Flag removal:** `window.history.replaceState` keeps Next's router in step ([Next linking guide](../web/node_modules/next/dist/docs/01-app/01-getting-started/04-linking-and-navigating.md)).
-- **Image address:** an `<img>` keeps its old picture while its address stays the same, so the address carries the stored version.
-- **Mock store:** it gets its own scenario, because Vitest uses the same mock server, and state in the default handlers would leak between tests.
-- **Page sketch (top of the edit form):** the sticky box shows "Saved as a draft" on arrival from create, "Saved" after Save changes, or the error list after a refusal; on a plain visit it shows nothing.
-
-Flow *(temporary)*:
-
-```
-Admin clicks Save as draft (create)
-├── image upload fails ── message, stays on create ── existing
-└── draft saved (and its image, if any)
-    └── open /admin/courses/{id}/edit?saved=draft ─── 10a
-        ├── load fails ── ProblemAlert ───────────── existing (2e)
-        └── note "Saved as a draft", flag dropped ─── 10c
-Admin clicks Save changes (edit)
-├── refused ── error list, no note, form kept ─────── existing
-└── saved
-    ├── stored file forgotten ────────────────────── 10e
-    ├── note "Saved" ─────────────────────────────── 10e
-    └── Next loads the page again ────────────────── 10e
-        ├── load fails ── ProblemAlert, no form ──── existing (2e)
-        └── form reset to the stored course;
-            the checks use the stored times ──────── 10e
-Admin changes a field (form turns dirty)
-└── note goes, leave warning on ───────────────────── 10c
-dev:mock and browser tests: get-as-admin returns the saved course ── 10d
-```
+- Planned 5 commits; shipped 5 (10a-10e).
+- Owner changes after using the page: none known.
+- Rule friction: none known.
 
 ## Step 11. Edit page explains itself
 
