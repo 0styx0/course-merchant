@@ -1,8 +1,8 @@
 # Outline formats
 
-Used in step 2 of [SKILL.md](SKILL.md). The writing rules are in CLAUDE.md (*Writing*), the diagram, flow and link formats in [../_shared/output-format.md](../_shared/output-format.md); follow them here. Every section of an outline follows the *Bullets, not blocks* rule: sub-bullets for joined steps, never a paragraph.
+Used in the *Outline* section of [SKILL.md](SKILL.md). The writing rules are in CLAUDE.md (*Writing*), the diagram, flow and link formats in [../_shared/output-format.md](../_shared/output-format.md); follow them here. Every section of an outline follows the *Bullets, not blocks* rule: sub-bullets for joined steps, never a paragraph.
 
-**Every outline, short or full, is followed by exactly one tool call: the one that starts the background build (SKILL.md step 3). Then end the turn and wait for the owner's reply; a note saying "my pick" is not approval. Show no build output (code, test results, hand-off) until the owner approves.**
+**Every outline, short or full, is followed by exactly one tool call: the one that starts the background build (SKILL.md *Build*). Then end the turn and wait for the owner's reply. Approval is a reply that says go, approve, OK or build it and leaves no question open.**
 
 **Before sending:** each *Questions* item needs a recommendation, and the build applies it. Ask any question without a recommendation, or with several equally good options, through the picker first (AskUserQuestion), so the outline holds only settled recommendations.
 
@@ -14,13 +14,12 @@ Start with a plain-language heading sentence saying what the commit does (for ex
 - **After this commit:** what changes for the admin, customer or developer.
 - **Why this way:** what would go wrong with the obvious alternative, or without this change.
 
-Code names appear only from *What* onward. If *Why this way* needs type-system terms to make sense, stop and reconsider the design before defending it.
-
+Code names appear only from *What* onward.
 ## Mechanical path
 
-A commit is **mechanical** if it changes no logic lines, or existing tests already pin every touched line (the coverage check in step 1). Typical cases: file moves, renames, splits of a file with the same content, doc-only changes, lint-rule fixes that change no behaviour.
+A commit is **mechanical** when it changes no behaviour **and** existing tests pin every logic line it touches (the coverage check in *Find the work*). The *(mechanical)* flag on a commit line is the planner's guess; this check decides. Typical cases: file moves, renames, splits of a file with the same content, doc-only changes, lint-rule fixes that change no behaviour.
 
-It is also eligible if it is **plan-conformant**: all four hold. The plan line has no open question (any user-visible text, error code or error shape the line leaves unstated counts as one); nothing read in step 1 deviates from the line; no decision row will be added; the commit adds no shared piece the line's *New shared pieces* omits (if it does, use the full outline and list the piece under *Questions*). A plan-conformant commit may contain logic.
+It is also eligible if it is **plan-conformant**: all four hold. The plan line has no open question (any user-visible text, error code or error shape the line leaves unstated counts as one); nothing read in *Find the work* deviates from the line; no decision row will be added; the commit adds no shared piece the line's *New shared pieces* omits (if it does, use the full outline and list the piece under *Questions*). A plan-conformant commit may contain logic.
 
 Give a **short outline** of about 5 lines after the opening.
 - It has: the files (with the per-folder BEFORE/AFTER diagram for moves); the check that proves nothing changed (type check, test count before and after); the doc tick; the file count; the *Preflight* line.
@@ -31,8 +30,7 @@ Give a **short outline** of about 5 lines after the opening.
 
 ## Full outline
 
-The code is written in the background right after the outline is sent, but the owner sees none of it before approving. In plan mode, present it with ExitPlanMode. If the owner asks a question while in plan mode, answer it in chat and do not call ExitPlanMode until they say to proceed.
-
+The code is written in the background right after the outline is sent, but the owner sees none of it before approving. In plan mode, present it with ExitPlanMode.
 After the opening:
 
 - **Terms:** define every specialized term the outline uses: what it means here, why use it, the alternatives. Never reuse a domain word (start, schedule, price, status) for something else; a new term is defined where it first appears.
@@ -45,7 +43,7 @@ After the opening:
 - **Doc update:** what changes in `docs/<area>.md`. Write out the exact text of any new decision row.
 - **Preflight (last line):** `Preflight: size <n files, ok> | coverage <result, or n/a> | siblings read <files> | library API <docs link, only for an API the repo doesn't use yet>`. A missing item is a check that was skipped. The short outline ends with it too.
 
-If the owner replies with questions or objections, discuss them first: answer, recommend, ask follow-ups. Don't edit the outline while the discussion is open. Once they agree, present the updated outline, adjust the background build to match (SKILL.md step 3), and wait for the go-ahead again.
+If the owner replies with questions or objections, discuss them first: answer, recommend, ask follow-ups. Keep the outline as sent while the discussion is open. Once they agree, present the updated outline, adjust the background build to match (SKILL.md *Build*), and wait for the go-ahead again.
 
 ## Before you send (outline)
 

@@ -20,7 +20,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 ## Numbers        (only when there are limits or measurements: rule | value | source | command that measures it)
 ## Decisions      (| Decision | Why | Rejected |)
 ## Step N. <milestone>   (one per milestone; the Next one has every field in _shared/milestone-line.md, the others only Why here, Needs, Size, Risk, Done when)
-   Retro: (filled by /next-commit when the milestone's last commit ships: planned commits vs real; what the owner changed after using the page; which rule caused friction. Three lines.)
+   Retro: (filled by /next-commit when the milestone's last commit ships; format in _shared/milestone-line.md)
 ## Changes       (| Date | What changed | Why |; only once the plan moves after approval: an order change, a milestone added or cut, a Principle changed. A milestone that needs more or fewer commits than its Size is normal and is not logged; the Retro records it.)
 ## Open questions   (only questions with no milestone yet; others live in their Step)
 ## Out of scope

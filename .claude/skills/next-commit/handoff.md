@@ -1,6 +1,6 @@
 # Hand-off format
 
-Used in step 5 of [SKILL.md](SKILL.md). Keep it short, and write every summary by the *Bullets, not blocks* rule in CLAUDE.md (one short sentence per bullet, joined steps as sub-bullets, never a paragraph). Diagram, flow and link formats are in [../_shared/output-format.md](../_shared/output-format.md). The items:
+Used in the *Hand off* section of [SKILL.md](SKILL.md). Keep it short, and write every summary by the *Bullets, not blocks* rule in CLAUDE.md (one short sentence per bullet, joined steps as sub-bullets, never a paragraph). Diagram, flow and link formats are in [../_shared/output-format.md](../_shared/output-format.md). The items:
 
 - Open with two plain lines that name no code: what the app can now do, and why the commit is shaped this way. The subagent or tool output you relay is restated in your own words.
 - The files changed, as a table: links | high-level changes.
@@ -16,15 +16,15 @@ Used in step 5 of [SKILL.md](SKILL.md). Keep it short, and write every summary b
   - Detail a command only if it failed, with its output.
   - For API commits, also `Ran it: <what you did and saw>`. For UI commits, `Ran it: <the states walked in Chrome, what you saw>` and the GIF file name.
 - `Tests:` the overview first, then the list of tests added or modified.
-  - The overview is what the hand-off already carries: the counts, one line per test written first and why it failed, and any test that passed on the old code.
+  - The overview lists: the counts, one line per test written first and why it failed, and any test that passed on the old code.
   - The list is a table in the same format as the files-changed table: links | high-level changes.
     - One row per test file, with the link on the first added or modified test, as `[file.test.tsx](path/file.test.tsx#L42)`.
     - The changes column names each test added or modified in that file, in plain words, and says which are new and which were changed.
     - Fixtures, mocks and other test helpers go in the files-changed table, not here.
 - `Deviations from the plan line: none`, or what differed and why (a file, a behaviour, a decision made on the way).
-- `Reviews:` which of the `/simplify` pass, `/security-review` and the other-model review (SKILL.md step 3) ran.
+- `Reviews:` which of the `/simplify` pass, `/security-review` and the other-model review (SKILL.md *Build*) ran.
   - Give each finding as fixed or rejected, with a reason.
-- When this is the last commit of its milestone, a `Retro:` of three lines, also added to the milestone's `## Step N.` section: planned commits against real commits; what the owner changed after using the page; which rule caused friction.
+- When this is the last commit of its milestone, a `Retro:` as defined in [../_shared/milestone-line.md](../_shared/milestone-line.md), also added to the milestone's `## Step N.` section.
 - A suggested conventional commit message.
   - No body unless it needs one.
   - Written as a copyable command (see CLAUDE.md *Writing*), e.g. `` `refactor(web): split the course form into sections` ``.

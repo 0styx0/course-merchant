@@ -58,7 +58,7 @@ Also across the map:
 
 ## 6. Present
 
-Bullets only, at most ~500 words (this overrides the word cap in chat-rules.md), in this order so the owner can stop after the second section. In plan mode present with ExitPlanMode; otherwise end your reply with it.
+Bullets only, at most ~500 words (this overrides the word cap in chat-rules.md), in this order so the owner can stop after the second section. In plan mode, present with ExitPlanMode. Outside plan mode, end your reply with the presentation and wait for approval.
 
 1. **Summary:** the goal in one bullet, the number of milestones, what is **Next**, what changed from the brief.
 2. **Questions for you:** anything open that *blocks the split* (usually few).
@@ -69,7 +69,7 @@ Bullets only, at most ~500 words (this overrides the word cap in chat-rules.md),
 7. **Open questions:** one line each, with the milestone and *blocks the split* or *can wait*.
 8. **Out of scope.**
 9. **Review result:** one line per accepted or rejected finding.
-10. **Terms:** only those the owner may not know.
+10. **Terms:** each specialized term the map uses (CLAUDE.md *Plain language*).
 
 Link and diagram formats: [../_shared/output-format.md](../_shared/output-format.md).
 

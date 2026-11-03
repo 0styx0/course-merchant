@@ -1,6 +1,6 @@
 # Library check
 
-Used in step 2 of [SKILL.md](SKILL.md). CLAUDE.md says: use the library, and keep it simple. This is how to apply it while shaping the map. Search for specific things; no survey of the whole npm registry.
+Used in step 2 of [SKILL.md](SKILL.md). CLAUDE.md says: use the library, and keep it simple. This is how to apply it while shaping the map.
 
 For each must-have and milestone, in this order:
 

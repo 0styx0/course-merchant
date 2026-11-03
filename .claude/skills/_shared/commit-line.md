@@ -4,14 +4,14 @@ Written by `/plan-create-implementation`, read by `/next-commit` in its first st
 
 ```
 - [ ] **3b.** <Outcome in plain words.> *(mechanical)* **Next**
-  - *Files*:
-    - <link or path> (<short note, if any>)
-    - <link or path>
-    - <folder counts, if near the limit>
   - *Behaviours*:
     - <one behaviour, with its failure or edge case named; for a failure, the error code or message the caller sees>
     - <next behaviour>
   - *New shared pieces*: <each new type, hook, component or abstraction that two or more files or features will use, with one reason each; "none" when there are none>
+  - *Files*:
+    - <link or path> (<short note, if any>)
+    - <link or path>
+    - <folder counts, if near the limit>
   - *Needs*: <earlier commit, if not the one before>
   - *Settled*: <decision rows or sections that already cover the design>
   - *Done when*: <the check that proves it: tests, count, command>
@@ -21,7 +21,7 @@ Written by `/plan-create-implementation`, read by `/next-commit` in its first st
 - A single short item (*Needs*, *Settled*, *Done when*) may stay on the field's own line; with two or more items, nest them.
 
 - Label: number plus letter (3b). No other scheme.
-- `*(mechanical)*` only when no logic changes; `/next-commit` still checks coverage first.
+- `*(mechanical)*` when the commit should change no behaviour (definition in [outline.md](../next-commit/outline.md)); `/next-commit` confirms it with the coverage check.
 - `Behaviours` is the plan's input to the test table, not the table. `/next-commit` adds cases it finds.
 - *New shared pieces* always appears, as "none" when empty. Any other empty sub-bullet is omitted; never pad.
 - A commit that adds a shared piece its line does not list is not plan-conformant (see `/next-commit`'s outline.md).

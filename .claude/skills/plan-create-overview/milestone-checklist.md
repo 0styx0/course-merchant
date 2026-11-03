@@ -28,7 +28,7 @@ Used in steps 4 and 5 of [SKILL.md](SKILL.md). The format is in [../_shared/mile
   - A UI milestone's *Done when* ends with a **journey**: the steps the owner walks in `dev:mock`, with the screen expected at each step. A browser test of that journey proves it.
   - The owner's findings go into the milestone's last commit, or one follow-up commit, before the next milestone starts, so they don't pile up into a separate UX pass.
 - **Facts are re-measured, not frozen.** Write `Re-measure: <command>`. A count appears only inside a *Numbers* row with its date and command.
-- **Status lines name no code.** Say what the admin, customer or developer can now do. The lint hook (`.claude/hooks/lint-design-doc.sh`) warns when a Status line holds backticks.
+- **Status lines** follow [milestone-line.md](../_shared/milestone-line.md); the lint hook (`.claude/hooks/lint-design-doc.sh`) warns when one holds backticks.
 
 ## Example (from the guardrails area, as it should have been written)
 

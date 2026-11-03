@@ -28,12 +28,11 @@ Read [../_shared/chat-rules.md](../_shared/chat-rules.md), [../_shared/milestone
 - **Confirm before working,** unless it is already unambiguous. It is unambiguous when `$module` is given and exactly one milestone of that doc is **Next** and not yet split into commits; then say "Planning module X, step N: title" in one line and go on. Otherwise ask through the picker (AskUserQuestion): the question names the module and the milestone (number and title); options are "Plan this one (Recommended)", one option per other candidate (at most two), and the free-text "Other". Do not read the milestone's code or start designing until the owner answers. If there is no candidate, say so and stop.
 - Take the milestone from `docs/<module>.md` and its `## Step N.` section. If it is already split into commits, stop and suggest `/next-commit` with the module name.
 - Read its *Builds on* links and open questions, the Principles, Decisions and *Journeys*, and the docs and rules it links.
-- Read the code it builds on: what earlier milestones added, and one sibling of each kind of file it will add (by line range). Grep for existing helpers before planning a new one; write down each helper you will reuse. Search for specific things. Never read generated files whole.
-- Mention uncommitted changes (above) in files this milestone touches.
+- Read the code it builds on: what earlier milestones added, and one sibling of each kind of file it will add (by line range). Grep for existing helpers before planning a new one; write down each helper you will reuse.- Mention uncommitted changes (above) in files this milestone touches.
 
 ## 2. Check the map still holds
 
-Run `.claude/hooks/run-remeasure.sh docs/<module>.md` (it runs every *Re-measure* command in the doc) and compare with what the section assumes, then look for other new facts since the overview: a library behaving differently than assumed, code that landed differently. For each, say what changed, why the decision may no longer hold, and your recommendation, **before** designing on it. The owner decides. If the map itself is wrong (order, a Principle), say so and ask before changing the Status list.
+Run `.claude/hooks/run-remeasure.sh docs/<module>.md` (it runs every *Re-measure* command in the doc) and compare with what the section assumes, then look for other new facts since the overview: a library behaving differently than assumed, code that landed differently. For each, follow CLAUDE.md *Push back as information comes in* **before** designing on it. If the map itself is wrong (order, a Principle), say so and ask before changing the Status list.
 
 ## 3. Settle the open questions
 
@@ -61,7 +60,7 @@ Format: commit-line.md. Size: commit-size.md. How to cut:
   4. browser tests and docs last.
 - **Every commit is green and shippable alone:** build, lint and tests pass; nothing is left unused or half-wired that a later commit finishes (unless the line says "not used yet").
 - **Tests live in the commit that adds the behaviour.** List the behaviours, naming failure and edge cases, so the outline's table is not invented later. One bullet per behaviour, never a run-on line.
-- **Mechanical flag:** only for commits that change no logic. If existing tests may not pin the touched lines, say "coverage first".
+- **Mechanical flag:** for commits that should change no behaviour (definition in [../next-commit/outline.md](../next-commit/outline.md)). If existing tests may not pin the touched lines, say "coverage first".
 - **Dependencies:** a line says which commit it needs when the order is not obvious.
 - **Folders:** if the commit adds files to a folder that would pass the files-per-folder limit in CLAUDE.md, the line includes the grouping.
 - **A spike milestone** is one commit line flagged `*(spike)*`: no tests; the code is deleted or kept only if the answer needs it; it ends with the answer written in the doc and a proposed decision row.
@@ -91,7 +90,7 @@ Fix what fails. Then, when the milestone has more than 3 commits, adds a decisio
 
 ## 7. Present
 
-Bullets only, at most ~600 words (this overrides the word cap in chat-rules.md), in this order so the owner can stop after the second section. In plan mode present with ExitPlanMode; otherwise end your reply with it.
+Bullets only, at most ~600 words (this overrides the word cap in chat-rules.md), in this order so the owner can stop after the second section. In plan mode, present with ExitPlanMode. Outside plan mode, end your reply with the presentation and wait for approval.
 
 1. **Summary:** what the milestone delivers, the commit count and granularity, what changed from the overview.
 2. **Questions for you:** anything open (usually none).
@@ -101,7 +100,7 @@ Bullets only, at most ~600 words (this overrides the word cap in chat-rules.md),
 6. **Design notes:** bullets by topic, from step 4.
 7. **Proposed decision rows:** the exact `| Decision | Why | Rejected |` text. For each rejected option: what it would give, what it would cost, and its complexity. Only strong contenders. A row deciding what shows, where, or in what order on a page ends its *Why* with "(revisit after use)".
 8. **Review result:** one line per accepted or rejected finding.
-9. **Terms:** only those the owner may not know.
+9. **Terms:** each specialized term the plan uses (CLAUDE.md *Plain language*).
 
 Link and diagram formats: [../_shared/output-format.md](../_shared/output-format.md).
 
