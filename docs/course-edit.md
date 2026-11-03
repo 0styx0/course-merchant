@@ -45,7 +45,46 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **7. Time zone keys and Keep fixed.** Enter in the Time zone box picks the first matching zone instead of saving the course; Escape keeps the chosen zone in the box; Keep the course in the delete dialog sets the status back to the loaded one.
   - [x] **7a.** Enter in the Time zone box picks the first matching zone and never saves the course; Escape keeps the chosen zone in the box. Both pages.
   - [x] **7b.** Keep the course or Escape in the delete dialog sets the status back to the one the course loaded with, and keeps every other edit.
-- [ ] **8. Schedule errors on the field to change.** An end date before the start date shows on End date at once; on the same day, an end time not after the start time shows on End time. **Next**
+- [ ] **8. Schedule errors on the field to change.** An end date before the start date shows on End date at once; on the same day, an end time not after the start time shows on End time.
+  - [ ] **8a.** Schedule problems show under the box they belong to, on both pages, and the line under the Schedule heading is gone. **Next**
+    - *Behaviours*:
+      - A start time in the past shows "The start time must be in the future." under Start time.
+      - An end time not after the start time shows "The end time must be after the start time." under End time.
+      - A daylight-saving gap shows its message under the box that holds the bad time.
+      - No schedule heading line exists; other field messages work as before.
+      - On edit, the same messages show under their boxes; an unchanged past time still raises none.
+      - The error list entry for such a problem still focuses that box.
+    - *New shared pieces*: none.
+    - *Files*:
+      - [course-form-fields.tsx](../web/src/features/admin-courses/course-form/fields/course-form-fields.tsx) (drop the shared-message option)
+      - [course-form-schedule-fields.tsx](../web/src/features/admin-courses/course-form/sections/course-form-schedule-fields.tsx) (drop the line's id)
+      - [schedule-problems.tsx](../web/src/features/admin-courses/course-form/sections/schedule-problems.tsx) (deleted; `sections/` 5 → 4)
+      - [create-course-sections.tsx](../web/src/features/admin-courses/create-course/create-course-sections.tsx)
+      - [edit-course-sections.tsx](../web/src/features/admin-courses/edit-course/edit-course-sections.tsx)
+      - [course-form-problems.ts](../web/src/features/admin-courses/course-form/problems/course-form-problems.ts) (`fieldErrorType` becomes unused)
+      - [validated-field.tsx](../web/src/components/form/validated-field.tsx) (drop the unused option to show the message elsewhere, and its test)
+      - Over the six-file limit with the owner's OK: the wrapper cleanup was folded in from its own commit (2026-11-03)
+      - Tests: create's fields and schedule-validation tests, edit's schedule test
+    - *Settled*: the Decisions row on where schedule messages show.
+    - *Done when*: the changed tests pass, `check:changed` is clean in `web`, and both pages in `dev:mock` show the start-in-past message under Start time.
+  - [ ] **8b.** An end date before the start date shows on End date at once; on the same day, an end time not after the start time shows on End time.
+    - *Behaviours*:
+      - Picking an end date before the start date puts "The end date must be on or after the start date." on End date, with a cross, as soon as the date changes.
+      - Moving the start date past a reached End date flags End date at once; an End date not reached yet stays clean.
+      - A later end date clears the End date message at once.
+      - On the same day, an end time not after the start time shows on End time, and End date shows nothing.
+      - With an earlier end date, End time shows no end-after-start message.
+      - The date comparison runs even when a time can't convert (a daylight-saving gap).
+      - A refused save sends no request; the error list names End date, and its link focuses End date.
+      - On edit, an earlier end date replaces "The end time must be in the future."; an unchanged past end time stays allowed.
+      - The API's end-time errors still land on End time.
+    - *New shared pieces*: none (the end-after-start check is already shared by create and edit).
+    - *Files*:
+      - [course-form-cross-field-issues.ts](../web/src/features/admin-courses/validation/course-form-cross-field-issues.ts)
+      - [edit-schedule-issues.ts](../web/src/features/admin-courses/validation/edit-schedule-issues.ts)
+      - Tests in existing files only: `edit-schedule-issues.test.ts`, `course-form-schema.schedule.test.ts`, both pages' schedule form tests (`validation/` is at its file limit)
+    - *Settled*: the Decisions row on where schedule messages show.
+    - *Done when*: the tests pass, and J2 works in `dev:mock` on both pages.
 - [ ] **9. Prices in plain words.** A past price start shows on its date, the price list says what to fix in words, amounts read $50.00, and the rows line up.
 - [ ] **10. Saving confirms and stays.** Edit stays and says "Saved"; create opens the new course's edit page saying "Saved as a draft".
 - [ ] **11. Edit page explains itself.** The header shows the course's name, its status and a link to its shop page; notes explain a time zone change and a course that already ran.
@@ -321,6 +360,30 @@ Retro:
 - Size: 2 commits.
 - Risk: the API's start and end errors map to the same boxes (field-errors-from-problem.ts), for both pages.
 - Done when: J2 on both pages; the error list link focuses the same box.
+- Design notes *(temporary)*:
+  - The date check compares the two date strings directly (`YYYY-MM-DD` in one zone), so it needs no conversion.
+  - "Reached" means the admin has focused the box, or it already shows a problem. The schedule change handler already marks a box touched and re-checks the other reached boxes, so "at once" needs no new wiring.
+  - The API can't say whether the date or the time is wrong, so its end-time errors keep landing on End time. The browser check catches the date case before any request.
+  - Flow:
+
+```
+Admin changes a schedule box                     existing
+├── End date < Start date                         8b → message on End date
+├── same day, end ≤ start                         existing check, under End time (8a)
+├── start/end in past, daylight-saving gap        existing checks, under their own boxes (8a)
+└── fine → saves                                  existing
+```
+
+  - Page sketch (Schedule, after 8b):
+
+```
+Schedule — When the course runs.
+  Time zone   [America/New_York ▾]
+  Start date  [2026-10-02]      Start time [18:00]
+  End date    [2026-10-01] ✗    End time   [20:00]
+  The end date must be on or after the start date.
+  Runs …
+```
 
 ## Step 9. Prices in plain words
 
