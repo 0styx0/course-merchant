@@ -62,22 +62,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **10e.** Saving on the edit page stays there, says "Saved", and loads the stored course again.
 - [ ] **11. Edit page explains itself.** The header shows the course's name, its status and a link to its shop page; notes explain a time zone change and a course that already ran.
   - [x] **11a.** The status labels (`courseStatusLabels`) and the shop page's address (`shopCoursePath`) each live in one shared place; nothing changes for the admin.
-  - [ ] **11b.** The header shows the course's saved name, its status, and a link to its shop page when the shop shows it; otherwise it says "Not in the shop". **Next**
-    - *Behaviours*:
-      - The header shows the loaded name and status label.
-      - A published course with a price in effect shows the link.
-      - A drafted, archived or deleted course, or a published one with only future prices, shows "Not in the shop" and no link.
-      - A course that fails to load keeps the "Edit course" heading above the problem.
-      - After a save, the refresh shows the stored name and status.
-    - *New shared pieces*: none.
-    - *Files*:
-      - a new `edit-course/header/edit-page-header.tsx` (with its test)
-      - [page.tsx](../web/src/app/admin/(signed-in)/courses/[courseId]/edit/page.tsx) (reads the clock once and passes it to the prefill; the shop check reuses the prefill's prices in effect)
-    - *Settled*: the decision row on the header link and the started note.
-    - *Done when*:
-      - Tests are green.
-      - In `dev:mock`, the sample course shows its name, status and link.
-  - [ ] **11c.** Under the Schedule heading, a note says the course has started or ended, and that its times may stay but a changed time must be in the future.
+  - [x] **11b.** The header shows the course's saved name, its status, and a link to its shop page when the shop shows it; otherwise it says "Not in the shop".
+  - [ ] **11c.** Under the Schedule heading, a note says the course has started or ended, and that its times may stay but a changed time must be in the future. **Next**
     - *Behaviours*:
       - A start in the future shows no note.
       - A passed start with an end ahead shows "This course has started. You can keep its times, but a changed time must be in the future."

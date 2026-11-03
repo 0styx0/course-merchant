@@ -5,6 +5,10 @@ import { notFound } from "next/navigation";
 import { ProblemAlert } from "@/components/problem-alert";
 import { EditCourseForm } from "@/features/admin-courses/edit-course/edit-course-form";
 import { toEditFormPrefill } from "@/features/admin-courses/edit-course/edit-form-prefill";
+import {
+  EditPageHeader,
+  isShownInShop,
+} from "@/features/admin-courses/edit-course/header/edit-page-header";
 import { getCourseAsAdmin } from "@/features/admin-courses/save-course/admin-courses.api";
 
 export const metadata: Metadata = {
@@ -25,6 +29,11 @@ function EditCoursePageLayout({ children }: { children: ReactNode }) {
       <div className="mt-8">{children}</div>
     </main>
   );
+}
+
+/** Built on the server so the server and the browser render the same list. */
+function listTimeZonesOnServer(): string[] {
+  return Intl.supportedValuesOf("timeZone");
 }
 
 function isCourseMissingCode(code: string): boolean {
@@ -51,13 +60,23 @@ export default async function EditCoursePage({
     );
   }
 
+  const prefill = toEditFormPrefill(result.data);
+
   return (
     <EditCoursePageLayout>
+      <EditPageHeader
+        courseId={courseId}
+        name={result.data.name}
+        statusName={result.data.status.name}
+        isInShop={isShownInShop(
+          result.data.status.name,
+          prefill.loadedPrices.inEffect.length,
+        )}
+      />
       <EditCourseForm
         courseId={courseId}
-        prefill={toEditFormPrefill(result.data)}
-        // The list is built here so the server and the browser render the same one.
-        timeZones={Intl.supportedValuesOf("timeZone")}
+        prefill={prefill}
+        timeZones={listTimeZonesOnServer()}
         // Create opens this page with `?saved=draft` after saving the draft.
         startingSavedNote={saved === "draft" ? "Saved as a draft" : undefined}
       />
