@@ -8,7 +8,7 @@ import { FieldError } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import type { EditCourseFormValues } from "../../validation/edit-course-form-schema";
-import { statusFieldLabel } from "../edit-course-fields";
+import { courseStatusLabels, statusFieldLabel } from "../edit-course-fields";
 
 type CourseStatusName = EditCourseFormValues["status"];
 
@@ -16,22 +16,22 @@ type CourseStatusName = EditCourseFormValues["status"];
 const statusChoices = [
   {
     value: "published",
-    label: "Published",
+    label: courseStatusLabels.published,
     meaning: "Students can find and buy it.",
   },
   {
     value: "drafted",
-    label: "Drafted",
+    label: courseStatusLabels.drafted,
     meaning: "Hidden while you work on it.",
   },
   {
     value: "archived",
-    label: "Archived",
+    label: courseStatusLabels.archived,
     meaning: "Hidden, can be published again.",
   },
   {
     value: "deleted",
-    label: "Deleted",
+    label: courseStatusLabels.deleted,
     meaning: "Removed from the admin list.",
   },
 ] as const satisfies {

@@ -61,22 +61,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **10d.** In `dev:mock` (with `scenario = "remembered"`), a saved course comes back as saved, and browser tests can use the same handlers, so the owner can walk create → edit → publish.
   - [x] **10e.** Saving on the edit page stays there, says "Saved", and loads the stored course again.
 - [ ] **11. Edit page explains itself.** The header shows the course's name, its status and a link to its shop page; notes explain a time zone change and a course that already ran.
-  - [ ] **11a.** The status labels and the shop page's address each live in one shared place; nothing changes for the admin. *(mechanical)* **Next**
-    - *Behaviours*:
-      - The course card links to the same address as before (its existing test pins it).
-      - The status options show the same labels as before.
-    - *New shared pieces*:
-      - The status labels, because the header (11b) needs them and only the status section has them.
-      - A shop course address helper in `features/courses/`, because the course card and the header both link there.
-    - *Files*:
-      - [edit-course-fields.ts](../web/src/features/admin-courses/edit-course/edit-course-fields.ts) (takes the labels)
-      - [status-section.tsx](../web/src/features/admin-courses/edit-course/status/status-section.tsx)
-      - a new address helper file in `web/src/features/courses/`
-      - [course-card.tsx](../web/src/features/courses/list/course-card.tsx)
-    - *Done when*:
-      - The test count is unchanged and green.
-      - Knip reports nothing.
-  - [ ] **11b.** The header shows the course's saved name, its status, and a link to its shop page when the shop shows it; otherwise it says "Not in the shop".
+  - [x] **11a.** The status labels (`courseStatusLabels`) and the shop page's address (`shopCoursePath`) each live in one shared place; nothing changes for the admin.
+  - [ ] **11b.** The header shows the course's saved name, its status, and a link to its shop page when the shop shows it; otherwise it says "Not in the shop". **Next**
     - *Behaviours*:
       - The header shows the loaded name and status label.
       - A published course with a price in effect shows the link.

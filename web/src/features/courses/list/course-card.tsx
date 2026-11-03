@@ -2,13 +2,14 @@ import Link from "next/link";
 import { Course } from "@/lib/types";
 import { formatPrice } from "@/lib/utils/formatters";
 import { CourseSchedule } from "../course-schedule";
+import { shopCoursePath } from "../shop-course-path";
 
 export function CourseCard({ course }: { course: Course }) {
   return (
     <article className="relative rounded-lg border p-6">
       <h3 className="text-xl font-semibold">
         <Link
-          href={`/courses/${course.id}`}
+          href={shopCoursePath(course.id)}
           className="after:absolute after:inset-0"
         >
           {course.name}

@@ -1,9 +1,18 @@
 import { courseFieldLabels } from "../course-form/fields/course-field-labels-and-price-row-names";
 import type { ProblemField } from "../course-form/problems/course-form-problems";
 import { priceRowFields } from "../price/price-row-labels";
+import type { EditCourseFormValues } from "../validation/edit-course-form-schema";
 
 /** The status field's label; create has no status, so it stays out of the shared labels. */
 export const statusFieldLabel = "Status";
+
+/** The label the admin sees for each course status. */
+export const courseStatusLabels = {
+  published: "Published",
+  drafted: "Drafted",
+  archived: "Archived",
+  deleted: "Deleted",
+} satisfies Record<EditCourseFormValues["status"], string>;
 
 /**
  * Every field the edit error list can name, as `[name, label]` in page order,
