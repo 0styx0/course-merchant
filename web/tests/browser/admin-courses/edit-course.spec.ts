@@ -234,6 +234,38 @@ test("asks before deleting, then saves the course as deleted", async ({
   expect(saves.courseBodies[0]).toMatchObject({ status: "deleted" });
 });
 
+test("shows the API's refusal under Status when a student enrolled after the page loaded", async ({
+  page,
+  msw,
+}) => {
+  msw.use(getCourseAsAdminHandlers.success, updateCourseHandlers.deleteRefused);
+  await page.goto(editPath);
+
+  await page.getByRole("radio", { name: "Deleted" }).click();
+  await page.getByRole("button", { name: "Save changes" }).click();
+  await page
+    .getByRole("alertdialog", { name: "Delete this course?" })
+    .getByRole("button", { name: "Delete course" })
+    .click();
+
+  await expect(
+    page
+      .getByRole("group", { name: "Status" })
+      .getByText("Students are enrolled in this course. Archive it instead."),
+  ).toBeVisible();
+});
+
+test("greys out Deleted on a course with students", async ({ page, msw }) => {
+  msw.use(getCourseAsAdminHandlers.withEnrollment);
+
+  await page.goto(editPath);
+
+  await expect(page.getByRole("radio", { name: "Deleted" })).toBeDisabled();
+  await expect(
+    page.getByText("Students are enrolled. Archive it instead."),
+  ).toBeVisible();
+});
+
 test("says the course was saved as a draft on arrival from create, once", async ({
   page,
   msw,

@@ -89,6 +89,11 @@ describe("toEditFormPrefill", () => {
     expect(toEditFormPrefill(course).values.status).toBe("drafted");
   });
 
+  it("says yes for a course with an enrollment and no for one without", () => {
+    expect(toEditFormPrefill(course).hasEnrollments).toBe(true);
+    expect(toEditFormPrefill(draftedAdminCourse).hasEnrollments).toBe(false);
+  });
+
   it("keeps the start and end as the loaded UTC strings", () => {
     expect(toEditFormPrefill(course).loadedSchedule).toEqual({
       startTime: course.schedule.startTime,

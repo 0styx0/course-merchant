@@ -19,6 +19,11 @@ export type EditFormPrefill = {
   scheduleProgress: ScheduleProgress;
   /** The stored image's version, or null when the course has no image yet. */
   storedImageVersion: string | null;
+  /**
+   * Whether the course has any enrollment, refunded or suspended ones too (the
+   * API's delete rule counts them all); the enrollments stay on the server.
+   */
+  hasEnrollments: boolean;
 };
 
 type PriceRowValues = EditCourseFormValues["prices"][number];
@@ -107,5 +112,6 @@ export function toEditFormPrefill(
     loadedPrices,
     scheduleProgress: scheduleProgressAt({ startTime, endTime }, renderMs),
     storedImageVersion: course.image?.version ?? null,
+    hasEnrollments: course.enrollments.length > 0,
   };
 }

@@ -35,6 +35,23 @@ export const updateCourseValidationFailed = http.put(updateCourseUrl, () => {
   return problemResponse(400, body);
 });
 
+const updateCourseDeleteRefused = http.put(updateCourseUrl, () => {
+  const body = {
+    title: "Validation failed",
+    detail: "The request contains 1 invalid field.",
+    code: "VALIDATION_FAILED",
+    errors: [
+      {
+        field: "/status",
+        code: "HAS_ENROLLMENTS",
+        detail: "Students are enrolled in this course. Archive it instead.",
+      },
+    ],
+  } satisfies ValidationFailedResponse;
+
+  return problemResponse(400, body);
+});
+
 export const updateCourseError = http.put(updateCourseUrl, () => {
   const body = {
     title: "Internal server error",
@@ -94,5 +111,6 @@ export function makeRememberedUpdateHandler(remembered: RememberedCourse) {
 export const updateCourseHandlers = {
   success: updateCourseSuccess,
   validationFailed: updateCourseValidationFailed,
+  deleteRefused: updateCourseDeleteRefused,
   error: updateCourseError,
 };

@@ -65,35 +65,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **11b.** The header shows the course's saved name, its status, and a link to its shop page when the shop shows it; otherwise it says "Not in the shop".
   - [x] **11c.** Under the Schedule heading, a note says the course has started or ended, and that its times may stay but a changed time must be in the future.
   - [x] **11d.** Choosing a different time zone shows a note under the box: the dates and times stay as typed, so the course moves to that time in the new zone, and on a started course the moved times must be in the future.
-- [ ] **12. Delete only without students.** The API refuses to delete a course with enrollments; the edit page greys out Deleted and says to archive it instead.
-  - [x] **12a.** The API refuses to delete a course that has students, with its own error code (`HAS_ENROLLMENTS`) on the status field.
-  - [ ] **12b.** On a course with students, the edit page greys out Deleted and says to archive it instead. **Next**
-    - *Behaviours*:
-      - on a course with an enrollment, Deleted shows greyed out with the line "Students are enrolled. Archive it instead."
-      - on a course with no enrollments, Deleted stays available with its usual line
-      - a course loaded as Deleted keeps Deleted available, matching the API rule, so the error list can still focus the chosen option
-      - arrow keys skip the greyed-out option
-      - the browser receives only yes or no for enrollments, never their details
-      - when a student enrolls while the page is open, the API's refusal shows its own message under the status field
-    - *New shared pieces*: none
-    - *Files*:
-      - [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (adds `hasEnrollments`)
-      - [status-section.tsx](../web/src/features/admin-courses/edit-course/status/status-section.tsx) (greys out Deleted)
-      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (passes `hasEnrollments` to the status section)
-      - mocks:
-        - [admin-courses.ts](../web/src/mocks/fixtures/admin-courses.ts) (a course with one enrollment)
-        - [get-course-as-admin.ts](../web/src/mocks/handlers/get-course-as-admin.ts) (`withEnrollment` scenario)
-        - [update-course.ts](../web/src/mocks/handlers/update-course.ts) (`deleteRefused` scenario)
-      - tests:
-        - `edit-form-prefill.test.ts`
-        - `tests/edit-course-form.status.test.tsx` (the `tests/` folder is full, so this adds no new file there)
-        - `web/tests/browser/admin-courses/edit-course.spec.ts`
-    - *Needs*: 12a
-    - *Done when*:
-      - J4 works in `dev:mock` with `scenario = "withEnrollment"`
-      - the tests pass
-      - `yarn --cwd web check:changed` reports nothing
-- [ ] **13. Accessible fields on both pages.** Status circles are visible, the check and cross icons have text, and the date boxes point to the schedule line.
+- [x] **12. Delete only without students.** The API refuses to delete a course with enrollments; the edit page greys out Deleted and says to archive it instead.
+- [ ] **13. Accessible fields on both pages.** Status circles are visible, the check and cross icons have text, and the date boxes point to the schedule line. **Next**
 - [ ] **14. Edit layout.** Status sits near the top and Save stays on screen.
 
 ## Journeys
@@ -219,37 +192,11 @@ Retro:
 - Risk: a buyer with an open checkout pays after the delete (see the Decision row and [future-milestones.md](future-milestones.md)).
 - Done when: an API test refuses deleting a course with enrollments; J4.
 
-### Design notes *(temporary)*
+Retro:
 
-- For now the browser gets a yes or no for enrollments, never the enrollments themselves (see the Decision row on customer data). A later page that shows students' names and emails will reopen that row.
-- The page computes the yes or no on the server when it renders, and the reload after each save refreshes it.
-- Base UI's [Radio](https://base-ui.com/react/components/radio) `disabled` prop greys out the option and takes it out of the arrow-key order.
-- `isPublishing` becomes `isChangingTo(status)`, so the rules hold one version of "the request moves the status to X".
-
-### Page sketch *(temporary)*
-
-```
-Status
-Who can see the course.
- ( ) Published   Students can find and buy it.
- ( ) Drafted     Hidden while you work on it.
- (•) Archived    Hidden, can be published again.
- ( ) Deleted     Students are enrolled. Archive it instead.   <- greyed out, can't be chosen
-```
-
-### Flow *(temporary)*
-
-```
-Admin opens the edit page
-└── server loads the course, hasEnrollments = any enrollment       12b
-    ├── yes, not loaded as Deleted → Deleted greyed out with reason 12b
-    └── otherwise → Deleted available
-        └── Admin picks Deleted, confirms, saves                   existing (6d)
-            └── API: is the status changing to deleted?            12a
-                ├── course has enrollments → 400 /status HAS_ENROLLMENTS
-                │     → API's message under Status, form kept      existing (6b)
-                └── no enrollments → status added, "Saved"         existing (10e)
-```
+- Planned 2 commits; shipped 2 (12a, 12b).
+- Owner changes after using the page: none known.
+- Rule friction: none known.
 
 ## Step 13. Accessible fields on both pages
 

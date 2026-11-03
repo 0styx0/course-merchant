@@ -42,16 +42,35 @@ const statusChoices = [
 
 type StatusChoice = (typeof statusChoices)[number];
 
+const lockedDeletedMeaning = "Students are enrolled. Archive it instead.";
+
+/**
+ * The API refuses a change to deleted when the course has students. A course
+ * stored as deleted is not being changed, so it keeps its option.
+ */
+function isDeletedOptionLocked(
+  choice: StatusChoice,
+  hasEnrollments: boolean,
+  loadedStatus: CourseStatusName,
+) {
+  return (
+    choice.value === "deleted" && hasEnrollments && loadedStatus !== "deleted"
+  );
+}
+
 /** One option: the radio, its label and what it means. */
 function StatusOption({
   choice,
   focusRef,
   isInvalid,
+  isLocked,
 }: {
   choice: StatusChoice;
   /** Set on the chosen option, so the error list can focus it. */
   focusRef?: (element: HTMLElement | null) => void;
   isInvalid: boolean;
+  /** Greys the option out and shows why, in place of its usual meaning. */
+  isLocked: boolean;
 }) {
   const labelId = `status-${choice.value}-label`;
   const meaningId = `status-${choice.value}-meaning`;
@@ -64,22 +83,35 @@ function StatusOption({
         aria-labelledby={labelId}
         aria-describedby={meaningId}
         aria-invalid={isInvalid}
-        className="mt-0.5"
+        disabled={isLocked}
+        // The radio is a span, so the `disabled:` styles of the shared radio never match.
+        className="mt-0.5 data-disabled:cursor-not-allowed data-disabled:opacity-50"
       />
       <span className="flex flex-col">
         <span id={labelId} className="font-medium">
           {choice.label}
         </span>
         <span id={meaningId} className="text-sm text-muted-foreground">
-          {choice.meaning}
+          {isLocked ? lockedDeletedMeaning : choice.meaning}
         </span>
       </span>
     </label>
   );
 }
 
+type StatusSectionProps = {
+  form: UseFormReturn<EditCourseFormValues>;
+  hasEnrollments: boolean;
+  /** The status the course had when the page loaded. */
+  loadedStatus: CourseStatusName;
+};
+
 /** The status options wired to the form field, then the field's message. */
-function StatusField({ form }: { form: UseFormReturn<EditCourseFormValues> }) {
+function StatusField({
+  form,
+  hasEnrollments,
+  loadedStatus,
+}: StatusSectionProps) {
   const { field, fieldState } = useController({
     control: form.control,
     name: "status",
@@ -104,6 +136,11 @@ function StatusField({ form }: { form: UseFormReturn<EditCourseFormValues> }) {
             choice={choice}
             focusRef={choice.value === field.value ? field.ref : undefined}
             isInvalid={doesShowError}
+            isLocked={isDeletedOptionLocked(
+              choice,
+              hasEnrollments,
+              loadedStatus,
+            )}
           />
         ))}
       </RadioGroup>
@@ -112,15 +149,11 @@ function StatusField({ form }: { form: UseFormReturn<EditCourseFormValues> }) {
   );
 }
 
-/** The edit form's status section; arrow keys move between the options. */
-export function StatusSection({
-  form,
-}: {
-  form: UseFormReturn<EditCourseFormValues>;
-}) {
+/** The edit form's status section; arrow keys move between the enabled options. */
+export function StatusSection(props: StatusSectionProps) {
   return (
     <FormSection title={statusFieldLabel} description="Who can see the course.">
-      <StatusField form={form} />
+      <StatusField {...props} />
     </FormSection>
   );
 }

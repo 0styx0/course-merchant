@@ -2,7 +2,10 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
+import {
+  adminCourseWithEnrollment,
+  draftedAdminCourse,
+} from "@/mocks/fixtures/admin-courses";
 
 import { toEditFormPrefill } from "../edit-form-prefill";
 import {
@@ -116,5 +119,59 @@ describe("EditCourseForm status", () => {
     await user.keyboard("{ArrowDown}");
 
     expect(statusOption("Drafted")).toBeChecked();
+  });
+
+  describe("with students enrolled", () => {
+    const enrolledPrefill = toEditFormPrefill(adminCourseWithEnrollment);
+
+    it("greys out Deleted and says to archive instead", () => {
+      renderForm(enrolledPrefill);
+
+      expect(statusOption("Deleted")).toHaveAttribute("aria-disabled", "true");
+      expect(
+        screen.getByText("Students are enrolled. Archive it instead."),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText("Removed from the admin list."),
+      ).not.toBeInTheDocument();
+    });
+
+    it("wraps from Archived to Published, skipping Deleted, on the down arrow", async () => {
+      const user = userEvent.setup();
+      renderForm(enrolledPrefill);
+
+      await user.click(statusOption("Archived"));
+      await user.keyboard("{ArrowDown}");
+
+      expect(statusOption("Published")).toBeChecked();
+      expect(statusOption("Deleted")).not.toBeChecked();
+    });
+
+    it("keeps Deleted available when the course loads deleted", () => {
+      renderForm(
+        toEditFormPrefill({
+          ...adminCourseWithEnrollment,
+          status: { name: "deleted", changedAt: "2026-10-15T18:30:00Z" },
+        }),
+      );
+
+      expect(statusOption("Deleted")).not.toHaveAttribute(
+        "aria-disabled",
+        "true",
+      );
+      expect(statusOption("Deleted")).toBeChecked();
+    });
+  });
+
+  it("keeps Deleted available when no student is enrolled", () => {
+    renderForm();
+
+    expect(statusOption("Deleted")).not.toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    expect(
+      screen.getByText("Removed from the admin list."),
+    ).toBeInTheDocument();
   });
 });

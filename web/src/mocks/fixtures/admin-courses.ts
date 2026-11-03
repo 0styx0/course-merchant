@@ -42,3 +42,25 @@ export const adminCourseWithImage = {
   ...adminCourseWithFuturePrice,
   image: { updatedAt: "2026-10-16T09:00:00Z", version: "1760605200000" },
 } as const satisfies AdminCourse;
+
+/** A course being edited that one student has bought. */
+export const adminCourseWithEnrollment = {
+  ...draftedAdminCourse,
+  enrollments: [
+    {
+      revokedAt: null,
+      suspendedAt: null,
+      emailStatus: "sent",
+      customer: {
+        id: "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+        name: "Ada Lovelace",
+        email: "ada@example.com",
+      },
+      payment: {
+        status: "succeeded",
+        amount: 9900,
+        paidAt: "2026-10-16T10:00:00Z",
+      },
+    },
+  ],
+} as const satisfies AdminCourse;

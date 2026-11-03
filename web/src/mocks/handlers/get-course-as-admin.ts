@@ -2,6 +2,7 @@ import type { operations } from "@/lib/api/generated";
 import type { AdminCourse } from "@/lib/types";
 import { http, HttpResponse } from "msw";
 import {
+  adminCourseWithEnrollment,
   adminCourseWithFuturePrice,
   adminCourseWithImage,
 } from "../fixtures/admin-courses";
@@ -29,6 +30,9 @@ const adminCourseByIdSuccess = makeAdminCourseByIdHandler(
 );
 const adminCourseByIdWithImage =
   makeAdminCourseByIdHandler(adminCourseWithImage);
+const adminCourseByIdWithEnrollment = makeAdminCourseByIdHandler(
+  adminCourseWithEnrollment,
+);
 
 const adminCourseByIdNotFound = http.get(adminCourseByIdUrl, ({ params }) => {
   const body = {
@@ -70,6 +74,7 @@ export function makeRememberedGetHandler(remembered: RememberedCourse) {
 export const getCourseAsAdminHandlers = {
   success: adminCourseByIdSuccess,
   withImage: adminCourseByIdWithImage,
+  withEnrollment: adminCourseByIdWithEnrollment,
   notFound: adminCourseByIdNotFound,
   invalidId: adminCourseByIdInvalidId,
   error: adminCourseByIdError,

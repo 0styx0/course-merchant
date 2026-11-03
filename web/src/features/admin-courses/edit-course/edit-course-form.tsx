@@ -145,7 +145,11 @@ export function EditCourseForm({
         priceRows={priceRows}
         pricesInEffect={prefill.loadedPrices.inEffect}
       />
-      <StatusSection form={form} />
+      <StatusSection
+        form={form}
+        hasEnrollments={prefill.hasEnrollments}
+        loadedStatus={prefill.values.status}
+      />
       <SaveButton label="Save changes" isSubmitting={submit.isSaving} />
       <DeleteConfirmation {...submit.deleteConfirmation} />
     </form>
