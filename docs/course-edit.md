@@ -56,15 +56,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **9d.** The price rows line up on desktop, with Remove level with the boxes, and stack in one column at 400 px.
 - [ ] **10. Saving confirms and stays.** Edit stays and says "Saved"; create opens the new course's edit page saying "Saved as a draft".
   - [x] **10a.** Saving on the create page opens the new course's edit page (`?saved=draft`); edit still goes to `/`.
-  - [ ] **10b.** The error list's sticky box at the top of the form becomes a shared piece; nothing changes for the admin. *(mechanical)* **Next**
-    - *Behaviours*:
-      - the error list looks and behaves the same on both pages (the existing tests pass unchanged)
-    - *New shared pieces*: the sticky notice box (10c's saved note uses it too, so the sticky styling lives in one place)
-    - *Files*:
-      - [error-summary.tsx](../web/src/components/form/error-summary.tsx)
-      - `components/form/sticky-form-notice.tsx` (new; `components/form/` stays under the folder limit)
-    - *Done when*: `yarn --cwd web check:changed` passes with the same test count
-  - [ ] **10c.** The edit page says "Saved as a draft" when the admin arrives from create.
+  - [x] **10b.** The error list's sticky box at the top of the form comes from a shared piece; nothing changes for the admin.
+  - [ ] **10c.** The edit page says "Saved as a draft" when the admin arrives from create. **Next**
     - *Behaviours*:
       - with `?saved=draft`, the edit page shows "Saved as a draft" (`role="status"`) in the sticky box
       - without the flag, or with any other value, nothing shows there

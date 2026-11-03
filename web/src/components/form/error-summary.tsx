@@ -1,5 +1,6 @@
 import type { Ref } from "react";
 
+import { StickyFormNotice } from "@/components/form/sticky-form-notice";
 import { Button } from "@/components/ui/button";
 
 export type ErrorSummaryProblem = {
@@ -81,16 +82,16 @@ export function ErrorSummary({
   if (problems.length === 0 && !serverProblem) return null;
 
   return (
-    <div
+    <StickyFormNotice
       ref={ref}
       tabIndex={-1}
       role="alert"
-      className="sticky top-0 z-10 max-h-48 overflow-y-auto rounded-lg border border-destructive bg-background p-4 text-sm outline-none focus-visible:ring-3 focus-visible:ring-destructive/40"
+      className="max-h-48 overflow-y-auto border-destructive outline-none focus-visible:ring-3 focus-visible:ring-destructive/40"
     >
       {serverProblem && <ServerProblemHeading {...serverProblem} />}
       {problems.length > 0 && (
         <ProblemList problems={problems} onSelectField={onSelectField} />
       )}
-    </div>
+    </StickyFormNotice>
   );
 }
