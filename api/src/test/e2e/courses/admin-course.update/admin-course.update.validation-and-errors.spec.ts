@@ -4,7 +4,11 @@ import { randomUUID } from "node:crypto";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { descriptionDoc } from "@/test/course-fixtures.js";
+import {
+  createCustomer,
+  createEnrollment,
+  descriptionDoc,
+} from "@/test/course-fixtures.js";
 import { bearer, logInAsAdmin } from "../../../admin-fixtures.js";
 import {
   createE2eApp,
@@ -165,6 +169,33 @@ describe("PUT /admin/courses/:courseId (e2e)", () => {
       ],
     });
     expect(await getAdminCourse(created.id)).toEqual(created);
+  });
+
+  it("refuses deleting a course that has students", async () => {
+    const created = await createViaApi();
+    const customer = await createCustomer({});
+    await createEnrollment({ courseId: created.id, customerId: customer.id });
+    const enrolled = await getAdminCourse(created.id);
+
+    const response: TypedResponse<ProblemDetails> = await request(
+      httpServer(app),
+    )
+      .put(`/v1/admin/courses/${created.id}`)
+      .set("Authorization", bearer(token))
+      .send({ ...toUpdateBody(created), status: "deleted" })
+      .expect(400);
+
+    expect(response.body).toMatchObject({
+      code: "VALIDATION_FAILED",
+      errors: [
+        {
+          field: "/status",
+          code: "HAS_ENROLLMENTS",
+          detail: "Students are enrolled in this course. Archive it instead.",
+        },
+      ],
+    });
+    expect(await getAdminCourse(created.id)).toEqual(enrolled);
   });
 
   it("returns 400 for a malformed course ID", async () => {

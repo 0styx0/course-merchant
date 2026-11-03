@@ -465,6 +465,10 @@ paths:
         Changing the status to `published` requires an uploaded image,
         otherwise the request fails with a `/status` `INVALID_VALUE` error.
         A course that is already published can be edited without re-checking.
+        Changing the status to `deleted` fails with a `/status`
+        `HAS_ENROLLMENTS` error while any student is enrolled, whether the
+        enrollment is active, refunded or suspended; archive the course
+        instead. A course that is already deleted is not re-checked.
 
 
         **Prices.** A stored price is in effect once its `effectiveAt` has
@@ -1812,6 +1816,8 @@ components:
             - `UNKNOWN_FIELD`: the field is not part of the request. `field`
               points at the unknown field (for an upload, always `/image`,
               also when the extra part has another name).
+            - `HAS_ENROLLMENTS`: the change is refused because students are
+              enrolled in the course, such as deleting it.
 
             Treat unrecognized values as a generic validation error.
           examples:

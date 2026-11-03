@@ -183,7 +183,7 @@ export interface paths {
          *
          *     This lets an admin edit the description of a course that has already started. Times are compared as instants, at the microsecond precision the server stores.
          *
-         *     **Status.** `status` is required. When it differs from the course's current status, it is appended to the course's status history and `status.changedAt` is updated. Sending the current status changes nothing. Send `archived` to hide the course from the public API, `published` to make it publicly viewable (once a price is in effect), or `deleted` to remove it from `listCoursesAsAdmin`. Changing the status to `published` requires an uploaded image, otherwise the request fails with a `/status` `INVALID_VALUE` error. A course that is already published can be edited without re-checking.
+         *     **Status.** `status` is required. When it differs from the course's current status, it is appended to the course's status history and `status.changedAt` is updated. Sending the current status changes nothing. Send `archived` to hide the course from the public API, `published` to make it publicly viewable (once a price is in effect), or `deleted` to remove it from `listCoursesAsAdmin`. Changing the status to `published` requires an uploaded image, otherwise the request fails with a `/status` `INVALID_VALUE` error. A course that is already published can be edited without re-checking. Changing the status to `deleted` fails with a `/status` `HAS_ENROLLMENTS` error while any student is enrolled, whether the enrollment is active, refunded or suspended; archive the course instead. A course that is already deleted is not re-checked.
          *
          *     **Prices.** A stored price is in effect once its `effectiveAt` has passed, evaluated when the request is processed. In-effect prices can never be changed or deleted, since payments refer to them. `prices` is the course's complete future schedule:
          *     - An entry that exactly matches a stored price (same `effectiveAt` instant, `amount` and `currency`) is kept unchanged, including its `id`. This lets a form send back the schedule it loaded, and makes retries safe.
@@ -666,6 +666,8 @@ export interface components {
              *     - `UNKNOWN_FIELD`: the field is not part of the request. `field`
              *       points at the unknown field (for an upload, always `/image`,
              *       also when the extra part has another name).
+             *     - `HAS_ENROLLMENTS`: the change is refused because students are
+             *       enrolled in the course, such as deleting it.
              *
              *     Treat unrecognized values as a generic validation error.
              * @example INVALID_RANGE

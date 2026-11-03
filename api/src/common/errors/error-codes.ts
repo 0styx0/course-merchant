@@ -31,7 +31,8 @@ export enum ErrorCodeAuth {
 }
 
 // Codes for each entry of a validation response's `errors`. They are generic;
-// the entry's `field` says which field failed.
+// the entry's `field` says which field failed. HAS_ENROLLMENTS is the one
+// code for a single business rule: a course with students can't be deleted.
 export enum FieldErrorCode {
   REQUIRED = "REQUIRED",
   INVALID_TYPE = "INVALID_TYPE",
@@ -45,6 +46,7 @@ export enum FieldErrorCode {
   INVALID_RANGE = "INVALID_RANGE",
   DUPLICATE_VALUE = "DUPLICATE_VALUE",
   UNKNOWN_FIELD = "UNKNOWN_FIELD",
+  HAS_ENROLLMENTS = "HAS_ENROLLMENTS",
 }
 
 export const ErrorCode = {

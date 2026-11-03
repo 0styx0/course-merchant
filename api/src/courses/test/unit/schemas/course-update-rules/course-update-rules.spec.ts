@@ -9,6 +9,7 @@ import {
   at,
   makeStored,
   makeRequest,
+  type Stored,
 } from "@/courses/test/unit/schemas/course-update-rules/course-update-rules.fixtures.js";
 
 describe("isSameInstant", () => {
@@ -211,5 +212,101 @@ describe("findUpdateRuleViolations", () => {
         (error) => error.field,
       ),
     ).toEqual(["/schedule/startTime", "/prices/2/effectiveAt"]);
+  });
+
+  describe("changing the status", () => {
+    const refusal = {
+      field: "/status",
+      code: "HAS_ENROLLMENTS",
+      detail: "Students are enrolled in this course. Archive it instead.",
+    };
+
+    const activeEnrollment = { revokedAt: null, suspendedAt: null };
+
+    function findViolationsWhenChangingStatus(
+      current: "published" | "archived" | "deleted",
+      requested: "archived" | "deleted",
+      enrollments: Stored["enrollments"],
+    ) {
+      const stored = {
+        ...makeStored(),
+        statuses: [{ name: current, changedAt: at(-72) }],
+        enrollments,
+      };
+
+      return findUpdateRuleViolations({
+        request: { ...makeRequest(stored), status: requested },
+        stored,
+        now,
+      });
+    }
+
+    it("refuses deleting a course with an active enrollment", () => {
+      expect(
+        findViolationsWhenChangingStatus("published", "deleted", [
+          activeEnrollment,
+        ]),
+      ).toEqual([refusal]);
+    });
+
+    it("refuses deleting a course whose enrollment was refunded", () => {
+      const refunded = { revokedAt: at(-1), suspendedAt: null };
+
+      expect(
+        findViolationsWhenChangingStatus("published", "deleted", [refunded]),
+      ).toEqual([refusal]);
+    });
+
+    it("refuses deleting a course whose enrollment is suspended", () => {
+      const suspended = { revokedAt: null, suspendedAt: at(-1) };
+
+      expect(
+        findViolationsWhenChangingStatus("published", "deleted", [suspended]),
+      ).toEqual([refusal]);
+    });
+
+    it("allows deleting a course with no enrollments", () => {
+      expect(
+        findViolationsWhenChangingStatus("published", "deleted", []),
+      ).toEqual([]);
+    });
+
+    it("allows archiving a course with enrollments", () => {
+      expect(
+        findViolationsWhenChangingStatus("published", "archived", [
+          activeEnrollment,
+        ]),
+      ).toEqual([]);
+    });
+
+    it("does not re-check a course that is already deleted", () => {
+      expect(
+        findViolationsWhenChangingStatus("deleted", "deleted", [
+          activeEnrollment,
+        ]),
+      ).toEqual([]);
+    });
+
+    it("returns the refusal together with an IN_PAST error", () => {
+      const stored = { ...makeStored(), enrollments: [activeEnrollment] };
+      const past = now.subtract({ hours: 1 }).toString();
+      const request = makeRequest(stored);
+
+      const violations = findUpdateRuleViolations({
+        request: {
+          ...request,
+          status: "deleted",
+          schedule: { ...request.schedule, startTime: past },
+        },
+        stored,
+        now,
+      });
+
+      expect(violations.map((violation) => violation.code)).toEqual([
+        "IN_PAST",
+        "HAS_ENROLLMENTS",
+      ]);
+      expect(violations).toContainEqual(refusal);
+    });
   });
 });

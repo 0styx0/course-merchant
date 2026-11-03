@@ -9,7 +9,13 @@ import type { UpdateCourseRequest } from "types.js";
 type StoredCourse = Pick<
   CourseRepositoryModelAdmin,
   "startsAt" | "endsAt" | "prices" | "statuses" | "image"
->;
+> & {
+  // the rules count enrollments and read none of their details
+  enrollments: Pick<
+    CourseRepositoryModelAdmin["enrollments"][number],
+    "revokedAt" | "suspendedAt"
+  >[];
+};
 
 type StoredPrice = StoredCourse["prices"][number];
 
@@ -62,20 +68,19 @@ function isInEffect(price: StoredPrice, now: Temporal.Instant): boolean {
   return Temporal.Instant.compare(price.effectiveAt, now) <= 0;
 }
 
-function isPublishing(
+function isChangingTo(
   request: UpdateCourseRequest,
   stored: StoredCourse,
+  status: UpdateCourseRequest["status"],
 ): boolean {
-  return (
-    request.status === "published" && stored.statuses[0].name !== "published"
-  );
+  return request.status === status && stored.statuses[0].name !== status;
 }
 
 function imageRequiredToPublish({
   request,
   stored,
 }: UpdateRuleContext): ValidationError[] {
-  if (!isPublishing(request, stored) || stored.image !== null) {
+  if (!isChangingTo(request, stored, "published") || stored.image !== null) {
     return [];
   }
 
@@ -84,6 +89,27 @@ function imageRequiredToPublish({
       field: toJsonPointer(["status"]),
       code: FieldErrorCode.INVALID_VALUE,
       detail: "Upload an image before publishing.",
+    },
+  ];
+}
+
+/** A course with students, whatever their access, is archived instead. */
+function noDeleteWithEnrollments({
+  request,
+  stored,
+}: UpdateRuleContext): ValidationError[] {
+  if (
+    !isChangingTo(request, stored, "deleted") ||
+    stored.enrollments.length === 0
+  ) {
+    return [];
+  }
+
+  return [
+    {
+      field: toJsonPointer(["status"]),
+      code: FieldErrorCode.HAS_ENROLLMENTS,
+      detail: "Students are enrolled in this course. Archive it instead.",
     },
   ];
 }
@@ -200,6 +226,7 @@ const UPDATE_RULES = [
   endNotInPast,
   pricesNotInPast,
   priceInEffectRequired,
+  noDeleteWithEnrollments,
 ];
 
 /**

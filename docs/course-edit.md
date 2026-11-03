@@ -66,33 +66,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **11c.** Under the Schedule heading, a note says the course has started or ended, and that its times may stay but a changed time must be in the future.
   - [x] **11d.** Choosing a different time zone shows a note under the box: the dates and times stay as typed, so the course moves to that time in the new zone, and on a started course the moved times must be in the future.
 - [ ] **12. Delete only without students.** The API refuses to delete a course with enrollments; the edit page greys out Deleted and says to archive it instead.
-  - [ ] **12a.** The API refuses to delete a course that has students, with its own error code on the status field. **Next**
-    - *Behaviours*:
-      - changing the status to `deleted` on a course with an enrollment gives 400 `VALIDATION_FAILED`, field `/status`, code `HAS_ENROLLMENTS`, detail "Students are enrolled in this course. Archive it instead."
-      - a refunded or suspended enrollment also blocks the delete
-      - a course with no enrollments can still be deleted
-      - a course with enrollments can still be archived
-      - a course already `deleted` that has enrollments still saves, because the rule checks only a change to `deleted`
-      - the refusal comes back together with the other rule violations, and the status log stays unchanged
-    - *New shared pieces*:
-      - `FieldErrorCode.HAS_ENROLLMENTS`, because 12b's mock answers with it
-    - *Files*:
-      - [openapi-v1.yaml](../api/openapi/openapi-v1.yaml) (`updateCourse` Status paragraph, field code list)
-      - [error-codes.ts](../api/src/common/errors/error-codes.ts)
-      - [course-update-rules.ts](../api/src/courses/validation/course-update-rules.ts), which changes in three ways:
-        - `isPublishing` becomes `isChangingTo(status)`, used by both rules
-        - `StoredCourse` adds `enrollments`
-        - a new rule refuses a change to `deleted` while the course has enrollments
-      - `api/src/generated/api.d.ts` and `web/src/lib/api/generated.ts` (both regenerated, because CI fails when the web copy is stale)
-      - [courses.md](courses.md) (the status rule under *Editing a course*)
-      - tests:
-        - unit: `course-update-rules.spec.ts`, plus fixtures where `makeStored()` defaults to no enrollments
-        - integration: `admin-courses.update.integration.spec.ts`
-        - e2e: `admin-course.update.validation-and-errors.spec.ts`
-        - the integration and e2e tests use the existing `createEnrollment` helper in `api/src/test/course-fixtures.ts`, which already takes `revokedAt` and `suspendedAt`
-    - *Settled*: the Decision row "A course with enrollments can be archived but not deleted"
-    - *Done when*: all three test levels pass, and `yarn --cwd api check:changed` reports nothing
-  - [ ] **12b.** On a course with students, the edit page greys out Deleted and says to archive it instead.
+  - [x] **12a.** The API refuses to delete a course that has students, with its own error code (`HAS_ENROLLMENTS`) on the status field.
+  - [ ] **12b.** On a course with students, the edit page greys out Deleted and says to archive it instead. **Next**
     - *Behaviours*:
       - on a course with an enrollment, Deleted shows greyed out with the line "Students are enrolled. Archive it instead."
       - on a course with no enrollments, Deleted stays available with its usual line
@@ -168,7 +143,7 @@ Each milestone's *Done when* walks its own in `dev:mock`.
 | The flow is create → edit → publish. After a save, edit stays, refreshes the stored course and shows "Saved"; create opens the new course's edit page through a query flag that shows "Saved as a draft" | Going to the shop proves nothing and leaves no way back. The refresh keeps the "unchanged time" checks right for the next save | Staying on create (a second Save makes a second course); a message, then still going to `/` (no way back; low) |
 | The price list under the rows names the broken part in words, as a plain list, with amounts as $50.00, on both pages (revisit after use) | A red "Error" doesn't say what to fix. Replaces create's U3b wording | Keeping "Error" and Roman numerals |
 | A price start in the past shows under Start date when its day has passed in the chosen zone, otherwise under Start time. A change in any price box re-checks every price box already reached, on both pages (revisit after use) | Follows step 8's rule that a message shows under the box to change. Without the re-check, a message would stay under a box after the admin fixed the other one | Always on the date box (points at a correct date when only today's time is past; low); keeping it on the time box (low) |
-| A course with enrollments can be archived but not deleted. Every enrollment counts, refunded or disputed too. The API refuses a change to `deleted` with a `/status` field error coded `HAS_ENROLLMENTS`, and the page greys out Deleted with the reason, unless the course is already deleted (revisit after use) | Students who paid keep a course the admin can still find, including the course behind a refund or dispute. The page already shows field errors under the status field. A payment that lands between the check and the write can still enroll a student in a course being deleted; that is accepted as rare, and the admin can set the status back | A top-level 409 `COURSE_HAS_ENROLLMENTS` (clearer for API callers; shows in the top alert, away from Status; low); locking the course row during the check (closes the race; needs row locking from the Prisma 8 RC; medium) |
+| A course with enrollments can be archived but not deleted. Every enrollment counts, refunded or disputed too. The API refuses a change to `deleted` with a `/status` field error coded `HAS_ENROLLMENTS`, and the page greys out Deleted with the reason, unless the course is already deleted (revisit after use) | Students who paid keep a course the admin can still find, including the course behind a refund or dispute. The page already shows field errors under the status field. The rule counts only existing enrollments, so a buyer whose checkout is still open (up to 31 minutes) can pay after the admin deletes the course. The gap is accepted for launch and the admin can set the status back; it is listed in [future-milestones.md](future-milestones.md) | A top-level 409 `COURSE_HAS_ENROLLMENTS` (clearer for API callers; shows in the top alert, away from Status; low); counting open checkouts in the rule (closes the window; costs a rule that reads checkout state; medium); locking the course row during the check (closes only the instant between check and write; needs row locking from the Prisma 8 RC; medium) |
 | After a save, the details action calls Next's `refresh()` so the reloaded page arrives in the action's own reply, the form takes the reloaded course as React Hook Form's `values`, and "Saved" shows in a transition after that | The "unchanged time" checks and the price split stay right for the next save, and "Saved" appears only once the form holds the stored course. Without it, a change typed between "Saved" and a late reload was wiped, and CI caught it. The transition orders "Saved" after the page update; the tests mock `refresh`, so only the repeated browser run proves that order | The browser's `router.refresh()` after "Saved" (a second request that nothing waits for; wiped edits typed in between; high); Building the new form values in the action from the `PUT` answer (no second request; costs a second place that splits prices in effect, beside the page's; medium) |
 | "Saved" and "Saved as a draft" show in the sticky box at the top of the form, where the error list shows, until the form holds an unsaved change (revisit after use) | The admin sees every answer to a save in one place, from anywhere on the page | Beside Save (misses "Saved as a draft" on arrival; low); one note under the heading plus one by Save (two spots; low) |
 | The header links to the shop only when the shop shows the course (published, with a price in effect); a course whose start has passed shows a note under Schedule, worded "started" or "ended" (revisit after use) | A draft's link would open a 404, and a refused past time would come with no explanation | Always linking (a 404 for every draft; none); a note only for ended courses (no explanation while a course runs; low) |
@@ -241,7 +216,7 @@ Retro:
 - Needs: 7.
 - Builds on: [course-update-rules.ts](../api/src/courses/validation/course-update-rules.ts) (the rules that read the stored course, including the "publishing needs an image" rule this one sits beside), [status-section.tsx](../web/src/features/admin-courses/edit-course/status/status-section.tsx), [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts) (what the browser may receive), and the Decision rows on the status, the customer data kept out of the browser, and the refusal of a status change on the status field.
 - Size: 2 commits (the map said 3): the API rule, then the page. The mock scenarios are test support, so they join the page commit.
-- Risk: a payment that lands between the check and the write (see the Decision row).
+- Risk: a buyer with an open checkout pays after the delete (see the Decision row and [future-milestones.md](future-milestones.md)).
 - Done when: an API test refuses deleting a course with enrollments; J4.
 
 ### Design notes *(temporary)*

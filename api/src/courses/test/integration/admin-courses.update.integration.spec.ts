@@ -12,6 +12,8 @@ import {
 import {
   createCourse,
   createCoursePrice,
+  createCustomer,
+  createEnrollment,
   descriptionDoc,
 } from "@/test/course-fixtures.js";
 import { UpdateCourseRequest } from "types.js";
@@ -241,6 +243,48 @@ describe("AdminCoursesService (integration)", () => {
       ).rejects.toThrow();
 
       expect(await findCourse(course.id)).toEqual(before);
+    });
+
+    it("refuses deleting a course with students and keeps its status log", async () => {
+      const { course } = await createStartedCourse();
+      const customer = await createCustomer({});
+      await createEnrollment({
+        courseId: course.id,
+        customerId: customer.id,
+      });
+      const request = toRequest(await findCourse(course.id));
+
+      await expect(
+        service.updateCourse(course.id, { ...request, status: "deleted" }),
+      ).rejects.toMatchObject({
+        status: 400,
+        response: {
+          code: "VALIDATION_FAILED",
+          errors: [
+            {
+              field: "/status",
+              code: "HAS_ENROLLMENTS",
+              detail:
+                "Students are enrolled in this course. Archive it instead.",
+            },
+          ],
+        },
+      });
+
+      const statuses = await prisma.db.orm.public.CourseStatus.where((status) =>
+        status.courseId.eq(course.id),
+      ).all();
+
+      expect(statuses.map((status) => status.name)).toEqual(["published"]);
+    });
+
+    it("deletes a course that has no students", async () => {
+      const { course } = await createStartedCourse();
+      const request = toRequest(await findCourse(course.id));
+
+      await service.updateCourse(course.id, { ...request, status: "deleted" });
+
+      expect((await findCourse(course.id)).statuses[0].name).toBe("deleted");
     });
 
     it("returns 404 COURSE_NOT_FOUND for an unknown course", async () => {

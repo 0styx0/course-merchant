@@ -13,11 +13,15 @@ export function makeStored() {
   return {
     statuses: [
       {
-        name: "published" as "published" | "archived" | "drafted",
+        name: "published" as "published" | "archived" | "drafted" | "deleted",
         changedAt: at(-72),
       },
     ],
     image: { updatedAt: at(-60) } as { updatedAt: Temporal.Instant } | null,
+    enrollments: [] as {
+      revokedAt: Temporal.Instant | null;
+      suspendedAt: Temporal.Instant | null;
+    }[],
     startsAt: at(24),
     endsAt: at(26),
     prices: [
