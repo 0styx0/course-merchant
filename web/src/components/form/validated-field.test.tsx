@@ -88,6 +88,7 @@ describe("ValidatedField", () => {
   it("shows nothing for an untouched field", () => {
     render(<Harness />);
 
+    expect(screen.getByLabelText("Course name")).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });

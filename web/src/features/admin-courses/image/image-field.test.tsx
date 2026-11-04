@@ -101,6 +101,7 @@ describe("ImageField", () => {
 
   it("shows no preview before a file is chosen", () => {
     render(<Harness />);
+    expect(screen.getByLabelText("Image")).toBeVisible();
     expect(
       screen.queryByRole("img", { name: previewImageName }),
     ).not.toBeInTheDocument();
@@ -221,7 +222,7 @@ describe("ImageField", () => {
     await choose(second);
     await waitFor(() => expect(onChange).toHaveBeenCalledTimes(1));
     finishFirst(bitmap);
-    await Promise.resolve();
+    await waitFor(() => expect(bitmap.close).toHaveBeenCalledTimes(2));
 
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith({

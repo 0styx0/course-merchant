@@ -72,6 +72,7 @@ describe("CourseDescription", () => {
       />,
     );
 
+    expect(screen.getByText("Title")).toBeVisible();
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
   });
 

@@ -361,9 +361,11 @@ for (const size of screenSizes) {
       await expect(errorBox).toBeVisible();
       await scrollToEnd(page);
 
-      await errorBox.getByRole("button").first().click();
+      await errorBox.getByRole("button", { name: "Start date" }).click();
+      const startDate = page.getByLabel("Start date", { exact: true });
+      await expect(startDate).toBeFocused();
 
-      const focusedBox = (await page.locator(":focus").boundingBox())!;
+      const focusedBox = (await startDate.boundingBox())!;
       expect(focusedBox.y).toBeGreaterThanOrEqual(
         await readBottomEdge(errorBox),
       );

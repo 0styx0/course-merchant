@@ -2,6 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { FROZEN_NOW } from "@/test/frozen-now";
 import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
 
 import { toEditFormPrefill } from "../edit-form-prefill";
@@ -53,6 +54,13 @@ const prefillWithOnlyFuturePrice = toEditFormPrefill({
   prices: [futurePrice],
 });
 
+const FROZEN_DAY = new Date(FROZEN_NOW)
+  .toISOString()
+  .slice(0, "YYYY-MM-DD".length);
+
+const TOO_SOON_MESSAGE =
+  "Choose a time at least a minute from now, or leave both empty to start when you save.";
+
 function pricesInEffectList() {
   return screen.getByRole("list", { name: /^Prices in effect/ });
 }
@@ -63,7 +71,7 @@ async function chooseZone(
 ) {
   const zone = screen.getByRole("combobox", { name: "Time zone" });
   await user.clear(zone);
-  await user.type(zone, zoneName.split("/")[1]);
+  await user.type(zone, zoneName.split("/")[1].replace("_", " "));
   await user.click(screen.getByRole("option", { name: zoneName }));
 }
 
@@ -86,6 +94,7 @@ describe("EditCourseForm prices", () => {
   it("shows no list when no price is in effect", () => {
     renderForm(prefillWithOnlyFuturePrice);
 
+    expect(screen.getByLabelText("Price")).toBeVisible();
     expect(
       screen.queryByRole("list", { name: /^Prices in effect/ }),
     ).not.toBeInTheDocument();
@@ -109,18 +118,23 @@ describe("EditCourseForm prices", () => {
   it("checks the rows again after a zone change", async () => {
     const user = userEvent.setup();
     renderForm(prefillWithOnlyFuturePrice);
-    setValue("Price", "");
+    await user.click(screen.getByRole("button", { name: "Add price" }));
+    // 05:00 today has passed in New York (10:00 UTC) and is ahead in Los Angeles (13:00 UTC).
+    setValue("Price 2", "10");
+    setValue("Price 2 start date", FROZEN_DAY);
+    setValue("Price 2 start time", "05:00");
     await clickSave(user);
-    expect(
-      await screen.findAllByText("Enter a price, like 79.50."),
-    ).not.toEqual([]);
-    setValue("Price", "50");
+    expect(await screen.findAllByText(TOO_SOON_MESSAGE)).not.toEqual([]);
 
-    await chooseZone(user, "Europe/Paris");
+    await chooseZone(user, "America/Los_Angeles");
 
-    expect(
-      screen.queryByText("Enter a price, like 79.50."),
-    ).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByLabelText("Price 2 start time")).toHaveAttribute(
+        "aria-invalid",
+        "false",
+      );
+      expect(screen.queryByText(TOO_SOON_MESSAGE)).not.toBeInTheDocument();
+    });
   });
 
   it("shows Remove on the only row when a price is in effect", () => {
@@ -169,9 +183,15 @@ describe("EditCourseForm prices", () => {
 
     await user.click(screen.getByRole("button", { name: "Remove price 2" }));
 
-    expect(
-      screen.queryByText("Two prices can't take effect at the same time."),
-    ).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByLabelText("Price start date")).toHaveAttribute(
+        "aria-invalid",
+        "false",
+      );
+      expect(
+        screen.queryByText("Two prices can't take effect at the same time."),
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("lists a refused price field by its label", async () => {
@@ -211,9 +231,13 @@ describe("EditCourseForm prices", () => {
 
       setValue("Price start date", "2099-03-02");
 
-      await waitFor(() =>
-        expect(screen.queryByText(PAST_DAY_MESSAGE)).not.toBeInTheDocument(),
-      );
+      await waitFor(() => {
+        expect(screen.getByLabelText("Price start date")).toHaveAttribute(
+          "aria-invalid",
+          "false",
+        );
+        expect(screen.queryByText(PAST_DAY_MESSAGE)).not.toBeInTheDocument();
+      });
     });
 
     it("clears another row's same-time error when one row's start changes", async () => {
@@ -233,11 +257,15 @@ describe("EditCourseForm prices", () => {
 
       setValue("Price 1 start date", "2099-03-02");
 
-      await waitFor(() =>
+      await waitFor(() => {
+        expect(screen.getByLabelText("Price 2 start time")).toHaveAttribute(
+          "aria-invalid",
+          "false",
+        );
         expect(
           screen.queryByText("Two prices can't take effect at the same time."),
-        ).not.toBeInTheDocument(),
-      );
+        ).not.toBeInTheDocument();
+      });
     });
   });
 });

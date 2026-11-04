@@ -14,7 +14,7 @@ import { toEditFormPrefill } from "../edit-form-prefill";
 // The `vi.mock` stand-ins live in edit-course-form.mocks.tsx.
 export const saveAction = vi.mocked(saveEditedDetailsAction);
 export const prefill = toEditFormPrefill(draftedAdminCourse, FROZEN_NOW);
-const timeZones = ["America/New_York", "Europe/Paris"];
+const timeZones = ["America/New_York", "America/Los_Angeles", "Europe/Paris"];
 
 export function makeEditFormElement(prefillOverride = prefill) {
   return (

@@ -41,30 +41,33 @@ describe("saveEditedDetailsAction", () => {
   it("refreshes nothing when the API refuses the course", async () => {
     server.use(updateCourseValidationFailed);
 
-    await saveEditedDetailsAction(
+    const result = await saveEditedDetailsAction(
       courseId,
       validValues,
       loadedSchedule,
       loadedPrices,
     );
 
+    expect(result).toMatchObject({ state: "failure" });
     expect(refresh).not.toHaveBeenCalled();
   });
 
   it("refreshes nothing when the course id or values fail the check", async () => {
-    await saveEditedDetailsAction(
+    const badIdResult = await saveEditedDetailsAction(
       "not-a-uuid",
       validValues,
       loadedSchedule,
       loadedPrices,
     );
-    await saveEditedDetailsAction(
+    const badValuesResult = await saveEditedDetailsAction(
       courseId,
       { ...validValues, name: "  " },
       loadedSchedule,
       loadedPrices,
     );
 
+    expect(badIdResult).toMatchObject({ state: "failure" });
+    expect(badValuesResult).toMatchObject({ state: "failure" });
     expect(refresh).not.toHaveBeenCalled();
   });
 

@@ -56,6 +56,7 @@ describe("EditCourseForm saved note", () => {
       />,
     );
 
+    expect(screen.getByLabelText("Course name")).toBeVisible();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
@@ -70,12 +71,14 @@ describe("EditCourseForm saved note", () => {
 
   it("hides the note at the first change", async () => {
     renderFormArrivingFromCreate();
+    expect(screen.getByRole("status")).toHaveTextContent("Saved as a draft");
 
     setValue("Course name", "Renamed");
 
-    await waitFor(() =>
-      expect(screen.queryByRole("status")).not.toBeInTheDocument(),
-    );
+    await waitFor(() => {
+      expect(leaveEvent().defaultPrevented).toBe(true);
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
   });
 
   it("turns the leave warning on at the first change", async () => {

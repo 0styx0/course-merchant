@@ -10,6 +10,7 @@ import { push } from "./edit-course-form.mocks";
 import { toEditFormPrefill } from "../edit-form-prefill";
 import {
   clickSave,
+  leaveEvent,
   makeEditFormElement,
   prefill,
   refusal,
@@ -162,7 +163,7 @@ describe("EditCourseForm saving", () => {
     await clickSave(user);
 
     await screen.findByRole("heading", { name: "Couldn't save the course" });
-    expect(screen.queryByText(/saved as a draft/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/saved as a draft/i)).not.toBeInTheDocument();
   });
 
   it("is disabled and reads Saving… while saving", async () => {
@@ -220,9 +221,10 @@ describe("EditCourseForm saving", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent("Saved");
     setValue("Course name", "Renamed again");
-    await waitFor(() =>
-      expect(screen.queryByRole("status")).not.toBeInTheDocument(),
-    );
+    await waitFor(() => {
+      expect(leaveEvent().defaultPrevented).toBe(true);
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
   });
 
   describe("when the clock passes the loaded start", () => {

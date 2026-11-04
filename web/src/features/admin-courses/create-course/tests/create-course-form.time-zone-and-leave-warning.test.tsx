@@ -100,6 +100,9 @@ describe("CourseForm", () => {
     await user.type(screen.getByLabelText("Start date"), date);
     await user.type(screen.getByLabelText("Start time"), time);
     expect(
+      await screen.findAllByRole("img", { name: "Looks good" }),
+    ).not.toHaveLength(0);
+    expect(
       screen.queryByText("The start time must be in the future."),
     ).not.toBeInTheDocument();
 
@@ -109,11 +112,15 @@ describe("CourseForm", () => {
     ).toBeInTheDocument();
 
     await pickTimeZone(user, "york", "America/New_York");
-    await waitFor(() =>
+    await waitFor(() => {
+      expect(screen.getByLabelText("Start time")).toHaveAttribute(
+        "aria-invalid",
+        "false",
+      );
       expect(
         screen.queryByText("The start time must be in the future."),
-      ).not.toBeInTheDocument(),
-    );
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe("leave-page warning", () => {
@@ -140,8 +147,11 @@ describe("CourseForm", () => {
       action.mockResolvedValue({ state: "success", data: { courseId: "c1" } });
       renderForm();
       await fillValidForm(user);
+      expect(leaveEvent().defaultPrevented).toBe(true);
       await user.click(screen.getByRole("button", { name: "Save as draft" }));
-      await waitFor(() => expect(push).toHaveBeenCalled());
+      await waitFor(() =>
+        expect(push).toHaveBeenCalledWith("/admin/courses/c1/edit?saved=draft"),
+      );
       await waitFor(() => expect(leaveEvent().defaultPrevented).toBe(false));
     });
   });

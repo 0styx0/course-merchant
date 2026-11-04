@@ -113,6 +113,7 @@ describe("CourseForm", () => {
 
     await user.click(screen.getByLabelText("Course name"));
     await user.tab();
+    expect(screen.getByText("Enter a course name.")).toBeInTheDocument();
     await user.type(screen.getByLabelText("Course name"), "A");
 
     expect(screen.getByLabelText("Course name")).toHaveAttribute(
@@ -129,6 +130,9 @@ describe("CourseForm", () => {
     await user.type(screen.getByLabelText("Start date"), "2099-01-10");
     await user.type(screen.getByLabelText("Start time"), "09:00");
 
+    expect(
+      await screen.findAllByRole("img", { name: "Looks good" }),
+    ).not.toHaveLength(0);
     expect(screen.getByLabelText("End time")).toHaveAttribute(
       "aria-invalid",
       "false",
@@ -151,6 +155,7 @@ describe("CourseForm", () => {
     const user = userEvent.setup();
     renderForm();
 
+    expect(screen.getByLabelText("Price")).toBeInTheDocument();
     expect(screen.queryByText(/^Price schedule \(/)).not.toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Price"), "abc");

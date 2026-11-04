@@ -146,11 +146,15 @@ describe("EditCourseForm schedule", () => {
     setValue("Start date", "2030-01-01");
     setValue("End date", "2030-01-02");
 
-    await waitFor(() =>
+    await waitFor(() => {
+      expect(screen.getByLabelText("Start time")).toHaveAttribute(
+        "aria-invalid",
+        "false",
+      );
       expect(
         screen.queryByText("The start time must be in the future."),
-      ).not.toBeInTheDocument(),
-    );
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("shows an end date before the start date on End date at once, with no request", async () => {
@@ -195,16 +199,23 @@ describe("EditCourseForm schedule", () => {
     expect(await screen.findByText(END_DATE_BEFORE_START)).toBeVisible();
 
     setValue("End date", "2030-01-07");
-    await waitFor(() =>
-      expect(screen.queryByText(END_DATE_BEFORE_START)).not.toBeInTheDocument(),
-    );
+    await waitFor(() => {
+      expect(screen.getByLabelText("End date")).toHaveAttribute(
+        "aria-invalid",
+        "false",
+      );
+      expect(screen.queryByText(END_DATE_BEFORE_START)).not.toBeInTheDocument();
+    });
   });
 
-  it("leaves End date clean when the start date moves and the end date was never reached", () => {
+  it("leaves End date clean when the start date moves and the end date was never reached", async () => {
     renderForm();
 
     setValue("Start date", "2030-01-06");
 
+    expect(
+      await screen.findAllByRole("img", { name: "Looks good" }),
+    ).not.toHaveLength(0);
     expect(screen.queryByText(END_DATE_BEFORE_START)).not.toBeInTheDocument();
     expect(screen.getByLabelText("End date")).not.toHaveAttribute(
       "aria-invalid",
@@ -250,6 +261,7 @@ describe("EditCourseForm schedule", () => {
 
     it("shows no note for the loaded zone", () => {
       renderForm();
+      expect(screen.getByRole("combobox", { name: "Time zone" })).toBeVisible();
       expect(screen.queryByText(/stay as typed/)).not.toBeInTheDocument();
     });
 
@@ -379,6 +391,7 @@ describe("EditCourseForm schedule", () => {
 
     it("shows no note for a course that starts later", () => {
       renderForm(futurePrefill);
+      expect(screen.getByLabelText("Start date")).toBeVisible();
       expect(
         screen.queryByText(/a changed time must be in the future/),
       ).not.toBeInTheDocument();

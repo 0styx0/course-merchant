@@ -30,6 +30,7 @@ describe("CourseForm", () => {
   it("adds and removes price rows, numbering them only when there are several", async () => {
     const user = userEvent.setup();
     renderForm();
+    expect(screen.getByRole("button", { name: "Add price" })).toBeVisible();
     expect(
       screen.queryByRole("button", { name: /Remove price/ }),
     ).not.toBeInTheDocument();
@@ -84,9 +85,15 @@ describe("CourseForm", () => {
 
     await user.click(screen.getByRole("button", { name: "Remove price 2" }));
 
-    expect(
-      screen.queryByText("Two prices can't take effect at the same time."),
-    ).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByLabelText("Price start date")).toHaveAttribute(
+        "aria-invalid",
+        "false",
+      );
+      expect(
+        screen.queryByText("Two prices can't take effect at the same time."),
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe("a price start in the past", () => {
@@ -114,9 +121,13 @@ describe("CourseForm", () => {
 
       setValue("Price start date", "2099-01-10");
 
-      await waitFor(() =>
-        expect(screen.queryByText(PAST_DAY_MESSAGE)).not.toBeInTheDocument(),
-      );
+      await waitFor(() => {
+        expect(screen.getByLabelText("Price start date")).toHaveAttribute(
+          "aria-invalid",
+          "false",
+        );
+        expect(screen.queryByText(PAST_DAY_MESSAGE)).not.toBeInTheDocument();
+      });
     });
 
     it("clears another row's same-time error when one row's start changes", async () => {
@@ -137,11 +148,15 @@ describe("CourseForm", () => {
 
       setValue("Price 1 start date", "2099-01-11");
 
-      await waitFor(() =>
+      await waitFor(() => {
+        expect(screen.getByLabelText("Price 2 start date")).toHaveAttribute(
+          "aria-invalid",
+          "false",
+        );
         expect(
           screen.queryByText("Two prices can't take effect at the same time."),
-        ).not.toBeInTheDocument(),
-      );
+        ).not.toBeInTheDocument();
+      });
     });
 
     it("keeps boxes the admin has not reached quiet", async () => {

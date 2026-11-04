@@ -46,6 +46,13 @@ function holdAction() {
   };
 }
 
+/** Records the browser's `invalid` event, which fires when a submit finds the box failing its checks. */
+function watchInvalidEvent(box: HTMLElement) {
+  const onInvalid = vi.fn();
+  box.addEventListener("invalid", onInvalid);
+  return onInvalid;
+}
+
 async function openFields() {
   const user = userEvent.setup();
   render(<EnrollButton courseId={courseId} />);
@@ -175,9 +182,11 @@ describe("EnrollButton", () => {
   it("sends no request when the name is empty", async () => {
     const user = await openFields();
     await user.type(screen.getByLabelText("Email"), "ami@example.com");
+    const nameInvalid = watchInvalidEvent(screen.getByLabelText("Name"));
 
     await user.click(screen.getByRole("button", { name: "Email me the link" }));
 
+    expect(nameInvalid).toHaveBeenCalledOnce();
     expect(sendAction).not.toHaveBeenCalled();
     expect(screen.getByLabelText("Name")).toBeInvalid();
   });
@@ -186,9 +195,11 @@ describe("EnrollButton", () => {
     const user = await openFields();
     await user.type(screen.getByLabelText("Name"), "Ami Cohen");
     await user.type(screen.getByLabelText("Email"), "not-an-email");
+    const emailInvalid = watchInvalidEvent(screen.getByLabelText("Email"));
 
     await user.click(screen.getByRole("button", { name: "Email me the link" }));
 
+    expect(emailInvalid).toHaveBeenCalledOnce();
     expect(sendAction).not.toHaveBeenCalled();
     expect(screen.getByLabelText("Email")).toBeInvalid();
   });

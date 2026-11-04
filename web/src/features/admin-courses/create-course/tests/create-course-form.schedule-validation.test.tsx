@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -58,7 +58,13 @@ describe("CourseForm schedule fields", () => {
 
     await user.clear(screen.getByLabelText("Start date"));
     await user.type(screen.getByLabelText("Start date"), "2099-01-01");
-    expect(screen.queryByText(PAST_START)).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByLabelText("Start time")).toHaveAttribute(
+        "aria-invalid",
+        "false",
+      );
+      expect(screen.queryByText(PAST_START)).not.toBeInTheDocument();
+    });
   });
 
   it("re-checks a touched end when the start changes", async () => {
@@ -73,7 +79,13 @@ describe("CourseForm schedule fields", () => {
     await user.clear(screen.getByLabelText("Start date"));
     await user.type(screen.getByLabelText("Start date"), "2099-01-01");
 
-    expect(screen.queryByText(END_DATE_BEFORE_START)).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByLabelText("End date")).toHaveAttribute(
+        "aria-invalid",
+        "false",
+      );
+      expect(screen.queryByText(END_DATE_BEFORE_START)).not.toBeInTheDocument();
+    });
   });
 
   it("leaves an untouched end alone when only the start date changes", async () => {
@@ -82,6 +94,9 @@ describe("CourseForm schedule fields", () => {
 
     await user.type(screen.getByLabelText("Start date"), "2099-01-01");
 
+    expect(
+      await screen.findByRole("img", { name: "Looks good" }),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Enter an end date.")).not.toBeInTheDocument();
     expect(screen.queryByText("Enter an end time.")).not.toBeInTheDocument();
   });
@@ -92,6 +107,9 @@ describe("CourseForm schedule fields", () => {
 
     await user.type(screen.getByLabelText("Start date"), "2099-01-01");
 
+    expect(
+      await screen.findByRole("img", { name: "Looks good" }),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Enter a start time.")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Start time")).not.toHaveAttribute(
       "aria-invalid",
@@ -169,14 +187,19 @@ describe("CourseForm schedule fields", () => {
 
     await user.clear(endDate);
     await user.type(endDate, "2099-01-06");
-    expect(screen.queryByText(END_DATE_BEFORE_START)).not.toBeInTheDocument();
-    expect(endDate).not.toHaveAttribute("aria-invalid", "true");
+    await waitFor(() => {
+      expect(endDate).toHaveAttribute("aria-invalid", "false");
+      expect(screen.queryByText(END_DATE_BEFORE_START)).not.toBeInTheDocument();
+    });
   });
 
   it("flags a reached End date when the start date moves past it, and leaves an unreached one clean", async () => {
     const user = userEvent.setup();
     renderForm();
     await user.type(screen.getByLabelText("Start date"), "2099-01-05");
+    expect(
+      await screen.findByRole("img", { name: "Looks good" }),
+    ).toBeInTheDocument();
     expect(screen.queryByText(END_DATE_BEFORE_START)).not.toBeInTheDocument();
     expect(screen.getByLabelText("End date")).not.toHaveAttribute(
       "aria-invalid",

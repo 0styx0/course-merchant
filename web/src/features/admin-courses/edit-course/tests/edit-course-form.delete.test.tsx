@@ -69,12 +69,12 @@ async function openDialogAfterRename(user: TestUser) {
 }
 
 async function expectDeleteDeclined() {
-  await waitFor(() =>
-    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
-  );
+  await waitFor(() => {
+    expect(statusOption("Drafted")).toBeChecked();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
   expect(saveAction).not.toHaveBeenCalled();
   expect(screen.getByLabelText("Course name")).toHaveValue("Renamed");
-  expect(statusOption("Drafted")).toBeChecked();
   expect(statusOption("Deleted")).not.toBeChecked();
 }
 
@@ -192,11 +192,11 @@ describe("EditCourseForm delete confirmation", () => {
 
     await user.click(screen.getByRole("button", { name: "Keep the course" }));
 
-    await waitFor(() =>
-      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
-    );
+    await waitFor(() => {
+      expect(statusOption("Archived")).toBeChecked();
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    });
     expect(saveAction).not.toHaveBeenCalled();
-    expect(statusOption("Archived")).toBeChecked();
     expect(statusOption("Deleted")).not.toBeChecked();
   });
 
@@ -208,9 +208,10 @@ describe("EditCourseForm delete confirmation", () => {
 
     await user.keyboard("{Escape}");
 
-    await waitFor(() =>
-      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
-    );
+    await waitFor(() => {
+      expect(statusOption("Drafted")).toBeChecked();
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    });
     expect(leaveEvent().defaultPrevented).toBe(false);
   });
 
@@ -222,9 +223,10 @@ describe("EditCourseForm delete confirmation", () => {
 
     await user.click(screen.getByRole("button", { name: "Keep the course" }));
 
-    await waitFor(() =>
-      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
-    );
+    await waitFor(() => {
+      expect(statusOption("Drafted")).toBeChecked();
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    });
     expect(leaveEvent().defaultPrevented).toBe(false);
   });
 
