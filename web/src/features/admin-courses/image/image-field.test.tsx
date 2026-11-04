@@ -9,6 +9,7 @@ import { ImagePreview } from "./image-preview";
 
 const createObjectURL = vi.fn();
 const revokeObjectURL = vi.fn();
+const previewImageName = "Preview of the chosen image";
 
 beforeEach(() => {
   let count = 0;
@@ -76,7 +77,7 @@ describe("ImageField", () => {
     const file = fileOf("image/png");
 
     await choose(file);
-    await screen.findByRole("img");
+    await screen.findByRole("img", { name: previewImageName });
 
     expect(screen.getByLabelText<HTMLInputElement>("Image").files?.[0]).toBe(
       file,
@@ -87,7 +88,7 @@ describe("ImageField", () => {
     const user = userEvent.setup({ applyAccept: false });
     render(<Harness />);
     await choose(fileOf("image/png"));
-    await screen.findByRole("img");
+    await screen.findByRole("img", { name: previewImageName });
 
     await user.click(
       screen.getByRole("button", { name: "Clear the image value" }),
@@ -100,7 +101,9 @@ describe("ImageField", () => {
 
   it("shows no preview before a file is chosen", () => {
     render(<Harness />);
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("img", { name: previewImageName }),
+    ).not.toBeInTheDocument();
   });
 
   it("measures the chosen file, reports it and shows a preview", async () => {
@@ -111,7 +114,7 @@ describe("ImageField", () => {
     await choose(file);
 
     expect(
-      await screen.findByRole("img", { name: "Preview of the chosen image" }),
+      await screen.findByRole("img", { name: previewImageName }),
     ).toHaveAttribute("src", "blob:preview-1");
     expect(onChange).toHaveBeenCalledWith({ file, width: 1600, height: 900 });
   });
@@ -160,7 +163,9 @@ describe("ImageField", () => {
         "This file couldn't be read as an image. Choose another.",
       ),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("img", { name: previewImageName }),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps the preview of a refused file beside its message", async () => {
@@ -168,25 +173,30 @@ describe("ImageField", () => {
     render(<Harness />);
     await choose(fileOf("image/png"));
     await screen.findByText("The image must be at least 800 × 450 pixels.");
-    expect(screen.getByRole("img")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: previewImageName }),
+    ).toBeInTheDocument();
   });
 
   it("revokes the old object URL when the file changes", async () => {
     render(<Harness />);
     await choose(fileOf("image/png"));
-    await screen.findByRole("img");
+    await screen.findByRole("img", { name: previewImageName });
     await choose(fileOf("image/jpeg"));
 
     await waitFor(() =>
       expect(revokeObjectURL).toHaveBeenCalledWith("blob:preview-1"),
     );
-    expect(screen.getByRole("img")).toHaveAttribute("src", "blob:preview-2");
+    expect(screen.getByRole("img", { name: previewImageName })).toHaveAttribute(
+      "src",
+      "blob:preview-2",
+    );
   });
 
   it("revokes the object URL on unmount", async () => {
     const { unmount } = render(<Harness />);
     await choose(fileOf("image/png"));
-    await screen.findByRole("img");
+    await screen.findByRole("img", { name: previewImageName });
 
     unmount();
 

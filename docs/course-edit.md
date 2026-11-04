@@ -67,24 +67,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **11d.** Choosing a different time zone shows a note under the box: the dates and times stay as typed, so the course moves to that time in the new zone, and on a started course the moved times must be in the future.
 - [x] **12. Delete only without students.** The API refuses to delete a course with enrollments; the edit page greys out Deleted and says to archive it instead.
 - [ ] **13. Accessible fields on both pages.** Status circles, field borders and focused borders are easy to see, and the check and cross marks have names a screen reader reads.
-  - [ ] **13a.** A screen reader names the mark beside each field: the cross reads "Needs a fix" and the check reads "Looks good", on both pages. **Next**
-    - *Behaviours*:
-      - a touched field with a problem shows an image named "Needs a fix"
-      - a touched valid field shows an image named "Looks good"
-      - an untouched field shows no image
-      - an untouched field with a problem shows "Needs a fix" once the form has been submitted
-      - the mark stays out of the input's own name and description, so the input still reads "Course name" with only its help and message
-      - the time zone and image fields get the same names, because they use the same shared field
-    - *New shared pieces*: none
-    - *Files*:
-      - [validated-field.tsx](../web/src/components/form/validated-field.tsx) (the mark gets `role="img"` and an `aria-label` in place of `aria-hidden`; [lucide](https://lucide.dev/guide/advanced/accessibility) drops its own `aria-hidden` when it receives an aria prop)
-      - [validated-field.test.tsx](../web/src/components/form/validated-field.test.tsx) (role queries replace the `.lucide-x` and `.lucide-check` selectors)
-      - [image-field.test.tsx](../web/src/features/admin-courses/image/image-field.test.tsx) (its unnamed `findByRole("img")` queries now name the preview, because a touched image field shows a second image)
-    - *Settled*: Decision row on the mark's names
-    - *Done when*:
-      - `yarn --cwd web check:changed` passes
-      - after Tab out of an empty Course name, the browser's accessibility tree shows "Needs a fix"
-  - [ ] **13b.** Every field's border, each status circle and a focused field's border reach 3:1 contrast against the form section, on both pages.
+  - [x] **13a.** A screen reader names the mark beside each field: the cross reads "Needs a fix" and the check reads "Looks good", on both pages.
+  - [ ] **13b.** Every field's border, each status circle and a focused field's border reach 3:1 contrast against the form section, on both pages. **Next**
     - *Behaviours*:
       - an unchecked status circle's border measures at least 3:1 against the section background
       - the borders of the Course name box, a date box and the description editor measure at least 3:1

@@ -54,7 +54,13 @@ describe("ValidatedField", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Enter a course name.");
     expect(input).toHaveAttribute("aria-invalid", "true");
     expect(input).toHaveAccessibleDescription("Enter a course name.");
-    expect(document.querySelector(".lucide-x")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Needs a fix" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("img", { name: "Looks good" }),
+    ).not.toBeInTheDocument();
+    expect(input).toHaveAccessibleName("Course name");
   });
 
   it("shows a check once a touched field is valid, and clears the message while typing", async () => {
@@ -70,15 +76,20 @@ describe("ValidatedField", () => {
       "aria-invalid",
       "false",
     );
-    expect(document.querySelector(".lucide-check")).toBeInTheDocument();
-    expect(document.querySelector(".lucide-x")).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Looks good" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("img", { name: "Needs a fix" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Course name")).toHaveAccessibleName(
+      "Course name",
+    );
   });
 
   it("shows nothing for an untouched field", () => {
     render(<Harness />);
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(document.querySelector("svg")).not.toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 
   it("keeps a fixed slot for the status icon before an error appears and after it clears", async () => {
@@ -91,10 +102,15 @@ describe("ValidatedField", () => {
 
     await user.click(screen.getByLabelText("Course name"));
     await user.tab();
-    expect(document.querySelector(slotSelector)).toBeInTheDocument();
+    expect(document.querySelector(slotSelector)).toContainElement(
+      screen.getByRole("img", { name: "Needs a fix" }),
+    );
 
     await user.type(screen.getByLabelText("Course name"), "Cooking");
     expect(document.querySelectorAll(slotSelector)).toHaveLength(1);
+    expect(document.querySelector(slotSelector)).toContainElement(
+      screen.getByRole("img", { name: "Looks good" }),
+    );
   });
 
   it("shows the problem on an untouched field after the form was submitted", () => {
@@ -105,6 +121,12 @@ describe("ValidatedField", () => {
       "aria-invalid",
       "true",
     );
+    expect(
+      screen.getByRole("img", { name: "Needs a fix" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("img", { name: "Looks good" }),
+    ).not.toBeInTheDocument();
   });
 
   it("describes the input by the help text, and by the message as well when invalid", async () => {

@@ -45,10 +45,22 @@ function StatusMark({
   doesShowValid: boolean;
 }) {
   if (doesShowError) {
-    return <X aria-hidden className="size-4 text-destructive" />;
+    return (
+      <X
+        role="img"
+        aria-label="Needs a fix"
+        className="size-4 text-destructive"
+      />
+    );
   }
   if (doesShowValid) {
-    return <Check aria-hidden className="size-4 text-green-600" />;
+    return (
+      <Check
+        role="img"
+        aria-label="Looks good"
+        className="size-4 text-green-600"
+      />
+    );
   }
   return null;
 }
