@@ -25,17 +25,15 @@ function headingFor(count: number): string {
   return `Fix ${count} ${count === 1 ? "problem" : "problems"} before saving`;
 }
 
-function ServerProblemHeading({
-  title,
-  detail,
-}: {
-  title: string;
-  detail: string;
-}) {
+/**
+ * Not `ProblemAlert`: the surrounding `StickyFormNotice` is already the alert box,
+ * so this only lays out the API's title and detail inside it.
+ */
+function ServerProblem({ title, detail }: { title: string; detail: string }) {
   return (
     <>
-      <h2 className="font-medium text-destructive">{title}</h2>
-      <p>{detail}</p>
+      <h2 className="font-medium text-foreground">{title}</h2>
+      <p className="text-muted-foreground">{detail}</p>
     </>
   );
 }
@@ -46,7 +44,7 @@ function ProblemList({
 }: Pick<ErrorSummaryProps, "problems" | "onSelectField">) {
   return (
     <>
-      <h2 className="font-medium text-destructive">
+      <h2 className="font-medium text-foreground">
         {headingFor(problems.length)}
       </h2>
       <ul className="mt-2 list-disc pl-5">
@@ -86,9 +84,9 @@ export function ErrorSummary({
       ref={ref}
       tabIndex={-1}
       role="alert"
-      className="max-h-48 overflow-y-auto border-destructive outline-none focus-visible:ring-3 focus-visible:ring-destructive/40"
+      className="max-h-48 overflow-y-auto border-destructive outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
-      {serverProblem && <ServerProblemHeading {...serverProblem} />}
+      {serverProblem && <ServerProblem {...serverProblem} />}
       {problems.length > 0 && (
         <ProblemList problems={problems} onSelectField={onSelectField} />
       )}

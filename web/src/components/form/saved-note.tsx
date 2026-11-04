@@ -4,7 +4,7 @@ import { StickyFormNotice } from "@/components/form/sticky-form-notice";
 export function SavedNote({ note }: { note?: string }) {
   if (note === undefined) return null;
   return (
-    <StickyFormNotice role="status" className="border-green-600">
+    <StickyFormNotice role="status" className="border-success">
       {note}
     </StickyFormNotice>
   );

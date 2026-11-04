@@ -8,29 +8,8 @@ Keep this file current **in the same commit as the work**: tick the step, mark t
 
 Each milestone delivers one outcome. `/plan-create-implementation` splits a milestone into commit lines when it is the one marked next.
 
-- [ ] **1a.** Admin and public pages show the guide's colours, its error boxes and success marks included. **Next**
-  - *Behaviours*:
-    - every light §11 pair meets its floor (4.5:1 text, 3:1 borders and ring), and a failure names the pair
-    - a token missing from the page names itself in the failure
-    - the border spec measures against the real cream page, not white
-    - ProblemAlert shows title and detail in a box with a 1px destructive border, `rounded-lg`, title `--foreground` weight 500, detail `--muted-foreground`
-    - the shop error page shows the same box through ProblemAlert, and Try again calls retry
-    - the error summary's title reads `--foreground`, and its programmatic focus shows the guide's ring
-    - the saved note's border and the "Looks good" check use `--success` (≥3:1 on the fieldset)
-  - *New shared pieces*: `measure-contrast.ts` (browser test helper: read, composite, ratio), shared by the border spec and the token spec
-  - *Files*:
-    - [globals.css](../web/src/app/globals.css) (light tokens, new tokens and `--color-*` aliases, `.dark` unchanged)
-    - [problem-alert.tsx](../web/src/components/problem-alert.tsx) (prop becomes title and detail only, plus a test)
-    - [error.tsx](../web/src/app/%28shop%29/error.tsx) (+ new unit test)
-    - [error-summary.tsx](../web/src/components/form/error-summary.tsx), [saved-note.tsx](../web/src/components/form/saved-note.tsx), [validated-field.tsx](../web/src/components/form/validated-field.tsx)
-    - `web/tests/browser/site-look/token-contrast.spec.ts` and `measure-contrast.ts` (new folder)
-    - [field-border-contrast.spec.ts](../web/tests/browser/admin-courses/field-border-contrast.spec.ts) (uses the helper)
-    - [style-guide.md](style-guide.md) (Status 1 ticked for light tokens, the dark rows wait)
-  - *Settled*:
-    - Decision "Tokens, fonts and Button/Input sizes are milestone 1"
-    - style guide §2, §7 Alert and §11
-  - *Done when*: both specs pass, and admin create shows a green Save on cream
-- [ ] **1b.** Every page shows DM Sans; admin page titles show Playfair Display on the guide's type scale.
+- [x] **1a.** Admin and public pages show the guide's light colours, one error box (ProblemAlert) and green success marks through `--success`; the contrast spec checks every light §11 pair.
+- [ ] **1b.** Every page shows DM Sans; admin page titles show Playfair Display on the guide's type scale. **Next**
   - *Behaviours*:
     - body text on home and admin create computes to DM Sans
     - "New course" and "Edit course" compute to Playfair weight 400, 2.75rem at desktop and 2.25rem at 400px
@@ -59,7 +38,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - *Files*:
     - [button.tsx](../web/src/components/ui/button.tsx), [toggle.tsx](../web/src/components/ui/toggle.tsx) ("Local change" comments)
     - [globals.css](../web/src/app/globals.css) (hover tokens)
-    - `token-contrast.spec.ts` (hover pairs), `web/tests/browser/site-look/controls.spec.ts` (new)
+    - `web/tests/browser/contrast/token-contrast.spec.ts` (hover pairs), `web/tests/browser/site-look/controls.spec.ts` (new)
     - [style-guide.md](style-guide.md) (hover tokens in *New tokens*)
 - [ ] **1d.** Fields are 48px white boxes, and any focus shows the ring.
   - *Behaviours*:

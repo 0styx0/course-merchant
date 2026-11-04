@@ -1,5 +1,6 @@
 "use client"; // Error boundaries must be Client Components
 
+import { ProblemAlert } from "@/components/problem-alert";
 import { Button } from "@/components/ui/button";
 
 type ErrorPageProps = {
@@ -12,13 +13,12 @@ type ErrorPageProps = {
 export default function ErrorPage({ retry }: ErrorPageProps) {
   return (
     <>
-      <div
-        role="alert"
-        className="rounded-md border border-red-300 bg-red-100 p-4 text-red-950"
-      >
-        <p className="font-semibold">We couldn&apos;t load this page</p>
-        <p className="mt-1">Please try again in a moment.</p>
-      </div>
+      <ProblemAlert
+        problem={{
+          title: "We couldn't load this page",
+          detail: "Please try again in a moment.",
+        }}
+      />
       <Button type="button" onClick={() => retry()} className="mt-4">
         Try again
       </Button>

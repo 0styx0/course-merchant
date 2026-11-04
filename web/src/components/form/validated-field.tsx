@@ -58,7 +58,7 @@ function StatusMark({
       <Check
         role="img"
         aria-label="Looks good"
-        className="size-4 text-green-600"
+        className="size-4 text-success"
       />
     );
   }
@@ -160,6 +160,7 @@ export function ValidatedField({
         )}
         <StatusIcon
           doesShowError={doesShowError}
+          // Valid means touched without an error, so an untouched field shows neither mark.
           doesShowValid={!error && isTouched}
         />
       </div>
