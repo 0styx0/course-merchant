@@ -13,9 +13,70 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **1c.** Buttons are 48px, with the guide's label, colours and focus ring; the hover colours are tokens, and the alert dialog title uses DM Sans.
 - [x] **1d.** Fields are 48px white boxes with `rounded-md`, 1rem text and a destructive border when invalid; any focus, including the status radio, shows the ring.
 - [x] **1e.** Public pages show Playfair titles on the type scale (home, course, 404, list, card) and the guide's muted text; no `gray-` or `green-` classes remain.
-- [ ] **2. Free enrollment from the course page.** A visitor opens the fields in place, sends a name and email, and sees "Check your email". **Next**
-  - Read [Step 2](#step-2-free-enrollment-from-the-course-page) first: it has 4 commits (API wrapper with mock fixtures and handlers; the action; fields opening in place; the confirmation), needs step 1, and its first commit moves the mock course dates to fixed years.
-  - Not yet split into commit lines: run `/plan-create-implementation` before `/next-commit`.
+- [ ] **2a.** The mock courses keep times that hold for years, the free course shows on the mock home page, and each mock course page answers for the course in its URL. Read [Step 2](#step-2-free-enrollment-from-the-course-page) first. **Next**
+  - *Behaviours*:
+    - The React and TypeScript fixtures start in 2030 (upcoming for years); the card, detail and browser tests assert the new literals.
+    - A new free course fixture (price 0, upcoming 2030) shows as the third card in the mock home list.
+    - The mock course endpoint answers with the fixture whose id is in the URL; an unknown id gets the API's 404 problem (`COURSE_NOT_FOUND`).
+    - The `slow` scenario answers the same way after its delay.
+    - The admin fixture keeps its own 2026 times, so the admin tests stay unchanged.
+  - *New shared pieces*: the `freeCourse` fixture (steps 2 to 4 walk it).
+  - *Files*:
+    - [courses.ts](../web/src/mocks/fixtures/courses.ts) (new dates, `freeCourse`)
+    - [admin-courses.ts](../web/src/mocks/fixtures/admin-courses.ts) (its own schedule literal)
+    - [get-course.ts](../web/src/mocks/handlers/get-course.ts) (lookup by id)
+    - [list-courses.ts](../web/src/mocks/handlers/list-courses.ts) (three courses)
+    - Tests: `course-details.test.tsx`, `course-card.test.tsx`, `course-list.test.tsx`, `courses.api.test.ts`, `get-course.spec.ts`, `list-courses.spec.ts`, plus one handler test.
+  - *Settled*: Decisions "Fixtures keep fixed times…" and "The mock course endpoint answers by id…".
+  - *Done when*: `yarn --cwd web check:changed` passes; in `dev:mock` the home page shows three cards and the free card opens its page.
+- [ ] **2b.** The web server can enroll a visitor: it sends the course, name and email to the API and returns "check your email", the API's problem with the typed values, or a redirect to Stripe.
+  - *Behaviours*:
+    - A `check_email` answer returns success carrying the email sent.
+    - A `redirect` answer sends the browser to the API's `url`.
+    - A problem answer (400, 404, 409, 500, 503) returns a failure carrying the API's problem unchanged plus the typed name and email.
+    - The action reads only string form values; a missing or file value goes as an empty string, so the API's 400 answers.
+    - The course id comes bound from the page; a bad id gets the API's 400 problem.
+    - An unreachable API or a call past the 10 s timeout makes the action throw, so the shop error page shows.
+    - The request body is `{ courseId, customer: { name, email } }` as typed; the API trims.
+  - *New shared pieces*:
+    - The form state type (empty before the first send; success with `customer.email`; failure with `problem` and `customer`): 2c's form uses it and step 3 adds field errors.
+    - `startCheckoutHandlers` (`success` = check_email, `slow`, `notPurchasable`): steps 3 and 4 add more.
+  - *Files*:
+    - `web/src/features/checkout/checkout.api.ts` (`startCheckout`, through `toResult`)
+    - `web/src/features/checkout/start-checkout.action.ts` (the action and its state type)
+    - `web/src/mocks/handlers/start-checkout.ts`
+    - [node.ts](../web/src/mocks/node.ts) (registers the scenarios)
+    - Tests: `checkout.api.test.ts`, `start-checkout.action.test.ts`.
+    - Folder counts: `features/checkout` 0 → 4; `mocks/handlers` 7 → 8.
+  - *Settled*:
+    - [web.md](web.md) Decision "Only the Next server calls the API".
+    - [web.md](web.md) Decision "A failure is a `Result` only when the body is a problem".
+    - Decision "The buy action returns the typed name and email…".
+  - *Done when*: unit tests pass; `/security-review` run.
+- [ ] **2c.** A visitor on a free course opens the fields in place, sends a name and email, sees "Sending…", then "Check your email" with focus on it; a problem shows above the fields with the values kept.
+  - *Behaviours*:
+    - The page shows "Enroll for free →" (`aria-expanded="false"`) under the details list only when the price is 0; paid pages stay unchanged.
+    - Pressing it swaps the button for the fields (Name; Email with the hint "We send the course link to this address.") and "Email me the link →"; focus lands on Name.
+    - While sending, the button reads "Sending…" with a spinner and `aria-busy`, ignores more presses (one request), and the fields turn read-only.
+    - On success the notice replaces the fields and the button, and focus moves to it; it reads "Check your email" and "We've sent access to {email}. It can take a few minutes. If it hasn't arrived, look in spam."
+    - On failure the API's title and detail show in the error box above the fields; both typed values stay and the visitor can send again.
+    - An empty name or a malformed email stops at the browser's own check; no request goes out.
+    - A reload shows the closed button again.
+    - J2 as a browser spec: keyboard only (Enter opens, Tab, Enter sends, focus ends on the notice); the `notPurchasable` scenario shows the error box with values kept.
+  - *New shared pieces*: the check-email notice (step 5's success page shows it without an address).
+  - *Files*:
+    - `web/src/features/checkout/enroll-form.tsx` (client component; takes the course id as a string)
+    - `web/src/features/checkout/check-email-notice.tsx`
+    - [page.tsx](../web/src/app/(shop)/courses/[courseId]/page.tsx) (renders the form after the details for a free course)
+    - Tests: `enroll-form.test.tsx`, `check-email-notice.test.tsx`, `web/tests/browser/courses/free-enrollment.spec.ts`.
+    - Folder counts: `features/checkout` 4 → 8; `tests/browser/courses` 2 → 3.
+  - *Needs*: 2a (the free course is reachable) and 2b.
+  - *Settled*:
+    - Decision "Step 2 puts a bare Enroll button…".
+    - Decision "With JavaScript off, the closed Enroll button does nothing".
+    - Decision "The buy action returns the typed name and email…".
+    - Wireframe states 2b, 5 and 7b, notes 3 and 19.
+  - *Done when*: unit and browser tests pass; J2 walked at the free course in `dev:mock` at 400 px and desktop, with `success`, `slow` and `notPurchasable`; `/security-review` run.
 - [ ] **3. Mistakes in plain words.** A wrong field shows its message under it, other problems show above the form, and the typed values stay.
 - [ ] **4. Paid enrollment goes to Stripe.** A paid visitor reaches Stripe, sees the API's message when Stripe is down, and gets a working form back after pressing Back.
 - [ ] **5. Coming back from Stripe.** The return page says the email is on its way, or what happened instead.
@@ -80,7 +141,8 @@ Wireframe states and time variants, by the milestone that builds them:
 
 - **`dev:mock`** picks one scenario through the single hand-edited line `const scenario = "success"` in [node.ts](../web/src/mocks/node.ts). Each endpoint's handler file exports one named handler per scenario, and an endpoint without the chosen one falls back to its `success`.
 - **Playwright and Vitest** pick nothing: each test lists its own handlers (`mswHandlers`).
-- **In this area** every state gets a named handler, so the owner can walk it by editing that one line. Names to use: `freeCourse`, `redirect`, `checkEmail`, `nameInvalid`, `emailInvalid`, `notPurchasable`, `paymentProviderDown`, `slow`, plus one handler per checkout status.
+- **In this area** every state gets a named handler, so the owner can walk it by editing that one line. Names to use: `redirect`, `checkEmail`, `nameInvalid`, `emailInvalid`, `notPurchasable`, `paymentProviderDown`, `slow`, plus one handler per checkout status.
+- **Courses are not scenarios.** The mock course endpoint answers with the fixture whose id is in the URL, and the home list links to each one, so the owner opens the free course from the home page and the chosen scenario applies to its form.
 - **Commands** (from the repo root): `yarn --cwd web dev:mock`; `yarn --cwd web check:changed` to check a commit; `yarn --cwd web test:browser` for the Playwright suite, started with `run_in_background` and never twice at once.
 
 ## Principles
@@ -123,6 +185,7 @@ Wireframe states and time variants, by the milestone that builds them:
 | The Button primitive carries height, padding, label, radius, colours, ring and the 11rem minimum (link variant exempt); each public buy button adds full width below sm itself (step 8) (revisit after use) | Full width in the primitive would stretch admin's Remove and Cancel on a phone and break the price row | Full width in the primitive |
 | ProblemAlert takes a title and detail and is the one error box; the shop error page uses it | Today two files copy one class string; this keeps shadcn files untouched | shadcn Alert with local edits (an avoidable primitive edit, and a second box beside StickyFormNotice) |
 | The §11 check is a browser spec reading root tokens with `getComputedStyle`, sharing the border spec's colour helpers | The browser resolves `var()`, one set of helpers serves both specs, and the spec checks surfaces no page shows yet | A Vitest test parsing globals.css (a second copy of the helpers and a hand-made `var()` resolver) |
+| The mock course endpoint answers with the fixture whose id is in the URL, and the mock home list shows every public fixture | Any checkout scenario then works on the free course (and later the in-progress and ended ones) with one `scenario` line | A `freeCourse` scenario plus per-scenario pairings in node.ts (about 6 lines now, one more per later walk; names multiply, and a missed pairing shows the paid course with no form) |
 
 ## Step 1. Site look
 
@@ -158,29 +221,83 @@ Admin: green 48px buttons, 3:1 field borders, 2px focus ring
 ## Step 2. Free enrollment from the course page
 
 ```
-Course page after 2 (a free course; new block under today's details)
-| ...title, summary, description, Price, Schedule...|
+Free course page after 2 (new block under today's details list)
+| React... title, summary, description             |
+| Price       $0.00        <- "Free" in step 8      |
+| Schedule    ...                                   |
+| Enrollment  0 enrolled                            |
 |                                                   |
-| [ Enroll for free → ]          aria-expanded=false|
-|        | click                                    |
-|        v                                          |
-| Name   [ Ami Cohen        ]    <- focus lands here|
+| [ Enroll for free → ]           (closed, first load)
+|        | press
+|        v
+| +-- error box (only after a failed send) -------+ |
+| | Course not purchasable                        | |
+| | This course has ended and can no longer ...   | |
+| +-----------------------------------------------+ |
+| Name   [ Ami Cohen        ]   <- focus on open    |
 | Email  [ ami@example.com  ]                       |
 |        We send the course link to this address.   |
-| [ Email me the link → ]   -> [ Sending… ◌ ]       |
-|        | check_email                              |
-|        v                                          |
+| [ Email me the link → ]  -> [ Sending… ◌ ]        |
+|        | check_email
+|        v
 | +-----------------------------------------------+ |
-| | ✓ Check your email                            | |  <- focus moves here
-| |   We've sent access to ami@example.com. ...   | |
+| | ✓ Check your email          <- focus here     | |
+| |   We've sent access to ami@example.com. It    | |
+| |   can take a few minutes. If it hasn't        | |
+| |   arrived, look in spam.                      | |
 | +-----------------------------------------------+ |
+Paid course page: unchanged (no button until step 4)
 ```
 
 - Why here: the thinnest path through every layer (page, Server Action, API, email), and the riskiest area. The form goes under today's details list; steps 7 and 8 move it.
 - Needs: 1.
-- Size: 4 commits (API wrapper and mock fixtures and handlers; the action; fields opening in place; the confirmation). Twins: [problem-alert.tsx](../web/src/components/problem-alert.tsx), [field.tsx](../web/src/components/ui/field.tsx).
-- Risk: React 19 clears uncontrolled fields after an action (see Decisions). The first commit moves the mock courses to fixed dates that hold for years (`reactCourse` upcoming in 2030) and adds `freeCourse`, `inProgressCourse` and `endedCourse`; card and detail tests assert the old 2026 dates as literals, so they change in that commit.
+- Size: 3 commits (sample data; the server half; the form). The overview said 4: the API wrapper has no user without the action, and the fields and the confirmation are two states of one form. Twins: [problem-alert.tsx](../web/src/components/problem-alert.tsx), [field.tsx](../web/src/components/ui/field.tsx).
+- Risk: React 19 clears uncontrolled fields after an action (see Decisions). 2a moves the mock courses to fixed dates that hold for years (`reactCourse` upcoming in 2030) and adds `freeCourse`; the card and detail tests assert the old 2026 dates as literals, so they change in that commit.
+- Test data: `freeCourse` (price 0, upcoming 2030) from 2a; `startCheckoutHandlers` `success`, `slow` and `notPurchasable` from 2b. `inProgressCourse` and `endedCourse` arrive in step 8, the first step that uses them.
 - Done when: journey J2 at the free-course mock: press Enroll for free, see focus land on Name, send, see Sending…, then the notice with focus on it.
+- Design notes *(temporary)*:
+  - Boundaries: a new public feature folder `checkout/` (the name [web.md](web.md) planned). The page composes `CourseDetails` and the enroll form; neither imports the other.
+  - The client component gets only the course id string; the page decides "free" from `price.amount === 0`.
+  - The form binds the course id to the action ([Next forms guide](../web/node_modules/next/dist/docs/01-app/02-guides/forms.md), "Passing additional arguments") and runs it through React's [`useActionState`](https://react.dev/reference/react/useActionState). Tests mock the action module like the admin create-form tests.
+  - Each field's `defaultValue` comes from the failure state's `customer`, because React 19 resets uncontrolled fields after every action.
+  - Step 2 shows the button for every free course; an ended one gets the API's 409 in the error box. Step 8 picks the panel by time.
+  - The action already redirects on a `redirect` answer, so it handles every answer the contract allows. Step 4 adds the paid button, its labels, Stripe down and Back.
+  - Any API problem shows in the error box above the fields. Step 3 adds the messages under each field, the browser's Zod check and the API rewording. Until then the browser's `required` and `type="email"` stop an empty or malformed submit.
+  - The notice's "or contact us" waits for step 6's `CONTACT_EMAIL`.
+  - Reuse: `toResult`, the `api` client, `ProblemAlert`, `Button`, `Input`, `Field`/`FieldLabel`/`FieldDescription`, `problemResponse`, `MOCK_API_BASE_URL`, lucide's spinner icon.
+- Flow *(temporary)*:
+
+```
+Visitor opens a free course page                                      existing
+└── page sees price 0, shows "Enroll for free →"                      2c
+    Visitor presses it
+    └── fields open in place, focus on Name                           2c
+        Visitor presses "Email me the link →"
+        ├── a field empty or email malformed                          2c
+        │   └── browser's own message; no request sent
+        └── button "Sending… ◌", fields read-only                     2c
+            action reads course id, name, email; calls startCheckout  2b
+            ├── check_email → notice replaces the form; focus on it   2b state, 2c notice
+            ├── redirect → browser goes to the API's url              2b
+            ├── problem (400/404/409/500/503)                         2b state, 2c box
+            │   └── error box above the fields; typed values kept; can resend
+            └── API unreachable or 10 s timeout → throws              2b
+                └── shop error page "We couldn't load this page"; values lost
+```
+
+- Failure table *(temporary)*:
+
+| Actor | Abuse or failure | What the system does | Test that pins it |
+|---|---|---|---|
+| Visitor | double-presses send | button ignores presses while sending; one request | enroll-form test |
+| Visitor | empty name or malformed email | browser's own check; no request | enroll-form test (`required`, `type=email`) |
+| Caller | posts to the action with missing or file values | empty strings go; the API's 400 shows in the box | action test |
+| Caller | posts a paid or non-UUID course id | redirect to Stripe / the API's 400 in the box | action tests |
+| Visitor | course ended or unpublished since load | the API's 409/404 in the box; values kept | action test, browser spec (409) |
+| Visitor | API 500 or Stripe down 503 | the API's title and detail in the box | action test |
+| Visitor | API unreachable or slow past 10 s | action throws; shop error page | action test (rejects) |
+| Visitor | already owns the course, or a 6th email in a day | same notice; the page reveals nothing | the API's own tests (contract) |
+| Bot | floods the form | the API caps emails per address; the edge limit is a launch item | [payments.md](payments.md) *Launch* |
 
 ## Step 3. Mistakes in plain words
 
