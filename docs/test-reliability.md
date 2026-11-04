@@ -15,10 +15,77 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **1. A test comparing two times fails when they differ.** Today any two times match inside an object check, so some assertions check nothing.
   - [x] **1a.** Object checks in every API suite fail on two different times; the `markSent` and create-course tests now compare real values.
   - [x] **1b.** Object checks in web unit and component tests fail on two different times, through the web's own copy of the tester.
-- [ ] **2. Two checkouts can run every suite at once.** Each checkout gets its own test containers and browser-test port, so a worktree or an agent stops wiping the main checkout's database. **Next**
-  - 2a. Test containers and the database address come from env settings that default to today's values (`docker-compose.test.yaml`, `.env.test`, `db:test:up`).
-  - 2b. The Playwright port comes from a setting, Playwright never reuses a running server, and CI refuses a leftover `test.only` (`forbidOnly`).
-- [ ] **3. Unit and integration tests keep their own clock and finish in time.** No test depends on today's date, a sleep or the 5-second default timeout, and no test leaks a mock into the next.
+- [-] **2. Two checkouts can run every suite at once.** Dropped by the owner on 2026-11-04: `.env.test` overrides every shell setting, so per-checkout ports need a loader across five files. A second checkout still shares the main checkout's test containers.
+- [ ] **3. Unit and integration tests keep their own clock and finish in time.** No test depends on today's date, a sleep or the 5-second default timeout, and no test leaks a mock into the next. Planned as 8 commits (one per kind of fix per package):
+  - [ ] **3a (api).** API tests build "future" dates from a clock, and none of them sleeps. **Next**
+    - *Behaviours*:
+      - A schema test that needs a future time uses `utcIn()`, not a typed 2030 date.
+      - The canonical-timestamp-format tests build a valid future time first.
+      - The refund, webhook and session-lifetime tests read "now" from a frozen clock.
+      - The 5 ms sleep in the image test gives way to a clock step, so the image version still changes.
+    - *New shared pieces*: none.
+    - *Files*:
+      - the schema specs in `api/src/courses/test/unit/schemas/course-request-schemas/`
+      - `stripe.service.refund-and-webhook.spec.ts`, `webhooks.stripe.spec.ts`, `admin-sessions.create.spec.ts`, `admin-course.image.spec.ts`
+      - [api-tests.md](../.claude/rules/api-tests.md) (3 rules: write "future" as `utcIn()` or a frozen clock; freeze `Temporal.Now` in `beforeEach`; use *Clock* for times Postgres stamps)
+    - *Done when*: the API unit, integration and end-to-end suites pass.
+  - [ ] **3b (web).** Web tests start at one frozen time and build future dates from it.
+    - *Behaviours*:
+      - The web setup file freezes `Date` before each test and restores the real clock after it.
+      - The ~18 files that already fake time keep passing, and a test can override the frozen time.
+      - The schedule, price-row, course-card and course-details tests build dates from the frozen time.
+      - The `Date.now()` reads in the create and edit form tests use the frozen time.
+    - *New shared pieces*: the setup-file freeze, because every web test depends on it.
+    - *Files*:
+      - `web/src/test/setup.ts`
+      - the date tests above
+      - `.claude/rules/web-tests.md` (new; `paths:` frontmatter `web/**/*.test.ts*` and `web/tests/**`; the freeze rule)
+    - *Settled*: the global freeze decision row.
+    - *Done when*: `yarn --cwd web test:unit` passes.
+  - [ ] **3c (web).** A web test asserts "nothing shown" only after something visible proves the check ran.
+    - *Behaviours*:
+      - Each offender awaits a positive signal first.
+      - Break it once: reverting the code behind an absence check fails its test.
+    - *New shared pieces*: none.
+    - *Files*:
+      - the offending tests (list them first with `git grep -nE 'queryBy|not\.toBeInTheDocument|not\.toHaveBeenCalled' -- web/src`; re-plan when the list passes about 12 files)
+      - `web-tests.md` (absence rule)
+    - *Done when*: the web suite passes and each fixed test fails when its code is reverted.
+  - [ ] **3d (api).** An API test can no longer leak a mock into the next.
+    - *Behaviours*:
+      - `restoreMocks`, `unstubEnvs` and `unstubGlobals` are on in the 3 API Vitest configs.
+      - The hand-written `vi.restoreAllMocks` calls are gone.
+      - A test that leaned on a leaked mock gets fixed.
+    - *New shared pieces*: none.
+    - *Files*: the 3 API Vitest configs and the specs with hand restores.
+    - *Done when*: the API suites pass.
+  - [ ] **3e (web).** A web test can no longer leak a mock into the next.
+    - *Behaviours*:
+      - The same three settings go into `web/vitest.config.mts`.
+      - The hand restores are gone.
+      - `web-tests.md` says spies restore themselves.
+    - *New shared pieces*: none.
+    - *Needs*: 3c
+    - *Done when*: the web suite passes.
+  - [ ] **3f (api).** API tests run in `Pacific/Chatham`, so a test that assumes UTC fails on every machine.
+    - *Behaviours*:
+      - `env: { TZ }` is set in the 3 API Vitest configs, and exposed tests are fixed.
+      - The unit suite passes once under `TZ=Pacific/Kiritimati`.
+    - *New shared pieces*: none.
+    - *Done when*: the API suites pass.
+  - [ ] **3g (web).** Web tests run in the same zone.
+    - *Behaviours*:
+      - `env: { TZ }` goes into the web config, and exposed tests are fixed.
+      - The web suite passes once under `TZ=Pacific/Kiritimati`.
+    - *New shared pieces*: none.
+    - *Needs*: 3b
+    - *Done when*: the web suite passes.
+  - [ ] **3h (web).** Heavy web form tests finish under load.
+    - *Behaviours*:
+      - A 15-second `testTimeout` goes into the web config.
+      - The unit suites pass 5 times under `--sequence.shuffle`, once under Kiritimati, and once on a busy machine with no 5-second timeouts.
+    - *New shared pieces*: none.
+    - *Done when*: those runs pass; the milestone's *Retro* is added.
 - [ ] **4. Browser tests wait for the page.** Layout checks retry until they hold, tests type only once the page is ready, and the course list's loading-state test stops racing a timer.
 - [ ] **5. Lint rejects the patterns behind the flakes.** Test files can't read the real clock, sleep, or read a layout value once, unless a comment says why.
 - [ ] **6. The commit hook skips tests a change can't affect, and checks both packages together.** A CSS-only commit no longer runs a whole suite, and the checks before push stay the same.
@@ -88,8 +155,7 @@ Measured on 2026-11-04 in a separate worktree, on a busy 8-core machine (load av
 | One shared Temporal equality tester, in a setup file every Vitest config loads | It fixes every current and future object check on a time in one place, so a developer who forgets the rule still gets a failing test | Rewriting each assertion to `toEqual` (each new one can slip back); a lint rule (lint can't see value types) |
 | Test inputs rounded to database precision with the existing `toDatabasePrecision` | Postgres keeps microseconds and `Temporal.Now` gives more digits, so the strict tester would otherwise fail correct code | Comparing to the millisecond (hides a real rounding bug) |
 | The time tester decides whenever either value is a Temporal value, and a Temporal value never equals its text | A test that compares an API response's text time against an `Instant` otherwise passes for any time, as the create end-to-end test did | Deciding only when both values are Temporal (small, but leaves text-against-time checks hollow); turning text into Temporal before comparing (a few more lines, and hides a response that sends a time in the wrong format) |
-| Test containers and the browser-test port come from env settings that default to today's values | A second checkout stops wiping the first one's database, and nothing changes for a single checkout | A fixed second set of ports (collides at the third checkout) |
-| Playwright never reuses a running server | A leftover dev server without the test proxy silently switches off every mock handler | Reusing outside CI (saves seconds, risks testing the wrong server) |
+| The web setup file freezes `Date` before every test | Tests build future dates from one known "now", so none depends on the day it runs, and a test sets its own time only when it needs one | A freeze in each file that needs one (a line per file, and a new test can forget it) |
 | `restoreMocks`, `unstubEnvs` and `unstubGlobals` on in every Vitest config | A failed test no longer leaks its mock into the tests after it | An `afterEach` in each file (easy to forget) |
 | `Pacific/Chatham` (+12:45, an offset no common machine uses) pinned for Vitest and for Playwright's `timezoneId`; the stress command also runs `Pacific/Kiritimati` (+14:00) | A test that assumes UTC or the developer's own zone fails on every machine, instead of only on some | Leaving the zone to the machine (today's tests pass by luck); pinning UTC (hides tests that assume UTC) |
 | A 15-second timeout for web unit tests | The heavy form tests pass alone but hit the 5-second default under load | Raising the timeout per test (a growing list); cutting the typing in each test first (worth doing later, but bigger) |
@@ -169,20 +235,17 @@ Measured on 2026-11-04 in a separate worktree, on a busy 8-core machine (load av
     - Write "future" as `utcIn()` or a frozen clock.
     - Freeze `Temporal.Now` in `beforeEach`.
     - Use *Clock* for times Postgres stamps.
-- **Blocks the split:** none.
 - **Can wait:** which specs take their fixed time from the database clock.
-- **Re-measure:**
-  - Literal far-future dates:
-    `git grep -lE '"20(29|3[0-9])-' -- 'api/src' 'web/src' 'web/tests'`
-  - Restores written by hand:
-    `git grep -n 'restoreAllMocks' -- 'api/src' 'web/src'`
-  - Reads of the real clock:
-    `git grep -nE 'setTimeout|Date\.now|new Date\(\)' -- 'api/src/**/test/**' 'api/src/test/**' 'web/src/**/*.test.ts*'`
+- **Design notes *(temporary)*:**
+  - The order is clocks, absence checks, mock restoring, zone, timeout. Each commit starts by running the suites to list what its change exposes, and re-plans when more than about 12 test files need a fix.
+  - `web-tests.md` is created in 3b and grows in 3c and 3e; `api-tests.md` gains its rules in 3a.
+  - Vitest's `test.env.TZ` sets the zone inside test workers (checked 2026-11-04 in `web/` with `Pacific/Chatham`).
+  - The size is 8 commits, not 5: a commit cannot span `api/` and `web/`, and zone fallout would mix with mock-restoring fallout.
 
 ## Step 4. Browser tests wait for the page
 
 - **Why here:** the audit's only reproduced browser flakes live here (see *Numbers*), and milestone 5's browser lint rules would reject the same code.
-- **Needs:** 2, so the repeated runs never collide with a dev server.
+- **Needs:** none. Milestone 2 is dropped, so a repeated run needs the dev server stopped first.
 - **Builds on:**
   - [edit-course.spec.ts](../web/tests/browser/admin-courses/edit-course.spec.ts), [fill-valid-course-form.ts](../web/tests/browser/admin-courses/fill-valid-course-form.ts), [list-courses.spec.ts](../web/tests/browser/courses/list-courses.spec.ts) and [fonts.spec.ts](../web/tests/browser/site-look/fonts.spec.ts).
   - `coursesSlow` in [list-courses.ts](../web/src/mocks/handlers/list-courses.ts).
@@ -254,7 +317,7 @@ Measured on 2026-11-04 in a separate worktree, on a busy 8-core machine (load av
 ## Step 7. One command stresses the suites on demand
 
 - **Why here:** it needs steady, isolated suites. Otherwise it only reports failures we already know about.
-- **Needs:** 2, 3, 4.
+- **Needs:** 3, 4.
 - **Builds on:** the commands in *Mocks and commands*, and the scripts in each `package.json`.
 - **Size:** 2 commits:
   - the script;
