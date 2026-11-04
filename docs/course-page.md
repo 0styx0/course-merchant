@@ -8,7 +8,88 @@ Keep this file current **in the same commit as the work**: tick the step, mark t
 
 Each milestone delivers one outcome. `/plan-create-implementation` splits a milestone into commit lines when it is the one marked next.
 
-- [ ] **1. Site look.** Every page, the admin pages included, uses the guide's colours, Playfair Display and DM Sans, and 48px buttons and fields with its focus ring. **Next**
+- [ ] **1a.** Admin and public pages show the guide's colours, its error boxes and success marks included. **Next**
+  - *Behaviours*:
+    - every light §11 pair meets its floor (4.5:1 text, 3:1 borders and ring), and a failure names the pair
+    - a token missing from the page names itself in the failure
+    - the border spec measures against the real cream page, not white
+    - ProblemAlert shows title and detail in a box with a 1px destructive border, `rounded-lg`, title `--foreground` weight 500, detail `--muted-foreground`
+    - the shop error page shows the same box through ProblemAlert, and Try again calls retry
+    - the error summary's title reads `--foreground`, and its programmatic focus shows the guide's ring
+    - the saved note's border and the "Looks good" check use `--success` (≥3:1 on the fieldset)
+  - *New shared pieces*: `measure-contrast.ts` (browser test helper: read, composite, ratio), shared by the border spec and the token spec
+  - *Files*:
+    - [globals.css](../web/src/app/globals.css) (light tokens, new tokens and `--color-*` aliases, `.dark` unchanged)
+    - [problem-alert.tsx](../web/src/components/problem-alert.tsx) (prop becomes title and detail only, plus a test)
+    - [error.tsx](../web/src/app/%28shop%29/error.tsx) (+ new unit test)
+    - [error-summary.tsx](../web/src/components/form/error-summary.tsx), [saved-note.tsx](../web/src/components/form/saved-note.tsx), [validated-field.tsx](../web/src/components/form/validated-field.tsx)
+    - `web/tests/browser/site-look/token-contrast.spec.ts` and `measure-contrast.ts` (new folder)
+    - [field-border-contrast.spec.ts](../web/tests/browser/admin-courses/field-border-contrast.spec.ts) (uses the helper)
+    - [style-guide.md](style-guide.md) (Status 1 ticked for light tokens, the dark rows wait)
+  - *Settled*:
+    - Decision "Tokens, fonts and Button/Input sizes are milestone 1"
+    - style guide §2, §7 Alert and §11
+  - *Done when*: both specs pass, and admin create shows a green Save on cream
+- [ ] **1b.** Every page shows DM Sans; admin page titles show Playfair Display on the guide's type scale.
+  - *Behaviours*:
+    - body text on home and admin create computes to DM Sans
+    - "New course" and "Edit course" compute to Playfair weight 400, 2.75rem at desktop and 2.25rem at 400px
+    - no request goes to fonts.googleapis.com or fonts.gstatic.com
+  - *New shared pieces*: `font-heading` and the steps `text-display` to `text-eyebrow`, used by every later milestone
+  - *Files*:
+    - [layout.tsx](../web/src/app/layout.tsx) (next/font: DM Sans variable, Playfair 400, the guide's fallback stacks)
+    - [globals.css](../web/src/app/globals.css) (`--font-heading`, `--text-*` steps)
+    - the admin new and edit page files (`new/page.tsx`, `[courseId]/edit/page.tsx`)
+    - `web/tests/browser/site-look/fonts.spec.ts`
+    - [web.md](web.md) (row "Inter is the one font" now names both fonts), [style-guide.md](style-guide.md) (tick Status 2)
+  - *Settled*: Decision "DM Sans and Playfair Display, loaded by `next/font`"
+- [ ] **1c.** Buttons are 48px, with the guide's label, colours and focus ring.
+  - *Behaviours*:
+    - default 48px `px-6`, sm 36px, lg 56px
+    - radius `rounded-md`, label 1rem weight 500, min width 11rem
+    - icon and xs sizes keep their size (toolbar, combobox)
+    - the link variant keeps its text width, so the error summary's links stay left-aligned
+    - Tab onto Save shows a 2px `--primary` ring 2px off the button, and a mouse click shows none
+    - hover uses `--primary-hover` and `--secondary-hover`, and their text pairs pass (9.17, 12.81)
+    - a press no longer shifts the button
+    - destructive fills `--destructive` with white text
+    - toolbar toggles show the same ring
+    - the Save bar still keeps a focused field clear (existing edit-course spec)
+  - *New shared pieces*: tokens `--primary-hover` and `--secondary-hover`, used by Button and the contrast spec
+  - *Files*:
+    - [button.tsx](../web/src/components/ui/button.tsx), [toggle.tsx](../web/src/components/ui/toggle.tsx) ("Local change" comments)
+    - [globals.css](../web/src/app/globals.css) (hover tokens)
+    - `token-contrast.spec.ts` (hover pairs), `web/tests/browser/site-look/controls.spec.ts` (new)
+    - [style-guide.md](style-guide.md) (hover tokens in *New tokens*)
+- [ ] **1d.** Fields are 48px white boxes, and any focus shows the ring.
+  - *Behaviours*:
+    - Input and the time zone picker: 48px, `bg-card`, `px-4`, 1rem text at every width, `rounded-md`
+    - the textarea and the description editor keep their min heights and take the same border, fill and ring
+    - a mouse click into Course name shows the ring
+    - an invalid field shows a 1px destructive border and no glow, and the existing contrast tests still pass
+    - the status radio shows the ring when focused
+    - a price row's amount and Remove line up at 48px
+  - *New shared pieces*: none
+  - *Files*:
+    - [input.tsx](../web/src/components/ui/input.tsx), [textarea.tsx](../web/src/components/ui/textarea.tsx), [input-group.tsx](../web/src/components/ui/input-group.tsx), [radio-group.tsx](../web/src/components/ui/radio-group.tsx)
+    - [description-editor.tsx](../web/src/features/admin-courses/description-editor/description-editor.tsx)
+    - `controls.spec.ts`
+- [ ] **1e.** Public pages show Playfair titles and the guide's muted text.
+  - *Behaviours*:
+    - the home, course and 404 h1 sit at the h1 step (the h2 step at 400px)
+    - the course-list h2 and the card h3 sit at their steps
+    - summaries, the schedule and the empty-list lines compute to `--muted-foreground`
+    - the re-measure colour grep (with `green-`) finds nothing
+  - *New shared pieces*: none
+  - *Files*:
+    - [page.tsx](../web/src/app/%28shop%29/page.tsx), [not-found.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/not-found.tsx)
+    - [course-details.tsx](../web/src/features/courses/course-details.tsx), [course-schedule.tsx](../web/src/features/courses/course-schedule.tsx), [course-list.tsx](../web/src/features/courses/list/course-list.tsx), [course-card.tsx](../web/src/features/courses/list/course-card.tsx)
+    - `fonts.spec.ts`
+    - this doc's tick
+  - *Done when*:
+    - the browser suite passes
+    - journey: open admin create, admin edit, home and a course page at 400 px and desktop
+    - each shows green buttons, 3:1 field borders and the ring on Tab
 - [ ] **2. Free enrollment from the course page.** A visitor opens the fields in place, sends a name and email, and sees "Check your email".
 - [ ] **3. Mistakes in plain words.** A wrong field shows its message under it, other problems show above the form, and the typed values stay.
 - [ ] **4. Paid enrollment goes to Stripe.** A paid visitor reaches Stripe, sees the API's message when Stripe is down, and gets a working form back after pressing Back.
@@ -112,6 +193,11 @@ Wireframe states and time variants, by the milestone that builds them:
 | The course image has `alt=""`; wireframe note 23 says so | The h1 right below names the course, so a screen reader would read the name twice; keeps courses.md's row and guide §6 | The course name as alt text |
 | Fixtures keep fixed times that hold for years (upcoming 2030, ended 2025, in progress 2020–2040); tests set the browser's clock with Playwright's [`page.clock`](https://playwright.dev/docs/clock); one `dev:mock`-only scenario uses times relative to now for walking "Starts in 4 days" | Failures repeat (web.md's fixtures row), and the default `dev:mock` course stays upcoming | Every fixture relative to now (results depend on the day) |
 | After about a minute the return page stops checking and says "We've received your payment. Your access email can take a few minutes. If it hasn't arrived, look in spam." whatever the status | A buyer reaches the page only after Stripe took the card, so "pending" means our server hasn't processed Stripe's webhook yet, and the sweeper rechecks late payments every 10 minutes. The words claim no delivery, so they stay true if a refund follows | "Your email is on its way" (a promise that fails if a refund follows); polling without end (a spinner with no outcome) |
+| Hover colours are tokens (`--primary-hover`, `--secondary-hover`) in globals.css | The contrast spec reads every pair from the page, so the hover pairs get checked like the rest, and each colour lives in one place | Raw oklch values in button.tsx (the spec can't see them, so two places change) |
+| Headings take Playfair from `font-heading` plus a `text-h*` step on each heading; Playfair loads weight 400 only, and DM Sans loads as its variable font | A base rule on h1–h3 would turn alert titles and the description's headings serif, and render the existing bold headings in a fake bold; one heading weight keeps the download small | A base rule (one line, but every heading changes at once); Playfair variable (a bigger file for weights the guide bans) |
+| The Button primitive carries height, padding, label, radius, colours, ring and the 11rem minimum (link variant exempt); each public buy button adds full width below sm itself (step 8) (revisit after use) | Full width in the primitive would stretch admin's Remove and Cancel on a phone and break the price row | Full width in the primitive |
+| ProblemAlert takes a title and detail and is the one error box; the shop error page uses it | Today two files copy one class string; this keeps shadcn files untouched | shadcn Alert with local edits (an avoidable primitive edit, and a second box beside StickyFormNotice) |
+| The §11 check is a browser spec reading root tokens with `getComputedStyle`, sharing the border spec's colour helpers | The browser resolves `var()`, one set of helpers serves both specs, and the spec checks surfaces no page shows yet | A Vitest test parsing globals.css (a second copy of the helpers and a hand-made `var()` resolver) |
 
 ## Step 1. Site look
 
@@ -136,9 +222,13 @@ Admin: green 48px buttons, 3:1 field borders, 2px focus ring
 - Size: 3 to 4 commits (tokens; fonts and type scale; Button and Input changes marked as local edits; hard-coded gray and red classes moved onto tokens). Twin code: every admin page uses these tokens and primitives.
 - Risk: the recolour and the primitive changes cause admin regressions.
 - Done when: the existing border-contrast test covers the new surfaces and one new test covers the §11 text pairs (the plan pass picks its file); the browser suite passes; journey: open admin create, admin edit and the home page at 400 px and at desktop, and see green buttons, 3:1 field borders and the focus ring on Tab.
-- Blocks the split: none.
-- Can wait: none.
-- Re-measure: `grep -rln "text-gray-\|bg-red-\|border-red-\|text-red-" web/src`; `grep -rln "components/ui/button\|components/ui/input\"" web/src`.
+- Design notes *(temporary)*:
+  - Each primitive edit starts with web.md's `// Local change:` comment.
+  - Tokens with no user yet (`--surface-alt`, `--surface-dark`, `--olive`, `--success-foreground`, the display and eyebrow steps): the token spec checks them now, and steps 6 to 9 use them.
+  - The dark rows of style guide §2 wait for future-milestones *Dark admin*, because nothing in the code turns `.dark` on. Style guide Status 1 is ticked for light tokens only.
+  - StickyFormNotice keeps its own box, because it is sticky and carries status as well as errors.
+  - `next/font` renames families to `__Playfair_Display_<hash>`, so font tests match `/Playfair/`.
+  - Flow diagram: none, because the milestone adds no logic branch.
 
 ## Step 2. Free enrollment from the course page
 
