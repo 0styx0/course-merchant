@@ -13,6 +13,9 @@ export default defineConfig({
   test: {
     include: ["src/**/*.integration.spec.ts"],
     fileParallelism: false,
-    setupFiles: ["./src/test/integration.setup.ts"],
+    setupFiles: [
+      "./src/test/temporal-equality.ts",
+      "./src/test/integration.setup.ts",
+    ],
   },
 });

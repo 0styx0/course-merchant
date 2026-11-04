@@ -13,35 +13,8 @@ Keep this file current **in the same commit as the work**: tick the step, and ma
 Each milestone delivers one outcome. `/plan-create-implementation` splits a milestone into commit lines when it becomes the next one. Milestone N is described in the section *Step N* below.
 
 - [ ] **1. A test comparing two times fails when they differ.** Today any two times match inside an object check, so some assertions check nothing.
-  - [ ] **1a.** An object check in any API suite fails when it compares two different times, and the two tests that passed by accident now compare real values. **Next**
-    - *Behaviours*:
-      - An object check on two different instants (`2020-01-01` against `2030-01-01`) fails.
-      - An object check on two equal instants built separately passes.
-      - Two Temporal values of different kinds are unequal.
-      - A Temporal value against its own text (a JSON string) is unequal.
-      - A time nested in an array inside an object check is checked too.
-      - A Temporal value against `null` or `undefined` is unequal.
-      - Two durations compare by text, as Vitest's `toEqual` already does (`PT1H` against `PT60M` is unequal).
-      - Comparisons without a Temporal value keep today's result: plain objects, `Date`, strings, `expect.any(Temporal.Instant)`.
-      - The `markSent` integration test passes with its input rounded by `toDatabasePrecision`, and fails when the stored `sentAt` changes (break it once).
-      - The create end-to-end test passes comparing the response's text times with `toDatabasePrecision` of the request's text, and fails when an expected time changes (break it once).
-      - The API unit suite was never run with the tester. The commit starts by running it, and fixes any test it exposes in the same commit.
-        - Some unit specs mix Temporal values with object checks, so a few failures are possible (see *Re-measure* in Step 1).
-    - *New shared pieces*: the API's Temporal equality tester, a setup file every API Vitest config loads, so each suite's object checks on times stay strict.
-    - *Files*:
-      - `api/src/test/temporal-equality.ts` (new)
-      - `api/src/test/unit/temporal-equality.spec.ts` (new; relies on the config, imports no tester)
-      - [vitest.unit.config.ts](../api/vitest.unit.config.ts) (first `setupFiles` entry)
-      - [vitest.integration.config.ts](../api/vitest.integration.config.ts) and [vitest.e2e.config.ts](../api/vitest.e2e.config.ts) (tester listed before `integration.setup.ts`)
-      - [email-outbox.repository.integration.spec.ts](../api/src/email/test/integration/email-outbox.repository.integration.spec.ts)
-      - [admin-course.create.spec.ts](../api/src/test/e2e/courses/admin-course.create/admin-course.create.spec.ts) (expects `toDatabasePrecision(text)`, as the sibling test already does)
-      - [api-tests.md](../.claude/rules/api-tests.md) (two rules: `toEqual` or the tester for times; round inputs with `toDatabasePrecision`)
-      - Folders: `api/src/test` stays under the file limit; `api/src/test/unit` is new.
-    - *Settled*: Decisions "One shared Temporal equality tester…", "Test inputs rounded to database precision…" and "The time tester decides whenever either value is a Temporal value…".
-    - *Done when*:
-      - `yarn --cwd api test:unit`, `test:integration` and `test:e2e` pass.
-      - Both break-it-once checks fail for the reason the test's name gives.
-  - [ ] **1b.** An object check in a web unit or component test fails when it compares two different times.
+  - [x] **1a.** Object checks in every API suite fail on two different times; the `markSent` and create-course tests now compare real values.
+  - [ ] **1b.** An object check in a web unit or component test fails when it compares two different times. **Next**
     - *Behaviours*:
       - The same tester behaviours as 1a, built with `temporal-polyfill`.
       - Every existing web unit test still passes.

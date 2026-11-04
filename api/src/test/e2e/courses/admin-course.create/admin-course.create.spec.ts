@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { instant, toDatabasePrecision } from "@/test/test-helpers.js";
+import { toDatabasePrecision } from "@/test/test-helpers.js";
 import { bearer, logInAsAdmin } from "../../../admin-fixtures.js";
 import {
   createE2eApp,
@@ -92,12 +92,12 @@ describe("POST /admin/courses (e2e)", () => {
           id: expect.any(String),
           amount: 2500,
           currency: "USD",
-          effectiveAt: instant(body.prices[0].effectiveAt),
+          effectiveAt: toDatabasePrecision(body.prices[0].effectiveAt),
         },
       ],
       schedule: {
-        startTime: instant(body.schedule.startTime),
-        endTime: instant(body.schedule.endTime),
+        startTime: toDatabasePrecision(body.schedule.startTime),
+        endTime: toDatabasePrecision(body.schedule.endTime),
         timeZone: body.schedule.timeZone,
       },
       enrollments: [],

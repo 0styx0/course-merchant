@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { EmailOutboxRepository } from "@/email/outbox/email-outbox.repository.js";
 import { MAX_SEND_ATTEMPTS } from "@/email/delivery/retry-policy.js";
+import { toDatabasePrecision } from "@/test/test-helpers.js";
 import { DatabaseClock } from "@/prisma/database-clock.js";
 import { db } from "@/prisma/db.js";
 import {
@@ -218,7 +219,9 @@ describe("EmailOutboxRepository (integration)", () => {
   describe("markSent", () => {
     it("marks a pending email sent", async () => {
       const email = await queuedEmail("ada@example.com");
-      const sentAt = Temporal.Now.instant();
+      const sentAt = Temporal.Instant.from(
+        toDatabasePrecision(Temporal.Now.instant().toString()),
+      );
 
       await repository.markSent(db, email.id, sentAt);
 
