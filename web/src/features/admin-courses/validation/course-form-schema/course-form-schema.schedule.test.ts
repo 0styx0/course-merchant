@@ -1,16 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { type CourseFormValues } from "../course-form-schema";
-import { NOW, withValues } from "./course-form-schema.fixtures";
+import { newYorkWallClockAt, withValues } from "./course-form-schema.fixtures";
+
+const MINUTE = 60 * 1000;
 
 describe("courseFormSchema", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(NOW);
-  });
-
-  afterEach(() => vi.useRealTimers());
-
   describe("time zone", () => {
     it.each(["", "Mars/Olympus"])("refuses %j", (timeZone) => {
       expect(withValues((v) => (v.schedule.timeZone = timeZone))).toEqual({
@@ -59,8 +54,8 @@ describe("courseFormSchema", () => {
     it("refuses a start time in the past", () => {
       expect(
         withValues((v) => {
-          startAt(v, "2026-06-01T11:59");
-          endAt(v, "2026-06-01T13:00");
+          startAt(v, newYorkWallClockAt(-MINUTE));
+          endAt(v, newYorkWallClockAt(60 * MINUTE));
         }),
       ).toEqual({
         "schedule.startTimeOfDay": ["The start time must be in the future."],
@@ -68,13 +63,13 @@ describe("courseFormSchema", () => {
     });
 
     it("refuses an end time not after the start", () => {
-      expect(withValues((v) => endAt(v, "2026-07-01T09:00"))).toEqual({
+      expect(withValues((v) => endAt(v, "2027-07-01T09:00"))).toEqual({
         "schedule.endTimeOfDay": ["The end time must be after the start time."],
       });
     });
 
     it("refuses an end date before the start date, on End date only", () => {
-      expect(withValues((v) => endAt(v, "2026-06-30T20:00"))).toEqual({
+      expect(withValues((v) => endAt(v, "2027-06-30T20:00"))).toEqual({
         "schedule.endDate": [
           "The end date must be on or after the start date.",
         ],
@@ -82,7 +77,7 @@ describe("courseFormSchema", () => {
     });
 
     it("refuses an end time not after the start on the same day, on End time only", () => {
-      expect(withValues((v) => endAt(v, "2026-07-01T08:00"))).toEqual({
+      expect(withValues((v) => endAt(v, "2027-07-01T08:00"))).toEqual({
         "schedule.endTimeOfDay": ["The end time must be after the start time."],
       });
     });
@@ -104,7 +99,7 @@ describe("courseFormSchema", () => {
     it("reports only the zone when it is empty", () => {
       const result = withValues((v) => {
         v.schedule.timeZone = "";
-        endAt(v, "2026-07-01T08:00");
+        endAt(v, "2027-07-01T08:00");
       });
       expect(result).toEqual({ "schedule.timeZone": ["Choose a time zone."] });
     });
@@ -119,13 +114,13 @@ describe("courseFormSchema", () => {
     });
 
     it("refuses a time that daylight saving repeats", () => {
-      expect(withValues((v) => endAt(v, "2026-11-01T01:30"))).toEqual({
+      expect(withValues((v) => endAt(v, "2027-11-07T01:30"))).toEqual({
         "schedule.endTimeOfDay": [dstMessage],
       });
     });
 
     it("refuses a date that does not exist", () => {
-      expect(withValues((v) => (v.schedule.endDate = "2026-09-31"))).toEqual({
+      expect(withValues((v) => (v.schedule.endDate = "2027-09-31"))).toEqual({
         "schedule.endTimeOfDay": ["Enter a valid date and time."],
       });
     });

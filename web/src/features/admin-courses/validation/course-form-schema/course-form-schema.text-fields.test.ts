@@ -1,7 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
-  NOW,
   paragraph,
   problems,
   validValues,
@@ -9,13 +8,6 @@ import {
 } from "./course-form-schema.fixtures";
 
 describe("courseFormSchema", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(NOW);
-  });
-
-  afterEach(() => vi.useRealTimers());
-
   it("accepts a valid form", () => {
     expect(problems(validValues())).toEqual({});
   });

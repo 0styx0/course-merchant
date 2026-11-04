@@ -1,3 +1,5 @@
+// Stand-ins that each test file hands to `vi.mock` (the router and the description editor).
+// The render helpers and sample values live in edit-course-form.fixtures.tsx.
 import { vi } from "vitest";
 
 export const push = vi.fn();

@@ -9,7 +9,7 @@ import {
   uploadAction,
 } from "./create-course-form.fixtures";
 import { push } from "./create-course-form.mocks";
-import { FROZEN_NOW } from "../../../../test/frozen-now";
+import { FROZEN_NOW } from "@/test/frozen-now";
 
 vi.mock(
   "next/navigation",

@@ -19,14 +19,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [ ] **3. Unit and integration tests keep their own clock and finish in time.** No test depends on today's date, a sleep or the 5-second default timeout, and no test leaks a mock into the next. Planned as 9 commits (one per kind of fix per package):
   - [x] **3a (api).** API tests build "future" dates from a clock, and none of them sleeps; the API unit, integration and end-to-end suites pass.
   - [x] **3b (web).** Web tests start at one frozen time (2026-11-04 12:00 UTC); a test can still set its own.
-  - [ ] **3b2 (web).** The three web tests that install their own 2026-11-03 clock start at the frozen time instead. **Next**
-    - *Behaviours*:
-      - The edit-form schedule and saving tests and the prices action test drop their own fake clock and build their times from `FROZEN_NOW`.
-      - The `remembered-course` and `remembered-handlers` tests keep their clocks, because they set a saved-at time on purpose.
-    - *New shared pieces*: none.
-    - *Files*: the three tests above (`edit-course-form.schedule.test.tsx`, `edit-course-form.saving.test.tsx`, `save-edited-details.action.prices.test.ts`).
-    - *Done when*: `yarn --cwd web test:unit` passes and none of the three calls `useFakeTimers`.
-  - [ ] **3c (web).** A web test asserts "nothing shown" only after something visible proves the check ran.
+  - [x] **3b2 (web).** The edit-form schedule and saving tests and the prices action test start at the frozen time and build their times from it.
+  - [ ] **3c (web).** A web test asserts "nothing shown" only after something visible proves the check ran. **Next**
     - *Behaviours*:
       - Each offender awaits a positive signal first.
       - Break it once: reverting the code behind an absence check fails its test.

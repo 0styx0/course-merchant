@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
 import {
@@ -16,8 +16,6 @@ import type { CourseFormValues } from "../../validation/course-form-schema";
 // Its default export throws outside a React Server Component build
 vi.mock("server-only", () => ({}));
 
-const NOW = new Date("2026-06-01T12:00:00Z");
-
 const courseId = draftedAdminCourse.id;
 
 const validValues: CourseFormValues = {
@@ -29,9 +27,9 @@ const validValues: CourseFormValues = {
   },
   contentUrl: "https://example.com/course",
   schedule: {
-    startDate: "2026-07-15",
+    startDate: "2027-07-15",
     startTimeOfDay: "09:00",
-    endDate: "2026-07-15",
+    endDate: "2027-07-15",
     endTimeOfDay: "17:00",
     timeZone: "America/New_York",
   },
@@ -52,12 +50,6 @@ function failOnAnyCall() {
 }
 
 describe("retryDraftSaveAction", () => {
-  beforeEach(() => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(NOW);
-  });
-  afterEach(() => vi.useRealTimers());
-
   it("returns the course's id", async () => {
     server.use(updateCourseSuccess);
 

@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { courseFormWithImageSchema } from "../course-form-schema";
-import { NOW, validValues } from "./course-form-schema.fixtures";
+import { validValues } from "./course-form-schema.fixtures";
 
 function issuePaths(
   image: unknown,
@@ -14,21 +14,13 @@ function issuePaths(
 }
 
 describe("courseFormWithImageSchema", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(NOW);
-  });
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it("refuses a missing image", () => {
     expect(issuePaths(null, () => {})).toEqual(["image"]);
   });
 
   it("still reports the schedule while the image is missing", () => {
     const paths = issuePaths(null, (v) => {
-      v.schedule.endDate = "2026-06-30";
+      v.schedule.endDate = "2027-06-30";
     });
     expect(paths).toContain("image");
     expect(paths.some((path) => path.startsWith("schedule"))).toBe(true);

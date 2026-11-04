@@ -1,7 +1,8 @@
 import { http } from "msw";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { problemResponse } from "@/mocks/problem-response";
+import { FROZEN_NOW } from "@/test/frozen-now";
 import {
   updateCourseSuccess,
   updateCourseUrl,
@@ -26,7 +27,7 @@ vi.mock("server-only", () => ({}));
 // `refresh` throws outside a running Server Action
 vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 
-const NOW = "2026-11-01T00:00:00.000Z";
+const ONE_MINUTE_MS = 60_000;
 
 /** A loaded future price whose stored time has seconds, as create's "when saved" leaves. */
 const loadedFuturePrice = {
@@ -61,11 +62,8 @@ function saveWithPriceRows(
 
 describe("saveEditedDetailsAction prices", () => {
   beforeEach(() => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date(NOW));
     server.use(updateCourseSuccess);
   });
-  afterEach(() => vi.useRealTimers());
 
   it("sends an untouched row as its loaded price, then the prices in effect", async () => {
     const sent = captureBody();
@@ -105,7 +103,7 @@ describe("saveEditedDetailsAction prices", () => {
         {
           amount: 4900,
           currency: "USD",
-          effectiveAt: "2026-11-01T00:01:00.000Z",
+          effectiveAt: new Date(FROZEN_NOW + ONE_MINUTE_MS).toISOString(),
         },
         ...loadedPrices.inEffect,
       ],

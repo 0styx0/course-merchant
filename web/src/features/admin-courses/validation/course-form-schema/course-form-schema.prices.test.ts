@@ -1,16 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { type CourseFormValues } from "../course-form-schema";
-import { NOW, withValues } from "./course-form-schema.fixtures";
+import { newYorkWallClockAt, withValues } from "./course-form-schema.fixtures";
+
+const MINUTE = 60 * 1000;
 
 describe("courseFormSchema", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(NOW);
-  });
-
-  afterEach(() => vi.useRealTimers());
-
   describe("prices", () => {
     const priceProblems = (amountDollars: string) =>
       withValues((v) => (v.prices[0].amountDollars = amountDollars));
@@ -64,11 +59,11 @@ describe("courseFormSchema", () => {
       withValues((v) => setPrices(v, ...wallClocks));
 
     it("accepts a time more than a minute ahead", () => {
-      expect(priceRows("2026-06-01T12:02")).toEqual({});
+      expect(priceRows(newYorkWallClockAt(2 * MINUTE))).toEqual({});
     });
 
     it("refuses a set time under a minute ahead", () => {
-      expect(priceRows("2026-06-01T12:00")).toEqual({
+      expect(priceRows(newYorkWallClockAt(0))).toEqual({
         "prices.0.effectiveTimeOfDay": [
           "Choose a time at least a minute from now, or leave both empty to start when the course is published.",
         ],
@@ -76,7 +71,7 @@ describe("courseFormSchema", () => {
     });
 
     it("refuses a set day that has passed, on the date box", () => {
-      expect(priceRows("2026-05-31T15:00")).toEqual({
+      expect(priceRows(newYorkWallClockAt(-24 * 60 * MINUTE))).toEqual({
         "prices.0.effectiveDate": [
           "Choose a date that isn't in the past, or leave both empty to start when the course is published.",
         ],
@@ -84,7 +79,7 @@ describe("courseFormSchema", () => {
     });
 
     it("refuses two prices at the same time, on the later row", () => {
-      expect(priceRows("2026-07-01T09:00", "2026-07-01T09:00")).toEqual({
+      expect(priceRows("2027-07-01T09:00", "2027-07-01T09:00")).toEqual({
         "prices.1.effectiveTimeOfDay": [
           "Two prices can't take effect at the same time.",
         ],
@@ -100,7 +95,7 @@ describe("courseFormSchema", () => {
     });
 
     it("asks for the time when only a date is entered", () => {
-      expect(priceRows("", "2026-07-01")).toEqual({
+      expect(priceRows("", "2027-07-01")).toEqual({
         "prices.1.effectiveTimeOfDay": ["Enter a time, or clear the date."],
       });
     });
@@ -119,7 +114,7 @@ describe("courseFormSchema", () => {
     it("still checks price times while another field is empty", () => {
       const result = withValues((v) => {
         v.name = "";
-        setPrices(v, "2026-07-01T09:00", "2026-07-01T09:00");
+        setPrices(v, "2027-07-01T09:00", "2027-07-01T09:00");
       });
       expect(Object.keys(result).sort()).toEqual([
         "name",

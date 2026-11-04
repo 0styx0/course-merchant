@@ -1,9 +1,7 @@
+import { FROZEN_NOW } from "@/test/frozen-now";
 import type { JSONContent } from "@tiptap/core";
 
 import { courseFormSchema, type CourseFormValues } from "../course-form-schema";
-
-// 2026-06-01 12:00 in New York is 16:00 UTC.
-export const NOW = new Date("2026-06-01T16:00:00Z");
 
 export const paragraph = (value: string): JSONContent => ({
   type: "doc",
@@ -17,9 +15,9 @@ export function validValues(): CourseFormValues {
     description: paragraph("A long description."),
     contentUrl: "https://drive.google.com/drive/folders/abc",
     schedule: {
-      startDate: "2026-07-01",
+      startDate: "2027-07-01",
       startTimeOfDay: "09:00",
-      endDate: "2026-07-01",
+      endDate: "2027-07-01",
       endTimeOfDay: "11:00",
       timeZone: "America/New_York",
     },
@@ -46,3 +44,10 @@ export function withValues(change: (values: CourseFormValues) => void) {
   change(values);
   return problems(values);
 }
+
+/** The wall-clock text, in the fixtures' zone, of the moment `offsetMilliseconds` after `FROZEN_NOW`. */
+export const newYorkWallClockAt = (offsetMilliseconds: number) =>
+  new Date(FROZEN_NOW + offsetMilliseconds)
+    .toLocaleString("sv-SE", { timeZone: "America/New_York" })
+    .slice(0, 16)
+    .replace(" ", "T");

@@ -1,8 +1,9 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
+import { FROZEN_NOW } from "@/test/frozen-now";
 
 import { toEditFormPrefill } from "../edit-form-prefill";
 import {
@@ -31,11 +32,23 @@ vi.mock("../../description-editor/description-editor", async () => ({
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.useFakeTimers({ toFake: ["Date"] });
-  vi.setSystemTime(new Date("2026-11-03T12:00:00Z"));
 });
 
-afterEach(() => vi.useRealTimers());
+const HOUR_MS = 3600_000;
+const DAY_MS = 24 * HOUR_MS;
+
+/** A course whose times start a week after the frozen time. */
+const futurePrefill = toEditFormPrefill(
+  {
+    ...draftedAdminCourse,
+    schedule: {
+      ...draftedAdminCourse.schedule,
+      startTime: new Date(FROZEN_NOW + 7 * DAY_MS).toISOString(),
+      endTime: new Date(FROZEN_NOW + 7 * DAY_MS + 2 * HOUR_MS).toISOString(),
+    },
+  },
+  FROZEN_NOW,
+);
 
 const END_DATE_BEFORE_START =
   "The end date must be on or after the start date.";
@@ -220,17 +233,6 @@ describe("EditCourseForm schedule", () => {
       "The dates and times stay as typed, so the course moves to that time in Europe/Paris.";
     const alreadyRanSentence =
       "Because it has started or ended, the moved times must be in the future.";
-    const futurePrefill = toEditFormPrefill(
-      {
-        ...draftedAdminCourse,
-        schedule: {
-          ...draftedAdminCourse.schedule,
-          startTime: "2026-11-10T18:00:00Z",
-          endTime: "2026-11-10T20:00:00Z",
-        },
-      },
-      Date.parse("2026-11-03T12:00:00Z"),
-    );
 
     async function typeZone(
       user: ReturnType<typeof userEvent.setup>,
@@ -270,11 +272,11 @@ describe("EditCourseForm schedule", () => {
             ...draftedAdminCourse,
             schedule: {
               ...draftedAdminCourse.schedule,
-              startTime: "2026-11-03T11:00:00Z",
-              endTime: "2026-11-03T14:00:00Z",
+              startTime: new Date(FROZEN_NOW - HOUR_MS).toISOString(),
+              endTime: new Date(FROZEN_NOW + 2 * HOUR_MS).toISOString(),
             },
           },
-          Date.parse("2026-11-03T12:00:00Z"),
+          FROZEN_NOW,
         ),
       );
 
@@ -343,19 +345,14 @@ describe("EditCourseForm schedule", () => {
   });
 
   describe("progress note", () => {
-    const now = Date.parse("2026-11-03T12:00:00Z");
     const prefillWithTimes = (startTime: string, endTime: string) =>
       toEditFormPrefill(
         {
           ...draftedAdminCourse,
           schedule: { ...draftedAdminCourse.schedule, startTime, endTime },
         },
-        now,
+        FROZEN_NOW,
       );
-    const futurePrefill = prefillWithTimes(
-      "2026-11-10T18:00:00Z",
-      "2026-11-10T20:00:00Z",
-    );
 
     it("says an ended course has ended", () => {
       renderForm();
@@ -368,7 +365,10 @@ describe("EditCourseForm schedule", () => {
 
     it("says a running course has started", () => {
       renderForm(
-        prefillWithTimes("2026-11-03T11:00:00Z", "2026-11-03T14:00:00Z"),
+        prefillWithTimes(
+          new Date(FROZEN_NOW - HOUR_MS).toISOString(),
+          new Date(FROZEN_NOW + 2 * HOUR_MS).toISOString(),
+        ),
       );
       expect(
         screen.getByText(

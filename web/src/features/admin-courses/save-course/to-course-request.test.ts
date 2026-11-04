@@ -1,9 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
+
+import { FROZEN_NOW } from "@/test/frozen-now";
 
 import type { CheckedCourseFormValues } from "../validation/course-form-schema";
 import { toCourseRequest } from "./to-course-request";
 
-const NOW = new Date("2026-06-01T12:00:00Z");
+// A price with no set time starts one minute from now.
+const ONE_MINUTE_FROM_NOW = new Date(FROZEN_NOW + 60 * 1000).toISOString();
 
 function values(
   overrides: Partial<CheckedCourseFormValues> = {},
@@ -20,9 +23,9 @@ function values(
     },
     contentUrl: "https://example.com/course",
     schedule: {
-      startDate: "2026-07-15",
+      startDate: "2027-07-15",
       startTimeOfDay: "09:00",
-      endDate: "2026-07-15",
+      endDate: "2027-07-15",
       endTimeOfDay: "17:00",
       timeZone: "America/New_York",
     },
@@ -34,12 +37,6 @@ function values(
 }
 
 describe("toCourseRequest", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(NOW);
-  });
-  afterEach(() => vi.useRealTimers());
-
   it("builds exactly the contract's fields", () => {
     expect(toCourseRequest(values(), "drafted")).toEqual({
       name: "React Fundamentals",
@@ -53,15 +50,15 @@ describe("toCourseRequest", () => {
       contentUrl: "https://example.com/course",
       status: "drafted",
       schedule: {
-        startTime: "2026-07-15T13:00:00Z",
-        endTime: "2026-07-15T21:00:00Z",
+        startTime: "2027-07-15T13:00:00Z",
+        endTime: "2027-07-15T21:00:00Z",
         timeZone: "America/New_York",
       },
       prices: [
         {
           amount: 7950,
           currency: "USD",
-          effectiveAt: "2026-06-01T12:01:00.000Z",
+          effectiveAt: ONE_MINUTE_FROM_NOW,
         },
       ],
     });
@@ -106,7 +103,7 @@ describe("toCourseRequest", () => {
     );
     expect(request.prices.map((p) => p.effectiveAt)).toEqual([
       "2026-12-01T15:00:00Z",
-      "2026-06-01T12:01:00.000Z",
+      ONE_MINUTE_FROM_NOW,
     ]);
   });
 
@@ -117,7 +114,7 @@ describe("toCourseRequest", () => {
       }),
       "drafted",
     );
-    expect(request.schedule.startTime).toBe("2026-07-15T00:00:00Z");
+    expect(request.schedule.startTime).toBe("2027-07-15T00:00:00Z");
   });
 
   it("throws on a time the schema should have refused", () => {
@@ -126,7 +123,7 @@ describe("toCourseRequest", () => {
         values({
           schedule: {
             ...values().schedule,
-            startDate: "2026-03-08",
+            startDate: "2027-03-14",
             startTimeOfDay: "02:30",
           },
         }),

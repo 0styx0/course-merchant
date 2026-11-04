@@ -1,8 +1,9 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
+import { FROZEN_NOW } from "@/test/frozen-now";
 
 import type { CourseActionResult } from "../../save-course/course-action-result";
 import { push } from "./edit-course-form.mocks";
@@ -37,18 +38,17 @@ const valuesWithoutImage = { ...prefill.values, image: undefined };
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.useFakeTimers({ toFake: ["Date"] });
-  vi.setSystemTime(new Date("2026-11-03T12:00:00Z"));
 });
 
-afterEach(() => vi.useRealTimers());
+const HOUR_MS = 3600_000;
+const MINUTE_MS = 60_000;
 
 const savedCourse: CourseActionResult = {
   state: "success",
   data: { courseId: "c1" },
 };
 
-/** The sample course with its start moved to `startTime`, as the page loads it. */
+/** The sample course with its start moved to `startTime`, as the page loads it at `renderMs`. It ends three hours after the frozen time. */
 function loadCourseStartingAt(startTime: string, renderMs: number) {
   return toEditFormPrefill(
     {
@@ -56,7 +56,7 @@ function loadCourseStartingAt(startTime: string, renderMs: number) {
       schedule: {
         ...draftedAdminCourse.schedule,
         startTime,
-        endTime: "2026-11-03T15:00:00Z",
+        endTime: new Date(FROZEN_NOW + 3 * HOUR_MS).toISOString(),
       },
     },
     renderMs,
@@ -82,6 +82,7 @@ describe("EditCourseForm saving", () => {
       prefill.loadedSchedule,
       prefill.loadedPrices,
     );
+    expect(push).not.toHaveBeenCalled();
   });
 
   it("shows a refusal, keeps the values, and replaces it with the next one", async () => {
@@ -179,18 +180,6 @@ describe("EditCourseForm saving", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("Saved");
   });
 
-  it("shows Saved after a save and keeps the address", async () => {
-    const user = userEvent.setup();
-    saveAction.mockResolvedValue(savedCourse);
-    renderForm();
-
-    setValue("Course name", "Renamed");
-    await clickSave(user);
-
-    expect(await screen.findByRole("status")).toHaveTextContent("Saved");
-    expect(push).not.toHaveBeenCalled();
-  });
-
   it("shows no Saved after a refused save", async () => {
     const user = userEvent.setup();
     saveAction.mockResolvedValue(refusal("Refused", []));
@@ -199,7 +188,6 @@ describe("EditCourseForm saving", () => {
     await clickSave(user);
 
     await screen.findByRole("heading", { name: "Refused" });
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
@@ -237,29 +225,47 @@ describe("EditCourseForm saving", () => {
     );
   });
 
-  it("saves the reloaded start unchanged once it has passed", async () => {
-    const user = userEvent.setup();
-    saveAction.mockResolvedValue(savedCourse);
-    const view = renderForm(
-      loadCourseStartingAt("2026-11-03T12:30:00Z", Date.now()),
-    );
-    vi.setSystemTime(new Date("2026-11-03T13:00:00Z"));
+  describe("when the clock passes the loaded start", () => {
+    const loadedStart = new Date(FROZEN_NOW + 30 * MINUTE_MS).toISOString();
+    const reloadedStart = new Date(FROZEN_NOW + 45 * MINUTE_MS).toISOString();
+    const clockAfterBothStarts = new Date(FROZEN_NOW + HOUR_MS);
 
-    view.rerender(
-      makeEditFormElement(
-        loadCourseStartingAt("2026-11-03T12:45:00Z", Date.now()),
-      ),
-    );
-    await clickSave(user);
+    it("saves the reloaded start unchanged", async () => {
+      const user = userEvent.setup();
+      saveAction.mockResolvedValue(savedCourse);
+      const view = renderForm(loadCourseStartingAt(loadedStart, FROZEN_NOW));
+      vi.setSystemTime(clockAfterBothStarts);
 
-    await waitFor(() => expect(saveAction).toHaveBeenCalled());
-    expect(saveAction.mock.calls[0]?.[1].schedule).toMatchObject({
-      startDate: "2026-11-03",
-      startTimeOfDay: "07:45",
+      view.rerender(
+        makeEditFormElement(
+          loadCourseStartingAt(reloadedStart, clockAfterBothStarts.getTime()),
+        ),
+      );
+      await clickSave(user);
+
+      await waitFor(() => expect(saveAction).toHaveBeenCalled());
+      // 12:45 UTC is 07:45 in the sample course's zone, America/New_York (UTC-5 in November).
+      expect(saveAction.mock.calls[0]?.[1].schedule).toMatchObject({
+        startDate: reloadedStart.slice(0, "YYYY-MM-DD".length),
+        startTimeOfDay: "07:45",
+      });
+      expect(
+        screen.queryByText("The start time must be in the future."),
+      ).not.toBeInTheDocument();
     });
-    expect(
-      screen.queryByText("The start time must be in the future."),
-    ).not.toBeInTheDocument();
+
+    it("refuses a changed start that lies before the clock", async () => {
+      const user = userEvent.setup();
+      renderForm(loadCourseStartingAt(loadedStart, FROZEN_NOW));
+      vi.setSystemTime(clockAfterBothStarts);
+
+      // 07:15 in America/New_York is 12:15 UTC, before the clock's 13:00 UTC.
+      setValue("Start time", "07:15");
+      await clickSave(user);
+
+      await screen.findAllByText("The start time must be in the future.");
+      expect(saveAction).not.toHaveBeenCalled();
+    });
   });
 
   it("shows the stored date and time (New York) on a price row that was saved with an empty start", async () => {
