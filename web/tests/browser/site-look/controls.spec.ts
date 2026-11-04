@@ -92,3 +92,51 @@ test("the delete dialog's title is DM Sans, not Playfair", async ({ page }) => {
   const title = dialog.getByText("Delete this course?").first();
   expect(await readStyle(title, "font-family")).toMatch(/^"DM Sans"/);
 });
+
+async function expectRingLayers(element: Locator, page: Page) {
+  // The two layers are the 2px gap in the page colour and the ring (4px with the gap).
+  await expect
+    .poll(async () =>
+      (await readVisibleShadowLayers(element)).map((layer) =>
+        layer.replace(/^\w+\([^)]*\) /, ""),
+      ),
+    )
+    .toEqual(["0px 0px 0px 2px", "0px 0px 0px 4px"]);
+
+  const [, ringLayer] = await readVisibleShadowLayers(element);
+  const ringColour = toRgb(ringLayer.replace(/ [^)]*$/, ""));
+  const ring = await readRootToken(page, "--ring");
+  expect(ringColour.r).toBeCloseTo(ring.r, 1);
+  expect(ringColour.g).toBeCloseTo(ring.g, 1);
+  expect(ringColour.b).toBeCloseTo(ring.b, 1);
+}
+
+test("Course name and the time zone box are 48px high with the --card fill", async ({
+  page,
+}) => {
+  const card = await readRootToken(page, "--card");
+  const boxes = [
+    page.getByLabel("Course name", { exact: true }),
+    page.getByRole("combobox", { name: "Time zone" }),
+  ];
+  for (const box of boxes) {
+    // The time zone box sits inside a group that draws the border and fill.
+    const frame = box.locator(
+      "xpath=ancestor-or-self::*[@data-slot='input-group' or @data-slot='input'][1]",
+    );
+    expect(await readStyle(frame, "height")).toBe("48px");
+    expect(toRgb(await readStyle(frame, "background-color"))).toEqual(card);
+  }
+});
+
+test("a mouse click into Course name shows the ring", async ({ page }) => {
+  const name = page.getByLabel("Course name", { exact: true });
+  await name.click();
+  await expectRingLayers(name, page);
+});
+
+test("Tab onto the status radio shows the ring", async ({ page }) => {
+  const radio = page.getByRole("radio", { checked: true });
+  await tabUntilFocused(page, radio);
+  await expectRingLayers(radio, page);
+});

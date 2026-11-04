@@ -11,20 +11,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **1a.** Admin and public pages show the guide's light colours, one error box (ProblemAlert) and green success marks through `--success`; the contrast spec checks every light §11 pair.
 - [x] **1b.** Every page shows DM Sans (italic file loads too); admin page titles show Playfair Display on the guide's type scale.
 - [x] **1c.** Buttons are 48px, with the guide's label, colours and focus ring; the hover colours are tokens, and the alert dialog title uses DM Sans.
-- [ ] **1d.** Fields are 48px white boxes, and any focus shows the ring. **Next**
-  - *Behaviours*:
-    - Input and the time zone picker: 48px, `bg-card`, `px-4`, 1rem text at every width, `rounded-md`
-    - the textarea and the description editor keep their min heights and take the same border, fill and ring
-    - a mouse click into Course name shows the ring
-    - an invalid field shows a 1px destructive border and no glow, and the existing contrast tests still pass
-    - the status radio shows the ring when focused
-    - a price row's amount and Remove line up at 48px
-  - *New shared pieces*: none
-  - *Files*:
-    - [input.tsx](../web/src/components/ui/input.tsx), [textarea.tsx](../web/src/components/ui/textarea.tsx), [input-group.tsx](../web/src/components/ui/input-group.tsx), [radio-group.tsx](../web/src/components/ui/radio-group.tsx)
-    - [description-editor.tsx](../web/src/features/admin-courses/description-editor/description-editor.tsx)
-    - `controls.spec.ts`
-- [ ] **1e.** Public pages show Playfair titles and the guide's muted text.
+- [x] **1d.** Fields are 48px white boxes with `rounded-md`, 1rem text and a destructive border when invalid; any focus, including the status radio, shows the ring.
+- [ ] **1e.** Public pages show Playfair titles and the guide's muted text. **Next**
   - *Behaviours*:
     - the home, course and 404 h1 sit at the h1 step (the h2 step at 400px)
     - the course-list h2 and the card h3 sit at their steps
