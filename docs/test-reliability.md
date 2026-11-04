@@ -16,19 +16,44 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **1a.** Object checks in every API suite fail on two different times; the `markSent` and create-course tests now compare real values.
   - [x] **1b.** Object checks in web unit and component tests fail on two different times, through the web's own copy of the tester.
 - [-] **2. Two checkouts can run every suite at once.** Dropped by the owner on 2026-11-04: `.env.test` overrides every shell setting, so per-checkout ports need a loader across five files. A second checkout still shares the main checkout's test containers.
-- [ ] **3. Unit and integration tests keep their own clock and finish in time.** No test depends on today's date, a sleep or the 5-second default timeout, and no test leaks a mock into the next. Planned as 9 commits (one per kind of fix per package):
+- [ ] **3. Unit and integration tests keep their own clock and finish in time.** No test depends on today's date, a sleep or the 5-second default timeout, and no test leaks a mock into the next. Split into commits, one per kind of fix per package:
   - [x] **3a (api).** API tests build "future" dates from a clock, and none of them sleeps; the API unit, integration and end-to-end suites pass.
   - [x] **3b (web).** Web tests start at one frozen time (2026-11-04 12:00 UTC); a test can still set its own.
   - [x] **3b2 (web).** The edit-form schedule and saving tests and the prices action test start at the frozen time and build their times from it.
   - [ ] **3c (web).** A web test asserts "nothing shown" only after something visible proves the check ran. **Next**
     - *Behaviours*:
-      - Each offender awaits a positive signal first.
-      - Break it once: reverting the code behind an absence check fails its test.
+      - Each "error cleared" check in the create and edit forms waits for a positive signal in the same `waitFor`/`findBy`: the "Looks good" mark, or `aria-invalid="false"` on the fixed field.
+      - Delete-dialog tests check the restored status option before "dialog gone" or "save not called".
+      - Saved-note tests show the note first, then wait for the leave warning before "note gone".
+      - The edit schedule test that checks without awaiting becomes async.
+      - The prices zone-recheck test gets a setup where only the zone change can clear the error.
+      - The save-details action tests assert the failure result before "refresh not called".
+      - The enroll-button tests prove the browser's `invalid` event fired before "no request sent".
+      - Plain-render tests assert a visible element on the same render.
+      - Break it once: removing the code each fixed test guards fails that test.
     - *New shared pieces*: none.
-    - *Files*:
-      - the offending tests (list them first with `git grep -nE 'queryBy|not\.toBeInTheDocument|not\.toHaveBeenCalled' -- web/src`; re-plan when the list passes about 12 files)
-      - `web-tests.md` (absence rule)
+    - *Files* (all under `web/src/`; line, then kind):
+      - `components/form/validated-field.test.tsx`: 91 S, 92 S
+      - `features/admin-courses/create-course/tests/create-course-form.fields.test.tsx`: 154 S
+      - `…/create-course/tests/create-course-form.price-rows.test.tsx`: 34 S, 88 R, 118 R, 142 R
+      - `…/create-course/tests/create-course-form.schedule-validation.test.tsx`: 61 R, 76 R, 85 A, 86 A, 95 A, 172 R, 180 A
+      - `…/create-course/tests/create-course-form.time-zone-and-leave-warning.test.tsx`: 103 A, 114 R
+      - `…/edit-course/tests/edit-course-form.delete.test.tsx`: 73 R, 75 A, 196 R, 198 A, 212 R, 226 R
+      - `…/edit-course/tests/edit-course-form.prices.test.tsx`: 90 S, 122 R, 136 S, 173 R, 215 R, 238 R
+      - `…/edit-course/tests/edit-course-form.saved-note.test.tsx`: 59 S, 77 A
+      - `…/edit-course/tests/edit-course-form.saving.test.tsx`: 224 R
+      - `…/edit-course/tests/edit-course-form.schedule.test.tsx`: 151 R, 199 R, 208 A, 253 S, 383 S
+      - `…/image/image-field.test.tsx`: 105 S
+      - `…/save-course/edit/save-edited-details.action.test.ts`: 51 A, 68 A
+      - `features/checkout/enroll-button.test.tsx`: 181 A, 192 A
+      - `features/courses/description/course-description.test.tsx`: 75 S
+      - `.claude/rules/web-tests.md` (absence rule)
+      - Line numbers come from the 2026-11-04 audit and shift as the files change.
     - *Done when*: the web suite passes and each fixed test fails when its code is reverted.
+    - *Design notes (temporary)*:
+      - Kinds: **A** = the test never showed the thing it checks absent, after async work, so a broken path still passes; **R** = the thing showed before the action, but nothing proves the async re-check produced the result; **S** = the check follows a plain render with nothing asserted present.
+      - Files that already pass the rule (a positive signal first, or a synchronous render): `error-summary`, `use-save-edited-course`, `time-zone-picker`, `description-toolbar`, `instrumentation` (mocking is off there, so no log-line signal exists), and the other create/edit/list/checkout tests the grep lists.
+      - The owner chose one commit over a split by area (2026-11-04).
   - [ ] **3d (api).** An API test can no longer leak a mock into the next.
     - *Behaviours*:
       - `restoreMocks`, `unstubEnvs` and `unstubGlobals` are on in the 3 API Vitest configs.
