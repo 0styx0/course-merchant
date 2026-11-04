@@ -9,7 +9,7 @@ type CourseListProps = {
 function CourseListFrame({ children }: { children: ReactNode }) {
   return (
     <section aria-labelledby="courses-heading">
-      <h2 id="courses-heading" className="text-2xl font-semibold">
+      <h2 id="courses-heading" className="font-heading text-h3 md:text-h2">
         Courses
       </h2>
 
@@ -20,14 +20,16 @@ function CourseListFrame({ children }: { children: ReactNode }) {
 
 function CoursesEmpty() {
   return (
-    <p className="mt-4 text-gray-600">Check back later for new courses.</p>
+    <p className="mt-4 text-muted-foreground">
+      Check back later for new courses.
+    </p>
   );
 }
 
 export function CourseListLoading() {
   return (
     <CourseListFrame>
-      <p className="mt-4 text-gray-600">Loading courses...</p>
+      <p className="mt-4 text-muted-foreground">Loading courses...</p>
     </CourseListFrame>
   );
 }

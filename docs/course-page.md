@@ -12,23 +12,10 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **1b.** Every page shows DM Sans (italic file loads too); admin page titles show Playfair Display on the guide's type scale.
 - [x] **1c.** Buttons are 48px, with the guide's label, colours and focus ring; the hover colours are tokens, and the alert dialog title uses DM Sans.
 - [x] **1d.** Fields are 48px white boxes with `rounded-md`, 1rem text and a destructive border when invalid; any focus, including the status radio, shows the ring.
-- [ ] **1e.** Public pages show Playfair titles and the guide's muted text. **Next**
-  - *Behaviours*:
-    - the home, course and 404 h1 sit at the h1 step (the h2 step at 400px)
-    - the course-list h2 and the card h3 sit at their steps
-    - summaries, the schedule and the empty-list lines compute to `--muted-foreground`
-    - the re-measure colour grep (with `green-`) finds nothing
-  - *New shared pieces*: none
-  - *Files*:
-    - [page.tsx](../web/src/app/%28shop%29/page.tsx), [not-found.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/not-found.tsx)
-    - [course-details.tsx](../web/src/features/courses/course-details.tsx), [course-schedule.tsx](../web/src/features/courses/course-schedule.tsx), [course-list.tsx](../web/src/features/courses/list/course-list.tsx), [course-card.tsx](../web/src/features/courses/list/course-card.tsx)
-    - `fonts.spec.ts`
-    - this doc's tick
-  - *Done when*:
-    - the browser suite passes
-    - journey: open admin create, admin edit, home and a course page at 400 px and desktop
-    - each shows green buttons, 3:1 field borders and the ring on Tab
-- [ ] **2. Free enrollment from the course page.** A visitor opens the fields in place, sends a name and email, and sees "Check your email".
+- [x] **1e.** Public pages show Playfair titles on the type scale (home, course, 404, list, card) and the guide's muted text; no `gray-` or `green-` classes remain.
+- [ ] **2. Free enrollment from the course page.** A visitor opens the fields in place, sends a name and email, and sees "Check your email". **Next**
+  - Read [Step 2](#step-2-free-enrollment-from-the-course-page) first: it has 4 commits (API wrapper with mock fixtures and handlers; the action; fields opening in place; the confirmation), needs step 1, and its first commit moves the mock course dates to fixed years.
+  - Not yet split into commit lines: run `/plan-create-implementation` before `/next-commit`.
 - [ ] **3. Mistakes in plain words.** A wrong field shows its message under it, other problems show above the form, and the typed values stay.
 - [ ] **4. Paid enrollment goes to Stripe.** A paid visitor reaches Stripe, sees the API's message when Stripe is down, and gets a working form back after pressing Back.
 - [ ] **5. Coming back from Stripe.** The return page says the email is on its way, or what happened instead.

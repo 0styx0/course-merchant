@@ -13,8 +13,8 @@ export function CourseDetails({ course }: CourseDetailsProps) {
   return (
     <article className="mt-6">
       <header>
-        <h1 className="text-3xl font-bold">{course.name}</h1>
-        <p className="mt-2 text-gray-600">{course.summary}</p>
+        <h1 className="font-heading text-h2 md:text-h1">{course.name}</h1>
+        <p className="mt-2 text-muted-foreground">{course.summary}</p>
       </header>
 
       <CourseDescription description={course.description} />

@@ -1,6 +1,8 @@
 import msw from "next/experimental/testmode/playwright/msw.js";
 
+import { reactCourse } from "@/mocks/fixtures/courses";
 import { getCourseAsAdminHandlers } from "@/mocks/handlers/get-course-as-admin";
+import { getCourseHandlers } from "@/mocks/handlers/get-course";
 import { coursesSuccess } from "@/mocks/handlers/list-courses";
 
 const { test, expect } = msw;
@@ -60,6 +62,64 @@ for (const { path, title } of adminTitles) {
     expect((await readStyle()).size).toBe("36px");
   });
 }
+
+const coursePath = `/courses/${reactCourse.id}`;
+
+const publicTitles = [
+  { path: "/", title: "Courses", scenario: getCourseHandlers.success },
+  {
+    path: coursePath,
+    title: reactCourse.name,
+    scenario: getCourseHandlers.success,
+  },
+  {
+    path: coursePath,
+    title: "Course not found",
+    scenario: getCourseHandlers.notFound,
+  },
+];
+
+for (const { path, title, scenario } of publicTitles) {
+  test(`the public "${title}" h1 on ${path} is Playfair Display at 44px on desktop and 36px on a phone`, async ({
+    page,
+    msw,
+  }) => {
+    msw.use(scenario);
+    const heading = page.getByRole("heading", { name: title, level: 1 });
+    const readStyle = () =>
+      heading.evaluate((node) => {
+        const style = getComputedStyle(node);
+        return { family: style.fontFamily, size: style.fontSize };
+      });
+
+    await page.setViewportSize({ width: desktopWidth, height: 800 });
+    await page.goto(path);
+    const desktop = await readStyle();
+    expect(desktop.family).toMatch(/Playfair/);
+    expect(desktop.size).toBe("44px");
+
+    await page.setViewportSize({ width: phoneWidth, height: 800 });
+    expect((await readStyle()).size).toBe("36px");
+  });
+}
+
+test("a course summary uses the muted text colour", async ({ page, msw }) => {
+  msw.use(getCourseHandlers.success);
+  await page.goto(coursePath);
+
+  const mutedColor = await page.evaluate(() => {
+    const probe = document.createElement("span");
+    probe.style.color = "var(--muted-foreground)";
+    document.body.append(probe);
+    const color = getComputedStyle(probe).color;
+    probe.remove();
+    return color;
+  });
+  await expect(page.getByText(reactCourse.summary)).toHaveCSS(
+    "color",
+    mutedColor,
+  );
+});
 
 test("the pages request no font from Google", async ({ page }) => {
   const requestedUrls: string[] = [];

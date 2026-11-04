@@ -10,8 +10,8 @@ export default function Home() {
   return (
     <>
       <header>
-        <h1 className="text-4xl font-bold">Courses</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="font-heading text-h2 md:text-h1">Courses</h1>
+        <p className="mt-2 text-muted-foreground">
           Browse currently available courses.
         </p>
       </header>

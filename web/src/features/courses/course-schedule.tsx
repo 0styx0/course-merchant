@@ -20,7 +20,7 @@ export function CourseSchedule({ schedule }: CourseScheduleProps) {
           {dateFormatter.format(new Date(schedule.endTime))}
         </time>
       </p>
-      <p className="mt-1 text-sm text-gray-600">{schedule.timeZone}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{schedule.timeZone}</p>
     </div>
   );
 }
