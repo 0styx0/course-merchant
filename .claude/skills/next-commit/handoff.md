@@ -22,8 +22,9 @@ Used in the *Hand off* section of [SKILL.md](SKILL.md). Keep it short, and follo
     - The changes column names each test added or modified in that file, in plain words, and says which are new and which were changed.
     - Fixtures, mocks and other test helpers go in the files-changed table, not here.
 - `Deviations from the plan line: none`, or what differed and why (a file, a behaviour, a decision made on the way).
-- `Reviews:` which of the `/simplify` pass, `/security-review` and the other-model review (SKILL.md *Build*) ran.
+- `Reviews:` which of the newcomer-reader pass, the `/simplify` pass, `/security-review` and the other-model review (SKILL.md *Build*) ran, in that order.
   - Give each finding as fixed or rejected, with a reason.
+  - List every newcomer-reader finding as the agent worded it, never a summary.
 - When this is the last commit of its milestone, a `Retro:` as defined in [../_shared/milestone-line.md](../_shared/milestone-line.md), also added to the milestone's `## Step N.` section.
 - A suggested conventional commit message.
   - No body unless it needs one.
