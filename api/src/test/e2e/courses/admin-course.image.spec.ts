@@ -1,7 +1,17 @@
 import type { INestApplication } from "@nestjs/common";
+import { Temporal } from "@js-temporal/polyfill";
 import request from "supertest";
 import sharp from "sharp";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { createCourse, descriptionDoc } from "@/test/course-fixtures.js";
 import { instant } from "@/test/test-helpers.js";
@@ -45,6 +55,10 @@ describe("Admin course image API (e2e)", () => {
         timeZone: "UTC",
       })
     ).id;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   afterAll(async () => {
@@ -97,6 +111,10 @@ describe("Admin course image API (e2e)", () => {
   });
 
   it("shows the image in the admin course and changes its version on replace", async () => {
+    // the admin session from beforeEach stays valid because the clock starts at the real time
+    let now = Temporal.Now.instant();
+    vi.spyOn(Temporal.Now, "instant").mockImplementation(() => now);
+
     await put()
       .attach("image", await jpeg(), "a.jpg")
       .expect(204);
@@ -106,7 +124,7 @@ describe("Admin course image API (e2e)", () => {
       .get(`/v1/admin/courses/${courseId}`)
       .set("Authorization", bearer(token));
 
-    await new Promise((resolve) => setTimeout(resolve, 5));
+    now = now.add({ seconds: 1 });
     await put()
       .attach("image", await jpeg(), "b.jpg")
       .expect(204);

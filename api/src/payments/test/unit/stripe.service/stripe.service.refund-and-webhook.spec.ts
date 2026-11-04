@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   InvalidWebhookSignatureError,
   PaymentProviderUnavailableError,
@@ -122,6 +122,18 @@ describe("StripeService", () => {
   });
 
   describe("verifyWebhookEvent", () => {
+    const frozenSignatureClock = new Date("2031-06-01T12:00:00Z");
+
+    // the Stripe SDK reads Date.now() to judge how old a signature is
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(frozenSignatureClock);
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     const eventBody = JSON.stringify({
       id: "evt_test_123",
       object: "event",
@@ -187,7 +199,8 @@ describe("StripeService", () => {
 
     it("rejects a signature from long ago, so old requests can't be replayed", () => {
       const { service, stripe } = serviceWith(() => jsonResponse(200, {}));
-      const oneHourAgoInSeconds = Math.floor(Date.now() / 1000) - 60 * 60;
+      const oneHourAgoInSeconds =
+        Math.floor(frozenSignatureClock.getTime() / 1000) - 60 * 60;
 
       expect(() =>
         service.verifyWebhookEvent(

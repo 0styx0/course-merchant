@@ -4,12 +4,15 @@ import {
   updateCourseRequestSchema,
 } from "@/courses/validation/course-request-schemas.js";
 import {
+  freezeTemporalNowBeforeEachTest,
   utcIn,
   makeValidRequest,
   makePrice,
   expectIssueAt,
   expectUnknownKeyIssue,
 } from "@/courses/test/unit/schemas/course-request-schemas/course-request-schemas.fixtures.js";
+
+freezeTemporalNowBeforeEachTest();
 
 describe("createCourseRequestSchema", () => {
   describe("malformed input", () => {

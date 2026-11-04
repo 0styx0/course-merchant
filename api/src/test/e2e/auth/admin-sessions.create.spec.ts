@@ -1,7 +1,9 @@
 import { INestApplication } from "@nestjs/common";
+import { Temporal } from "@js-temporal/polyfill";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { db } from "@/prisma/db.js";
 import { isWellFormedSessionToken } from "@/auth/sessions/session-token.js";
 import type { AdminSessionResponse, ProblemDetails } from "types.js";
 import {
@@ -48,9 +50,12 @@ describe("POST /v1/admin/sessions (e2e)", () => {
     expect(response.headers["cache-control"]).toBe("no-store");
     expect(isWellFormedSessionToken(response.body.token)).toBe(true);
 
-    const lifetimeMs = Date.parse(response.body.absoluteExpiresAt) - Date.now();
-    expect(lifetimeMs).toBeGreaterThan(6.99 * 24 * 3600_000);
-    expect(lifetimeMs).toBeLessThanOrEqual(7 * 24 * 3600_000);
+    // Postgres stamps the session's createdAt, so the test reads it back
+    const [storedSession] = await db.orm.public.AdminSession.all();
+
+    expect(Temporal.Instant.from(response.body.absoluteExpiresAt)).toEqual(
+      storedSession.createdAt.add({ hours: 7 * 24 }),
+    );
   });
 
   it("accepts the email in any case, with spaces", async () => {

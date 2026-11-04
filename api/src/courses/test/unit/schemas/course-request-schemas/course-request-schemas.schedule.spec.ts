@@ -2,6 +2,8 @@ import { Temporal } from "@js-temporal/polyfill";
 import { describe, expect, it } from "vitest";
 import { createCourseRequestSchema } from "@/courses/validation/course-request-schemas.js";
 import {
+  freezeTemporalNowBeforeEachTest,
+  frozenNow,
   utcIn,
   makeValidRequest,
   makePrice,
@@ -10,6 +12,8 @@ import {
 } from "@/courses/test/unit/schemas/course-request-schemas/course-request-schemas.fixtures.js";
 
 describe("createCourseRequestSchema", () => {
+  freezeTemporalNowBeforeEachTest();
+
   describe("schedule range", () => {
     it("rejects an end time earlier than the start time", () => {
       const request = makeValidRequest();
@@ -86,21 +90,47 @@ describe("createCourseRequestSchema", () => {
         "End time cannot be in the past.",
       );
     });
+
+    it("accepts a start time exactly equal to now", () => {
+      const request = makeValidRequest();
+
+      request.schedule.startTime = frozenNow.toString();
+      request.schedule.endTime = frozenNow.add({ hours: 1 }).toString();
+
+      expect(createCourseRequestSchema.safeParse(request).success).toBe(true);
+    });
+
+    it("rejects a start time 1 nanosecond before now", () => {
+      const request = makeValidRequest();
+
+      request.schedule.startTime = frozenNow
+        .subtract({ nanoseconds: 1 })
+        .toString();
+      request.schedule.endTime = frozenNow.add({ hours: 1 }).toString();
+
+      const issues = getIssues(request);
+
+      expectIssueAt(
+        issues,
+        ["schedule", "startTime"],
+        "Start time cannot be in the past.",
+      );
+    });
   });
 
   describe("canonical UTC timestamp format", () => {
     const nonCanonicalTimestamps = [
       {
         label: "a negative numeric offset",
-        value: "2030-01-01T19:00:00-05:00",
+        value: "2026-11-05T19:00:00-05:00",
       },
       {
         label: "a positive zero offset",
-        value: "2030-01-02T00:00:00+00:00",
+        value: "2026-11-06T00:00:00+00:00",
       },
       {
         label: "a timestamp without a time-zone designator",
-        value: "2030-01-02T00:00:00",
+        value: "2026-11-06T00:00:00",
       },
     ];
 
@@ -110,7 +140,7 @@ describe("createCourseRequestSchema", () => {
         const request = makeValidRequest();
 
         request.schedule.startTime = value;
-        request.schedule.endTime = "2030-01-02T02:00:00Z";
+        request.schedule.endTime = "2026-11-06T02:00:00Z";
 
         const issues = getIssues(request);
 
@@ -123,7 +153,7 @@ describe("createCourseRequestSchema", () => {
       ({ value }) => {
         const request = makeValidRequest();
 
-        request.schedule.startTime = "2030-01-01T18:00:00Z";
+        request.schedule.startTime = "2026-11-05T18:00:00Z";
         request.schedule.endTime = value;
 
         const issues = getIssues(request);
@@ -195,8 +225,8 @@ describe("createCourseRequestSchema", () => {
       const request = makeValidRequest();
 
       request.prices = [
-        makePrice("2030-01-01T12:00:00Z"),
-        makePrice("2030-01-01T12:00:00.000Z"),
+        makePrice("2026-11-05T12:00:00Z"),
+        makePrice("2026-11-05T12:00:00.000Z"),
       ];
 
       const issues = getIssues(request);

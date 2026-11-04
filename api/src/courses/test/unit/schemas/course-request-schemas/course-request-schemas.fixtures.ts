@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { expect } from "vitest";
+import { afterEach, beforeEach, expect, vi } from "vitest";
 
 import { descriptionDoc } from "@/test/course-fixtures.js";
 import { createCourseRequestSchema } from "@/courses/validation/course-request-schemas.js";
@@ -27,6 +27,19 @@ export type IssueLike = {
   path: PropertyKey[];
   message: string;
 };
+
+export const frozenNow = Temporal.Instant.from("2026-11-04T12:00:00Z");
+
+// registers hooks that hold Temporal.Now at frozenNow for every test in the calling describe
+export function freezeTemporalNowBeforeEachTest() {
+  beforeEach(() => {
+    vi.spyOn(Temporal.Now, "instant").mockReturnValue(frozenNow);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+}
 
 export function utcIn(hoursFromNow: number): string {
   return Temporal.Now.instant().add({ hours: hoursFromNow }).toString();

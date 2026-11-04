@@ -17,19 +17,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **1b.** Object checks in web unit and component tests fail on two different times, through the web's own copy of the tester.
 - [-] **2. Two checkouts can run every suite at once.** Dropped by the owner on 2026-11-04: `.env.test` overrides every shell setting, so per-checkout ports need a loader across five files. A second checkout still shares the main checkout's test containers.
 - [ ] **3. Unit and integration tests keep their own clock and finish in time.** No test depends on today's date, a sleep or the 5-second default timeout, and no test leaks a mock into the next. Planned as 8 commits (one per kind of fix per package):
-  - [ ] **3a (api).** API tests build "future" dates from a clock, and none of them sleeps. **Next**
-    - *Behaviours*:
-      - A schema test that needs a future time uses `utcIn()`, not a typed 2030 date.
-      - The canonical-timestamp-format tests build a valid future time first.
-      - The refund, webhook and session-lifetime tests read "now" from a frozen clock.
-      - The 5 ms sleep in the image test gives way to a clock step, so the image version still changes.
-    - *New shared pieces*: none.
-    - *Files*:
-      - the schema specs in `api/src/courses/test/unit/schemas/course-request-schemas/`
-      - `stripe.service.refund-and-webhook.spec.ts`, `webhooks.stripe.spec.ts`, `admin-sessions.create.spec.ts`, `admin-course.image.spec.ts`
-      - [api-tests.md](../.claude/rules/api-tests.md) (3 rules: write "future" as `utcIn()` or a frozen clock; freeze `Temporal.Now` in `beforeEach`; use *Clock* for times Postgres stamps)
-    - *Done when*: the API unit, integration and end-to-end suites pass.
-  - [ ] **3b (web).** Web tests start at one frozen time and build future dates from it.
+  - [x] **3a (api).** API tests build "future" dates from a clock, and none of them sleeps; the API unit, integration and end-to-end suites pass.
+  - [ ] **3b (web).** Web tests start at one frozen time and build future dates from it. **Next**
     - *Behaviours*:
       - The web setup file freezes `Date` before each test and restores the real clock after it.
       - The ~18 files that already fake time keep passing, and a test can override the frozen time.
@@ -125,7 +114,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - **A test must be able to fail.** Each new assertion gets a "break it once" check. This is the TDD red step, applied to every assertion.
 - **A test controls its own time.**
   - "Now" comes from a frozen clock.
-  - A "future" date is built from that clock (`utcIn(24)` gives 24 hours from now), never typed as a calendar date.
+  - A "future" date is built from the frozen clock (`utcIn(24)` gives 24 hours from now). A typed calendar date appears only beside a frozen "now", and only when its text format is what the test checks.
   - Times that Postgres stamps come from `DatabaseClock` (see [api/CLAUDE.md](../api/CLAUDE.md) *Clock*).
 - **Read a value that can still change inside a retry.** A check on layout, validation or a font uses a retrying assertion, never a single read.
 - **Assert an absence only after a positive signal.** "No error shown" counts only once something visible proves the check ran.

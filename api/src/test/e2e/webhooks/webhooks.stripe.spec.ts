@@ -2,7 +2,16 @@ import { INestApplication } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 import request from "supertest";
 import Stripe from "stripe";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { db } from "@/prisma/db.js";
 import { createPricedCourse } from "@/test/course-fixtures.js";
@@ -16,6 +25,7 @@ import type { ProblemDetails } from "types.js";
 
 describe("POST /v1/webhooks/stripe (e2e)", () => {
   let app: INestApplication;
+  let now: Temporal.Instant;
 
   beforeAll(async () => {
     app = await createE2eApp(useStripeMock);
@@ -25,9 +35,17 @@ describe("POST /v1/webhooks/stripe (e2e)", () => {
     await app.close();
   });
 
+  beforeEach(() => {
+    now = Temporal.Now.instant();
+    vi.spyOn(Temporal.Now, "instant").mockReturnValue(now);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   // starts a paid checkout and returns the Payment it created
   async function startPaidCheckout() {
-    const now = Temporal.Now.instant();
     const { course } = await createPricedCourse(
       { startsAt: now.add({ hours: 24 }), endsAt: now.add({ hours: 26 }) },
       { amount: 9900, effectiveAt: now.subtract({ hours: 1 }) },
@@ -55,7 +73,7 @@ describe("POST /v1/webhooks/stripe (e2e)", () => {
       id,
       object: "event",
       type,
-      created: Math.floor(Date.now() / 1000),
+      created: Math.floor(now.epochMilliseconds / 1000),
       data: {
         object: {
           id: payment.providerCheckoutId,

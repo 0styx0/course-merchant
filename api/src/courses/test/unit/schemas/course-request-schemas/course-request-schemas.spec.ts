@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createCourseRequestSchema } from "@/courses/validation/course-request-schemas.js";
 import {
+  freezeTemporalNowBeforeEachTest,
   utcIn,
   makeValidRequest,
   makePrice,
@@ -10,6 +11,8 @@ import {
 } from "@/courses/test/unit/schemas/course-request-schemas/course-request-schemas.fixtures.js";
 
 describe("createCourseRequestSchema", () => {
+  freezeTemporalNowBeforeEachTest();
+
   describe("valid requests", () => {
     it("accepts a complete valid request", () => {
       const result = createCourseRequestSchema.safeParse(makeValidRequest());
@@ -51,9 +54,9 @@ describe("createCourseRequestSchema", () => {
     it("accepts canonical UTC timestamps ending in Z", () => {
       const request = makeValidRequest();
 
-      request.schedule.startTime = "2030-01-01T18:00:00Z";
-      request.schedule.endTime = "2030-01-01T19:00:00Z";
-      request.prices[0].effectiveAt = "2030-01-01T17:00:00Z";
+      request.schedule.startTime = "2026-11-05T18:00:00Z";
+      request.schedule.endTime = "2026-11-05T19:00:00Z";
+      request.prices[0].effectiveAt = "2026-11-05T17:00:00Z";
 
       expect(createCourseRequestSchema.safeParse(request).success).toBe(true);
     });
@@ -61,9 +64,9 @@ describe("createCourseRequestSchema", () => {
     it("accepts canonical UTC timestamps with fractional seconds", () => {
       const request = makeValidRequest();
 
-      request.schedule.startTime = "2030-01-01T18:00:00.123Z";
-      request.schedule.endTime = "2030-01-01T19:00:00.456Z";
-      request.prices[0].effectiveAt = "2030-01-01T17:00:00.789Z";
+      request.schedule.startTime = "2026-11-05T18:00:00.123Z";
+      request.schedule.endTime = "2026-11-05T19:00:00.456Z";
+      request.prices[0].effectiveAt = "2026-11-05T17:00:00.789Z";
 
       expect(createCourseRequestSchema.safeParse(request).success).toBe(true);
     });
