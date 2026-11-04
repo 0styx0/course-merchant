@@ -10,26 +10,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 
 - [x] **1a.** Admin and public pages show the guide's light colours, one error box (ProblemAlert) and green success marks through `--success`; the contrast spec checks every light §11 pair.
 - [x] **1b.** Every page shows DM Sans (italic file loads too); admin page titles show Playfair Display on the guide's type scale.
-- [ ] **1c.** Buttons are 48px, with the guide's label, colours and focus ring. **Next**
-  - *Behaviours*:
-    - default 48px `px-6`, sm 36px, lg 56px
-    - radius `rounded-md`, label 1rem weight 500, min width 11rem
-    - icon and xs sizes keep their size (toolbar, combobox)
-    - the link variant keeps its text width, so the error summary's links stay left-aligned
-    - Tab onto Save shows a 2px `--primary` ring 2px off the button, and a mouse click shows none
-    - hover uses `--primary-hover` and `--secondary-hover`, and their text pairs pass (9.17, 12.81)
-    - a press no longer shifts the button
-    - destructive fills `--destructive` with white text
-    - toolbar toggles show the same ring
-    - the alert dialog's title computes to DM Sans, not Playfair (Playfair loads weight 400 only, so its `font-heading font-medium` would render a faux bold)
-    - the Save bar still keeps a focused field clear (existing edit-course spec)
-  - *New shared pieces*: tokens `--primary-hover` and `--secondary-hover`, used by Button and the contrast spec
-  - *Files*:
-    - [button.tsx](../web/src/components/ui/button.tsx), [toggle.tsx](../web/src/components/ui/toggle.tsx), [alert-dialog.tsx](../web/src/components/ui/alert-dialog.tsx) (title drops `font-heading`) ("Local change" comments)
-    - [globals.css](../web/src/app/globals.css) (hover tokens)
-    - `web/tests/browser/contrast/token-contrast.spec.ts` (hover pairs), `web/tests/browser/site-look/controls.spec.ts` (new)
-    - [style-guide.md](style-guide.md) (hover tokens in *New tokens*)
-- [ ] **1d.** Fields are 48px white boxes, and any focus shows the ring.
+- [x] **1c.** Buttons are 48px, with the guide's label, colours and focus ring; the hover colours are tokens, and the alert dialog title uses DM Sans.
+- [ ] **1d.** Fields are 48px white boxes, and any focus shows the ring. **Next**
   - *Behaviours*:
     - Input and the time zone picker: 48px, `bg-card`, `px-4`, 1rem text at every width, `rounded-md`
     - the textarea and the description editor keep their min heights and take the same border, fill and ring

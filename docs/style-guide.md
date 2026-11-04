@@ -47,6 +47,8 @@ Derived from two planned screenshots (the Courses page and the Free Gifts page) 
 | `--olive` | `oklch(0.52 0.07 112)` | Eyebrows and status lines on light surfaces only | No existing mid-olive token |
 | `--success` | `oklch(0.47 0.09 150)` | Confirmation notices | No success token exists |
 | `--success-foreground` | `oklch(1 0 0)` | Text on `--success` | — |
+| `--primary-hover` | `oklch(0.38 0.06 135)` | Hover fill of the primary button | Same hue, one step lighter; 9.17:1 with `--primary-foreground` |
+| `--secondary-hover` | `oklch(0.86 0.08 90)` | Hover fill of the gold button | One step darker than `--secondary`; 12.81:1 with `--secondary-foreground` |
 
 Register each with a `--color-*` alias in `@theme inline` (`--color-surface-alt: var(--surface-alt);`), so `bg-surface-alt` resolves.
 

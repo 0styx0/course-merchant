@@ -37,6 +37,16 @@ const lightPairs: TokenPair[] = [
     floor: textFloor,
   },
   {
+    foreground: "--primary-foreground",
+    background: "--primary-hover",
+    floor: textFloor,
+  },
+  {
+    foreground: "--secondary-foreground",
+    background: "--secondary-hover",
+    floor: textFloor,
+  },
+  {
     foreground: "--surface-dark-foreground",
     background: "--surface-dark",
     floor: textFloor,
