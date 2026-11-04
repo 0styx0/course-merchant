@@ -38,4 +38,27 @@ describe("startCheckoutRequestSchema", () => {
   ])("rejects %s", (_label, input) => {
     expect(startCheckoutRequestSchema.safeParse(input).success).toBe(false);
   });
+
+  it.each([
+    ["an empty name", "   ", "Enter your name."],
+    [
+      "a name over 100 characters",
+      "a".repeat(101),
+      "That name is too long. Use 100 characters or fewer.",
+    ],
+  ])("words %s in a plain sentence", (_label, name, sentence) => {
+    const result = startCheckoutRequestSchema.safeParse(withCustomer({ name }));
+
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual([
+      sentence,
+    ]);
+  });
+
+  it("accepts a 100-character name", () => {
+    expect(
+      startCheckoutRequestSchema.safeParse(
+        withCustomer({ name: "a".repeat(100) }),
+      ).success,
+    ).toBe(true);
+  });
 });

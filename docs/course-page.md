@@ -17,23 +17,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **2b.** The web server can enroll a visitor: it sends the course, name and email to the API and returns "check your email", the API's problem with the typed values, or a redirect to Stripe.
 - [x] **2c.** A visitor on a free course opens the fields in place, sends a name and email, sees "Sending…", then "Check your email" with focus on it; a problem shows above the fields with the values kept.
 - [x] **3a.** Admin and checkout share one routine that turns the API's field errors into form-field errors.
-- [ ] **3b.** The API words a bad name or email in plain sentences. **Next**
-  - *Behaviours*:
-    - Empty name returns "Enter your name."
-    - Name over 100 characters returns "That name is too long. Use 100 characters or fewer."
-    - Email over 254 characters returns "That email address is too long. Use 254 characters or fewer." and not the format sentence as well.
-    - Malformed email, including `a@b`, returns "That email address looks incomplete. It should look like name@example.com."
-    - Admin login's schema shares the email words.
-  - *New shared pieces*: none.
-  - *Files*:
-    - [email.schema.ts](../api/src/common/validation/email.schema.ts)
-    - [start-checkout-request.schema.ts](../api/src/checkout/validation/start-checkout-request.schema.ts)
-    - [email.schema.spec.ts](../api/src/common/test/unit/email.schema.spec.ts) (asserts the words)
-    - [checkout.start.spec.ts](../api/src/test/e2e/checkout/checkout.start.spec.ts) (asserts each field error's `detail`)
-    - [course-page.html](wireframes/course-page.html) (state 6b and note 17 take the new sentence)
-  - *Settled*: the Words and Risk bullets of Step 3; the commit greps the admin login specs for the old wording.
-  - *Done when*: the api unit and checkout e2e specs pass.
-- [ ] **3c.** A visitor sees the API's field messages under Name and Email, with a red border, and focus lands on the first wrong field.
+- [x] **3b.** The API words a bad name or email in plain sentences; admin login shares the email words.
+- [ ] **3c.** A visitor sees the API's field messages under Name and Email, with a red border, and focus lands on the first wrong field. **Next**
   - *Behaviours*:
     - A 400 on the email shows its message under Email, with `aria-invalid` and `aria-describedby` listing the hint and the message.
     - A 400 on the name shows its message under Name.

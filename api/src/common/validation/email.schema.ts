@@ -9,4 +9,12 @@ export const emailSchema = z
   .string()
   .trim()
   .toLowerCase()
-  .pipe(z.email().max(254));
+  .max(254, {
+    error: "That email address is too long. Use 254 characters or fewer.",
+  })
+  .pipe(
+    z.email({
+      error:
+        "That email address looks incomplete. It should look like name@example.com.",
+    }),
+  );

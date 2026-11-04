@@ -295,7 +295,7 @@ A buyer who already owns a paid course clicks `Continue to payment →` and sees
    Do: `Course concepts shown for preview.` Don't: bury it in the footer.
 7. **Errors say what happened, then what to do.**
    Do: `We couldn't take that payment. Check the card details and try again.`
-   Do: `That email address looks incomplete. It should include an @.`
+   Do: `That email address looks incomplete. It should look like name@example.com.`
    Don't: `Error 402`, `Invalid input`, `Something went wrong`.
 8. **Empty states describe the state and offer one action.**
    Do: `No courses yet. New ones are announced here.` + ghost `See current courses →`.

@@ -30,4 +30,28 @@ describe("emailSchema", () => {
   it("rejects a malformed address", () => {
     expect(emailSchema.safeParse("ada.example.com").success).toBe(false);
   });
+
+  describe("error sentences", () => {
+    const incompleteSentence =
+      "That email address looks incomplete. It should look like name@example.com.";
+    const tooLongSentence =
+      "That email address is too long. Use 254 characters or fewer.";
+
+    function sentencesFor(input: string) {
+      const result = emailSchema.safeParse(input);
+      return result.success ? [] : result.error.issues.map((i) => i.message);
+    }
+
+    it.each(["ada.example.com", "a@b"])("words %s as incomplete", (input) => {
+      expect(sentencesFor(input)).toEqual([incompleteSentence]);
+    });
+
+    it("gives only the length sentence for a 255-character address", () => {
+      expect(sentencesFor(emailOfLength(255))).toEqual([tooLongSentence]);
+    });
+
+    it("gives only the length sentence for a long address with no @", () => {
+      expect(sentencesFor("a".repeat(255))).toEqual([tooLongSentence]);
+    });
+  });
 });

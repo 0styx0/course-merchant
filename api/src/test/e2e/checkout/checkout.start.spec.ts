@@ -200,10 +200,13 @@ describe("POST /v1/checkout-sessions (e2e)", () => {
           expect.objectContaining({
             field: "/customer/name",
             code: "TOO_SHORT",
+            detail: "Enter your name.",
           }),
           expect.objectContaining({
             field: "/customer/email",
             code: "INVALID_FORMAT",
+            detail:
+              "That email address looks incomplete. It should look like name@example.com.",
           }),
           expect.objectContaining({ field: "/price", code: "UNKNOWN_FIELD" }),
         ]),
