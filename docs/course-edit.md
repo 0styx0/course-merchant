@@ -66,28 +66,11 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **11c.** Under the Schedule heading, a note says the course has started or ended, and that its times may stay but a changed time must be in the future.
   - [x] **11d.** Choosing a different time zone shows a note under the box: the dates and times stay as typed, so the course moves to that time in the new zone, and on a started course the moved times must be in the future.
 - [x] **12. Delete only without students.** The API refuses to delete a course with enrollments; the edit page greys out Deleted and says to archive it instead.
-- [ ] **13. Accessible fields on both pages.** Status circles, field borders and focused borders are easy to see, and the check and cross marks have names a screen reader reads.
+- [x] **13. Accessible fields on both pages.** Status circles, field borders and focused borders are easy to see, and the check and cross marks have names a screen reader reads.
   - [x] **13a.** A screen reader names the mark beside each field: the cross reads "Needs a fix" and the check reads "Looks good", on both pages.
-  - [ ] **13b.** Every field's border, each status circle and a focused field's border reach 3:1 contrast against the form section, on both pages. **Next**
-    - *Behaviours*:
-      - an unchecked status circle's border measures at least 3:1 against the section background
-      - the borders of the Course name box, a date box and the description editor measure at least 3:1
-      - a focused box's border measures at least 3:1
-      - the cross (red) and the check (green) measure at least 3:1
-      - the checked circle keeps its primary colour
-      - the greyed-out Deleted circle stays at half opacity, and the test skips it, because WCAG exempts disabled controls
-    - *New shared pieces*: none
-    - *Files*:
-      - [globals.css](../web/src/app/globals.css) (changes `--input` and `--ring` in the light theme only, aiming for about 3.2:1 or more so a later tint change keeps a margin; the commit picks the exact greys; the app never sets a `dark` class)
-      - `web/tests/browser/admin-courses/field-border-contrast.spec.ts` (new; measures each colour against the section's own background composited over the page white)
-      - `web/package.json` (adds `culori` and `@types/culori` as dev dependencies, but only if [culori](https://culorijs.org/api/)'s parser reads the colours Chromium computes; otherwise the spec turns each colour into sRGB through a 1×1 canvas, with a comment saying why)
-      - folder count: `tests/browser/admin-courses` gains one file; the folder-count command must print nothing
-    - *Needs*: 13a is not required, but 13a's test changes land first so the images' names stay stable
-    - *Settled*: Decision row on field border contrast, and the owner's answer "every field border"
-    - *Done when*:
-      - the new browser spec passes
-      - "Ran it" walks create and edit at desktop and at 400 px
-- [ ] **14. Edit layout.** Status sits near the top and Save stays on screen.
+  - [x] **13b.** Every field's border, each status circle and a focused field's border reach 3:1 contrast against the form section, on both pages (light theme `--input` 3.26:1, `--ring` 4.69:1).
+- [ ] **14. Edit layout.** Status sits near the top and Save stays on screen. **Next**
+  - Not split into commits yet: run `/plan-create-implementation`. Start from Step 14 below (status above Basics, Save visible while scrolling at 400 px and desktop); it needs 11 and 12, both done, and moves the status section that 12 finished.
 
 ## Journeys
 
@@ -229,14 +212,12 @@ Retro:
 - Size: 2 commits (the map said 2).
 - Risk: none.
 - Done when: the accessibility tree names each mark ("Needs a fix", "Looks good"); field borders, status circles, focused borders and the marks measure 3:1 or more against the section tint.
-- Design notes *(temporary)*:
-  - Both commits change only shared pieces (`ValidatedField` and the theme tokens), so create and edit change together and no page code changes.
-  - The fields sit on the section tint (`bg-muted/30` in `FormSection`), not on white; the inputs have see-through backgrounds, so the tint is what each border is measured against.
-  - Contrast against that tint (WCAG formula, from the oklch values): `--input` 1.19:1, `--ring` 2.26:1, `--muted-foreground` 4.14:1, `--destructive` 4.63:1, green-600 (the check) 3.12:1, a grey at lightness 0.62 with the same hue 3.52:1.
-  - `--ring` also colours the focus halo on buttons and links, so every focus halo gets a bit darker.
-  - `--input` also colours the shadcn toggle's outline variant (unused) and some dark-only button styles; neither changes.
-  - Only a browser test can measure contrast, because jsdom computes no Tailwind styles.
-  - The schedule line's link to the date boxes was dropped; step 8 moved the cross-box errors under each box.
+
+Retro:
+
+- Planned 2 commits; shipped 2 (13a, 13b).
+- Owner changes after using the page: none known.
+- Rule friction: none known.
 
 ## Step 14. Edit layout
 
