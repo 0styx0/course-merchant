@@ -16,7 +16,76 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **2a.** The mock courses keep times that hold for years, the free course shows on the mock home page, and each mock course page answers for the course in its URL.
 - [x] **2b.** The web server can enroll a visitor: it sends the course, name and email to the API and returns "check your email", the API's problem with the typed values, or a redirect to Stripe.
 - [x] **2c.** A visitor on a free course opens the fields in place, sends a name and email, sees "Sending…", then "Check your email" with focus on it; a problem shows above the fields with the values kept.
-- [ ] **3. Mistakes in plain words.** A wrong field shows its message under it, other problems show above the form, and the typed values stay. **Next** (run `/plan-create-implementation` first)
+- [ ] **3a.** Admin and checkout share one routine that turns the API's field errors into form-field errors. *(mechanical)* **Next**
+  - *Behaviours*:
+    - Admin's field errors come out unchanged (the existing `field-errors-from-problem.test.ts` pins this).
+    - A problem with no `errors` list gives an empty list.
+    - A pointer the path function can't place is left out.
+  - *New shared pieces*: `form-errors.ts` in `web/src/lib/api/`; it takes the problem and a function from pointer to form path, and admin and checkout both use it.
+  - *Files*:
+    - [form-errors.ts](../web/src/lib/api/form-errors.ts) (the generic part, with its test)
+    - [field-errors-from-problem.ts](../web/src/features/admin-courses/save-course/field-errors-from-problem.ts) (keeps its path table)
+    - [course-action-result.ts](../web/src/features/admin-courses/save-course/course-action-result.ts) (imports the type from its new home)
+  - *Done when*: `yarn --cwd web check:changed` passes and no test changed.
+- [ ] **3b.** The API words a bad name or email in plain sentences.
+  - *Behaviours*:
+    - Empty name returns "Enter your name."
+    - Name over 100 characters returns "That name is too long. Use 100 characters or fewer."
+    - Email over 254 characters returns "That email address is too long. Use 254 characters or fewer." and not the format sentence as well.
+    - Malformed email, including `a@b`, returns "That email address looks incomplete. It should look like name@example.com."
+    - Admin login's schema shares the email words.
+  - *New shared pieces*: none.
+  - *Files*:
+    - [email.schema.ts](../api/src/common/validation/email.schema.ts)
+    - [start-checkout-request.schema.ts](../api/src/checkout/validation/start-checkout-request.schema.ts)
+    - [email.schema.spec.ts](../api/src/common/test/unit/email.schema.spec.ts) (asserts the words)
+    - [checkout.start.spec.ts](../api/src/test/e2e/checkout/checkout.start.spec.ts) (asserts each field error's `detail`)
+    - [course-page.html](wireframes/course-page.html) (state 6b and note 17 take the new sentence)
+  - *Settled*: the Words and Risk bullets of Step 3; the commit greps the admin login specs for the old wording.
+  - *Done when*: the api unit and checkout e2e specs pass.
+- [ ] **3c.** A visitor sees the API's field messages under Name and Email, with a red border, and focus lands on the first wrong field.
+  - *Behaviours*:
+    - A 400 on the email shows its message under Email, with `aria-invalid` and `aria-describedby` listing the hint and the message.
+    - A 400 on the name shows its message under Name.
+    - Both wrong shows both messages.
+    - A 409 shows above the fields and no field shows an error.
+    - Typed values stay in every case.
+    - The form has `noValidate`, so the browser's own bubbles never replace the messages.
+    - Resubmitting clears the old messages.
+  - *New shared pieces*:
+    - One field-error display and one "focus the first invalid field" hook, keyed by form path; 3e feeds its errors to the same pieces.
+    - One words file for the checkout messages, shared by the mock handlers and 3e's schema.
+  - *Files*:
+    - [start-checkout.action.ts](../web/src/features/checkout/start-checkout.action.ts) (returns `fieldErrors`)
+    - [enroll-button.tsx](../web/src/features/checkout/enroll-button.tsx) (the fields move to their own file)
+    - [start-checkout.ts](../web/src/mocks/handlers/start-checkout.ts) (`nameInvalid`, `emailInvalid`)
+    - new form files, words file and tests under `web/src/features/checkout/form/`
+    - Folder count: `checkout/` holds 8 files, so the form files group into `checkout/form/`.
+  - *Needs*: 3a. *Settled*: the Words bullet and the Decisions on the mapper and typed values.
+  - *Done when*: in `dev:mock` with `emailInvalid`, the message shows under Email with the values kept.
+- [ ] **3d.** A visitor keeps their typed values when the API is down or slow.
+  - *Behaviours*:
+    - A thrown call returns a failure with fixed title and detail above the fields, and the values stay.
+    - The server logs the thrown error.
+    - A timeout past 10 s takes the same path (one test throws a timeout error).
+  - *New shared pieces*: none.
+  - *Files*:
+    - [start-checkout.action.ts](../web/src/features/checkout/start-checkout.action.ts)
+    - [start-checkout.ts](../web/src/mocks/handlers/start-checkout.ts) (`unreachable`)
+    - the action test
+  - *Done when*: in `dev:mock` with `unreachable`, the box shows above the fields and the values stay.
+- [ ] **3e.** A typo shows its message at once, with no request sent.
+  - *Behaviours*:
+    - A bad email shows the 3b sentence and sends nothing.
+    - An empty name shows "Enter your name."
+    - A valid pair sends as before.
+    - A test fails when the browser words differ from the API's words.
+  - *New shared pieces*: none (reuses 3c's display, hook and words).
+  - *Files*:
+    - a checkout form schema file under `checkout/form/`
+    - the form's submit handler
+    - their tests
+  - *Needs*: 3c. *Done when*: the Step 3 journey.
 - [ ] **4. Paid enrollment goes to Stripe.** A paid visitor reaches Stripe, sees the API's message when Stripe is down, and gets a working form back after pressing Back.
 - [ ] **5. Coming back from Stripe.** The return page says the email is on its way, or what happened instead.
 - [ ] **6. Site header and footer.** Every public page has the header, the phone menu and the footer.
@@ -125,6 +194,8 @@ Wireframe states and time variants, by the milestone that builds them:
 | ProblemAlert takes a title and detail and is the one error box; the shop error page uses it | Today two files copy one class string; this keeps shadcn files untouched | shadcn Alert with local edits (an avoidable primitive edit, and a second box beside StickyFormNotice) |
 | The §11 check is a browser spec reading root tokens with `getComputedStyle`, sharing the border spec's colour helpers | The browser resolves `var()`, one set of helpers serves both specs, and the spec checks surfaces no page shows yet | A Vitest test parsing globals.css (a second copy of the helpers and a hand-made `var()` resolver) |
 | The mock course endpoint answers with the fixture whose id is in the URL, and the mock home list shows every public fixture | Any checkout scenario then works on the free course (and later the in-progress and ended ones) with one `scenario` line | A `freeCourse` scenario plus per-scenario pairings in node.ts (about 6 lines now, one more per later walk; names multiply, and a missed pairing shows the paid course with no form) |
+| The API words a bad email as "…It should look like name@example.com." | The wireframe's "include an @" misleads on `a@b` | The wireframe sentence |
+| The action catches a thrown API call and returns fixed words with the typed values | An unreachable API sends no text to show, and the visitor keeps their typing (note 17's "API's own message" covers answers only) | The full-page error (the visitor retypes) |
 
 ## Step 1. Site look
 
@@ -207,7 +278,7 @@ Field error (browser check, or the API's 400):
 | Name   [ Ami Cohen        ]                       |
 | Email  [ ami.example.com  ]   <- red border        |
 |        That email address looks incomplete.       |
-|        It should include an @.                    |
+|        It should look like name@example.com.      |
 | [ Email me the link → ]                           |
 
 Course error (the API's 409, shown above the fields):
@@ -221,10 +292,20 @@ Course error (the API's 409, shown above the fields):
 
 - Why here: the errors belong to the form built in 2 and decide the shared mapper before paid enrollment reuses it.
 - Needs: 2.
-- Size: 3 to 4 commits (shared error mapper; API rewording; browser check and display). Twins: [field-errors-from-problem.ts](../web/src/features/admin-courses/save-course/field-errors-from-problem.ts) (admin), [email.schema.ts](../api/src/common/validation/email.schema.ts) (shared with admin login). The first commit moves the generic part of the admin mapper into `web/src/lib/api/form-errors.ts`: it takes a function from the API's field pointer to a form path. Admin keeps its own path table and imports it; checkout supplies its two paths.
-- Words: the API's name and email messages follow §9 rule 7, with the wireframe's sentence as the model ("That email address looks incomplete. It should include an @."). Name: "Enter your name." The hint under Email ("We send the course link to this address.") is fixed copy from the wireframe, not an API message.
-- Open question for the plan pass (blocks the split): when the API is unreachable or slow past 10 s, the action throws and the shop error page replaces the whole course page, so the visitor loses the typed name and email. Decide whether the action catches the throw and returns a failure state, which keeps the values and shows the message above the fields, or whether the full-page error stays. Raised by the newcomer-reader in 2c.
-- Risk: rewording the shared email schema changes admin login's message. The web app has no login form yet, so only API callers and API tests see it; the plan pass greps the API tests for the old wording.
+- Size: 5 commits (the overview said 3 to 4: the API-down case and the shared mapper each need their own). Twins: [field-errors-from-problem.ts](../web/src/features/admin-courses/save-course/field-errors-from-problem.ts) (admin), [email.schema.ts](../api/src/common/validation/email.schema.ts) (shared with admin login).
+- *(temporary)* Words: email format "That email address looks incomplete. It should look like name@example.com."; empty name "Enter your name."; the too-long sentences name the limits (100, 254). The hint under Email is fixed wireframe copy, not an API message.
+- *(temporary)* Flow:
+```
+submit -> [3e browser check] --bad--> messages under fields (3c)
+              | ok
+              v
+        action -> API 400 -> messages under fields (3c)
+              |-> API 409 -> box above fields (2c)
+              |-> throw   -> fixed box above fields (3d)
+              '-> 200     -> notice (2c)
+```
+- *(temporary)* One error display and one focus hook, keyed by form path, serve all three error sources. The web words and the API words live in two packages; 3e's drift test pins them.
+- Risk: rewording the shared email schema changes admin login's message; the web app has no login form yet, so only API callers and API specs see it.
 - Done when: journey: type `ami.example.com`, see the email message under Email; send a valid address for an ended course, see the API's 409 above the form with both values still typed.
 
 ## Step 4. Paid enrollment goes to Stripe
