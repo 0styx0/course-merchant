@@ -8,6 +8,7 @@ Add an entry when a review or a decision accepts a known gap. Remove it when the
 
 - [ ] **Deleting a course while a buyer is mid-checkout.**
 - [ ] **Newsletter signup.**
+- [ ] **Discounted prices.**
 
 ## Entries
 
@@ -37,3 +38,23 @@ Add an entry when a review or a decision accepts a known gap. Remove it when the
   - Store addresses in our own database. It costs an endpoint, a table, a record of consent, an unsubscribe link and a way to send the mail (the email outbox could carry it).
 - **Build it when:** the owner has news to send on a regular schedule.
 - **Where it matters:** the planned homepage and course list designs.
+
+### Discounted prices
+
+- **What goes wrong:**
+  - The admin has no way to run a sale. The only lever is a new price in the schedule, which hides the old price from buyers.
+  - A buyer cannot see how much a sale saves.
+- **How likely:** certain once the owner wants a sale.
+- **Today's handling:** the admin schedules a lower price. The public site shows only the current price.
+- **Wanted behaviour:**
+  - The admin sets a discounted price on a course.
+  - Everywhere the price shows (course list, course page, checkout), the buyer sees the original price with a strike-through, then the discounted price.
+- **Options:**
+  - Store the discount as a field on each price entry (an original and a sale amount). It costs a contract change and a form field; it keeps one price history.
+  - Store discounts as a separate schedule with start and end times. It supports timed sales; it costs a second history and a rule for overlaps.
+- **Open questions:**
+  - Whether a discount has an end time.
+  - Which amount a payment records, since payments point at `CoursePrice` rows ([courses.md](courses.md) *Editing a course*).
+  - Which amount the refund and payout estimates use ([payments/refunds.md](payments/refunds.md)).
+- **Build it when:** the owner plans the first sale.
+- **Where it matters:** [courses.md](courses.md) price schedule rules, [style-guide.md](style-guide.md) for the strike-through look, and every web component that shows a price.

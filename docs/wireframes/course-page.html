@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Course page wireframe</title>
+<style>
+  /* Tokens: names and values come from docs/style-guide.md §2–§5. A comment marks every value the guide leaves open. */
+  :root {
+    color-scheme: light;
+    --background: oklch(0.977 0.011 95);
+    --foreground: oklch(0.153 0.006 107.1);
+    --card: oklch(1 0 0);
+    --border: oklch(0.93 0.007 106.5);
+    --primary: oklch(0.33 0.055 135);
+    --primary-foreground: oklch(0.977 0.011 95);
+    --primary-hover: oklch(0.38 0.06 135);        /* §2 States gives the value, no token name */
+    --primary-pressed: oklch(0.29 0.055 135);     /* §2 States: darken 0.04 L, taken from the base fill */
+    --secondary: oklch(0.90 0.075 90);
+    --secondary-foreground: oklch(0.153 0.006 107.1);
+    --muted: oklch(0.97 0.004 106.5);             /* guide gap: no value given */
+    --muted-foreground: oklch(0.53 0.028 107.3);
+    --accent: oklch(0.955 0.018 95);              /* guide gap: no value given */
+    --destructive: oklch(0.505 0.19 27.3);
+    --input: oklch(0.62 0.02 106.5);
+    --ring: var(--primary);
+    --surface-alt: oklch(0.955 0.018 95);
+    --olive: oklch(0.52 0.07 112);
+    --success: oklch(0.47 0.09 150);
+    --wireframe-grey: oklch(0.86 0.004 106.5);    /* wireframe only: the image placeholder */
+
+    --font-heading: "Playfair Display", "Iowan Old Style", Georgia, "Times New Roman", serif;
+    --font-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    --radius-md: 8px;
+    --radius-lg: 10px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font: 400 1rem/1.6 var(--font-sans);
+  }
+  h1, h2, h3, h4, p, ul, ol, figure, blockquote { margin: 0; }
+  a { color: var(--primary); }
+
+  /* ---------- Type steps (§3) ---------- */
+  .t-h1 { font: 400 2.75rem/1.1 var(--font-heading); letter-spacing: -0.01em; }
+  .t-h2 { font: 400 2.25rem/1.15 var(--font-heading); }
+  .t-h3 { font: 400 1.5rem/1.25 var(--font-heading); }
+  .t-body-lg { font-size: 1.125rem; line-height: 1.55; }
+  .t-meta { font-size: 0.9375rem; line-height: 1.5; }
+  .t-small { font-size: 0.8125rem; line-height: 1.45; }
+  .t-eyebrow { font-size: 0.75rem; font-weight: 600; line-height: 1.4; letter-spacing: 0.12em; text-transform: uppercase; }
+
+  /* ---------- Document chrome (not part of the page design) ---------- */
+  .doc { max-width: 1400px; margin-inline: auto; padding: 32px 16px 64px; }
+  .doc-title { font: 400 2.25rem/1.15 var(--font-heading); }
+  .doc-intro { color: var(--muted-foreground); max-width: 70ch; margin-top: 12px; }
+  .doc h2 { font: 400 1.75rem/1.2 var(--font-heading); margin: 56px 0 8px; }
+  .doc-lead { color: var(--muted-foreground); max-width: 70ch; margin-bottom: 24px; }
+  .device { overflow-x: auto; padding-bottom: 8px; }
+  .device-row { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
+  .caption { color: var(--muted-foreground); font-size: 0.8125rem; line-height: 1.45; margin-top: 8px; }
+  .pin {
+    display: inline-grid; place-items: center; width: 22px; height: 22px; margin-left: 6px;
+    border-radius: 9999px; background: var(--foreground); color: var(--background);
+    font: 600 0.75rem/1 var(--font-sans); letter-spacing: 0; text-transform: none; vertical-align: middle;
+  }
+  .wf-tag {
+    display: inline-block; margin-bottom: 16px; padding: 2px 8px; border: 1px dashed var(--input);
+    border-radius: var(--radius-md); color: var(--muted-foreground); font-size: 0.8125rem; line-height: 1.45;
+  }
+  .variants { display: grid; gap: 40px 24px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); align-items: start; }
+  .variant h3 { font: 500 0.9375rem/1.5 var(--font-sans); margin-bottom: 8px; }
+  .notes { padding-left: 28px; display: grid; gap: 12px; max-width: 90ch; }
+  .notes li::marker { font-weight: 600; }
+  .notes .cite { color: var(--muted-foreground); }
+  .plain-list { padding-left: 24px; display: grid; gap: 8px; max-width: 90ch; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.875em; }
+
+  /* ---------- Device frames ---------- */
+  .frame { background: var(--background); border: 1px solid var(--input); border-radius: var(--radius-md); }
+  .frame.desktop { width: 1280px; height: 820px; overflow-y: auto; overflow-x: hidden; }
+  .frame.phone { width: 390px; height: 780px; position: relative; overflow-x: hidden; }
+  .frame.phone.scrolls { overflow-y: auto; }
+  .frame.phone.snapshot { overflow-y: hidden; }
+
+  /* ---------- Site chrome (§7) ---------- */
+  .site-header {
+    position: sticky; top: 0; z-index: 2; height: 72px; padding-inline: 48px; background: var(--background);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .wordmark { font: 400 1.5rem/1.25 var(--font-heading); }
+  .nav-link, .footer-link {
+    display: inline-flex; align-items: center; min-height: 44px; font-size: 0.9375rem; line-height: 1.5; font-weight: 500;
+    color: var(--foreground); text-decoration: none;
+  }
+  .menu-button {
+    display: inline-flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+    width: 44px; height: 44px; padding: 0; border: 0; border-radius: var(--radius-md); background: transparent;
+  }
+  .menu-button span { display: block; width: 20px; height: 2px; background: var(--foreground); }
+  .site-footer {
+    border-top: 1px solid var(--border); padding: 48px; display: flex; flex-wrap: wrap; gap: 16px 24px;
+    align-items: center; justify-content: space-between;
+  }
+  .site-footer nav { display: flex; gap: 24px; }
+  .site-footer .footer-link { color: var(--muted-foreground); font-weight: 400; }
+
+  /* ---------- Page layout (§4) ---------- */
+  .page { box-sizing: content-box; max-width: 1200px; margin-inline: auto; padding: 96px 48px; }
+  .phone .page { box-sizing: border-box; }
+  .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px; }
+  .course { grid-column: 1 / span 7; }
+  .buy { grid-column: 9 / span 4; position: sticky; top: 96px; align-self: start; }
+
+  .course-image {
+    aspect-ratio: 16 / 9; width: 100%; display: grid; place-items: center; background: var(--wireframe-grey);
+    color: var(--foreground); border-radius: 0;
+  }
+  .course h1, .phone-page h1 { margin-top: 24px; color: var(--foreground); }
+  .summary { margin-top: 16px; color: var(--muted-foreground); }
+  .description { margin-top: 40px; }
+
+  /* ---------- Rich text (guide gap: the guide styles no rich text) ---------- */
+  .rich { color: var(--muted-foreground); font-size: 1.125rem; line-height: 1.55; }
+  .rich > * + * { margin-top: 16px; }
+  .rich h2 { font: 400 1.5rem/1.25 var(--font-heading); color: var(--foreground); margin-top: 40px; }
+  .rich h3 { font: 500 1.125rem/1.55 var(--font-sans); color: var(--foreground); margin-top: 32px; }
+  .rich h4 { font: 500 1rem/1.6 var(--font-sans); color: var(--foreground); margin-top: 24px; }
+  .rich > :first-child { margin-top: 0; }
+  .rich ul, .rich ol { padding-left: 24px; display: grid; gap: 4px; }
+  .rich blockquote { padding-left: 24px; border-left: 1px solid var(--input); color: var(--foreground); }
+  .rich hr { border: 0; border-top: 1px solid var(--border); margin-block: 32px; }
+
+  /* ---------- Buy panel ---------- */
+  .panel { background: var(--surface-alt); border-radius: var(--radius-lg); padding: 24px; color: var(--foreground); }
+  .status { color: var(--olive); margin-bottom: 12px; }
+  .when { display: grid; gap: 4px; margin-bottom: 16px; }
+  .when p { font-size: 0.9375rem; line-height: 1.5; }
+  .when .course-time { font-weight: 500; }
+  .when .quiet { color: var(--muted-foreground); }
+  .price { font: 500 1.5rem/1.25 var(--font-sans); font-variant-numeric: tabular-nums; margin-bottom: 20px; }
+  .after { margin-top: 20px; }
+  .after .after-title { font-size: 0.9375rem; font-weight: 500; line-height: 1.5; }
+  .after p + p { margin-top: 4px; color: var(--muted-foreground); font-size: 0.8125rem; line-height: 1.45; }
+  .limit { margin-bottom: 20px; color: var(--muted-foreground); font-size: 0.9375rem; line-height: 1.5; }
+  .panel-plain-line { font-size: 0.9375rem; line-height: 1.5; }
+
+  .pill {
+    display: inline-block; padding: 4px 12px; border-radius: 9999px; margin-bottom: 12px;
+    font-size: 0.75rem; font-weight: 600; line-height: 1.4; letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .pill-ended { background: var(--muted); color: var(--muted-foreground); }
+
+  /* ---------- Buttons (§7) ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-width: 11rem; min-height: 48px;
+    padding: 0 24px; border: 1px solid transparent; border-radius: var(--radius-md);
+    font: 500 1rem/1.6 var(--font-sans); text-decoration: none; cursor: pointer;
+  }
+  .btn-primary { background: var(--primary); color: var(--primary-foreground); }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-primary:active { background: var(--primary-pressed); }
+  .btn-ghost { background: transparent; color: var(--foreground); }
+  .btn-ghost:hover { background: var(--accent); }
+  .btn-busy { cursor: progress; }
+  .spinner {
+    display: inline-block; width: 16px; height: 16px; border: 2px solid currentColor; border-top-color: transparent;
+    border-radius: 9999px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .spinner { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  }
+
+  /* Focus (§2 States, §10): a two-layer ring, plus a transparent outline that forced-colours mode shows. */
+  .btn:focus, input:focus, a:focus-visible, .menu-button:focus, .is-focus {
+    outline: 2px solid transparent; outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+  }
+
+  /* ---------- Fields (§7) ---------- */
+  .field { margin-bottom: 20px; }
+  .field label { display: block; margin-bottom: 8px; font-size: 0.9375rem; font-weight: 500; line-height: 1.5; color: var(--foreground); }
+  .field input {
+    display: block; width: 100%; height: 48px; padding: 0 16px; border: 1px solid var(--input); border-radius: var(--radius-md);
+    background: var(--card); color: var(--foreground); font: 400 1rem/1.6 var(--font-sans);
+  }
+  .field input::placeholder { color: var(--muted-foreground); opacity: 1; }
+  .field input[aria-invalid="true"] { border-color: var(--destructive); }
+  .hint, .error { margin-top: 6px; font-size: 0.8125rem; line-height: 1.45; }
+  .hint { color: var(--muted-foreground); }
+  .error { color: var(--destructive); }
+
+  /* ---------- Alert (§7) ---------- */
+  .alert {
+    display: grid; grid-template-columns: 20px 1fr; gap: 12px; padding: 16px; margin-bottom: 20px;
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+  }
+  .alert svg { width: 20px; height: 20px; margin-top: 2px; }
+  .alert-title { font-weight: 500; color: var(--foreground); }
+  .alert-message { color: var(--muted-foreground); }
+  .alert-success { border-color: var(--success); }
+  .alert-success svg { color: var(--success); }
+  .alert-error { border-color: var(--destructive); }
+  .alert-error svg { color: var(--destructive); }
+
+  /* ---------- Phone ---------- */
+  .phone .site-header { padding-inline: 16px; }
+  .phone-page { padding: 48px 16px; }
+  .phone-page h1 { font: 400 2.25rem/1.15 var(--font-heading); }
+  .phone-page .panel { margin-top: 24px; }
+  .phone-page .description { margin-top: 32px; }
+  .phone .site-footer { padding: 48px 16px; flex-direction: column; align-items: flex-start; }
+  .phone .site-footer nav { flex-direction: column; gap: 8px; }
+  .buy-bar {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; background: var(--background);
+    border-top: 1px solid var(--border); padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  .fade-top { height: 24px; background: linear-gradient(var(--background), transparent); position: relative; z-index: 1; }
+
+  @media (max-width: 640px) { .doc-title { font-size: 1.75rem; } }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <p class="doc-title">Course page wireframe</p>
+  <p class="doc-intro">Public page for one course, built only from the fields <code>GET /v1/courses/{courseId}</code> returns. Sample course: React Fundamentals, $99, Tue, Dec 1, 2026, 6:00 – 8:00 PM EST. Numbered dots match the notes below. Playfair Display and DM Sans are not loaded here, so Georgia and the system sans stand in.</p>
+
+  <!-- ===================== Desktop ===================== -->
+  <h2>Desktop, 1280px</h2>
+  <p class="doc-lead">Scroll inside the frame: the buy panel stays 24px under the header while the description moves.</p>
+  <div class="device">
+    <div class="frame desktop" tabindex="0" role="region" aria-label="Desktop layout, 1280 pixels wide. Scrolls.">
+      <header class="site-header">
+        <span class="wordmark">Course Merchant</span>
+        <nav aria-label="Main"><a class="nav-link" href="#!">Courses</a></nav>
+      </header>
+
+      <div class="page">
+        <div class="grid">
+          <article class="course" aria-label="Course details">
+            <div class="course-image" role="img" aria-label="React Fundamentals">
+              <span class="t-eyebrow">Course image 1600×900<span class="pin" role="img" aria-label="Note 23">23</span></span>
+            </div>
+            <h1 class="t-h1">React Fundamentals<span class="pin" role="img" aria-label="Note 22">22</span></h1>
+            <p class="summary t-body-lg">A hands-on introduction to React. Build three small apps and learn components, state and hooks.</p>
+
+            <div class="description">
+              <span class="wf-tag">Description field: rich text, sample</span>
+              <div class="rich">
+                <h2>What you will cover.</h2>
+                <p>Each session adds one idea to the app you are building. By the end you will have written <strong>components</strong>, <em>state</em> and <u>hooks</u> yourself, not <s>copied them</s>.</p>
+                <ul>
+                  <li>Components and props</li>
+                  <li>State and events</li>
+                  <li>Hooks, starting with <code>useState</code></li>
+                </ul>
+                <h3>Before you start.</h3>
+                <ol>
+                  <li>Install the current Node.js release.</li>
+                  <li>Create an empty folder for your projects.</li>
+                </ol>
+                <blockquote>Small apps teach more than long slides.</blockquote>
+                <hr>
+                <h4>Read ahead.</h4>
+                <p>The <a href="#!">React documentation</a> covers every topic we meet. Read the first page before the first session.</p>
+                <h2>Three small apps.</h2>
+                <p>The first app is a counter, the second a to-do list and the third a small shop. Each one reuses the ideas of the last.</p>
+                <p>Every session ends with working code you can open in a browser.</p>
+                <h3>What you take away.</h3>
+                <p>Three finished apps and the habits to start a fourth on your own.</p>
+              </div>
+            </div>
+          </article>
+
+          <aside class="buy" aria-label="Enroll in React Fundamentals">
+            <div class="panel">
+              <p class="status t-eyebrow">Starts Dec 1, 2026<span class="pin" role="img" aria-label="Note 10">10</span></p>
+              <div class="when">
+                <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST<span class="pin" role="img" aria-label="Note 6">6</span></p>
+                <p class="quiet">(3:00 – 5:00 PM PST your time)<span class="pin" role="img" aria-label="Note 7">7</span></p>
+                <p class="quiet">2 hours<span class="pin" role="img" aria-label="Note 9">9</span></p>
+              </div>
+              <p class="price">$99<span class="pin" role="img" aria-label="Note 5">5</span></p>
+              <button type="button" class="btn btn-primary" aria-expanded="false">Enroll for $99 <span aria-hidden="true">→</span></button>
+              <div class="after">
+                <p class="after-title">After you enroll.<span class="pin" role="img" aria-label="Note 20">20</span></p>
+                <p>You pay on Stripe's secure page. Then we email you a link to the course material. You don't need an account.</p>
+              </div>
+            </div>
+            <p class="caption">Sticky panel<span class="pin" role="img" aria-label="Note 1">1</span>, one button that changes label<span class="pin" role="img" aria-label="Note 3">3</span>, flat <code>--surface-alt</code> fill<span class="pin" role="img" aria-label="Note 24">24</span></p>
+          </aside>
+        </div>
+      </div>
+
+      <footer class="site-footer">
+        <span class="wordmark">Course Merchant</span>
+        <nav aria-label="Footer"><a class="footer-link" href="#!">Courses</a><a class="footer-link" href="#!">Contact</a></nav>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ===================== Phone ===================== -->
+  <h2>Phone, 390px</h2>
+  <p class="doc-lead">The buy block sits inline under the summary<span class="pin" role="img" aria-label="Note 21">21</span>. Once it scrolls out of view, a slim bar keeps the button on screen. The left frame scrolls; the right frame shows that scrolled moment.</p>
+  <div class="device-row">
+    <figure>
+      <div class="device">
+        <div class="frame phone scrolls" tabindex="0" role="region" aria-label="Phone layout, top of page. Scrolls.">
+          <header class="site-header">
+            <span class="wordmark">Course Merchant</span>
+            <button type="button" class="menu-button" aria-label="Menu"><span></span><span></span><span></span></button>
+          </header>
+          <div class="phone-page">
+            <div class="course-image" role="img" aria-label="React Fundamentals">
+              <span class="t-eyebrow">Course image 1600×900</span>
+            </div>
+            <h1>React Fundamentals</h1>
+            <p class="summary t-body-lg">A hands-on introduction to React. Build three small apps and learn components, state and hooks.</p>
+
+            <div class="panel" role="group" aria-label="Enroll in React Fundamentals">
+              <p class="status t-eyebrow">Starts Dec 1, 2026</p>
+              <div class="when">
+                <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST</p>
+                <p class="quiet">(3:00 – 5:00 PM PST your time)</p>
+                <p class="quiet">2 hours</p>
+              </div>
+              <p class="price">$99</p>
+              <button type="button" class="btn btn-primary" aria-expanded="false">Enroll for $99 <span aria-hidden="true">→</span></button>
+              <div class="after">
+                <p class="after-title">After you enroll.</p>
+                <p>You pay on Stripe's secure page. Then we email you a link to the course material. You don't need an account.</p>
+              </div>
+            </div>
+
+            <div class="description">
+              <div class="rich">
+                <h2>What you will cover.</h2>
+                <p>Each session adds one idea to the app you are building. By the end you will have written <strong>components</strong>, <em>state</em> and <u>hooks</u> yourself.</p>
+                <ul>
+                  <li>Components and props</li>
+                  <li>State and events</li>
+                  <li>Hooks, starting with <code>useState</code></li>
+                </ul>
+                <h3>Before you start.</h3>
+                <ol>
+                  <li>Install the current Node.js release.</li>
+                  <li>Create an empty folder for your projects.</li>
+                </ol>
+                <blockquote>Small apps teach more than long slides.</blockquote>
+                <h2>Three small apps.</h2>
+                <p>The first app is a counter, the second a to-do list and the third a small shop.</p>
+              </div>
+            </div>
+          </div>
+          <footer class="site-footer">
+            <span class="wordmark">Course Merchant</span>
+            <nav aria-label="Footer"><a class="footer-link" href="#!">Courses</a><a class="footer-link" href="#!">Contact</a></nav>
+          </footer>
+        </div>
+      </div>
+      <figcaption class="caption">Top of page: inline block, no bar.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="device">
+        <div class="frame phone snapshot" role="img" aria-label="Phone layout scrolled into the description, with the sticky enroll bar at the bottom.">
+          <header class="site-header">
+            <span class="wordmark">Course Merchant</span>
+            <button type="button" class="menu-button" aria-label="Menu" tabindex="-1"><span></span><span></span><span></span></button>
+          </header>
+          <div class="phone-page" style="padding-top: 0; padding-bottom: 120px;">
+            <div class="fade-top"></div>
+            <div class="rich">
+              <h3>Before you start.</h3>
+              <ol>
+                <li>Install the current Node.js release.</li>
+                <li>Create an empty folder for your projects.</li>
+              </ol>
+              <blockquote>Small apps teach more than long slides.</blockquote>
+              <hr>
+              <h4>Read ahead.</h4>
+              <p>The <a href="#!">React documentation</a> covers every topic we meet. Read the first page before the first session.</p>
+              <h2>Three small apps.</h2>
+              <p>The first app is a counter, the second a to-do list and the third a small shop. Each one reuses the ideas of the last.</p>
+              <p>Every session ends with working code you can open in a browser.</p>
+            </div>
+          </div>
+          <div class="buy-bar">
+            <button type="button" class="btn btn-primary" tabindex="-1">Enroll for $99 <span aria-hidden="true">→</span></button>
+          </div>
+        </div>
+      </div>
+      <figcaption class="caption">Scrolled: the bar appears<span class="pin" role="img" aria-label="Note 21">21</span>. A tap scrolls back to the inline block and opens its fields.</figcaption>
+    </figure>
+  </div>
+
+  <!-- ===================== States ===================== -->
+  <h2>Purchase area, every state</h2>
+  <p class="doc-lead">Each panel is the 378px desktop panel; the phone inline block is the same component at full width. Sample copy in error states stands in for the text the API sends.</p>
+  <div class="variants">
+
+    <section class="variant" aria-label="State 1">
+      <h3>1 · Upcoming, paid</h3>
+      <div class="panel">
+        <p class="status t-eyebrow">Starts Dec 1, 2026</p>
+        <div class="when">
+          <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST</p>
+          <p class="quiet">(3:00 – 5:00 PM PST your time)</p>
+          <p class="quiet">2 hours</p>
+        </div>
+        <p class="price">$99</p>
+        <button type="button" class="btn btn-primary" aria-expanded="false">Enroll for $99 <span aria-hidden="true">→</span></button>
+        <div class="after">
+          <p class="after-title">After you enroll.</p>
+          <p>You pay on Stripe's secure page. Then we email you a link to the course material. You don't need an account.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="variant" aria-label="State 1, fields open">
+      <h3>1b · Paid, fields open<span class="pin" role="img" aria-label="Note 2">2</span><span class="pin" role="img" aria-label="Note 15">15</span><span class="pin" role="img" aria-label="Note 16">16</span></h3>
+      <div class="panel">
+        <p class="status t-eyebrow">Starts Dec 1, 2026</p>
+        <div class="when">
+          <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST</p>
+          <p class="quiet">(3:00 – 5:00 PM PST your time)</p>
+          <p class="quiet">2 hours</p>
+        </div>
+        <p class="price">$99</p>
+        <form novalidate>
+          <div class="field">
+            <label for="s1b-name">Name</label>
+            <input id="s1b-name" type="text" autocomplete="name" placeholder="Ami Cohen" required>
+          </div>
+          <div class="field">
+            <label for="s1b-email">Email</label>
+            <input id="s1b-email" class="is-focus" type="email" autocomplete="email" placeholder="ami@example.com" aria-describedby="s1b-email-hint" required>
+            <p class="hint" id="s1b-email-hint">We send the course link to this address.</p>
+          </div>
+          <button type="submit" class="btn btn-primary">Continue to payment <span aria-hidden="true">→</span></button>
+        </form>
+        <div class="after">
+          <p class="after-title">After you enroll.</p>
+          <p>You pay on Stripe's secure page. Then we email you a link to the course material. You don't need an account.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="variant" aria-label="State 2">
+      <h3>2 · Upcoming, free<span class="pin" role="img" aria-label="Note 12">12</span></h3>
+      <div class="panel">
+        <p class="status t-eyebrow">Starts Dec 1, 2026</p>
+        <div class="when">
+          <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST</p>
+          <p class="quiet">(3:00 – 5:00 PM PST your time)</p>
+          <p class="quiet">2 hours</p>
+        </div>
+        <p class="price">Free</p>
+        <button type="button" class="btn btn-primary" aria-expanded="false">Enroll for free <span aria-hidden="true">→</span></button>
+        <div class="after">
+          <p class="after-title">After you enroll.</p>
+          <p>We email you a link to the course material. You don't need an account.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="variant" aria-label="State 2, fields open">
+      <h3>2b · Free, fields open</h3>
+      <div class="panel">
+        <p class="status t-eyebrow">Starts Dec 1, 2026</p>
+        <div class="when">
+          <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST</p>
+          <p class="quiet">(3:00 – 5:00 PM PST your time)</p>
+          <p class="quiet">2 hours</p>
+        </div>
+        <p class="price">Free</p>
+        <form novalidate>
+          <div class="field">
+            <label for="s2b-name">Name</label>
+            <input id="s2b-name" type="text" autocomplete="name" placeholder="Ami Cohen" required>
+          </div>
+          <div class="field">
+            <label for="s2b-email">Email</label>
+            <input id="s2b-email" type="email" autocomplete="email" placeholder="ami@example.com" aria-describedby="s2b-email-hint" required>
+            <p class="hint" id="s2b-email-hint">We send the course link to this address.</p>
+          </div>
+          <button type="submit" class="btn btn-primary">Email me the link <span aria-hidden="true">→</span></button>
+        </form>
+        <div class="after">
+          <p class="after-title">After you enroll.</p>
+          <p>We email you a link to the course material. You don't need an account.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="variant" aria-label="State 3">
+      <h3>3 · In progress, still open<span class="pin" role="img" aria-label="Note 13">13</span></h3>
+      <div class="panel">
+        <p class="status t-eyebrow">In progress</p>
+        <div class="when">
+          <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST</p>
+          <p class="quiet">(3:00 – 5:00 PM PST your time)</p>
+          <p class="quiet">2 hours</p>
+        </div>
+        <p class="price">$99</p>
+        <p class="limit">This course has started. You can still enroll.</p>
+        <button type="button" class="btn btn-primary" aria-expanded="false">Enroll for $99 <span aria-hidden="true">→</span></button>
+        <div class="after">
+          <p class="after-title">After you enroll.</p>
+          <p>You pay on Stripe's secure page. Then we email you a link to the course material. You don't need an account.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="variant" aria-label="State 4">
+      <h3>4 · Ended<span class="pin" role="img" aria-label="Note 14">14</span></h3>
+      <div class="panel">
+        <span class="pill pill-ended">Ended</span>
+        <div class="when">
+          <p class="course-time">Dec 1, 2026</p>
+          <p class="quiet">2 hours</p>
+        </div>
+        <p class="panel-plain-line" style="margin-bottom: 20px;">This course has ended.</p>
+        <a class="btn btn-ghost" href="#!">See current courses <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+
+    <section class="variant" aria-label="State 5">
+      <h3>5 · After the form: check your email<span class="pin" role="img" aria-label="Note 19">19</span></h3>
+      <div class="panel">
+        <p class="status t-eyebrow">Starts Dec 1, 2026</p>
+        <div class="when">
+          <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST</p>
+          <p class="quiet">(3:00 – 5:00 PM PST your time)</p>
+          <p class="quiet">2 hours</p>
+        </div>
+        <div class="alert alert-success" role="status" tabindex="-1" style="margin-bottom: 0;">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="8.25"/><path d="M6.5 10.2l2.4 2.4 4.6-5"/></svg>
+          <div>
+            <p class="alert-title">Check your email</p>
+            <p class="alert-message">We've sent access to ami@example.com. It can take a few minutes. If it hasn't arrived, look in spam or <a href="#!">contact us</a>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="variant" aria-label="State 6a">
+      <h3>6a · Payment provider down<span class="pin" role="img" aria-label="Note 17">17</span></h3>
+      <div class="panel">
+        <p class="status t-eyebrow">Starts Dec 1, 2026</p>
+        <div class="when">
+          <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST</p>
+          <p class="quiet">(3:00 – 5:00 PM PST your time)</p>
+          <p class="quiet">2 hours</p>
+        </div>
+        <p class="price">$99</p>
+        <form novalidate>
+          <div class="alert alert-error" role="alert">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="8.25"/><path d="M10 6v4.5M10 13.5v.01"/></svg>
+            <div>
+              <p class="alert-title">Payment provider unavailable</p>
+              <p class="alert-message">Payments can't be taken right now. Try again later.</p>
+            </div>
+          </div>
+          <div class="field">
+            <label for="s6a-name">Name</label>
+            <input id="s6a-name" type="text" autocomplete="name" value="Ami Cohen" required>
+          </div>
+          <div class="field">
+            <label for="s6a-email">Email</label>
+            <input id="s6a-email" type="email" autocomplete="email" value="ami@example.com" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Try again <span aria-hidden="true">→</span></button>
+        </form>
+      </div>
+    </section>
+
+    <section class="variant" aria-label="State 6b">
+      <h3>6b · Email field error<span class="pin" role="img" aria-label="Note 17">17</span></h3>
+      <div class="panel">
+        <p class="status t-eyebrow">Starts Dec 1, 2026</p>
+        <div class="when">
+          <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST</p>
+          <p class="quiet">(3:00 – 5:00 PM PST your time)</p>
+          <p class="quiet">2 hours</p>
+        </div>
+        <p class="price">$99</p>
+        <form novalidate>
+          <div class="field">
+            <label for="s6b-name">Name</label>
+            <input id="s6b-name" type="text" autocomplete="name" value="Ami Cohen" required>
+          </div>
+          <div class="field">
+            <label for="s6b-email">Email</label>
+            <input id="s6b-email" type="email" autocomplete="email" value="ami.example.com" aria-invalid="true" aria-describedby="s6b-email-error" required>
+            <p class="error" id="s6b-email-error">That email address looks incomplete. It should include an @.</p>
+          </div>
+          <button type="submit" class="btn btn-primary">Continue to payment <span aria-hidden="true">→</span></button>
+        </form>
+      </div>
+    </section>
+
+    <section class="variant" aria-label="State 7a">
+      <h3>7a · Loading, paid<span class="pin" role="img" aria-label="Note 18">18</span></h3>
+      <div class="panel">
+        <p class="status t-eyebrow">Starts Dec 1, 2026</p>
+        <div class="when">
+          <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST</p>
+          <p class="quiet">(3:00 – 5:00 PM PST your time)</p>
+          <p class="quiet">2 hours</p>
+        </div>
+        <p class="price">$99</p>
+        <form novalidate>
+          <div class="field">
+            <label for="s7a-name">Name</label>
+            <input id="s7a-name" type="text" value="Ami Cohen" readonly>
+          </div>
+          <div class="field">
+            <label for="s7a-email">Email</label>
+            <input id="s7a-email" type="email" value="ami@example.com" readonly>
+          </div>
+          <button type="submit" class="btn btn-primary btn-busy" aria-busy="true">Opening payment… <span class="spinner" aria-hidden="true"></span></button>
+        </form>
+      </div>
+    </section>
+
+    <section class="variant" aria-label="State 7b">
+      <h3>7b · Loading, free</h3>
+      <div class="panel">
+        <p class="status t-eyebrow">Starts Dec 1, 2026</p>
+        <div class="when">
+          <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST</p>
+          <p class="quiet">(3:00 – 5:00 PM PST your time)</p>
+          <p class="quiet">2 hours</p>
+        </div>
+        <p class="price">Free</p>
+        <form novalidate>
+          <div class="field">
+            <label for="s7b-name">Name</label>
+            <input id="s7b-name" type="text" value="Ami Cohen" readonly>
+          </div>
+          <div class="field">
+            <label for="s7b-email">Email</label>
+            <input id="s7b-email" type="email" value="ami@example.com" readonly>
+          </div>
+          <button type="submit" class="btn btn-primary btn-busy" aria-busy="true">Sending… <span class="spinner" aria-hidden="true"></span></button>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===================== Time and status variants ===================== -->
+  <h2>When the course runs, variants</h2>
+  <p class="doc-lead">Lines produced by <code>Intl.DateTimeFormat</code> and <code>formatRange</code> for the sample schedule (start 2026-12-01T23:00Z, end 2026-12-02T01:00Z, <code>America/New_York</code>), checked in Node 26.</p>
+  <div class="variants">
+    <section class="variant" aria-label="Time, same zone">
+      <h3>a · Visitor in New York: no local line<span class="pin" role="img" aria-label="Note 7">7</span></h3>
+      <div class="panel"><div class="when" style="margin-bottom: 0;">
+        <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST</p>
+        <p class="quiet">2 hours</p>
+      </div></div>
+    </section>
+    <section class="variant" aria-label="Time, Pacific visitor">
+      <h3>b · Visitor in Los Angeles: time differs</h3>
+      <div class="panel"><div class="when" style="margin-bottom: 0;">
+        <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST</p>
+        <p class="quiet">(3:00 – 5:00 PM PST your time)</p>
+        <p class="quiet">2 hours</p>
+      </div></div>
+    </section>
+    <section class="variant" aria-label="Time, Tokyo visitor">
+      <h3>c · Visitor in Tokyo: the day differs too</h3>
+      <div class="panel"><div class="when" style="margin-bottom: 0;">
+        <p class="course-time">Tue, Dec 1, 6:00 – 8:00 PM EST</p>
+        <p class="quiet">(Wed, Dec 2, 8:00 – 10:00 AM GMT+9 your time)</p>
+        <p class="quiet">2 hours</p>
+      </div></div>
+    </section>
+    <section class="variant" aria-label="Time, London visitor, en-GB">
+      <h3>d · en-GB, visitor in London<span class="pin" role="img" aria-label="Note 8">8</span></h3>
+      <div class="panel"><div class="when" style="margin-bottom: 0;">
+        <p class="course-time">Tue 1 Dec, 18:00–20:00 GMT-5</p>
+        <p class="quiet">(Tue 1 Dec, 23:00 GMT – Wed 2 Dec, 01:00 GMT your time)</p>
+        <p class="quiet">2 hours</p>
+      </div></div>
+    </section>
+    <section class="variant" aria-label="Time, de-DE">
+      <h3>e · de-DE: day first, 24-hour clock</h3>
+      <div class="panel"><div class="when" style="margin-bottom: 0;">
+        <p class="course-time">Di., 1. Dez., 18:00–20:00 Uhr GMT-5</p>
+        <p class="quiet">2 hours</p>
+      </div></div>
+    </section>
+    <section class="variant" aria-label="Time, several days">
+      <h3>f · Course spanning several days<span class="pin" role="img" aria-label="Note 9">9</span></h3>
+      <div class="panel"><div class="when" style="margin-bottom: 0;">
+        <p class="course-time">Dec 1 – 3, 2026</p>
+        <p class="quiet">Tue, Dec 1, 6:00 PM EST – Thu, Dec 3, 8:00 PM EST</p>
+        <p class="quiet">2 days 2 hours</p>
+      </div></div>
+    </section>
+    <section class="variant" aria-label="Status line options">
+      <h3>g · Status line, by distance in time<span class="pin" role="img" aria-label="Note 10">10</span><span class="pin" role="img" aria-label="Note 11">11</span></h3>
+      <div class="panel">
+        <ul class="plain-list" style="padding-left: 0; list-style: none; gap: 12px;">
+          <li><span class="status t-eyebrow" style="margin: 0;">Starts Dec 1, 2026</span> <span class="caption" style="display: block; margin-top: 0;">more than 14 days away</span></li>
+          <li><span class="status t-eyebrow" style="margin: 0;">Starts in 4 days</span> <span class="caption" style="display: block; margin-top: 0;">within 14 days</span></li>
+          <li><span class="status t-eyebrow" style="margin: 0;">Starts tomorrow</span></li>
+          <li><span class="status t-eyebrow" style="margin: 0;">In progress</span></li>
+          <li><span class="pill pill-ended" style="margin: 0;">Ended</span></li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===================== Annotations ===================== -->
+  <h2>Annotations</h2>
+  <p class="doc-lead">Each note names the guide section it follows and what goes wrong for the visitor without it.</p>
+  <ol class="notes">
+    <li id="n1"><strong>The buy panel sticks on desktop</strong> (<span class="cite">§4 grid columns 9–12; §1.4 one CTA per block</span>). It sits 96px from the top, 24px under the 72px header. Without it, a visitor who reads up to 5,000 characters of description scrolls back to the top to find the button.</li>
+    <li id="n2"><strong>The fields open inside the panel, not in a dialog</strong> (<span class="cite">§1.5 no modal; §12 #3 two fields, then the button</span>). The price, date and time stay in view while the visitor types. Without it, a dialog hides the facts the visitor is still checking, traps focus, and shares a small phone screen with the keyboard. Fields that always show would put a form in front of every visitor who only browses.</li>
+    <li id="n3"><strong>One primary button changes its label in place</strong> (<span class="cite">§9 rule 1; §7 Button, one per block</span>). <code>Enroll for $99 →</code> opens the fields, then the same slot holds <code>Continue to payment →</code> (<code>Email me the link →</code> when free). Focus moves to the Name field and the button carries <code>aria-expanded</code>. Without it, the panel shows two primary buttons at once and the visitor guesses which one pays.</li>
+    <li id="n4"><strong>The button label carries the exact price</strong> (<span class="cite">§9 rule 1; §8 price: <code>$99</code>, <code>$49.50</code>, <code>Free</code></span>). Without it, the phone bar, which shows no price row, hides what the visitor is about to pay.</li>
+    <li id="n5"><strong>The panel reads status, time, price, button</strong> (<span class="cite">§4 spacing: meta → price 16px, price → button 20px; §3 price style</span>). The price sits directly above its button. Without it, the price drifts away from the action it belongs to.</li>
+    <li id="n6"><strong>The course time shows first, in the course's own zone, with the zone name</strong> (<span class="cite">§8 course time</span>). One <code>formatRange</code> call prints the line. Without it, a New York evening class reads as "6 PM" and a visitor in another zone joins at the wrong hour.</li>
+    <li id="n7"><strong>The visitor's time appears only when the UTC offset at the start instant differs</strong> (<span class="cite">§8 course time</span>). The line adds the date only when the date differs (variant c) and prints both days when the range crosses midnight (variant d). Without it, a New York visitor reads "6 PM EST (6 PM EST your time)", and a Tokyo visitor misses that the class falls on the next day.</li>
+    <li id="n8"><strong>A locale changes order, clock and zone label</strong> (<span class="cite">§8 intro: <code>Intl</code> in the visitor's locale, never a hand-built string</span>). en-US prints <code>Tue, Dec 1, 6:00 – 8:00 PM EST</code>. en-GB prints <code>Tue 1 Dec, 18:00–20:00 GMT-5</code>: day before month, 24-hour clock, an offset in place of "EST". de-DE adds <code>Uhr</code> and spells the month <code>Dez.</code>. Without <code>Intl</code>, a hand-built string shows "12/1" to a reader who reads it as 12 January.</li>
+    <li id="n9"><strong>Duration and date range come from start and end</strong> (<span class="cite">§8 duration; date range</span>). A one-day course shows <code>2 hours</code>. A multi-day course shows <code>Dec 1 – 3, 2026</code>, then its first start and its last end. The API holds only a start and an end, so the page never claims daily sessions. Without it, the visitor cannot tell a two-hour evening from a three-day course.</li>
+    <li id="n10"><strong>The status line shows a relative time only within 14 days</strong> (<span class="cite">§8 relative time; §3 eyebrow in <code>--olive</code></span>). Dec 1 is 27 days after 2026-11-04, so the sample shows <code>Starts Dec 1, 2026</code>. Without the 14-day limit, "Starts in 27 days" becomes a soft countdown, which §1.1 rules out.</li>
+    <li id="n11"><strong>The page shows no enrollment count, no seats left and no urgency</strong> (<span class="cite">§1.1; §8 closing line; §9 rule 4</span>). Without it, the page breaks the calm voice and quotes a number the public API never returns.</li>
+    <li id="n12"><strong>A free course puts the word <code>Free</code> in the price slot, in plain price type</strong> (<span class="cite">§8 price; §1.4 one accent</span>). The gold Free badge from §7 stays off this block. Without it, the block mixes gold with the green button, which §1.4 forbids.</li>
+    <li id="n13"><strong>A course in progress stays buyable and says so beside the button</strong> (<span class="cite">§9 rule 6 limits sit next to the thing they limit</span>). Without it, visitors wonder whether they may still join and leave.</li>
+    <li id="n14"><strong>An ended course shows the pill, the sentence and one ghost link, with no price, fields or buy button</strong> (<span class="cite">§9 rule 1 ended row; §8 ended course; §7 Badge</span>). The date stays as a plain date. Without it, the visitor fills in a form and the server refuses it with <code>COURSE_NOT_PURCHASABLE</code>. If a visitor's clock or a race still reaches that refusal, the page shows the API's own message in an error alert above the form.</li>
+    <li id="n15"><strong>Every field has a visible label, an example placeholder and a hint</strong> (<span class="cite">§7 Input, label and error; §10</span>). The hint under Email says where the link goes. Without a visible label, a placeholder vanishes the moment the visitor types and nobody remembers which field is which.</li>
+    <li id="n16"><strong>Every control shows a 2px ring with a 2px offset on focus</strong> (<span class="cite">§2 States focus; §10 focus</span>). The Email field in 1b shows it; <code>--ring</code> is <code>--primary</code> (11.23:1 on <code>--background</code>). Without it, keyboard visitors lose their place.</li>
+    <li id="n17"><strong>Errors say what happened and what to do, and keep the typed values</strong> (<span class="cite">§7 Alert: errors inline above the form; §9 rule 7; §7 Input: <code>aria-invalid</code>, <code>aria-describedby</code></span>). 6a and 6b are separate requests: the server checks the fields before it calls the payment provider, so one response never carries both. The build shows the API's own message and title, not a fixed text. Without this, the visitor retypes a name and an email, and a red border alone tells a colour-blind visitor nothing.</li>
+    <li id="n18"><strong>Loading swaps the label, replaces the arrow with a spinner and holds the width</strong> (<span class="cite">§7 Button loading; §9 rule 1 loading strings</span>). The fields turn read-only so their text stays readable. Without it, the button jumps in width and a second click sends a second request.</li>
+    <li id="n19"><strong>The confirmation replaces the form, names the inbox and ends the flow</strong> (<span class="cite">§9 rule 9; §9 rule 1 "after check your email: no button"</span>). It reads the same for a free course and for a buyer who already owns the course, so the page never reveals who owns what. Focus moves to the notice. Without it, a button under "check your email" invites a second submit, and an "already owned" message leaks who is enrolled.</li>
+    <li id="n20"><strong>A short "After you enroll." note sits under the button</strong> (<span class="cite">§9 rules 3, 6, 10</span>). It says an email arrives with the link, that Stripe takes the payment for a paid course, and that no account is needed. Without it, buyers look for a login and wait for instant access.</li>
+    <li id="n21"><strong>On the phone, the buy block sits inline under the summary, and a slim bar repeats only the button once the block scrolls away</strong> (<span class="cite">§4 stack with a 24px gap; §10 touch targets 48px; §7 Button <code>w-full</code> below <code>sm</code></span>). A bar alone cannot hold the date, time, price and two fields, and the keyboard would cover it. An inline block alone sends the visitor back up a long description. The bar hides while the inline block shows, so the page never carries two buttons on one screen, and the page keeps bottom padding so the bar never covers the last paragraph.</li>
+    <li id="n22"><strong>The course name is the only <code>h1</code>; the description's headings sit below it</strong> (<span class="cite">§10 structure; §3 below <code>md</code> h1 becomes the h2 step</span>). The panel holds no headings. Without it, a screen reader outline starts at the wrong level or finds two page titles.</li>
+    <li id="n23"><strong>The image keeps its 16:9 shape with square corners and the course name as alt text</strong> (<span class="cite">§5 images <code>rounded-none</code>; §6 alt text names the course</span>). Without the alt text, a screen reader reads the file name.</li>
+    <li id="n24"><strong>The panel is flat <code>--surface-alt</code> with <code>--radius-lg</code>, no shadow and no border</strong> (<span class="cite">§1.3 flat; §5; §11 contrast</span>). Text pairs checked in §11: <code>--foreground</code> 17.20:1, <code>--muted-foreground</code> 4.61:1, <code>--olive</code> 4.77:1 on <code>--surface-alt</code>; <code>--input</code> borders reach 3.19:1 on it. Without a flat panel, a shadow suggests the panel overlaps the text beside it.</li>
+  </ol>
+
+  <!-- ===================== Guide gaps ===================== -->
+  <h2>Guide gaps</h2>
+  <p class="doc-lead">Each item names the default this wireframe took. Item 1 is a defect, not a gap.</p>
+  <ol class="plain-list">
+    <li><strong>§8 time format throws.</strong> <code>{ timeStyle: 'short', timeZoneName: 'short' }</code> raises a <code>TypeError</code> in <code>Intl.DateTimeFormat</code> (checked in Node 26; <code>timeStyle</code> cannot combine with <code>timeZoneName</code>). Default: <code>{ hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }</code>.</li>
+    <li><strong>§8 prints date and time separately.</strong> One <code>formatRange</code> call with <code>weekday</code>, <code>month</code>, <code>day</code>, <code>hour</code>, <code>minute</code> and <code>timeZoneName</code> keeps a range that crosses midnight correct. Default: that single call for the course line.</li>
+    <li><strong>§8 "always display the time zone name".</strong> Outside en-US, <code>short</code> prints <code>GMT-5</code>, not a name. Default: keep <code>short</code>. Alternative: <code>long</code> ("Eastern Standard Time") or the city.</li>
+    <li><strong>§8 "only when the zone differs" has no definition.</strong> Default: compare the UTC offset at the start instant, so Toronto and New York match.</li>
+    <li><strong>§8 relative time</strong> does not say whose calendar counts days, and the server does not know the visitor's zone. Default: the visitor's local days, so the local line and the status line render in the browser.</li>
+    <li><strong>§8 duration</strong> lists <code>weeks</code> and <code>min</code> only. Default: <code>2 hours</code>, <code>90 min</code>, <code>2 days 2 hours</code>.</li>
+    <li><strong>§7 and §8 have no "In progress" status.</strong> Default: <code>In progress</code> as an eyebrow in <code>--olive</code>.</li>
+    <li><strong>§3 and §10: this page has no hero.</strong> The guide makes the hero title the <code>h1</code> and the course title an <code>h2</code>. Default: the course name is the <code>h1</code> at the h1 step (h2 step on the phone).</li>
+    <li><strong>§6 course imagery is 3:2, the API image is 16:9.</strong> Default: show the full 16:9 image here; cards keep cropping to 3:2.</li>
+    <li><strong>No rich-text styles.</strong> Default: description <code>h2</code> uses the h3 step; <code>h3</code> is body-lg weight 500; <code>h4</code> is body weight 500; lists indent 24px; a quote takes a 1px <code>--input</code> rule; a divider is 1px <code>--border</code>; a link is <code>--primary</code> and underlined.</li>
+    <li><strong>§2 gives no value for <code>--muted</code> or <code>--accent</code>.</strong> Default: <code>--muted</code> <code>oklch(0.97 0.004 106.5)</code>; <code>--accent</code> equals <code>--surface-alt</code>.</li>
+    <li><strong>§2 States have no token names for hover and pressed.</strong> Default: <code>--primary-hover</code> (the given value) and <code>--primary-pressed</code> (<code>oklch(0.29 0.055 135)</code>, which darkens the base fill by 0.04 L; the guide does not say whether pressed starts from base or hover).</li>
+    <li><strong>§7 Badge (gold Free) clashes with §1.4.</strong> A block never uses both gold and green. Default: plain <code>Free</code> in the price slot.</li>
+    <li><strong>The guide has no "panel" component.</strong> Default: <code>--surface-alt</code> fill, <code>rounded-lg</code>, 24px padding, no border or shadow. Inputs use <code>--card</code>, which §2 reserves for "inputs and popovers only" yet §7 also gives to cards.</li>
+    <li><strong>§7 Button loading names no spinner, and §10 Motion allows only opacity and colour.</strong> Default: a 16px rotating ring, turned off under <code>prefers-reduced-motion</code>.</li>
+    <li><strong>Fields while a request runs.</strong> Default: <code>readonly</code> at full contrast, because §2 disabled (0.5 opacity) is exempt from contrast but hides what the visitor typed.</li>
+    <li><strong>The sticky phone bar has no spec.</strong> Default: <code>--background</code> fill, 1px <code>--border</code> top, 12px padding plus the safe-area inset, hidden while the inline block is in view. The sticky desktop panel sits 96px from the top.</li>
+    <li><strong>§12 #3 puts checkout on its own page; the task asks inline or dialog.</strong> Default: inline in the panel (note 2).</li>
+    <li><strong>§12 #4 adds a resend link after 60 seconds; §9 rule 9 says no button.</strong> Default: no resend on this page.</li>
+    <li><strong>§4 does not say whether the 1200px page width includes the gutters.</strong> Default: 1200px of content plus gutters, which makes seven columns exactly 680px, the prose width.</li>
+    <li><strong>Header and footer links are not listed.</strong> Default: <code>Courses</code> in the header; <code>Courses</code> and <code>Contact</code> in the footer (§12 #10). The hamburger is an icon button with <code>aria-label="Menu"</code>, a string the §9 button table does not cover.</li>
+    <li><strong>Fonts.</strong> The wireframe loads no webfonts because the guide's Status list still shows self-hosting as open.</li>
+  </ol>
+
+  <!-- ===================== Suggestions ===================== -->
+  <h2>Not in the API — suggestions</h2>
+  <p class="doc-lead">None of these appear on the page. Each would need a new field or a guide string first.</p>
+  <ul class="plain-list">
+    <li><strong>A purchasable flag or status from the server</strong> (<code>upcoming</code>, <code>in_progress</code>, <code>ended</code>). The page now derives it from the visitor's clock, which can be wrong; the server refuses an ended course with its own clock.</li>
+    <li><strong>Format and location</strong> (online or in person, city). §12 #8 already plans <code>Mar 12 · Lisbon · In person</code> and waits for this field. A buyer needs to know where to go.</li>
+    <li><strong>How to join</strong> (a video link or an address for the session). Access arrives by email, so the page could say which kind.</li>
+    <li><strong>Instructor</strong> (name, one line). Buyers of a live course ask who teaches it.</li>
+    <li><strong>Number of sessions and length of each</strong>. §8 shows <code>6 sessions · 90 min each</code>, but start and end alone cannot say it.</li>
+    <li><strong>Refund and cancellation policy.</strong> The refunds flow exists; §12 #10 links it from the footer <code>Contact</code>. A line next to the button would settle a common doubt.</li>
+    <li><strong>Contact address</strong> for the "contact us" link in the confirmation.</li>
+    <li><strong>Level, prerequisites and language</strong> as short plain fields.</li>
+    <li><strong>Curriculum or agenda</strong> beyond the free-form description.</li>
+    <li><strong>An "Add to calendar" file.</strong> The schedule alone can generate it, but §9 fixes every button label and has no string for it.</li>
+    <li><strong>Image alt text</strong> separate from the name, for images whose subject differs from the title.</li>
+    <li><strong>Reviews.</strong> §9 rule 4 forbids social proof by number, so only named quotes the owner chooses could fit.</li>
+  </ul>
+
+</div>
+</body>
+</html>
