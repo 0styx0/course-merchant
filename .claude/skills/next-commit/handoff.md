@@ -24,7 +24,7 @@ Used in the *Hand off* section of [SKILL.md](SKILL.md). Keep it short, and follo
 - `Deviations from the plan line: none`, or what differed and why (a file, a behaviour, a decision made on the way).
 - `Reviews:` which of the newcomer-reader pass, the `/simplify` pass, `/security-review` and the other-model review (SKILL.md *Build*) ran, in that order.
   - Give each finding as fixed or rejected, with a reason.
-  - List every newcomer-reader finding as the agent worded it, never a summary.
+  - Paste the newcomer-reader findings as the agent wrote them, and add the decision in italics as the last line of each. Give each *Also noticed* item a decision too.
 - When this is the last commit of its milestone, a `Retro:` as defined in [../_shared/milestone-line.md](../_shared/milestone-line.md), also added to the milestone's `## Step N.` section.
 - A suggested conventional commit message.
   - No body unless it needs one.

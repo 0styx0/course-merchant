@@ -44,7 +44,12 @@ Judge the lines the commit adds or changes first. Report related code too when i
 
 Report only what you tried and could not do. Leave out style taste.
 
-Answer in at most 350 words, in this shape:
+Answer in at most 400 words, in this shape. Use one idea per bullet and plain words. Define any testing term you use, or describe the problem without it.
 - **Your 3-sentence explanation**, first, then **Differences** (a short list, or "none").
-- **Where you got stuck**: at most 7 bullets, most serious first. Start each bullet with its job tag: `[Read]`, `[Navigate]`, `[Tests]` or `[Understand]`. Then give the file and line, what you tried, why it blocked you, and one suggested fix in plain words.
+- **Findings**: at most 7, numbered, most serious first. Give each separate problem its own finding. Each finding has:
+  - a bold first sentence that says what goes wrong for the owner or the next developer (a test that breaks on the wrong day, a check that no test proves). Name the consequence before any file or code;
+  - the job tag (`[Read]`, `[Navigate]`, `[Tests]` or `[Understand]`), *existing code* when it applies, and the file as a markdown link with the line;
+  - the cause in one or two plain sentences;
+  - `Fix:` with one suggested fix.
+- **Also noticed**: after the 7 findings, one line naming each remaining problem in a few words with its file, so the cap hides nothing. Leave it out when there are no more.
 - Say "nothing blocked me" when that is true.
