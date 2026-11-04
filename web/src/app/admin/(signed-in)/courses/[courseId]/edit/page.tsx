@@ -24,7 +24,7 @@ type EditCoursePageProps = {
 function EditCoursePageLayout({ children }: { children: ReactNode }) {
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      <h1 className="text-3xl font-bold">Edit course</h1>
+      <h1 className="font-heading text-h2 md:text-h1">Edit course</h1>
       <p className="mt-2 text-muted-foreground">Change the course details.</p>
       <div className="mt-8">{children}</div>
     </main>

@@ -1,9 +1,27 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils/cn";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-dm-sans",
+  fallback: [
+    "ui-sans-serif",
+    "system-ui",
+    "-apple-system",
+    "Segoe UI",
+    "sans-serif",
+  ],
+});
+
+const playfairDisplay = Playfair_Display({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-playfair",
+  fallback: ["Iowan Old Style", "Georgia", "Times New Roman", "serif"],
+});
 
 export const metadata: Metadata = {
   title: {
@@ -18,7 +36,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", "font-sans", inter.variable)}
+      className={cn(
+        "h-full",
+        "antialiased",
+        "font-sans",
+        dmSans.variable,
+        playfairDisplay.variable,
+      )}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

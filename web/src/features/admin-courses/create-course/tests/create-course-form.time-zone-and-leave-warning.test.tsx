@@ -141,7 +141,7 @@ describe("CourseForm", () => {
       await fillValidForm(user);
       await user.click(screen.getByRole("button", { name: "Save as draft" }));
       await waitFor(() => expect(push).toHaveBeenCalled());
-      expect(leaveEvent().defaultPrevented).toBe(false);
+      await waitFor(() => expect(leaveEvent().defaultPrevented).toBe(false));
     });
   });
 });

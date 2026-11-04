@@ -7,7 +7,7 @@ Derived from two planned screenshots (the Courses page and the Free Gifts page) 
 ## Status
 
 - [ ] Colour tokens, new tokens and the `--input` change in `globals.css` (one commit: it recolours the admin too). Light tokens done; the dark rows wait.
-- [ ] Fonts self-hosted and the type scale registered.
+- [x] Fonts self-hosted and the type scale registered.
 - [ ] Public course page built from the wireframe.
 - [ ] Homepage and course list built.
 

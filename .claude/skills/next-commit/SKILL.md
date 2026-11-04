@@ -25,7 +25,7 @@ Every item below happens, in this order.
 4. Send the outline as [outline.md](outline.md) says, then start the build at once in a background subagent (*Build*), in the same turn. Tell the owner the build runs while they review.
 5. Wait for the owner's reply. Show nothing of the build (no code, test results or hand-off) until they approve the outline.
 6. In the build: write the tests first and show them failing, run `/simplify` in subagents, verify.
-7. After approval, hand off as [handoff.md](handoff.md) says.
+7. After approval, run `git diff --cached --name-only`. Staged but uncommitted changes stop the hand-off: tell the owner which files wait, ask them to commit those first, and hand off once they have. Otherwise hand off as [handoff.md](handoff.md) says.
 
 ## Find the work
 

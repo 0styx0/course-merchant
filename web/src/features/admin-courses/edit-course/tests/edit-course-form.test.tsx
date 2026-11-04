@@ -98,7 +98,7 @@ describe("EditCourseForm", () => {
       setValue("Course name", "Renamed");
       await clickSave(user);
       expect(await screen.findByRole("status")).toHaveTextContent("Saved");
-      expect(leaveEvent().defaultPrevented).toBe(false);
+      await waitFor(() => expect(leaveEvent().defaultPrevented).toBe(false));
     });
   });
 });

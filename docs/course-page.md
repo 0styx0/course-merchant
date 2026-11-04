@@ -9,20 +9,8 @@ Keep this file current **in the same commit as the work**: tick the step, mark t
 Each milestone delivers one outcome. `/plan-create-implementation` splits a milestone into commit lines when it is the one marked next.
 
 - [x] **1a.** Admin and public pages show the guide's light colours, one error box (ProblemAlert) and green success marks through `--success`; the contrast spec checks every light §11 pair.
-- [ ] **1b.** Every page shows DM Sans; admin page titles show Playfair Display on the guide's type scale. **Next**
-  - *Behaviours*:
-    - body text on home and admin create computes to DM Sans
-    - "New course" and "Edit course" compute to Playfair weight 400, 2.75rem at desktop and 2.25rem at 400px
-    - no request goes to fonts.googleapis.com or fonts.gstatic.com
-  - *New shared pieces*: `font-heading` and the steps `text-display` to `text-eyebrow`, used by every later milestone
-  - *Files*:
-    - [layout.tsx](../web/src/app/layout.tsx) (next/font: DM Sans variable, Playfair 400, the guide's fallback stacks)
-    - [globals.css](../web/src/app/globals.css) (`--font-heading`, `--text-*` steps)
-    - the admin new and edit page files (`new/page.tsx`, `[courseId]/edit/page.tsx`)
-    - `web/tests/browser/site-look/fonts.spec.ts`
-    - [web.md](web.md) (row "Inter is the one font" now names both fonts), [style-guide.md](style-guide.md) (tick Status 2)
-  - *Settled*: Decision "DM Sans and Playfair Display, loaded by `next/font`"
-- [ ] **1c.** Buttons are 48px, with the guide's label, colours and focus ring.
+- [x] **1b.** Every page shows DM Sans (italic file loads too); admin page titles show Playfair Display on the guide's type scale.
+- [ ] **1c.** Buttons are 48px, with the guide's label, colours and focus ring. **Next**
   - *Behaviours*:
     - default 48px `px-6`, sm 36px, lg 56px
     - radius `rounded-md`, label 1rem weight 500, min width 11rem
@@ -33,10 +21,11 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
     - a press no longer shifts the button
     - destructive fills `--destructive` with white text
     - toolbar toggles show the same ring
+    - the alert dialog's title computes to DM Sans, not Playfair (Playfair loads weight 400 only, so its `font-heading font-medium` would render a faux bold)
     - the Save bar still keeps a focused field clear (existing edit-course spec)
   - *New shared pieces*: tokens `--primary-hover` and `--secondary-hover`, used by Button and the contrast spec
   - *Files*:
-    - [button.tsx](../web/src/components/ui/button.tsx), [toggle.tsx](../web/src/components/ui/toggle.tsx) ("Local change" comments)
+    - [button.tsx](../web/src/components/ui/button.tsx), [toggle.tsx](../web/src/components/ui/toggle.tsx), [alert-dialog.tsx](../web/src/components/ui/alert-dialog.tsx) (title drops `font-heading`) ("Local change" comments)
     - [globals.css](../web/src/app/globals.css) (hover tokens)
     - `web/tests/browser/contrast/token-contrast.spec.ts` (hover pairs), `web/tests/browser/site-look/controls.spec.ts` (new)
     - [style-guide.md](style-guide.md) (hover tokens in *New tokens*)

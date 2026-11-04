@@ -69,7 +69,7 @@ Hooks refuse hand-edits of generated files and whole-file reads of them (they're
 How the owner wants Claude to work on this repo.
 
 **Workflow**
-- **One commit at a time.** `/next-commit` ([skill](.claude/skills/next-commit/SKILL.md)) runs the routine for the **Next** item in `docs/`: outline, background build, your approval, then a hand-off with a suggested conventional commit message. The owner makes the commits. Finish one commit's changes before starting the next, because interactive `git add -p` isn't available.
+- **One commit at a time.** `/next-commit` ([skill](.claude/skills/next-commit/SKILL.md)) runs the routine for the **Next** item in `docs/`: outline, background build, your approval, then a hand-off with a suggested conventional commit message. The owner makes the commits. Work may start while earlier changes sit staged; the hand-off waits until nothing is staged, because interactive `git add -p` isn't available and staged files would join the new commit.
 - **Planning a new area.** `/plan-create-overview`, then `/plan-create-implementation` once per milestone, then `/next-commit` per commit ([skills](.claude/skills/); repo facts they use are in [.claude/skills/_shared/project.md](.claude/skills/_shared/project.md)).
 - **Usage reviews.** About once a month, or when the owner asks about usage or token cost, run `/usage-review`.
 - **Keep the design docs current** in the same commit (see *Design docs*).
