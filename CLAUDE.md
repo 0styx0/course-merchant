@@ -22,6 +22,7 @@ Each doc has a status checklist (what's next), principles and decisions with rej
   - [docs/payments/refunds.md](docs/payments/refunds.md) — refunds, disputes, access, sweeper.
 - [docs/courses.md](docs/courses.md) — creating, editing and browsing courses: who sees what, `PUT` semantics, validation.
 - [docs/course-creation.md](docs/course-creation.md) — the admin "create course" page and its rich-text (Tiptap) description.- [docs/course-edit.md](docs/course-edit.md) — the admin "edit course" page: prefill, full PUT, schedule and price rules, image, status.- [docs/auth.md](docs/auth.md) — admin login, logout, sessions, the auth guard, the command that creates admins.
+- [docs/course-page.md](docs/course-page.md) — the public course page: buy panel, enrollment form, Stripe return page, site header and footer, times; matches [the wireframe](docs/wireframes/course-page.html).
 - [docs/web.md](docs/web.md) — the web app: folder layout, API calls, caching, errors, forms, admin login cookie.
 - [docs/style-guide.md](docs/style-guide.md) — how the public site and admin look and sound: colour tokens, type, spacing, components, button wording, formats, contrast floors.
 - [docs/future-milestones.md](docs/future-milestones.md) — known gaps the launch accepts, with what a fix would cost and when to build it.

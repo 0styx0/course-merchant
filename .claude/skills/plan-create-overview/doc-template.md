@@ -15,11 +15,13 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 
 <one Status line per milestone, format in _shared/milestone-line.md>
 
-## Journeys        (areas with screens: the 2 to 3 one-sentence journeys, then the whole-page sketch in one code block)
+## Terms          (every word a newcomer would not know: twin code, journey, walked, Re-measure, "§" and note references; one line each, with a link to where it is defined)
+## Journeys        (areas with screens: the 2 to 3 one-sentence journeys, then the whole-page sketch in one code block; for a wireframe-driven area, also a table of each wireframe state or variant and the milestone that builds it)
+## Mocks and commands   (areas with states: how the owner picks a mock scenario, the handler names, and the commands to walk and check)
 ## Principles
 ## Numbers        (only when there are limits or measurements: rule | value | source | command that measures it)
 ## Decisions      (| Decision | Why | Rejected |)
-## Step N. <milestone>   (one per milestone; the Next one has every field in _shared/milestone-line.md, the others only Why here, Needs, Size, Risk, Done when)
+## Step N. <milestone>   (one per milestone, with its Sketch first for areas with screens; the Next one has every field in _shared/milestone-line.md, the others only Why here, Needs, Sketch, Test data, Size, Risk, Done when)
    Retro: (filled by /next-commit when the milestone's last commit ships; format in _shared/milestone-line.md)
 ## Changes       (| Date | What changed | Why |; only once the plan moves after approval: an order change, a milestone added or cut, a Principle changed. A milestone that needs more or fewer commits than its Size is normal and is not logged; the Retro records it.)
 ## Open questions   (only questions with no milestone yet; others live in their Step)

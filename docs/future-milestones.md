@@ -9,6 +9,7 @@ Add an entry when a review or a decision accepts a known gap. Remove it when the
 - [ ] **Deleting a course while a buyer is mid-checkout.**
 - [ ] **Newsletter signup.**
 - [ ] **Discounted prices.**
+- [ ] **Dark admin palette.**
 
 ## Entries
 
@@ -58,3 +59,14 @@ Add an entry when a review or a decision accepts a known gap. Remove it when the
   - Which amount the refund and payout estimates use ([payments/refunds.md](payments/refunds.md)).
 - **Build it when:** the owner plans the first sale.
 - **Where it matters:** [courses.md](courses.md) price schedule rules, [style-guide.md](style-guide.md) for the strike-through look, and every web component that shows a price.
+
+### Dark admin palette
+
+- **What goes wrong:** the admin always shows light colours. The guide's dark tokens ([style-guide.md](style-guide.md) §2) exist on paper only, and nothing in the code turns dark mode on.
+- **How likely:** certain for an admin who works at night with the operating system set to dark.
+- **Today's handling:** the admin uses the light palette.
+- **Wanted behaviour:** the admin follows the operating system's setting, with the guide's dark tokens and contrast pairs (§11).
+- **Options:**
+  - Add the dark tokens and switch the dark variant in `globals.css` to `prefers-color-scheme`. It costs about one commit plus walking every admin page in dark mode.
+- **Build it when:** the owner asks for it, after [course-page.md](course-page.md) milestone 1 has landed the light tokens.
+- **Where it matters:** `web/src/app/globals.css`, the admin pages.

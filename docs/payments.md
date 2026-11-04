@@ -38,7 +38,7 @@ Keep these files current **in the same commit as the work**. Tick off status her
   - [x] `PaymentRefunds` refunds through Stripe, then marks the payment `refunded`; fulfillment and the sweeper both use it.
   - [x] `PaymentSweeper` on a 10-minute interval: refunds orphan payments, rechecks overdue pending payments with Stripe, expires payments with no checkout.
   - [x] `StripeService.retrieveCheckout`, `refundPayment` treating `charge_already_refunded` as success, and `FulfillmentService.fulfillRetrievedCheckout`.
-- [ ] **6. Web:** **Next** (structure and decisions in [web.md](web.md); do its steps 1–5 first)
+- [ ] **6. Web:** planned and built in [course-page.md](course-page.md) (milestones 2 to 5); the bullets below stay as the requirements (structure and decisions in [web.md](web.md))
   - buy form on the course page: a Server Action with `useActionState`; `lib/api/form-errors.ts` (API field errors to form fields) arrives here;
   - `/checkout/success`, rendered on the server and refreshed with `router.refresh()` while the status is `pending`;
   - no cancel page: Stripe's cancel URL is the course page ([stripe-redirect.service.ts](../api/src/checkout/stripe-redirect.service.ts));

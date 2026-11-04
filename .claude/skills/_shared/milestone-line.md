@@ -10,8 +10,10 @@ Written by `/plan-create-overview`, read by `/plan-create-implementation` in its
 - Why here: <the dependency or risk that puts it in this place>
 - Needs: <earlier milestone numbers, or none>
 - Builds on: <links to existing code, docs, rules and Decisions it touches>
+- **Sketch: <areas with screens only: one ASCII drawing of the page or flow as it looks once this milestone ships, in a code block. Each sketch shows the previous milestone's page grown by this milestone's part, so reading the Steps in order shows the page evolve. Name any placeholder ("the form sits under today's details list until milestone 7")>**
 - Size: <2 to 5 commits (rule in commit-size.md), plus a granularity hint such as "moves grouped per package"; based on the grep of touched files and twin code, not a feeling>
 - Risk: <the unknown to retire, or none>
+- **Test data: <areas with states only: for each state this milestone builds, the fixture and the mock handler it walks, and the commit that creates any that does not exist yet>**
 - Done when: <what to run or look at to prove the whole milestone>
 - Blocks the split: <questions that change the order or size of the commits; settled at plan time through the picker>
 - Can wait: <questions one commit can decide alone>
@@ -20,7 +22,9 @@ Written by `/plan-create-overview`, read by `/plan-create-implementation` in its
 
 - The outcome says what the admin, customer or developer can now do, in plain words, with no function, type or file names.
 - Number only: 1, 2, 3. The plan pass labels commits 2a, 2b, matching [commit-line.md](commit-line.md).
-- Fields by place: the **Next** milestone has every field. Any other milestone has only *Why here*, *Needs*, *Size*, *Risk* and *Done when*; the plan pass adds the rest when it becomes **Next**, so notes are not written for work that may change.
+- Fields by place: the **Next** milestone has every field. Any other milestone has only *Why here*, *Needs*, **\*Sketch\* (areas with screens), \*Test data\* (areas with states)**, *Size*, *Risk* and *Done when*; the plan pass adds the rest when it becomes **Next**, so notes are not written for work that may change.
+- **A question is *blocks the split* when its answer changes the list of commits (which commits exist, their order or their size). Otherwise it is *can wait*. Judge by that test, not by how hard the question feels.**
+- **The plan pass redraws the *Sketch* of the milestone it splits; `/next-commit` cuts it with the other temporary notes only when the Sketch no longer matches the shipped page.**
 - **Spike:** a milestone flagged `*(spike)*` answers one question with throwaway code. Its section has *Question*, *Time-box* (hours, or one commit) and *Done when* = the written answer. No tests are required. It ends with a decision row recording the answer and what was rejected. Use one for any question only running code can answer (a library's real behaviour, a data shape, speed), and put it first.
 - Exactly one milestone is **Next**. Omit a field that is empty, except *Done when* and *Needs*.
 - *Done when* is the milestone-level check; each commit line's own *Done when* adds up to it. A UI milestone's ends with a journey: the steps the owner walks in `dev:mock`, with the screen expected at each step.

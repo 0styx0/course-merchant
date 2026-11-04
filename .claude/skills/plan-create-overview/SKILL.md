@@ -40,15 +40,17 @@ Repeat the brief back in at most 5 bullets, and ask once "anything else that's a
 
 ## 3. Settle shape-changing decisions
 
-For each decision ask: **would the answer change which milestones exist, their order or their size?** Yes: settle it now, one at a time through the picker. A new library is usually a Yes (it can remove a milestone or add a "prove it works" one): offer it as an option, library recommended when it passes the check, hand-rolling as the rejected option with its cost. No: write it as an open question, tagged *can wait* or *blocks the split* (definitions in milestone-line.md).
+For each decision ask: **would the answer change which milestones exist, their order or their size?** Yes: settle it now, one at a time, with the `decision-card` skill (it shows each option's before and after, code and cost, then asks the pick through the picker). A new library is usually a Yes (it can remove a milestone or add a "prove it works" one): offer it as an option, library recommended when it passes the check, hand-rolling as the rejected option with its cost. No: write it as an open question, tagged *can wait* or *blocks the split* (definitions in milestone-line.md).
 
 ## 4. Draw the milestones
 
-Follow milestone-checklist.md (it covers how to choose and how to write them). Mark milestone 1 **Next**. For an area with screens, also draw the **whole-page sketch**: one ASCII wireframe of the finished page or flow, sections in order, with the empty state. Each milestone's later sketch fills in a part of it.
+Follow milestone-checklist.md (it covers how to choose and how to write them). Mark milestone 1 **Next**. For an area with screens, also draw the **whole-page sketch**: one ASCII wireframe of the finished page or flow, sections in order, with the empty state. Then draw each milestone's *Sketch*: the page as it looks once that milestone ships, grown from the previous milestone's. Reading the sketches in order shows the page evolve.
 
 ## 5. Check the map before presenting
 
 Run the checklist in milestone-checklist.md against the draft map. Then, only when the map has a decision row, call the `plan-reviewer` agent (Agent tool, `subagent_type: plan-reviewer`) with the draft map and the files it names, and say it is a **map**. Report which findings you accept and fix, and which you reject with a reason. Do not relay its full list.
+
+Then run `/plan-ripple` on the draft (the plan file stands in for the doc until step 7) and add its table to the map as *Docs touched*.
 
 Also across the map:
 - Is every must-have covered, and nothing else added?
@@ -64,17 +66,19 @@ Bullets only, at most ~500 words (this overrides the word cap in chat-rules.md),
 2. **Questions for you:** anything open that *blocks the split* (usually few).
 3. **Brief:** the 5 bullets from step 1, then the journeys.
 4. **Whole-page sketch**, when the area has screens.
-5. **Milestones:** each as its Status line, then *Needs*, *Size* and *Done when* on one line.
+5. **Milestones:** each as its Status line, then *Needs*, *Size* and *Done when* on one line, and its *Sketch* for an area with screens.
 6. **Proposed decision rows:** the exact `| Decision | Why | Rejected |` text. For each rejected option: what it would give, cost and complexity. Only strong contenders. A row deciding what shows, where, or in what order on a page ends its *Why* with "(revisit after use)".
 7. **Open questions:** one line each, with the milestone and *blocks the split* or *can wait*.
 8. **Out of scope.**
 9. **Review result:** one line per accepted or rejected finding.
-10. **Terms:** each specialized term the map uses (CLAUDE.md *Plain language*).
+10. **Docs touched:** the `/plan-ripple` table.
+11. **Terms:** each specialized term the map uses (CLAUDE.md *Plain language*).
 
 Link and diagram formats: [../_shared/output-format.md](../_shared/output-format.md).
 
 ## 7. After approval, write the doc
 
-- Create `docs/$area.md` from [doc-template.md](doc-template.md), with only the approved decision rows.
-- Add the doc to CLAUDE.md's *Design docs* list.
+- **The approved plan file is the doc body.** Copy its sections into `docs/$area.md` (shape in [doc-template.md](doc-template.md)), with only the approved decision rows, every milestone's *Sketch*, and a *Terms* section. Never rewrite the doc from memory. A follow-up request (a question, a revision) edits the plan file; it never overwrites it, so approved text and sketches survive.
+- Add the doc to CLAUDE.md's *Design docs* list, and make the *Docs touched* edits that are status or plan text. Propose the Decision-row edits and wait for the owner's OK.
+- Run `/plan-cold-read $area` and fix what it reports as *Fix now*; ask the owner about the rest. Run `/plan-ripple $area` once more.
 - Docs only. Hand off with the files changed, `` `docs($area): plan the overview` `` as the suggested commit message, and a reminder to `/clear` before `/plan-create-implementation $area`.
