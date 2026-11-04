@@ -54,7 +54,7 @@ The OpenAPI spec is the source of truth, so a change starts there:
 
 ## What CI runs
 
-[ci.yml](.github/workflows/ci.yml) runs on every pull request and every push to `main`. It repeats everything the hooks run, on a clean machine, plus ESLint, knip, the API build, the folder layout check and the tests of the repo's shell scripts (their own job), and a check that the generated API types are committed and up to date. The `api`, `web` and `web-playwright` jobs run in parallel; the Playwright tests have their own job so their browser install overlaps with the web checks. If CI fails but your hooks passed, run the failing command from the workflow locally. The usual causes are a forgotten `yarn generate:api-types` or a file that was never committed. CI uses no secrets: tests run against the fake values in `api/.env.test`.
+[ci.yml](.github/workflows/ci.yml) runs on every pull request and every push to `main`. It repeats everything the hooks run, on a clean machine, plus ESLint, knip, the API build, the folder layout check and the tests of the repo's shell scripts, and a check that the generated API types are committed and up to date. Each kind of check is its own job (API and web static checks, API unit, integration and end-to-end tests, web unit and browser tests, repo script tests), so a pull request lists one pill per kind. The jobs run in parallel on separate machines and share one install step ([install-node-deps](.github/actions/install-node-deps/action.yml)). If CI fails but your hooks passed, run the failing command from the workflow locally. The usual causes are a forgotten `yarn generate:api-types` or a file that was never committed. CI uses no secrets: tests run against the fake values in `api/.env.test`.
 
 ## Writing tests
 

@@ -1,6 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 import { server } from "../mocks/node";
 import { FROZEN_NOW } from "./frozen-now";
+import { spyTemporalNowOnDate } from "./spy-temporal-now-on-date";
 
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
@@ -10,11 +11,14 @@ beforeAll(() => {
     onUnhandledRequest: "error",
   });
 });
-// Only Date is faked, so timers, user-event and findBy queries keep running in real time.
+let restoreTemporalNow: () => void = () => {};
 beforeEach(() => {
+  // Only Date is faked, so timers, user-event and findBy queries keep running in real time.
   vi.useFakeTimers({ toFake: ["Date"], now: FROZEN_NOW });
+  restoreTemporalNow = spyTemporalNowOnDate();
 });
 afterEach(() => {
+  restoreTemporalNow();
   vi.useRealTimers();
   cleanup();
   server.resetHandlers();

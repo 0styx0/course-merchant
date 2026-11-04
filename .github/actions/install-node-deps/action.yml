@@ -1,0 +1,17 @@
+name: Install Node dependencies
+description: Sets up Node and installs the yarn packages of one project (api or web).
+inputs:
+  project:
+    description: Folder of the yarn project, api or web.
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v5
+      with:
+        node-version: 26
+        cache: yarn
+        cache-dependency-path: ${{ inputs.project }}/yarn.lock
+    - run: yarn install --frozen-lockfile
+      shell: bash
+      working-directory: ${{ inputs.project }}

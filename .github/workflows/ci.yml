@@ -1,7 +1,8 @@
 name: CI
 
 # Runs what the git hooks run (see .husky/), so a passing badge means the
-# type checks and all three test suites pass on a clean machine.
+# type checks and all test suites pass on a clean machine. Each job is one
+# kind of check, so a pull request lists one pill per kind.
 on:
   pull_request:
   push:
@@ -19,6 +20,7 @@ concurrency:
 
 jobs:
   repo-scripts:
+    name: Repo script tests
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -28,21 +30,18 @@ jobs:
       - run: bash .claude/hooks/lint-design-doc.test.sh
       - run: bash .claude/skills/usage-review/measure.test.sh
 
-  api:
+  api-checks:
+    name: API static checks
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: api
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: ./.github/actions/install-node-deps
         with:
-          node-version: 26
-          cache: yarn
-          cache-dependency-path: api/yarn.lock
-      - run: yarn install --frozen-lockfile
-
+          project: api
       - name: Generated API types are up to date
         run: |
           yarn generate:api-types
@@ -53,26 +52,62 @@ jobs:
       - run: yarn format:check
       - run: yarn build
 
+  api-unit:
+    name: API unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/install-node-deps
+        with:
+          project: api
       - run: yarn test:unit
-      # These two start Postgres and stripe-mock themselves (docker compose).
+
+  # The integration and e2e jobs start Postgres and stripe-mock themselves
+  # (docker compose).
+  api-integration:
+    name: API integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/install-node-deps
+        with:
+          project: api
       - run: yarn test:integration
+
+  api-e2e:
+    name: API end-to-end tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/install-node-deps
+        with:
+          project: api
       - run: yarn test:e2e
 
-  web:
+  web-checks:
+    name: Web static checks
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: web
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: ./.github/actions/install-node-deps
         with:
-          node-version: 26
-          cache: yarn
-          cache-dependency-path: web/yarn.lock
-      - run: yarn install --frozen-lockfile
-
+          project: web
       - name: Generated API types are up to date
         run: |
           yarn generate:api-types
@@ -85,11 +120,22 @@ jobs:
       - run: yarn knip
       - run: yarn format:check
 
+  web-unit:
+    name: Web unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/install-node-deps
+        with:
+          project: web
       - run: yarn test:unit
 
-  # Separate from `web` so Playwright's slow browser and system-package install
-  # overlaps with the checks above instead of waiting for them.
-  web-playwright:
+  web-browser:
+    name: Web browser tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -97,14 +143,9 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: ./.github/actions/install-node-deps
         with:
-          node-version: 26
-          cache: yarn
-          cache-dependency-path: web/yarn.lock
-      - run: yarn install --frozen-lockfile
-
-      # The tests run headless, so the smaller headless shell is enough; full
-      # Chrome isn't needed.
+          project: web
+      # Headless runs need only the smaller headless shell, not full Chrome.
       - run: yarn playwright install --with-deps --only-shell chromium
       - run: yarn test:browser

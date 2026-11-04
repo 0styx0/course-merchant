@@ -21,6 +21,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3b (web).** Web tests start at one frozen time (2026-11-04 12:00 UTC); a test can still set its own.
   - [x] **3b2 (web).** The edit-form schedule and saving tests and the prices action test start at the frozen time and build their times from it.
   - [x] **3c (web).** A web test asserts "nothing shown" only after something visible proves the check ran; each fixed test fails when the code it guards breaks. The prices zone test now uses a time that has passed in New York and lies ahead in Los Angeles, so only the zone change clears its error.
+  - [x] **3b3 (web).** Web tests read the frozen time from `Temporal.Now` too, on Node builds that include Temporal (CI) and on builds that leave it out.
   - [ ] **3d (api).** An API test can no longer leak a mock into the next. **Next**
     - *Start with*: add the three settings to `api/vitest.unit.config.ts`, `api/vitest.integration.config.ts` and `api/vitest.e2e.config.ts`, run each suite, and list what fails. Then remove the `vi.restoreAllMocks` calls in the 20 spec and fixture files that `git grep -l restoreAllMocks -- api` lists.
     - *Behaviours*:
@@ -69,6 +70,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - **Temporal value:** a time object from the Temporal library that both packages use (`Instant`, `PlainDate`).
 - **Equality tester:** a function Vitest asks whether two values are equal, registered with `expect.addEqualityTesters`. Without one for Temporal, `toMatchObject` calls any two times equal.
 - **Frozen clock:** a test that fixes "now" to one time, with `vi.useFakeTimers` or a spy on `Temporal.Now`, so its result never depends on the day it runs.
+- **Built-in Temporal:** the `Temporal` that official Node 26 builds and modern browsers provide. `temporal-polyfill` hands it back when present, so its `Temporal.Now` reads the machine clock and ignores a faked `Date`.
 - **Hydration:** React attaching to the page the server sent. Typing or clicking before it finishes can be lost.
 - **Web-first assertion:** a Playwright check, `expect(locator)…`, that retries until it holds or times out. A plain `expect(number)` reads once.
 - **Poll:** Playwright's `expect.poll(fn)`, which reruns a function until its value passes.
@@ -129,6 +131,7 @@ Measured on 2026-11-04 in a separate worktree, on a busy 8-core machine (load av
 | The web setup file freezes `Date` before every test | Tests build future dates from one known "now", so none depends on the day it runs, and a test sets its own time only when it needs one | A freeze in each file that needs one (a line per file, and a new test can forget it) |
 | `restoreMocks`, `unstubEnvs` and `unstubGlobals` on in every Vitest config | A failed test no longer leaks its mock into the tests after it | An `afterEach` in each file (easy to forget) |
 | `Pacific/Chatham` (+12:45, an offset no common machine uses) pinned for Vitest and for Playwright's `timezoneId`; the stress command also runs `Pacific/Kiritimati` (+14:00) | A test that assumes UTC or the developer's own zone fails on every machine, instead of only on some | Leaving the zone to the machine (today's tests pass by luck); pinning UTC (hides tests that assume UTC) |
+| The web setup file makes every `Temporal.Now` method read the faked `Date` before each test | On a Node build with the built-in Temporal, the polyfill hands back the built-in, which reads the machine clock. A test reading `Temporal.Now` then sees today's time on CI and the frozen time locally | Deleting the built-in before the polyfill loads (tests run a different Temporal than the app, and it breaks once the polyfill goes); pinning CI's Node (every official Node 26 build includes Temporal); Vitest's `toFake: ["Temporal"]` alone (it swaps only the global, and our code holds the polyfill's import); a clock function in app code (app code already reads one clock, `Date.now()`) |
 | A 15-second timeout for web unit tests | The heavy form tests pass alone but hit the 5-second default under load | Raising the timeout per test (a growing list); cutting the typing in each test first (worth doing later, but bigger) |
 | Browser layout and font checks go through `expect.poll` and `document.fonts.ready` | A single read right after a scroll or a focus lost to late layout | `waitForTimeout` (a guess); `networkidle` (waits for neither layout nor fonts) |
 | Lint bans real clocks in test files outright, and a line that needs real time carries `eslint-disable-next-line` with its reason | A list of exempt files goes stale, while a comment sits on the line it excuses | Per-file exemption lists; detecting a frozen clock (lint can't) |
