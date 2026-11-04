@@ -13,23 +13,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **1c.** Buttons are 48px, with the guide's label, colours and focus ring; the hover colours are tokens, and the alert dialog title uses DM Sans.
 - [x] **1d.** Fields are 48px white boxes with `rounded-md`, 1rem text and a destructive border when invalid; any focus, including the status radio, shows the ring.
 - [x] **1e.** Public pages show Playfair titles on the type scale (home, course, 404, list, card) and the guide's muted text; no `gray-` or `green-` classes remain.
-- [ ] **2a.** The mock courses keep times that hold for years, the free course shows on the mock home page, and each mock course page answers for the course in its URL. Read [Step 2](#step-2-free-enrollment-from-the-course-page) first. **Next**
-  - *Behaviours*:
-    - The React and TypeScript fixtures start in 2030 (upcoming for years); the card, detail and browser tests assert the new literals.
-    - A new free course fixture (price 0, upcoming 2030) shows as the third card in the mock home list.
-    - The mock course endpoint answers with the fixture whose id is in the URL; an unknown id gets the API's 404 problem (`COURSE_NOT_FOUND`).
-    - The `slow` scenario answers the same way after its delay.
-    - The admin fixture keeps its own 2026 times, so the admin tests stay unchanged.
-  - *New shared pieces*: the `freeCourse` fixture (steps 2 to 4 walk it).
-  - *Files*:
-    - [courses.ts](../web/src/mocks/fixtures/courses.ts) (new dates, `freeCourse`)
-    - [admin-courses.ts](../web/src/mocks/fixtures/admin-courses.ts) (its own schedule literal)
-    - [get-course.ts](../web/src/mocks/handlers/get-course.ts) (lookup by id)
-    - [list-courses.ts](../web/src/mocks/handlers/list-courses.ts) (three courses)
-    - Tests: `course-details.test.tsx`, `course-card.test.tsx`, `course-list.test.tsx`, `courses.api.test.ts`, `get-course.spec.ts`, `list-courses.spec.ts`, plus one handler test.
-  - *Settled*: Decisions "Fixtures keep fixed times…" and "The mock course endpoint answers by id…".
-  - *Done when*: `yarn --cwd web check:changed` passes; in `dev:mock` the home page shows three cards and the free card opens its page.
-- [ ] **2b.** The web server can enroll a visitor: it sends the course, name and email to the API and returns "check your email", the API's problem with the typed values, or a redirect to Stripe.
+- [x] **2a.** The mock courses keep times that hold for years, the free course shows on the mock home page, and each mock course page answers for the course in its URL.
+- [ ] **2b.** The web server can enroll a visitor: it sends the course, name and email to the API and returns "check your email", the API's problem with the typed values, or a redirect to Stripe. **Next**
   - *Behaviours*:
     - A `check_email` answer returns success carrying the email sent.
     - A `redirect` answer sends the browser to the API's `url`.

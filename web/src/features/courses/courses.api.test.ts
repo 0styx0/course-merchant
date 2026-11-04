@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { server } from "@/mocks/node";
 import { coursesError, coursesSuccess } from "@/mocks/handlers/list-courses";
-import { reactCourse, typescriptCourse } from "@/mocks/fixtures/courses";
+import { publicCourses } from "@/mocks/fixtures/courses";
 import { listCourses } from "./courses.api";
 
 // Its default export throws outside a React Server Component build
@@ -13,7 +13,7 @@ describe("listCourses", () => {
     server.use(coursesSuccess);
 
     await expect(listCourses()).resolves.toEqual({
-      courses: [reactCourse, typescriptCourse],
+      courses: publicCourses,
     });
   });
 

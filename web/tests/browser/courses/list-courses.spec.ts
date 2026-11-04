@@ -1,7 +1,11 @@
 import msw from "next/experimental/testmode/playwright/msw.js";
 
 import { courseByIdSuccess } from "@/mocks/handlers/get-course";
-import { reactCourse, typescriptCourse } from "@/mocks/fixtures/courses";
+import {
+  freeCourse,
+  reactCourse,
+  typescriptCourse,
+} from "@/mocks/fixtures/courses";
 import {
   coursesError,
   coursesSlow,
@@ -26,10 +30,11 @@ test("displays available courses", async ({ page }) => {
   const courses = page.getByRole("region", { name: "Courses" });
   const cards = courses.getByRole("article");
 
-  await expect(cards).toHaveCount(2);
+  await expect(cards).toHaveCount(3);
 
   await expect(cards.nth(0)).toContainText(reactCourse.name);
   await expect(cards.nth(1)).toContainText(typescriptCourse.name);
+  await expect(cards.nth(2)).toContainText(freeCourse.name);
 
   await expect(
     courses.getByRole("heading", {
@@ -57,6 +62,22 @@ test("opens a course from its card", async ({ page, msw }) => {
   await expect(page).toHaveURL(`/courses/${reactCourse.id}`);
   await expect(
     page.getByRole("heading", { level: 1, name: reactCourse.name }),
+  ).toBeVisible();
+});
+
+test("opens the free course from its card", async ({ page, msw }) => {
+  msw.use(courseByIdSuccess);
+
+  await page.goto("/");
+
+  await page
+    .getByRole("region", { name: "Courses" })
+    .getByRole("link", { name: freeCourse.name })
+    .click();
+
+  await expect(page).toHaveURL(`/courses/${freeCourse.id}`);
+  await expect(
+    page.getByRole("heading", { level: 1, name: freeCourse.name }),
   ).toBeVisible();
 });
 

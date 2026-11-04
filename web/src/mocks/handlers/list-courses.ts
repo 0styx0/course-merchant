@@ -1,7 +1,7 @@
 import type { operations } from "@/lib/api/generated";
 import type { CoursesResponse } from "@/lib/types";
 import { http, HttpResponse, delay } from "msw";
-import { reactCourse, typescriptCourse } from "../fixtures/courses";
+import { publicCourses } from "../fixtures/courses";
 import { MOCK_API_BASE_URL } from "../mock-api";
 import { problemResponse } from "../problem-response";
 
@@ -11,8 +11,8 @@ type InternalServerError =
 const coursesUrl = `${MOCK_API_BASE_URL}/v1/courses`;
 
 const coursesResponse = {
-  courses: [reactCourse, typescriptCourse],
-} as const satisfies CoursesResponse;
+  courses: publicCourses,
+} satisfies CoursesResponse;
 
 export const coursesSuccess = http.get(coursesUrl, () => {
   return HttpResponse.json(coursesResponse);

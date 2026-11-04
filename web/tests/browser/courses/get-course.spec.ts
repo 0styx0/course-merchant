@@ -4,7 +4,7 @@ import {
   courseByIdNotFound,
   courseByIdInvalidId,
 } from "@/mocks/handlers/get-course";
-import { reactCourse } from "@/mocks/fixtures/courses";
+import { reactCourse, typescriptCourse } from "@/mocks/fixtures/courses";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
 const { test, expect } = msw;
@@ -55,6 +55,14 @@ test("displays course details", async ({ page }) => {
 
   await expect(endTime).toBeVisible();
   await expect(endTime).not.toBeEmpty();
+});
+
+test("displays the course whose id is in the URL", async ({ page }) => {
+  await page.goto(`/courses/${typescriptCourse.id}`);
+
+  await expect(
+    page.getByRole("heading", { level: 1, name: typescriptCourse.name }),
+  ).toBeVisible();
 });
 
 test("displays an error when the API returns a server error", async ({

@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { CourseListLoading, CourseList } from "./course-list";
-import { reactCourse, typescriptCourse } from "@/mocks/fixtures/courses";
+import { publicCourses } from "@/mocks/fixtures/courses";
 
 describe("CourseList", () => {
   it("renders the loading state", () => {
@@ -32,13 +32,14 @@ describe("CourseList", () => {
   });
 
   it("renders the available courses", () => {
-    render(<CourseList courses={[reactCourse, typescriptCourse]} />);
+    render(<CourseList courses={publicCourses} />);
 
     const courses = screen.getByRole("region", { name: "Courses" });
     const cards = within(courses).getAllByRole("article");
 
-    expect(cards).toHaveLength(2);
+    expect(cards).toHaveLength(3);
     expect(cards[0]).toHaveTextContent("React Fundamentals");
     expect(cards[1]).toHaveTextContent("Advanced TypeScript");
+    expect(cards[2]).toHaveTextContent("Mindful Breathing");
   });
 });

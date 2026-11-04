@@ -32,13 +32,13 @@ describe("CourseDetails", () => {
 
     expect(screen.getByText(formatPrice(9900, "USD"))).toBeVisible();
 
-    expect(screen.getByText("Oct 1, 2026, 2:00 PM")).toHaveAttribute(
+    expect(screen.getByText("Oct 1, 2030, 2:00 PM")).toHaveAttribute(
       "datetime",
-      "2026-10-01T18:00:00Z",
+      "2030-10-01T18:00:00Z",
     );
-    expect(screen.getByText("Oct 1, 2026, 4:00 PM")).toHaveAttribute(
+    expect(screen.getByText("Oct 1, 2030, 4:00 PM")).toHaveAttribute(
       "datetime",
-      "2026-10-01T20:00:00Z",
+      "2030-10-01T20:00:00Z",
     );
 
     expect(screen.getByText("America/New_York")).toBeVisible();

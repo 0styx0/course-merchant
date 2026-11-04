@@ -1,7 +1,7 @@
 import type { operations } from "@/lib/api/generated";
 import { delay, http, HttpResponse } from "msw";
 import { MOCK_API_BASE_URL } from "../mock-api";
-import { reactCourse } from "../fixtures/courses";
+import { publicCourses } from "../fixtures/courses";
 import { problemResponse } from "../problem-response";
 
 type GetCourseResponse =
@@ -18,20 +18,30 @@ type InternalServerErrorResponse =
 
 const courseByIdUrl = `${MOCK_API_BASE_URL}/v1/courses/:courseId`;
 
-const courseResponse: GetCourseResponse = reactCourse;
+function respondWithCourse(courseId: string | readonly string[]) {
+  const course: GetCourseResponse | undefined = publicCourses.find(
+    (publicCourse) => publicCourse.id === courseId,
+  );
 
-export const courseByIdSuccess = http.get(courseByIdUrl, () => {
-  return HttpResponse.json(courseResponse);
-});
+  return course ? HttpResponse.json(course) : respondCourseNotFound(courseId);
+}
 
-export const courseByIdNotFound = http.get(courseByIdUrl, ({ params }) => {
+function respondCourseNotFound(courseId: string | readonly string[]) {
   const body = {
     title: "Course not found",
-    detail: `No course exists with ID ${params.courseId}.`,
+    detail: `No course exists with ID ${courseId}.`,
     code: "COURSE_NOT_FOUND",
   } satisfies CourseNotFoundResponse;
 
   return problemResponse(404, body);
+}
+
+export const courseByIdSuccess = http.get(courseByIdUrl, ({ params }) => {
+  return respondWithCourse(params.courseId);
+});
+
+export const courseByIdNotFound = http.get(courseByIdUrl, ({ params }) => {
+  return respondCourseNotFound(params.courseId);
 });
 
 export const courseByIdInvalidId = http.get(courseByIdUrl, ({ params }) => {
@@ -54,9 +64,9 @@ export const courseByIdError = http.get(courseByIdUrl, () => {
   return problemResponse(500, body);
 });
 
-const courseByIdSlow = http.get(courseByIdUrl, async () => {
+const courseByIdSlow = http.get(courseByIdUrl, async ({ params }) => {
   await delay(1000);
-  return HttpResponse.json(courseResponse);
+  return respondWithCourse(params.courseId);
 });
 
 export const getCourseHandlers = {

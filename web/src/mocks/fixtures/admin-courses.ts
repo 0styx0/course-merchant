@@ -8,7 +8,11 @@ export const draftedAdminCourse = {
   name: reactCourse.name,
   summary: reactCourse.summary,
   description: reactCourse.description,
-  schedule: reactCourse.schedule,
+  schedule: {
+    startTime: "2026-10-01T18:00:00Z",
+    endTime: "2026-10-01T20:00:00Z",
+    timeZone: "America/New_York",
+  },
   contentUrl: "https://example.com/course",
   status: { name: "drafted", changedAt: "2026-10-15T18:30:00Z" },
   image: null,
