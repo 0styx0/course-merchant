@@ -12,7 +12,49 @@ Keep this file current **in the same commit as the work**: tick the step, and ma
 
 Each milestone delivers one outcome. `/plan-create-implementation` splits a milestone into commit lines when it becomes the next one. Milestone N is described in the section *Step N* below.
 
-- [ ] **1. A test comparing two times fails when they differ.** Today any two times match inside an object check, so some assertions check nothing. **Next**
+- [ ] **1. A test comparing two times fails when they differ.** Today any two times match inside an object check, so some assertions check nothing.
+  - [ ] **1a.** An object check in any API suite fails when it compares two different times, and the two tests that passed by accident now compare real values. **Next**
+    - *Behaviours*:
+      - An object check on two different instants (`2020-01-01` against `2030-01-01`) fails.
+      - An object check on two equal instants built separately passes.
+      - Two Temporal values of different kinds are unequal.
+      - A Temporal value against its own text (a JSON string) is unequal.
+      - A time nested in an array inside an object check is checked too.
+      - A Temporal value against `null` or `undefined` is unequal.
+      - Two durations compare by text, as Vitest's `toEqual` already does (`PT1H` against `PT60M` is unequal).
+      - Comparisons without a Temporal value keep today's result: plain objects, `Date`, strings, `expect.any(Temporal.Instant)`.
+      - The `markSent` integration test passes with its input rounded by `toDatabasePrecision`, and fails when the stored `sentAt` changes (break it once).
+      - The create end-to-end test passes comparing the response's text times with `toDatabasePrecision` of the request's text, and fails when an expected time changes (break it once).
+      - The API unit suite was never run with the tester. The commit starts by running it, and fixes any test it exposes in the same commit.
+        - Some unit specs mix Temporal values with object checks, so a few failures are possible (see *Re-measure* in Step 1).
+    - *New shared pieces*: the API's Temporal equality tester, a setup file every API Vitest config loads, so each suite's object checks on times stay strict.
+    - *Files*:
+      - `api/src/test/temporal-equality.ts` (new)
+      - `api/src/test/unit/temporal-equality.spec.ts` (new; relies on the config, imports no tester)
+      - [vitest.unit.config.ts](../api/vitest.unit.config.ts) (first `setupFiles` entry)
+      - [vitest.integration.config.ts](../api/vitest.integration.config.ts) and [vitest.e2e.config.ts](../api/vitest.e2e.config.ts) (tester listed before `integration.setup.ts`)
+      - [email-outbox.repository.integration.spec.ts](../api/src/email/test/integration/email-outbox.repository.integration.spec.ts)
+      - [admin-course.create.spec.ts](../api/src/test/e2e/courses/admin-course.create/admin-course.create.spec.ts) (expects `toDatabasePrecision(text)`, as the sibling test already does)
+      - [api-tests.md](../.claude/rules/api-tests.md) (two rules: `toEqual` or the tester for times; round inputs with `toDatabasePrecision`)
+      - Folders: `api/src/test` stays under the file limit; `api/src/test/unit` is new.
+    - *Settled*: Decisions "One shared Temporal equality tester…", "Test inputs rounded to database precision…" and "The time tester decides whenever either value is a Temporal value…".
+    - *Done when*:
+      - `yarn --cwd api test:unit`, `test:integration` and `test:e2e` pass.
+      - Both break-it-once checks fail for the reason the test's name gives.
+  - [ ] **1b.** An object check in a web unit or component test fails when it compares two different times.
+    - *Behaviours*:
+      - The same tester behaviours as 1a, built with `temporal-polyfill`.
+      - Every existing web unit test still passes.
+        - The web suite was never run with the tester; grep finds no web test that mixes Temporal values with object checks. The commit runs the suite first and fixes anything it exposes.
+      - Removing the config's setup entry fails the tester's own test (break it once).
+    - *New shared pieces*: the web's copy of the tester, a twin of 1a's, because the packages share no source.
+    - *Files*:
+      - `web/src/test/temporal-equality.ts` (new)
+      - `web/src/test/temporal-equality.test.ts` (new)
+      - [vitest.config.mts](../web/vitest.config.mts) (second `setupFiles` entry, beside `setup.ts`)
+      - Folder: `web/src/test` stays under the file limit.
+    - *Needs*: 1a (copies its code and tests).
+    - *Done when*: `yarn --cwd web test:unit` passes.
 - [ ] **2. Two checkouts can run every suite at once.** Each checkout gets its own test containers and browser-test port, so a worktree or an agent stops wiping the main checkout's database.
 - [ ] **3. Unit and integration tests keep their own clock and finish in time.** No test depends on today's date, a sleep or the 5-second default timeout, and no test leaks a mock into the next.
 - [ ] **4. Browser tests wait for the page.** Layout checks retry until they hold, tests type only once the page is ready, and the course list's loading-state test stops racing a timer.
@@ -83,6 +125,7 @@ Measured on 2026-11-04 in a separate worktree, on a busy 8-core machine (load av
 |---|---|---|
 | One shared Temporal equality tester, in a setup file every Vitest config loads | It fixes every current and future object check on a time in one place, so a developer who forgets the rule still gets a failing test | Rewriting each assertion to `toEqual` (each new one can slip back); a lint rule (lint can't see value types) |
 | Test inputs rounded to database precision with the existing `toDatabasePrecision` | Postgres keeps microseconds and `Temporal.Now` gives more digits, so the strict tester would otherwise fail correct code | Comparing to the millisecond (hides a real rounding bug) |
+| The time tester decides whenever either value is a Temporal value, and a Temporal value never equals its text | A test that compares an API response's text time against an `Instant` otherwise passes for any time, as the create end-to-end test did | Deciding only when both values are Temporal (small, but leaves text-against-time checks hollow); turning text into Temporal before comparing (a few more lines, and hides a response that sends a time in the wrong format) |
 | Test containers and the browser-test port come from env settings that default to today's values | A second checkout stops wiping the first one's database, and nothing changes for a single checkout | A fixed second set of ports (collides at the third checkout) |
 | Playwright never reuses a running server | A leftover dev server without the test proxy silently switches off every mock handler | Reusing outside CI (saves seconds, risks testing the wrong server) |
 | `restoreMocks`, `unstubEnvs` and `unstubGlobals` on in every Vitest config | A failed test no longer leaks its mock into the tests after it | An `afterEach` in each file (easy to forget) |
@@ -102,10 +145,28 @@ Measured on 2026-11-04 in a separate worktree, on a busy 8-core machine (load av
   - The configs [vitest.unit.config.ts](../api/vitest.unit.config.ts), [vitest.integration.config.ts](../api/vitest.integration.config.ts), [vitest.e2e.config.ts](../api/vitest.e2e.config.ts) and [vitest.config.mts](../web/vitest.config.mts).
   - Twin code: the api and web setup files. The API uses the `@js-temporal/polyfill` package and the web uses `temporal-polyfill`. The tester matches on the object's type tag (`Object.prototype.toString`, which starts with `[object Temporal.`) plus its text form, so it covers both without importing either.
   - Setup file: one file per package, because `api/` and `web/` share no source. `api/src/test/temporal-equality.ts` is listed in all three API configs: the unit config gains its first `setupFiles` entry, and the integration and end-to-end configs list it before `integration.setup.ts` (which opens the database and wipes every table, so the unit suite must not load it). `web/src/test/temporal-equality.ts` sits beside `setup.ts` in the web config. Each copy gets its own unit test.
-- **Size:** 3 commits:
-  - the tester with its own unit test;
-  - the two exposed inputs, rounded: the `markSent` test in [email-outbox.repository.integration.spec.ts](../api/src/email/test/integration/email-outbox.repository.integration.spec.ts) and the create test in [admin-course.create.spec.ts](../api/src/test/e2e/courses/admin-course.create/admin-course.create.spec.ts);
-  - the rule in `api-tests.md`.
+- **Size:** 2 commits, one per package (a commit may not span `api/` and `web/`). The two exposed tests and the `api-tests.md` rules join the API commit, because the tester exposes them and the rules describe it.
+- **Design notes** *(temporary)*:
+  - The tester recognises a Temporal value by its type tag and calls two values equal only when tags and text forms match. It imports neither polyfill.
+  - It decides whenever **either** value is Temporal. The end-to-end create test compares JSON text against an `Instant`; a "both sides" tester would leave it hollow.
+  - It returns `undefined` for anything else, so Vitest keeps every other comparison.
+  - Vitest 5.0.5 already compares Temporal values in `toEqual` with `a.equals(b)`. `toMatchObject` runs its subset check first, which sees a Temporal object as one with no keys and calls it a match. Registered testers run before that subset check, so the tester fixes it ([source](../api/node_modules/vitest/dist/chunks/index.aTZaPVhf.js), functions `eq` and `subsetEquality`).
+  - Both polyfills tag an instant `[object Temporal.Instant]` and give it no own keys (`@js-temporal/polyfill` 0.5.1, `temporal-polyfill` 1.0.6).
+  - Spec files rely on `setupFiles` and import nothing from the tester, so each run also proves the config loads it.
+  - `toDatabasePrecision` takes and returns text, so the `markSent` fix builds an `Instant` from its result. Milestone 3 owns the move to a frozen clock.
+- **Flow** *(temporary)*:
+  ```
+  Test runs toMatchObject / toEqual / toHaveBeenCalledWith                existing (Vitest)
+  └── Vitest compares each pair of values
+      ├── one side is an asymmetric matcher (expect.any…) → matcher decides  existing (Vitest)
+      └── registered testers run before Vitest's own checks
+          ├── neither value is Temporal → tester steps aside;               1a (api), 1b (web)
+          │   Vitest's subset or deep check decides, as today               existing
+          └── at least one value is Temporal → tester decides               1a, 1b
+              ├── same kind, same text → equal; the test goes on            1a, 1b
+              └── other kind, other text, or plain text on one side
+                  → unequal; the test fails with Vitest's diff              1a, 1b
+  ```
 - **Risk:** the tester must call different Temporal kinds unequal, and must leave every non-Temporal comparison unchanged.
 - **Done when:**
   - Every unit, integration and end-to-end suite passes.
@@ -114,10 +175,9 @@ Measured on 2026-11-04 in a separate worktree, on a busy 8-core machine (load av
 - **Also in this milestone:** [api-tests.md](../.claude/rules/api-tests.md) gains two rules, as bullets in its existing list:
   - Compare times with `toEqual`, or with `toMatchObject` under the shared tester.
   - Round test inputs with `toDatabasePrecision`.
-- **Blocks the split:** none.
 - **Can wait:** the setup file's name and folder.
-- **Re-measure:** the assertions the tester now guards:
-  `git grep -n toMatchObject -- 'api/src' 'web/src'`
+- **Re-measure:** the unit specs that mix Temporal values with object checks:
+  `git grep -l Temporal -- 'api/src/**/test/unit/**' | xargs grep -l 'toMatchObject\|objectContaining'`
 
 ## Step 2. Two checkouts can run every suite at once
 
