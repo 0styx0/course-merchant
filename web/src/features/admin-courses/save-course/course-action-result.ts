@@ -1,11 +1,12 @@
 import { z } from "zod";
 
+import {
+  fieldErrorsByFormPath,
+  type FormFieldError,
+} from "@/lib/api/form-errors";
 import type { ProblemDetails, Result } from "@/lib/types";
 
-import {
-  fieldErrorsFromProblem,
-  type FormFieldError,
-} from "./field-errors-from-problem";
+import { courseFormPath } from "./course-form-path";
 
 export type CourseActionFailure = {
   problem: ProblemDetails;
@@ -68,7 +69,10 @@ export function invalidImageFailure(): CourseActionResult {
 export function problemFailure(problem: ProblemDetails): CourseActionResult {
   return {
     state: "failure",
-    error: { problem, fieldErrors: fieldErrorsFromProblem(problem) },
+    error: {
+      problem,
+      fieldErrors: fieldErrorsByFormPath(problem, courseFormPath),
+    },
   };
 }
 

@@ -160,7 +160,7 @@ Shipped in six commits (2a–2f). Limits and the currency constant live in the `
 - The time zone is checked against `Intl.supportedValuesOf("timeZone")`. The browser and server lists can differ slightly; a zone the server doesn't know is refused with "Choose a time zone." Accepted as rare.
 - Dollars to cents is `Math.round(Number(dollars) * 100)`. `Intl.NumberFormat` only formats, it can't parse. The schema's two-decimal check is the guard.
 - `toCourseRequest(values, status)` takes the schema's output and throws if a time can't be converted (a bug in the caller). `status` is typed `CreateCourseStatus`; step 5 widens it when it adds the update request. `updateCourse` is added with step 5 too, as nothing uses it before.
-- `fieldErrorsFromProblem` maps JSON Pointers to form paths. A pointer for a date-and-time value (`/schedule/startTime`, `/prices/N/effectiveAt`) maps to the time-of-day box. Pointers the form has no field for appear only in the summary (the problem's `detail`).
+- `courseFormPath` maps JSON Pointers to form paths. A pointer for a date-and-time value (`/schedule/startTime`, `/prices/N/effectiveAt`) maps to the time-of-day box. Pointers the form has no field for appear only in the summary (the problem's `detail`).
 - `createCourseAction(values)` re-checks with `courseFormSchema` (no API call if invalid), saves with status `drafted`, and returns `Result<{ courseId }, { problem, fieldErrors }>`. A problem that isn't a validation one returns empty `fieldErrors`.
 - MSW: `mocks/handlers/create-course.ts` (`success`, `validationFailed`, `error`) with the `draftedAdminCourse` fixture.
 

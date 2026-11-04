@@ -16,18 +16,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **2a.** The mock courses keep times that hold for years, the free course shows on the mock home page, and each mock course page answers for the course in its URL.
 - [x] **2b.** The web server can enroll a visitor: it sends the course, name and email to the API and returns "check your email", the API's problem with the typed values, or a redirect to Stripe.
 - [x] **2c.** A visitor on a free course opens the fields in place, sends a name and email, sees "Sending…", then "Check your email" with focus on it; a problem shows above the fields with the values kept.
-- [ ] **3a.** Admin and checkout share one routine that turns the API's field errors into form-field errors. *(mechanical)* **Next**
-  - *Behaviours*:
-    - Admin's field errors come out unchanged (the existing `field-errors-from-problem.test.ts` pins this).
-    - A problem with no `errors` list gives an empty list.
-    - A pointer the path function can't place is left out.
-  - *New shared pieces*: `form-errors.ts` in `web/src/lib/api/`; it takes the problem and a function from pointer to form path, and admin and checkout both use it.
-  - *Files*:
-    - [form-errors.ts](../web/src/lib/api/form-errors.ts) (the generic part, with its test)
-    - [field-errors-from-problem.ts](../web/src/features/admin-courses/save-course/field-errors-from-problem.ts) (keeps its path table)
-    - [course-action-result.ts](../web/src/features/admin-courses/save-course/course-action-result.ts) (imports the type from its new home)
-  - *Done when*: `yarn --cwd web check:changed` passes and no test changed.
-- [ ] **3b.** The API words a bad name or email in plain sentences.
+- [x] **3a.** Admin and checkout share one routine that turns the API's field errors into form-field errors.
+- [ ] **3b.** The API words a bad name or email in plain sentences. **Next**
   - *Behaviours*:
     - Empty name returns "Enter your name."
     - Name over 100 characters returns "That name is too long. Use 100 characters or fewer."
@@ -292,7 +282,7 @@ Course error (the API's 409, shown above the fields):
 
 - Why here: the errors belong to the form built in 2 and decide the shared mapper before paid enrollment reuses it.
 - Needs: 2.
-- Size: 5 commits (the overview said 3 to 4: the API-down case and the shared mapper each need their own). Twins: [field-errors-from-problem.ts](../web/src/features/admin-courses/save-course/field-errors-from-problem.ts) (admin), [email.schema.ts](../api/src/common/validation/email.schema.ts) (shared with admin login).
+- Size: 5 commits (the overview said 3 to 4: the API-down case and the shared mapper each need their own). Twins: [course-form-path.ts](../web/src/features/admin-courses/save-course/course-form-path.ts) (admin), [email.schema.ts](../api/src/common/validation/email.schema.ts) (shared with admin login).
 - *(temporary)* Words: email format "That email address looks incomplete. It should look like name@example.com."; empty name "Enter your name."; the too-long sentences name the limits (100, 254). The hint under Email is fixed wireframe copy, not an API message.
 - *(temporary)* Flow:
 ```
