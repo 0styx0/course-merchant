@@ -16,21 +16,16 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **1a.** Object checks in every API suite fail on two different times; the `markSent` and create-course tests now compare real values.
   - [x] **1b.** Object checks in web unit and component tests fail on two different times, through the web's own copy of the tester.
 - [-] **2. Two checkouts can run every suite at once.** Dropped by the owner on 2026-11-04: `.env.test` overrides every shell setting, so per-checkout ports need a loader across five files. A second checkout still shares the main checkout's test containers.
-- [ ] **3. Unit and integration tests keep their own clock and finish in time.** No test depends on today's date, a sleep or the 5-second default timeout, and no test leaks a mock into the next. Planned as 8 commits (one per kind of fix per package):
+- [ ] **3. Unit and integration tests keep their own clock and finish in time.** No test depends on today's date, a sleep or the 5-second default timeout, and no test leaks a mock into the next. Planned as 9 commits (one per kind of fix per package):
   - [x] **3a (api).** API tests build "future" dates from a clock, and none of them sleeps; the API unit, integration and end-to-end suites pass.
-  - [ ] **3b (web).** Web tests start at one frozen time and build future dates from it. **Next**
+  - [x] **3b (web).** Web tests start at one frozen time (2026-11-04 12:00 UTC); a test can still set its own.
+  - [ ] **3b2 (web).** The three web tests that install their own 2026-11-03 clock start at the frozen time instead. **Next**
     - *Behaviours*:
-      - The web setup file freezes `Date` before each test and restores the real clock after it.
-      - The ~18 files that already fake time keep passing, and a test can override the frozen time.
-      - The schedule, price-row, course-card and course-details tests build dates from the frozen time.
-      - The `Date.now()` reads in the create and edit form tests use the frozen time.
-    - *New shared pieces*: the setup-file freeze, because every web test depends on it.
-    - *Files*:
-      - `web/src/test/setup.ts`
-      - the date tests above
-      - `.claude/rules/web-tests.md` (new; `paths:` frontmatter `web/**/*.test.ts*` and `web/tests/**`; the freeze rule)
-    - *Settled*: the global freeze decision row.
-    - *Done when*: `yarn --cwd web test:unit` passes.
+      - The edit-form schedule and saving tests and the prices action test drop their own fake clock and build their times from `FROZEN_NOW`.
+      - The `remembered-course` and `remembered-handlers` tests keep their clocks, because they set a saved-at time on purpose.
+    - *New shared pieces*: none.
+    - *Files*: the three tests above (`edit-course-form.schedule.test.tsx`, `edit-course-form.saving.test.tsx`, `save-edited-details.action.prices.test.ts`).
+    - *Done when*: `yarn --cwd web test:unit` passes and none of the three calls `useFakeTimers`.
   - [ ] **3c (web).** A web test asserts "nothing shown" only after something visible proves the check ran.
     - *Behaviours*:
       - Each offender awaits a positive signal first.

@@ -9,6 +9,7 @@ import {
   uploadAction,
 } from "./create-course-form.fixtures";
 import { push } from "./create-course-form.mocks";
+import { FROZEN_NOW } from "../../../../test/frozen-now";
 
 vi.mock(
   "next/navigation",
@@ -93,7 +94,7 @@ describe("CourseForm", () => {
       dateStyle: "short",
       timeStyle: "short",
     })
-      .format(Date.now() + 3 * 60 * 60 * 1000)
+      .format(FROZEN_NOW + 3 * 60 * 60 * 1000)
       .split(" ");
     await pickTimeZone(user, "york", "America/New_York");
     await user.type(screen.getByLabelText("Start date"), date);
