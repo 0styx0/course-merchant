@@ -15,31 +15,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **1e.** Public pages show Playfair titles on the type scale (home, course, 404, list, card) and the guide's muted text; no `gray-` or `green-` classes remain.
 - [x] **2a.** The mock courses keep times that hold for years, the free course shows on the mock home page, and each mock course page answers for the course in its URL.
 - [x] **2b.** The web server can enroll a visitor: it sends the course, name and email to the API and returns "check your email", the API's problem with the typed values, or a redirect to Stripe.
-- [ ] **2c.** A visitor on a free course opens the fields in place, sends a name and email, sees "Sending…", then "Check your email" with focus on it; a problem shows above the fields with the values kept. **Next**
-  - *Behaviours*:
-    - The page shows "Enroll for free →" (`aria-expanded="false"`) under the details list only when the price is 0; paid pages stay unchanged.
-    - Pressing it swaps the button for the fields (Name; Email with the hint "We send the course link to this address.") and "Email me the link →"; focus lands on Name.
-    - While sending, the button reads "Sending…" with a spinner and `aria-busy`, ignores more presses (one request), and the fields turn read-only.
-    - On success the notice replaces the fields and the button, and focus moves to it; it reads "Check your email" and "We've sent access to {email}. It can take a few minutes. If it hasn't arrived, look in spam."
-    - On failure the API's title and detail show in the error box above the fields; both typed values stay and the visitor can send again.
-    - An empty name or a malformed email stops at the browser's own check; no request goes out.
-    - A reload shows the closed button again.
-    - J2 as a browser spec: keyboard only (Enter opens, Tab, Enter sends, focus ends on the notice); the `notPurchasable` scenario shows the error box with values kept.
-  - *New shared pieces*: the check-email notice (step 5's success page shows it without an address).
-  - *Files*:
-    - `web/src/features/checkout/enroll-form.tsx` (client component; takes the course id as a string)
-    - `web/src/features/checkout/check-email-notice.tsx`
-    - [page.tsx](../web/src/app/(shop)/courses/[courseId]/page.tsx) (renders the form after the details for a free course)
-    - Tests: `enroll-form.test.tsx`, `check-email-notice.test.tsx`, `web/tests/browser/courses/free-enrollment.spec.ts`.
-    - Folder counts: `features/checkout` 4 → 8; `tests/browser/courses` 2 → 3.
-  - *Needs*: 2a (the free course is reachable) and 2b.
-  - *Settled*:
-    - Decision "Step 2 puts a bare Enroll button…".
-    - Decision "With JavaScript off, the closed Enroll button does nothing".
-    - Decision "The buy action returns the typed name and email…".
-    - Wireframe states 2b, 5 and 7b, notes 3 and 19.
-  - *Done when*: unit and browser tests pass; J2 walked at the free course in `dev:mock` at 400 px and desktop, with `success`, `slow` and `notPurchasable`; `/security-review` run.
-- [ ] **3. Mistakes in plain words.** A wrong field shows its message under it, other problems show above the form, and the typed values stay.
+- [x] **2c.** A visitor on a free course opens the fields in place, sends a name and email, sees "Sending…", then "Check your email" with focus on it; a problem shows above the fields with the values kept.
+- [ ] **3. Mistakes in plain words.** A wrong field shows its message under it, other problems show above the form, and the typed values stay. **Next** (run `/plan-create-implementation` first)
 - [ ] **4. Paid enrollment goes to Stripe.** A paid visitor reaches Stripe, sees the API's message when Stripe is down, and gets a working form back after pressing Back.
 - [ ] **5. Coming back from Stripe.** The return page says the email is on its way, or what happened instead.
 - [ ] **6. Site header and footer.** Every public page has the header, the phone menu and the footer.
@@ -217,49 +194,10 @@ Paid course page: unchanged (no button until step 4)
 - Risk: React 19 clears uncontrolled fields after an action (see Decisions). 2a moves the mock courses to fixed dates that hold for years (`reactCourse` upcoming in 2030) and adds `freeCourse`; the card and detail tests assert the old 2026 dates as literals, so they change in that commit.
 - Test data: `freeCourse` (price 0, upcoming 2030) from 2a; `startCheckoutHandlers` `success`, `slow` and `notPurchasable` from 2b. `inProgressCourse` and `endedCourse` arrive in step 8, the first step that uses them.
 - Done when: journey J2 at the free-course mock: press Enroll for free, see focus land on Name, send, see Sending…, then the notice with focus on it.
-- Design notes *(temporary)*:
-  - Boundaries: a new public feature folder `checkout/` (the name [web.md](web.md) planned). The page composes `CourseDetails` and the enroll form; neither imports the other.
-  - The client component gets only the course id string; the page decides "free" from `price.amount === 0`.
-  - The form binds the course id to the action ([Next forms guide](../web/node_modules/next/dist/docs/01-app/02-guides/forms.md), "Passing additional arguments") and runs it through React's [`useActionState`](https://react.dev/reference/react/useActionState). Tests mock the action module like the admin create-form tests.
-  - Each field's `defaultValue` comes from the failure state's `customer`, because React 19 resets uncontrolled fields after every action.
-  - Step 2 shows the button for every free course; an ended one gets the API's 409 in the error box. Step 8 picks the panel by time.
-  - The action already redirects on a `redirect` answer, so it handles every answer the contract allows. Step 4 adds the paid button, its labels, Stripe down and Back.
-  - Any API problem shows in the error box above the fields. Step 3 adds the messages under each field, the browser's Zod check and the API rewording. Until then the browser's `required` and `type="email"` stop an empty or malformed submit.
-  - The notice's "or contact us" waits for step 6's `CONTACT_EMAIL`.
-  - Reuse: `toResult`, the `api` client, `ProblemAlert`, `Button`, `Input`, `Field`/`FieldLabel`/`FieldDescription`, `problemResponse`, `MOCK_API_BASE_URL`, lucide's spinner icon.
-- Flow *(temporary)*:
-
-```
-Visitor opens a free course page                                      existing
-└── page sees price 0, shows "Enroll for free →"                      2c
-    Visitor presses it
-    └── fields open in place, focus on Name                           2c
-        Visitor presses "Email me the link →"
-        ├── a field empty or email malformed                          2c
-        │   └── browser's own message; no request sent
-        └── button "Sending… ◌", fields read-only                     2c
-            action reads course id, name, email; calls startCheckout  2b
-            ├── check_email → notice replaces the form; focus on it   2b state, 2c notice
-            ├── redirect → browser goes to the API's url              2b
-            ├── problem (400/404/409/500/503)                         2b state, 2c box
-            │   └── error box above the fields; typed values kept; can resend
-            └── API unreachable or 10 s timeout → throws              2b
-                └── shop error page "We couldn't load this page"; values lost
-```
-
-- Failure table *(temporary)*:
-
-| Actor | Abuse or failure | What the system does | Test that pins it |
-|---|---|---|---|
-| Visitor | double-presses send | button ignores presses while sending; one request | enroll-form test |
-| Visitor | empty name or malformed email | browser's own check; no request | enroll-form test (`required`, `type=email`) |
-| Caller | posts to the action with missing or file values | empty strings go; the API's 400 shows in the box | action test |
-| Caller | posts a paid or non-UUID course id | redirect to Stripe / the API's 400 in the box | action tests |
-| Visitor | course ended or unpublished since load | the API's 409/404 in the box; values kept | action test, browser spec (409) |
-| Visitor | API 500 or Stripe down 503 | the API's title and detail in the box | action test |
-| Visitor | API unreachable or slow past 10 s | action throws; shop error page | action test (rejects) |
-| Visitor | already owns the course, or a 6th email in a day | same notice; the page reveals nothing | the API's own tests (contract) |
-| Bot | floods the form | the API caps emails per address; the edge limit is a launch item | [payments.md](payments.md) *Launch* |
+- Retro:
+  - Planned 3 commits (2a, 2b, 2c); shipped 3.
+  - Owner changes after using the page: not yet recorded.
+  - Rule friction: a pending async action blocks every later action in the test run, so unit tests finish each held action.
 
 ## Step 3. Mistakes in plain words
 
@@ -285,6 +223,7 @@ Course error (the API's 409, shown above the fields):
 - Needs: 2.
 - Size: 3 to 4 commits (shared error mapper; API rewording; browser check and display). Twins: [field-errors-from-problem.ts](../web/src/features/admin-courses/save-course/field-errors-from-problem.ts) (admin), [email.schema.ts](../api/src/common/validation/email.schema.ts) (shared with admin login). The first commit moves the generic part of the admin mapper into `web/src/lib/api/form-errors.ts`: it takes a function from the API's field pointer to a form path. Admin keeps its own path table and imports it; checkout supplies its two paths.
 - Words: the API's name and email messages follow §9 rule 7, with the wireframe's sentence as the model ("That email address looks incomplete. It should include an @."). Name: "Enter your name." The hint under Email ("We send the course link to this address.") is fixed copy from the wireframe, not an API message.
+- Open question for the plan pass (blocks the split): when the API is unreachable or slow past 10 s, the action throws and the shop error page replaces the whole course page, so the visitor loses the typed name and email. Decide whether the action catches the throw and returns a failure state, which keeps the values and shows the message above the fields, or whether the full-page error stays. Raised by the newcomer-reader in 2c.
 - Risk: rewording the shared email schema changes admin login's message. The web app has no login form yet, so only API callers and API tests see it; the plan pass greps the API tests for the old wording.
 - Done when: journey: type `ami.example.com`, see the email message under Email; send a valid address for an ended course, see the API's 409 above the form with both values still typed.
 

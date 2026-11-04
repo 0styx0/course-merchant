@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProblemAlert } from "@/components/problem-alert";
+import { EnrollButton } from "@/features/checkout/enroll-button";
 import { CourseDetails } from "@/features/courses/course-details";
 import { getCourse } from "@/features/courses/courses.api";
 
@@ -39,5 +40,12 @@ export default async function CoursePage({ params }: CoursePageProps) {
     return <ProblemAlert problem={result.error} />;
   }
 
-  return <CourseDetails course={result.data} />;
+  const course = result.data;
+
+  return (
+    <>
+      <CourseDetails course={course} />
+      {course.price.amount === 0 && <EnrollButton courseId={course.id} />}
+    </>
+  );
 }
