@@ -7,6 +7,7 @@ Add an entry when a review or a decision accepts a known gap. Remove it when the
 ## Status
 
 - [ ] **Deleting a course while a buyer is mid-checkout.**
+- [ ] **Newsletter signup.**
 
 ## Entries
 
@@ -23,3 +24,16 @@ Add an entry when a review or a decision accepts a known gap. Remove it when the
   - Check the course's status in fulfillment and flag the enrollment for the owner. It also covers late webhook retries; it costs a new owner-facing signal.
 - **Build it when:** the shop sells enough that admins delete courses during sales, or one such enrollment happens.
 - **Where it matters:** [courses.md](courses.md) *Editing a course*, and the Decision row on enrollments and deleting in [course-edit.md](course-edit.md).
+
+### Newsletter signup
+
+- **What goes wrong:**
+  - The planned homepage and course list end with a band ("Stay close to the practice") that collects an email address.
+  - The API has no endpoint that stores such an address, so a built band would accept an address and lose it.
+- **How likely:** certain if the band ships.
+- **Today's handling:** the launch pages leave the band out.
+- **Options:**
+  - Link the band to an outside newsletter service's hosted form. It costs almost no code and stores no address here; the visitor leaves the site to sign up.
+  - Store addresses in our own database. It costs an endpoint, a table, a record of consent, an unsubscribe link and a way to send the mail (the email outbox could carry it).
+- **Build it when:** the owner has news to send on a regular schedule.
+- **Where it matters:** the planned homepage and course list designs.

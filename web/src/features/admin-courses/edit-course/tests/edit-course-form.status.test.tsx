@@ -50,6 +50,52 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
+describe("EditCourseForm status position", () => {
+  it("shows the Status group before the Basics group", () => {
+    renderForm();
+
+    const status = screen.getByRole("group", { name: "Status" });
+    const basics = screen.getByRole("group", { name: "Basics" });
+
+    expect(status.compareDocumentPosition(basics)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it("lists Status first in the error list, before Course name", async () => {
+    const user = userEvent.setup();
+    saveAction.mockResolvedValue(
+      refusal("Invalid course", [
+        { path: "name", message: "Name is taken." },
+        { path: "status", message: publishRefusal },
+      ]),
+    );
+    renderForm();
+    await clickSave(user);
+
+    await screen.findByRole("button", { name: "Status" });
+    const buttons = screen
+      .getAllByRole("button")
+      .map((button) => button.textContent);
+
+    expect(buttons.indexOf("Status")).toBe(0);
+    expect(buttons.indexOf("Status")).toBeLessThan(
+      buttons.indexOf("Course name"),
+    );
+  });
+
+  it("reaches the chosen status option before the image input on Tab", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.tab();
+    expect(statusOption("Drafted")).toHaveFocus();
+
+    await user.tab();
+    expect(screen.getByLabelText("Image")).toHaveFocus();
+  });
+});
+
 describe("EditCourseForm status", () => {
   it("chooses the loaded status", () => {
     renderForm();

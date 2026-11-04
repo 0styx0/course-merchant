@@ -69,34 +69,9 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **13. Accessible fields on both pages.** Status circles, field borders and focused borders are easy to see, and the check and cross marks have names a screen reader reads.
   - [x] **13a.** A screen reader names the mark beside each field: the cross reads "Needs a fix" and the check reads "Looks good", on both pages.
   - [x] **13b.** Every field's border, each status circle and a focused field's border reach 3:1 contrast against the form section, on both pages (light theme `--input` 3.26:1, `--ring` 4.69:1).
-- [ ] **14. Edit layout.** Status sits near the top and Save stays on screen.
-  - [ ] **14a.** The admin sees Status first on the edit page, above Basics, and the error list names Status first. **Next**
-    - *Behaviours*:
-      - The Status section comes before Basics on the page, after the saved note and the error list.
-      - With a problem on Status (API refusal) and on Course name, the error list names Status first.
-      - Tab from the top of the form reaches the chosen status option before the image picker.
-      - The create page keeps its order (it has no Status).
-    - *New shared pieces*: none
-    - *Files*:
-      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (move `StatusSection` above `EditBasicsSection`)
-      - [edit-course-fields.ts](../web/src/features/admin-courses/edit-course/edit-course-fields.ts) (`["status", …]` first, so the list keeps page order)
-      - [edit-course-form.status.test.tsx](../web/src/features/admin-courses/edit-course/tests/edit-course-form.status.test.tsx) (tests)
-    - *Settled*: Step 14 design note "Status first"
-    - *Done when*: the edit form tests pass; in `dev:mock` Status shows above Basics.
-  - [ ] **14b.** On the edit page, Save stays on screen in a bar at the bottom while the admin scrolls, at 400 px and on desktop.
-    - *Behaviours*:
-      - At 400 × 800 and at desktop size, Save is on screen at the top of the page, after scrolling to Schedule, and at the end of the page (browser test).
-      - At the end of the page the bar settles below Pricing and covers no field.
-      - A field reached with Tab shows fully above the bar (WCAG 2.4.11, focus not obscured), through a `scroll-margin-bottom` class on the edit form's fields.
-      - With the error list showing, a field reached with Shift+Tab or a link in the list shows fully below the sticky top box (`scroll-margin-top` on the same class, sized for the box's 12rem cap).
-      - While a save runs, the bar's button reads "Saving…" and is disabled (existing tests keep passing).
-      - The create page keeps Save at the bottom of its form, with no bar.
-    - *New shared pieces*: none (the bar is a small component inside `edit-course-form.tsx`, used only there)
-    - *Files*:
-      - [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (the bar around `SaveButton`)
-      - [edit-course.spec.ts](../web/tests/browser/admin-courses/edit-course.spec.ts) (the browser test, at 400 × 800 and desktop)
-    - *Settled*: Step 14 design notes "Save bar" and "Focus clear of the bars"
-    - *Done when*: the browser test passes at both sizes; walk it in `dev:mock` at 400 px and desktop.
+- [x] **14. Edit layout.** Status sits near the top and Save stays on screen.
+  - [x] **14a.** The admin sees Status first on the edit page, above Basics, and the error list names Status first.
+  - [x] **14b.** On the edit page, Save stays on screen in a bar at the bottom while the admin scrolls, at 400 px and on desktop; a field reached by Tab or from the error list shows clear of the bar and the top box.
 
 ## Journeys
 
@@ -254,40 +229,11 @@ Retro:
 - Risk: Chrome may apply `scroll-margin` on focus differently than assumed (confidence medium); 14b's browser test proves it.
 - Done when: at 400 px and desktop, Save stays visible while scrolling; status sits above Basics.
 
-Design notes *(temporary)*:
+Retro:
 
-- **Status first:** Status says who can see the course, the first thing an admin checks on opening the page; the UX review found it last, under a long form.
-  - It stays a form section (`StatusSection`); only its place changes, and the header keeps showing the saved status.
-  - The error list keeps page order, so its links read top to bottom.
-- **Save bar:** an admin who changes one field near the top otherwise scrolls past every section to save. The owner chose edit only; create keeps Save at the end of its form.
-  - The bar is CSS `position: sticky; bottom: 0` inside the form, with the page background and a top border, so it stays on screen while the form is in view and settles after Pricing at the end.
-  - The bar holds only Save; "Saved" and the error list stay in the sticky top box (existing Decision row).
-- **Focus clear of the bars:** Chrome scrolls a focused field only just into view and ignores sticky boxes, so without a margin a field lands under the bar or the top box.
-  - The margins go on a class on the edit form, so create stays as it is.
-  - `scroll-padding` on the page was rejected: it needs `globals.css` and changes create too.
-
-Page sketch after step 14 *(temporary)*:
-
-```
-Edit course
-Change the course details.
-React Fundamentals
-Drafted   Not in the shop
-[Saved]                          ← sticky top box, hidden until a save
-[Fix N problems before saving]   ← sticky top box, hidden until a refused save
-Status    Who can see the course.
-          ( ) Published  Students can find and buy it.
-          ( ) Drafted    Hidden while you work on it.
-          ( ) Archived   Hidden, can be published again.
-          ( ) Deleted    Removed from the admin list.  (greyed with students)
-Basics    What students see when they browse for the course.
-          Image  Name  Summary  Description
-Course material   Content link
-Schedule  (started/ended note)  Time zone  (zone change note)
-          Start date/time  End date/time   Runs … Lasts …
-Pricing   Prices in effect · price rows · Add price · price list
-┌─ bar at the screen's bottom ───────────── [Save changes] ─┐
-```
+- Planned 2 commits; shipped 2 (14a, 14b).
+- Owner changes after using the page: none known.
+- Rule friction: none known.
 
 ## Out of scope
 

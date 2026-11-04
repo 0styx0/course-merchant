@@ -23,6 +23,7 @@ export function editCourseFields(priceRowCount: number): ProblemField[] {
     priceRowFields(index, priceRowCount),
   ).flat();
   return [
+    ["status", statusFieldLabel],
     ["image", courseFieldLabels.image],
     ["name", courseFieldLabels.name],
     ["summary", courseFieldLabels.summary],
@@ -34,6 +35,5 @@ export function editCourseFields(priceRowCount: number): ProblemField[] {
     ["schedule.endDate", courseFieldLabels["schedule.endDate"]],
     ["schedule.endTimeOfDay", courseFieldLabels["schedule.endTimeOfDay"]],
     ...priceFields,
-    ["status", statusFieldLabel],
   ];
 }

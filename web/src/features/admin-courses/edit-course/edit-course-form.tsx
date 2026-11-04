@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 
+import { cn } from "cn";
+
 import { ErrorSummary } from "@/components/form/error-summary";
 import { SavedNote } from "@/components/form/saved-note";
 
@@ -90,6 +92,31 @@ function useEditFormSubmit(
   };
 }
 
+/**
+ * Margins on every control that can take focus, so the browser scrolls a
+ * focused control fully between the sticky top box and the Save bar:
+ * `scroll-mt-52` is 13rem (the top box's 12rem cap plus a gap) and
+ * `scroll-mb-24` is 6rem (the bar's height plus a gap).
+ */
+const clearOfStickyBoxes =
+  "[&_:is(button,input,select,textarea,[tabindex])]:scroll-mt-52 [&_:is(button,input,select,textarea,[tabindex])]:scroll-mb-24";
+
+/**
+ * Keeps Save on screen at the bottom while the admin scrolls, like the sticky
+ * top box (`StickyFormNotice`) does at the top. At the end of the form it sits
+ * in normal flow below Pricing, after the form's `gap-8`, so it covers no field.
+ */
+function SaveBar({ isSaving }: { isSaving: boolean }) {
+  return (
+    <div
+      data-testid="save-bar"
+      className="sticky bottom-0 z-10 border-t bg-background py-3"
+    >
+      <SaveButton label="Save changes" isSubmitting={isSaving} />
+    </div>
+  );
+}
+
 type EditCourseFormProps = {
   courseId: string;
   prefill: EditFormPrefill;
@@ -120,12 +147,17 @@ export function EditCourseForm({
     <form
       noValidate
       onSubmit={submit.submitForm}
-      className="flex flex-col gap-8"
+      className={cn("flex flex-col gap-8", clearOfStickyBoxes)}
     >
       <SavedNote note={submit.savedNote} />
       <ErrorSummary
         {...submit.errorList}
         serverProblem={submit.serverProblem}
+      />
+      <StatusSection
+        form={form}
+        hasEnrollments={prefill.hasEnrollments}
+        loadedStatus={prefill.values.status}
       />
       <EditBasicsSection
         form={form}
@@ -145,12 +177,7 @@ export function EditCourseForm({
         priceRows={priceRows}
         pricesInEffect={prefill.loadedPrices.inEffect}
       />
-      <StatusSection
-        form={form}
-        hasEnrollments={prefill.hasEnrollments}
-        loadedStatus={prefill.values.status}
-      />
-      <SaveButton label="Save changes" isSubmitting={submit.isSaving} />
+      <SaveBar isSaving={submit.isSaving} />
       <DeleteConfirmation {...submit.deleteConfirmation} />
     </form>
   );

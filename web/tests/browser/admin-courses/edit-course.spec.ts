@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { http, HttpResponse } from "msw";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
@@ -283,4 +283,110 @@ test("says the course was saved as a draft on arrival from create, once", async 
   await expect(
     page.getByRole("status").filter({ hasText: "Saved" }),
   ).toHaveCount(0);
+});
+
+const screenSizes = [
+  { name: "phone", width: 400, height: 800 },
+  { name: "desktop", width: 1280, height: 800 },
+];
+
+const scrollToEnd = (page: Page) =>
+  page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
+const findSaveBar = (page: Page) => page.getByTestId("save-bar");
+
+const findLastPrice = (page: Page) =>
+  page.getByLabel("Price", { exact: true }).last();
+
+async function readBottomEdge(locator: Locator) {
+  const box = (await locator.boundingBox())!;
+  return box.y + box.height;
+}
+
+for (const size of screenSizes) {
+  test.describe(`save bar on a ${size.name} screen`, () => {
+    test.beforeEach(async ({ page, msw }) => {
+      msw.use(getCourseAsAdminHandlers.success);
+      await page.setViewportSize({ width: size.width, height: size.height });
+      await page.goto(editPath);
+      await page.waitForLoadState("networkidle");
+    });
+
+    test("keeps Save on screen at the top, in the middle and at the end", async ({
+      page,
+    }) => {
+      const save = page.getByRole("button", { name: "Save changes" });
+      await expect(save).toBeInViewport({ ratio: 1 });
+      await expect(findSaveBar(page)).toHaveCSS("position", "sticky");
+
+      await page
+        .getByLabel("Start date", { exact: true })
+        .scrollIntoViewIfNeeded();
+      await expect(save).toBeInViewport({ ratio: 1 });
+      const barBottomInMiddle = (await findSaveBar(page).boundingBox())!.y;
+      expect(
+        barBottomInMiddle + (await findSaveBar(page).boundingBox())!.height,
+      ).toBeLessThanOrEqual(size.height);
+
+      await scrollToEnd(page);
+      await expect(save).toBeInViewport({ ratio: 1 });
+    });
+
+    test("settles below the last field at the end and covers none", async ({
+      page,
+    }) => {
+      await scrollToEnd(page);
+      const barTop = (await findSaveBar(page).boundingBox())!.y;
+      expect(await readBottomEdge(findLastPrice(page))).toBeLessThanOrEqual(
+        barTop,
+      );
+    });
+
+    test("shows a field reached by focus fully above the bar", async ({
+      page,
+    }) => {
+      await findLastPrice(page).focus();
+      const barTop = (await findSaveBar(page).boundingBox())!.y;
+      expect(await readBottomEdge(findLastPrice(page))).toBeLessThanOrEqual(
+        barTop,
+      );
+    });
+
+    test("shows a field chosen from the error list fully below the top box", async ({
+      page,
+    }) => {
+      await page.getByLabel("Start date", { exact: true }).fill("");
+      await page.getByRole("button", { name: "Save changes" }).click();
+      const errorBox = page.getByRole("alert").filter({ hasText: "Fix" });
+      await expect(errorBox).toBeVisible();
+      await scrollToEnd(page);
+
+      await errorBox.getByRole("button").first().click();
+
+      const focusedBox = (await page.locator(":focus").boundingBox())!;
+      expect(focusedBox.y).toBeGreaterThanOrEqual(
+        await readBottomEdge(errorBox),
+      );
+      expect(focusedBox.y + focusedBox.height).toBeLessThanOrEqual(
+        (await findSaveBar(page).boundingBox())!.y,
+      );
+    });
+  });
+}
+
+test("keeps Save at the end of the create form, with no bar", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 400, height: 800 });
+  await page.goto("/admin/courses/new");
+
+  const save = page.getByRole("button", { name: /^Save/ });
+  await expect(save).not.toBeInViewport();
+  const position = await save.evaluate((button) => {
+    for (let node = button.parentElement; node; node = node.parentElement) {
+      if (getComputedStyle(node).position === "sticky") return "sticky";
+    }
+    return "none";
+  });
+  expect(position).toBe("none");
 });
