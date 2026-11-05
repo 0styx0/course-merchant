@@ -26,13 +26,79 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3e (web).** A web test can no longer leak a mock into the next: the web Vitest config restores spies and stubs after each test, and the hand-written restores are gone.
   - [x] **3f (api).** API tests run in `Pacific/Chatham` unless the shell sets `TZ`; no existing test needed a fix.
   - [x] **3g (web).** Web tests run in `Pacific/Chatham` unless the shell sets `TZ`; no existing test needed a fix.
-  - [ ] **3h (web).** Heavy web form tests finish under load. **Next**
+- [ ] **4. Browser tests wait for the page.** Layout checks retry until they hold, tests type only once the page is ready, and the course list's loading-state test stops racing a timer. Split into commits, one per kind of fix:
+  - [ ] **4a.** An admin form test types and clicks only after the page has attached its scripts. **Next**
     - *Behaviours*:
-      - A 15-second `testTimeout` goes into the web config.
-      - The unit suites pass 5 times under `--sequence.shuffle`, once under Kiritimati, and once on a busy machine with no 5-second timeouts.
+      - A helper takes a path, opens it, and returns once the description editor's Bold button is enabled. It names no route.
+      - The create, create-then-publish, edit, field-border-contrast and controls specs open form pages through it. The save-bar block switches in 4b.
+      - `fillValidForm` and the paste test drop their own Bold waits.
+      - The edit page's 404 and load-error tests keep a plain `goto`, because those pages have no form.
+      - `edit-course.spec.ts` imports `collectConsoleErrors` from `fill-valid-course-form.ts` instead of keeping its copy.
+      - Break it once: the helper on the 404 edit page fails with a timeout on Bold.
+      - [web-tests.md](../.claude/rules/web-tests.md) gains: open a form page through the helper before typing or clicking.
+    - *New shared pieces*: the open-and-wait helper (five specs use it).
+    - *Files*:
+      - `web/tests/browser/admin-courses/<helper>.ts` (new)
+      - Folder count: `admin-courses/` stays under the limit with the new file.
+      - [fill-valid-course-form.ts](../web/tests/browser/admin-courses/fill-valid-course-form.ts)
+      - [create-course.spec.ts](../web/tests/browser/admin-courses/create-course.spec.ts), [create-then-publish.spec.ts](../web/tests/browser/admin-courses/create-then-publish.spec.ts), [edit-course.spec.ts](../web/tests/browser/admin-courses/edit-course.spec.ts), [field-border-contrast.spec.ts](../web/tests/browser/admin-courses/field-border-contrast.spec.ts)
+      - [controls.spec.ts](../web/tests/browser/site-look/controls.spec.ts)
+      - [web-tests.md](../.claude/rules/web-tests.md)
+    - *Settled*:
+      - Out of scope: "A hydrated marker in the app".
+      - The decision row on waiting for Bold.
+    - *Done when*:
+      - The five specs pass `--repeat-each=5 --workers=8 --grep-invert "save bar"`.
+      - The hand-off reports how many slow-save failures remain. If any do, the plan gains a commit for them.
+  - [ ] **4b.** The Save bar and phone-width card checks retry until the layout settles.
+    - *Behaviours*:
+      - Each save-bar position check reads both boxes inside one `expect.poll`: the bar inside the screen, the last price above the bar, a focused field above the bar, and a chosen field below the error box.
+      - The save-bar block opens the page through 4a's helper and drops `networkidle`.
+      - The create page's "legend inside its card" and "no sideways scroll" checks poll.
+      - Break it once: removing `scroll-mb-24` in the app makes the focus check time out and print the numbers it measured.
+      - `web-tests.md` gains: read layout inside `expect.poll`.
     - *New shared pieces*: none.
-    - *Done when*: those runs pass; the milestone's *Retro* is added.
-- [ ] **4. Browser tests wait for the page.** Layout checks retry until they hold, tests type only once the page is ready, and the course list's loading-state test stops racing a timer.
+    - *Files*: [edit-course.spec.ts](../web/tests/browser/admin-courses/edit-course.spec.ts), [create-course.spec.ts](../web/tests/browser/admin-courses/create-course.spec.ts), [web-tests.md](../.claude/rules/web-tests.md)
+    - *Needs*: 4a
+    - *Settled*: the decision row "Browser layout and font checks go through `expect.poll`…".
+    - *Done when*: edit-course.spec.ts passes `--repeat-each=5 --workers=8`.
+  - [ ] **4c.** The course list's loading test and the free enrollment's "Sending…" test decide when the mock answers.
+    - *Behaviours*:
+      - list-courses.ts gains a factory, called in each test, that returns a gated handler and its release function. The handler answers only after the release.
+      - The loading test sees "Loading courses...", releases, then sees the first course.
+      - start-checkout.ts gains the same kind of factory. The enrollment test sees "Sending…" busy, releases, then sees "Check your email".
+      - Each test releases in a `finally`, so a failed test leaves no server render hanging.
+      - The delay scenarios stay for `dev:mock`, and `coursesSlow` loses its `export`.
+      - Break it once: with no release, the test times out on the course heading.
+      - `web-tests.md` gains: gate a slow mock answer with a promise, never a delay.
+    - *New shared pieces*: none. Each mock file owns its factory, built on `Promise.withResolvers`.
+    - *Files*: [list-courses.ts](../web/src/mocks/handlers/list-courses.ts), [start-checkout.ts](../web/src/mocks/handlers/start-checkout.ts), [list-courses.spec.ts](../web/tests/browser/courses/list-courses.spec.ts), [free-enrollment.spec.ts](../web/tests/browser/courses/free-enrollment.spec.ts), [web-tests.md](../.claude/rules/web-tests.md)
+    - *Settled*: the decision row on gated mock answers.
+    - *Done when*: both specs pass `--repeat-each=5 --workers=8`.
+  - [ ] **4d.** Font and size checks wait until the style applies.
+    - *Behaviours*:
+      - fonts.spec checks family, weight and size with `toHaveCSS`, which retries, including after a viewport change.
+      - controls.spec checks the 48 px heights and the dialog title's font with `toHaveCSS`. The `--card` fill check polls.
+      - The "no Google fonts" test keeps `networkidle` and `document.fonts.ready`, because it counts requests.
+      - Break it once: changing the title's size class in the app fails the check, which prints the real value.
+      - `web-tests.md` gains: check styles with web-first assertions.
+    - *New shared pieces*: none.
+    - *Files*: [fonts.spec.ts](../web/tests/browser/site-look/fonts.spec.ts), [controls.spec.ts](../web/tests/browser/site-look/controls.spec.ts), [web-tests.md](../.claude/rules/web-tests.md)
+    - *Settled*: the decision row "Browser layout and font checks go through `expect.poll`…".
+    - *Done when*: both specs pass `--repeat-each=5 --workers=8`.
+  - [ ] **4e.** Browser tests run in `Pacific/Chatham` and `en-US` unless the shell sets `TZ`, and the dev server runs in UTC like production.
+    - *Behaviours*:
+      - Playwright's `timezoneId` reads `process.env.TZ`, falling back to `Pacific/Chatham`.
+      - `locale` is `en-US`.
+      - `webServer.env.TZ` is `UTC`.
+      - The commit starts by running the suite with the dev server stopped, then fixes what fails. It re-plans when more than about a dozen specs need a fix.
+      - `web-tests.md`'s zone rule now covers browser tests.
+    - *New shared pieces*: none.
+    - *Files*: [playwright.config.ts](../web/playwright.config.ts), [web-tests.md](../.claude/rules/web-tests.md), plus any spec the run exposes
+    - *Settled*: the `Pacific/Chatham` and server-in-UTC decision rows.
+    - *Done when*:
+      - `yarn --cwd web playwright test --repeat-each=5 --workers=8` passes.
+      - The milestone's Retro is added.
 - [ ] **5. Lint rejects the patterns behind the flakes.** Test files can't read the real clock, sleep, or read a layout value once, unless a comment says why.
 - [ ] **6. The commit hook skips tests a change can't affect, and checks both packages together.** A CSS-only commit no longer runs a whole suite, and the checks before push stay the same.
 - [ ] **7. One command stresses the suites on demand.** It runs shuffled, time-zone and repeated runs, so a new flake shows up before it reaches a commit.
@@ -87,6 +153,7 @@ Measured on 2026-11-04 in a separate worktree, on a busy 8-core machine (load av
 | Fact | Value | Command |
 |---|---|---|
 | Playwright failures over 3 repeats | 8 of 225, all in the "save bar" block | `yarn --cwd web playwright test --repeat-each=3 --workers=8` |
+| Playwright failures over 3 repeats, 2026-11-05 (load average about 20) | 16 of 282: 8 in the save-bar block (5 of them typed before React attached), 8 saves on the create and edit pages that missed "Saved" or the edit URL | `yarn --cwd web playwright test --repeat-each=3 --workers=8` |
 | Tests that fail once times compare strictly | 2 | milestone 1's tester, then `yarn --cwd api test:integration` and `yarn --cwd api test:e2e` |
 | Web unit run | 58 s | `yarn --cwd web test:unit` |
 | API unit run | 27–48 s | `yarn --cwd api test:unit` |
@@ -107,8 +174,11 @@ Measured on 2026-11-04 in a separate worktree, on a busy 8-core machine (load av
 | `Pacific/Chatham` (+12:45, an offset no common machine uses) pinned for Vitest and for Playwright's `timezoneId`; the stress command also runs `Pacific/Kiritimati` (+14:00) | A test that assumes UTC or the developer's own zone fails on every machine, instead of only on some | Leaving the zone to the machine (today's tests pass by luck); pinning UTC (hides tests that assume UTC) |
 | The web setup file makes every `Temporal.Now` method read the faked `Date` before each test | On a Node build with the built-in Temporal, the polyfill hands back the built-in, which reads the machine clock. A test reading `Temporal.Now` then sees today's time on CI and the frozen time locally | Deleting the built-in before the polyfill loads (tests run a different Temporal than the app, and it breaks once the polyfill goes); pinning CI's Node (every official Node 26 build includes Temporal); Vitest's `toFake: ["Temporal"]` alone (it swaps only the global, and our code holds the polyfill's import); a clock function in app code (app code already reads one clock, `Date.now()`) |
 | The API Vitest configs read `process.env.TZ` and fall back to `Pacific/Chatham` | The stress command must override the zone from the shell, and `test.env` would otherwise overwrite it | A fixed `TZ` in `test.env` (ignores the shell, so the Kiritimati runs would silently use Chatham) |
-| A 15-second timeout for web unit tests | The heavy form tests pass alone but hit the 5-second default under load | Raising the timeout per test (a growing list); cutting the typing in each test first (worth doing later, but bigger) |
+| Heavy web form tests enter long text in one step, and the 5-second timeout stays | Typing key by key is what makes these tests slow under load, so cutting it fixes the cause. The 5-second limit keeps flagging a test that hangs or slows down | A 15-second global timeout (hides slow tests and delays the signal from a hung one); a per-test timeout list (grows as tests are added) |
 | Browser layout and font checks go through `expect.poll` and `document.fonts.ready` | A single read right after a scroll or a focus lost to late layout | `waitForTimeout` (a guess); `networkidle` (waits for neither layout nor fonts) |
+| Admin form tests wait for the description editor's Bold button before typing or clicking | React resets a value typed before it attaches, as the "error list" runs showed, and the editor only enables Bold once React has attached | `networkidle` (small, but it waits for requests, not React, and those runs used it); a "ready" marker in the app (exact, but app code that exists only for tests) |
+| A slow mock answer waits on a promise the test releases | The test sees the loading or sending state however busy the machine is | A longer delay (one line, but still a guess, and it slows every run) |
+| The dev server under Playwright runs in UTC, and only the browser takes `Pacific/Chatham` | Production renders on a UTC server for visitors in other zones, so a page that formats a time in the server's zone fails the test | The same zone for both (one more line, but it hides that bug); the machine's zone (differs between CI and laptops) |
 | Lint bans real clocks in test files outright, and a line that needs real time carries `eslint-disable-next-line` with its reason | A list of exempt files goes stale, while a comment sits on the line it excuses | Per-file exemption lists; detecting a frozen clock (lint can't) |
 | The stress command runs on demand (weekly, or before a release) and never in a hook | Shuffled, repeated and zone runs take many minutes | Running it before every push |
 
@@ -199,22 +269,27 @@ Measured on 2026-11-04 in a separate worktree, on a busy 8-core machine (load av
   - [edit-course.spec.ts](../web/tests/browser/admin-courses/edit-course.spec.ts), [fill-valid-course-form.ts](../web/tests/browser/admin-courses/fill-valid-course-form.ts), [list-courses.spec.ts](../web/tests/browser/courses/list-courses.spec.ts) and [fonts.spec.ts](../web/tests/browser/site-look/fonts.spec.ts).
   - `coursesSlow` in [list-courses.ts](../web/src/mocks/handlers/list-courses.ts).
   - Twin code: the create and edit specs share `fillValidForm`.
-- **Size:** 4 commits:
-  1. A shared helper that opens a page and waits until a known control is enabled (the Bold button of the description editor on the create page).
-  2. The checks on the save bar (the `data-testid="save-bar"` strip in [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx)) moved into polls.
-  3. The loading-state test moved to a gated handler.
-  4. The font checks, with Playwright's `timezoneId` and `locale` pinned.
-- **Risk:** the edit page needs its own "ready" control. The create page has the editor toolbar.
 - **Done when:** this command passes with no failures:
   `yarn --cwd web playwright test --repeat-each=5 --workers=8`
-- **Also in this milestone:** `web-tests.md` gains the browser rules:
-  - Wait for the page to be ready before typing.
-  - Use web-first assertions.
-  - Read layout inside `expect.poll`.
-  - Gate slow handlers.
-- **Blocks the split:** none.
-- **Can wait:** the helper's name.
-- **Re-measure:** the Playwright command in *Numbers*.
+- **Design notes *(temporary)*:**
+  - The edit page renders the same description editor, so its Bold button proves hydration there too.
+  - Under load, `fillValidForm` passes the 30-second test limit and some saves miss "Saved" within 5 seconds. 4a's hand-off re-measures them, and the plan gains a commit if any remain.
+  - Each gated handler comes from a factory called in the test. A handler built once at module level would stay released on the next `--repeat-each` run, and the loading test would never see its state.
+  - The dev server runs in UTC and the browser in `Pacific/Chatham`, so a page that formats a time in the server's zone shows up as a failure.
+  - A dev server already on port 3000 keeps its own settings (`reuseExistingServer`), so 4e's run stops it first.
+- **Flow *(temporary)*:**
+
+```
+Test opens an admin form page
+├── waits for Bold to be enabled ............................. 4a
+│   ├── types, clicks, saves ................................. existing
+│   ├── checks layout inside expect.poll ..................... 4b
+│   └── checks styles with toHaveCSS ......................... 4d
+└── page with no form (404, load error): plain goto .......... existing
+Test needs an in-between state (loading, sending)
+└── mock gates its answer → test sees the state → releases ... 4c
+Every page renders in a pinned zone and locale ............... 4e
+```
 
 ## Step 5. Lint rejects the patterns behind the flakes
 
@@ -281,6 +356,5 @@ Measured on 2026-11-04 in a separate worktree, on a busy 8-core machine (load av
 
 - Changes to `/next-commit` and CLAUDE.md, including listing this doc under *Design docs*.
 - A "hydrated" marker in the app, until a browser test has no control it can wait for.
-- Cutting the typing cost inside each heavy form test.
 - Making Postgres-stamped times and `Temporal.Now` agree outside the two-clocks cases in milestone 3.
 - Visual-regression screenshots.
