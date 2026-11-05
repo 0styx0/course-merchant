@@ -7,6 +7,7 @@ import {
 } from "@/lib/api/form-errors";
 import type { CheckoutCustomer, ProblemDetails } from "@/lib/types";
 import { checkoutFormPath } from "./form/checkout-form-path";
+import { readCheckoutCustomer } from "./form/read-checkout-customer";
 import { startCheckout, type StartCheckoutResult } from "./start-checkout.api";
 
 export type StartCheckoutFormState =
@@ -39,19 +40,6 @@ async function startCheckoutCatchingThrows(
   }
 }
 
-/** A missing field or an uploaded file reads as "", so the API's 400 answers. */
-function readText(formData: FormData, fieldName: string): string {
-  const field = formData.get(fieldName);
-  return typeof field === "string" ? field : "";
-}
-
-function readCustomer(formData: FormData): CheckoutCustomer {
-  return {
-    name: readText(formData, "customer.name"),
-    email: readText(formData, "customer.email"),
-  };
-}
-
 /**
  * Starts a checkout for the bound course. The page binds `courseId`;
  * `useActionState` supplies the previous state, which the action ignores.
@@ -62,7 +50,7 @@ export async function startCheckoutAction(
   _previousState: StartCheckoutFormState,
   formData: FormData,
 ): Promise<StartCheckoutFormState> {
-  const customer = readCustomer(formData);
+  const customer = readCheckoutCustomer(formData);
   const result = await startCheckoutCatchingThrows(courseId, customer);
 
   if (result.state === "failure") {

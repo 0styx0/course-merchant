@@ -20,19 +20,9 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **3b.** The API words a bad name or email in plain sentences; admin login shares the email words.
 - [x] **3c.** A visitor sees the API's field messages under Name and Email, with a red border, and focus lands on the first wrong field.
 - [x] **3d.** A visitor keeps their typed values when the API is down or slow.
-- [ ] **3e.** A typo shows its message at once, with no request sent. **Next**
-  - *Behaviours*:
-    - A bad email shows the 3b sentence and sends nothing.
-    - An empty name shows "Enter your name."
-    - A valid pair sends as before.
-    - A test fails when the browser words differ from the API's words.
-  - *New shared pieces*: none (reuses 3c's display, hook and words).
-  - *Files*:
-    - a checkout form schema file under `checkout/form/`
-    - the form's submit handler
-    - their tests
-  - *Needs*: 3c. *Done when*: the Step 3 journey.
-- [ ] **4. Paid enrollment goes to Stripe.** A paid visitor reaches Stripe, sees the API's message when Stripe is down, and gets a working form back after pressing Back.
+- [x] **3e.** A typo or a too-long name or email shows its message at once, with no request sent.
+- [ ] **4. Paid enrollment goes to Stripe.** A paid visitor reaches Stripe, sees the API's message when Stripe is down, and gets a working form back after pressing Back. **Next**
+  - Still needs `/plan-create-implementation course-page` to split it into commits.
 - [ ] **5. Coming back from Stripe.** The return page says the email is on its way, or what happened instead.
 - [ ] **6. Site header and footer.** Every public page has the header, the phone menu and the footer.
 - [ ] **7. Course page layout.** The image, title and description sit beside a sticky panel on desktop, stacked on a phone.
@@ -239,20 +229,12 @@ Course error (the API's 409, shown above the fields):
 - Why here: the errors belong to the form built in 2 and decide the shared mapper before paid enrollment reuses it.
 - Needs: 2.
 - Size: 5 commits (the overview said 3 to 4: the API-down case and the shared mapper each need their own). Twins: [course-form-path.ts](../web/src/features/admin-courses/save-course/course-form-path.ts) (admin), [email.schema.ts](../api/src/common/validation/email.schema.ts) (shared with admin login).
-- *(temporary)* Words: email format "That email address looks incomplete. It should look like name@example.com."; empty name "Enter your name."; the too-long sentences name the limits (100, 254). The hint under Email is fixed wireframe copy, not an API message.
-- *(temporary)* Flow:
-```
-submit -> [3e browser check] --bad--> messages under fields (3c)
-              | ok
-              v
-        action -> API 400 -> messages under fields (3c)
-              |-> API 409 -> box above fields (2c)
-              |-> throw   -> fixed box above fields (3d)
-              '-> 200     -> notice (2c)
-```
-- *(temporary)* One error display and one focus hook, keyed by form path, serve all three error sources. The web words and the API words live in two packages; 3e's drift test pins them.
 - Risk: rewording the shared email schema changes admin login's message; the web app has no login form yet, so only API callers and API specs see it.
 - Done when: journey: type `ami.example.com`, see the email message under Email; send a valid address for an ended course, see the API's 409 above the form with both values still typed.
+- Retro:
+  - Planned 5 commits (3a to 3e); shipped 5.
+  - Owner changes after using the page: not yet recorded.
+  - Rule friction: React 19 clears the typed values after a submit, so the browser check calls `preventDefault` in `onSubmit` to keep them.
 
 ## Step 4. Paid enrollment goes to Stripe
 

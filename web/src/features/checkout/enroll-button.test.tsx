@@ -7,6 +7,10 @@ import {
   type StartCheckoutFormState,
 } from "./start-checkout.action";
 import { EnrollButton } from "./enroll-button";
+import {
+  CHECKOUT_EMAIL_TOO_LONG_MESSAGE,
+  CHECKOUT_NAME_TOO_LONG_MESSAGE,
+} from "./form/checkout-messages";
 
 vi.mock("./start-checkout.action", () => ({ startCheckoutAction: vi.fn() }));
 
@@ -37,11 +41,12 @@ const validationProblem = {
 
 function makeFieldFailure(
   fieldErrors: { path: string; message: string }[],
+  customer = { name: "Ami Cohen", email: "ami@" },
 ): StartCheckoutFormState {
   return {
     state: "failure",
     problem: validationProblem,
-    customer: { name: "Ami Cohen", email: "ami@" },
+    customer,
     fieldErrors,
   };
 }
@@ -272,7 +277,12 @@ describe("EnrollButton", () => {
   });
 
   it("hides the old messages while the next send runs", async () => {
-    sendAction.mockResolvedValueOnce(makeFieldFailure([emailError]));
+    sendAction.mockResolvedValueOnce(
+      makeFieldFailure([emailError], {
+        name: "Ami Cohen",
+        email: "ami@example.com",
+      }),
+    );
     const user = await openFields();
     await submitTypedDetails(user);
     await screen.findByText(EMAIL_MESSAGE);
@@ -286,15 +296,135 @@ describe("EnrollButton", () => {
     await finishAction();
   });
 
-  it("sends an empty form to the action", async () => {
-    sendAction.mockResolvedValue(sent);
-    const user = await openFields();
+  describe("when the browser finds a typo", () => {
+    async function typeDetailsThenSubmit(
+      user: ReturnType<typeof userEvent.setup>,
+      name: string,
+      email: string,
+    ) {
+      if (name) await user.type(screen.getByLabelText("Name"), name);
+      if (email) await user.type(screen.getByLabelText("Email"), email);
+      await user.click(
+        screen.getByRole("button", { name: "Email me the link" }),
+      );
+    }
 
-    await user.click(screen.getByRole("button", { name: "Email me the link" }));
+    it("shows the email message and sends nothing for a bad email", async () => {
+      const user = await openFields();
 
-    await screen.findByRole("status");
-    const [, , formData] = sendAction.mock.calls[0];
-    expect(formData.get("customer.name")).toBe("");
-    expect(formData.get("customer.email")).toBe("");
+      await typeDetailsThenSubmit(user, "Ami Cohen", "ami@");
+
+      expect(await screen.findByLabelText("Email")).toHaveAccessibleDescription(
+        expect.stringContaining(EMAIL_MESSAGE),
+      );
+      expect(sendAction).not.toHaveBeenCalled();
+    });
+
+    it("shows the name message and focuses Name for an empty name", async () => {
+      const user = await openFields();
+
+      await typeDetailsThenSubmit(user, "", "ami@example.com");
+
+      expect(await screen.findByLabelText("Name")).toHaveAccessibleDescription(
+        NAME_MESSAGE,
+      );
+      await waitFor(() => expect(screen.getByLabelText("Name")).toHaveFocus());
+      expect(sendAction).not.toHaveBeenCalled();
+    });
+
+    it("shows the too-long name message and sends nothing", async () => {
+      const user = await openFields();
+
+      await typeDetailsThenSubmit(user, "a".repeat(101), "ami@example.com");
+
+      expect(await screen.findByLabelText("Name")).toHaveAccessibleDescription(
+        expect.stringContaining(CHECKOUT_NAME_TOO_LONG_MESSAGE),
+      );
+      expect(sendAction).not.toHaveBeenCalled();
+    });
+
+    it("shows the too-long email message and sends nothing", async () => {
+      const user = await openFields();
+
+      await typeDetailsThenSubmit(user, "Ami Cohen", `${"a".repeat(250)}@b.co`);
+
+      expect(await screen.findByLabelText("Email")).toHaveAccessibleDescription(
+        expect.stringContaining(CHECKOUT_EMAIL_TOO_LONG_MESSAGE),
+      );
+      expect(sendAction).not.toHaveBeenCalled();
+    });
+
+    it("shows the browser's message instead of the API's earlier one", async () => {
+      sendAction.mockResolvedValueOnce(
+        makeFieldFailure([nameError], {
+          name: "Ami Cohen",
+          email: "ami@example.com",
+        }),
+      );
+      const user = await openFields();
+      await submitTypedDetails(user);
+      await screen.findByText(NAME_MESSAGE);
+
+      await user.clear(screen.getByLabelText("Email"));
+      await user.click(
+        screen.getByRole("button", { name: "Email me the link" }),
+      );
+
+      expect(await screen.findByText(EMAIL_MESSAGE)).toBeVisible();
+      expect(screen.queryByText(NAME_MESSAGE)).not.toBeInTheDocument();
+    });
+
+    it("shows both messages when both boxes are wrong", async () => {
+      const user = await openFields();
+
+      await typeDetailsThenSubmit(user, "", "");
+
+      expect(await screen.findByText(NAME_MESSAGE)).toBeVisible();
+      expect(screen.getByText(EMAIL_MESSAGE)).toBeVisible();
+      expect(sendAction).not.toHaveBeenCalled();
+    });
+
+    it("keeps the typed values beside the message", async () => {
+      const user = await openFields();
+
+      await typeDetailsThenSubmit(user, "Ami Cohen", "ami@");
+
+      await screen.findByText(EMAIL_MESSAGE);
+      expect(screen.getByLabelText("Name")).toHaveValue("Ami Cohen");
+      expect(screen.getByLabelText("Email")).toHaveValue("ami@");
+    });
+
+    it("sends a valid pair after the messages and clears them", async () => {
+      sendAction.mockResolvedValue(sent);
+      const user = await openFields();
+      await typeDetailsThenSubmit(user, "Ami Cohen", "ami@");
+      await screen.findByText(EMAIL_MESSAGE);
+
+      await user.type(screen.getByLabelText("Email"), "example.com");
+      await user.click(
+        screen.getByRole("button", { name: "Email me the link" }),
+      );
+
+      expect(await screen.findByRole("status")).toBeInTheDocument();
+      expect(screen.queryByText(EMAIL_MESSAGE)).not.toBeInTheDocument();
+      const [, , formData] = sendAction.mock.calls[0];
+      expect(formData.get("customer.email")).toBe("ami@example.com");
+    });
+
+    it("hides the messages while the corrected pair sends", async () => {
+      const finishAction = holdAction();
+      const user = await openFields();
+      await typeDetailsThenSubmit(user, "Ami Cohen", "ami@");
+      await screen.findByText(EMAIL_MESSAGE);
+
+      await user.type(screen.getByLabelText("Email"), "example.com");
+      await user.click(
+        screen.getByRole("button", { name: "Email me the link" }),
+      );
+
+      await screen.findByRole("button", { name: "Sending…" });
+      expect(screen.queryByText(EMAIL_MESSAGE)).not.toBeInTheDocument();
+      await finishAction();
+    });
   });
 });

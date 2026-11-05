@@ -1,12 +1,20 @@
 "use client";
 
 import { LoaderCircle } from "lucide-react";
-import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  useActionState,
+  type FormEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { ProblemAlert } from "@/components/problem-alert";
 import { Button } from "@/components/ui/button";
 import type { FormFieldError } from "@/lib/api/form-errors";
 import { CheckEmailNotice } from "./check-email-notice";
+import { findCheckoutCustomerErrors } from "./form/checkout-customer.schema";
 import { CustomerDetailFields } from "./form/customer-detail-fields";
+import { readCheckoutCustomer } from "./form/read-checkout-customer";
 import { useFocusFirstInvalidField } from "./form/use-focus-first-invalid-field";
 import {
   startCheckoutAction,
@@ -46,9 +54,26 @@ function EnrollForm({ courseId }: EnrollButtonProps) {
     EMPTY_FORM_STATE,
   );
   const formRef = useRef<HTMLFormElement>(null);
-  const fieldErrors =
+  const [browserErrors, setBrowserErrors] =
+    useState<FormFieldError[]>(NO_FIELD_ERRORS);
+  const serverErrors =
     state.state === "failure" ? state.fieldErrors : NO_FIELD_ERRORS;
+  const fieldErrors = browserErrors.length > 0 ? browserErrors : serverErrors;
   useFocusFirstInvalidField(formRef, fieldErrors);
+
+  function checkTypedDetailsBeforeSending(event: FormEvent<HTMLFormElement>) {
+    // A second press while sending would start a second checkout.
+    if (isPending) {
+      event.preventDefault();
+      return;
+    }
+    const errors = findCheckoutCustomerErrors(
+      readCheckoutCustomer(new FormData(event.currentTarget)),
+    );
+    setBrowserErrors(errors);
+    // Stopping the submit sends nothing and keeps React 19 from clearing the typed values.
+    if (errors.length > 0) event.preventDefault();
+  }
 
   if (state.state === "success") {
     return <FocusedCheckEmailNotice email={state.customer.email} />;
@@ -59,10 +84,7 @@ function EnrollForm({ courseId }: EnrollButtonProps) {
       ref={formRef}
       noValidate
       action={sendAction}
-      // A second press while sending would start a second checkout.
-      onSubmit={(event) => {
-        if (isPending) event.preventDefault();
-      }}
+      onSubmit={checkTypedDetailsBeforeSending}
       className="mt-6 space-y-4"
     >
       {state.state === "failure" && <ProblemAlert problem={state.problem} />}
