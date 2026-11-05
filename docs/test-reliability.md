@@ -28,7 +28,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3g (web).** Web tests run in `Pacific/Chatham` unless the shell sets `TZ`; no existing test needed a fix.
 - [ ] **4. Browser tests wait for the page.** Layout checks retry until they hold, tests type only once the page is ready, and the course list's loading-state test stops racing a timer. Split into commits, one per kind of fix:
   - [x] **4a.** Admin form tests open their page through one helper that waits for the Bold button, so typing starts after the page has attached its scripts. The re-run found 3 slow-save failures in 170 runs, so the plan needs a commit for them.
-  - [ ] **4b.** The Save bar and phone-width card checks retry until the layout settles.
+  - [ ] **4b.** The Save bar and phone-width card checks retry until the layout settles. **Next**
     - *Behaviours*:
       - Each save-bar position check reads both boxes inside one `expect.poll`: the bar inside the screen, the last price above the bar, a focused field above the bar, and a chosen field below the error box.
       - The save-bar block opens the page through 4a's helper and drops `networkidle`.
@@ -78,23 +78,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
       - `yarn --cwd web playwright test --repeat-each=5 --workers=8` passes.
       - The milestone's Retro is added.
 - [ ] **5. Lint rejects the patterns behind the flakes.** Component and browser tests fail lint when they forget to wait for an async step, sleep, wait for the network to go quiet, read the real clock (browser tests), or read a layout value once. Planned out of order, before step 4 finishes; one commit per plugin:
-  - [ ] **5c (web).** Component and hook tests fail lint when they forget to await an async check or do work inside `waitFor`. **Next**
-    - *Behaviours*:
-      - The commit adds [eslint-plugin-testing-library](https://github.com/testing-library/eslint-plugin-testing-library) 7.16.2 for `src/**/*.test.{ts,tsx}`, with only its flake rules:
-        - `await-async-queries`
-        - `await-async-utils`
-        - `await-async-events`
-        - `no-wait-for-side-effects`
-        - `prefer-find-by`
-        - `no-unnecessary-act`
-      - It leaves out `no-wait-for-multiple-assertions`, because `web-tests.md` puts a positive signal and an absence in one `waitFor`.
-      - It leaves out `no-node-access` and `no-container`, because they guard style, not flakes and today's tests use container queries in several files.
-      - The commit starts by running lint and fixes what it flags. It re-plans when a dozen or more files need a fix.
-      - Break it once: dropping the `await` before a `findBy` fails lint.
-    - *New shared pieces*: none.
-    - *Files*: [web/package.json](../web/package.json), `web/yarn.lock` (generated), [web/eslint.config.mjs](../web/eslint.config.mjs), [web-tests.md](../.claude/rules/web-tests.md), plus any test the run flags
-    - *Settled*: the decision row "Test lint turns on each plugin's flake rules by name…".
-    - *Done when*: `yarn --cwd web lint` prints nothing, and `yarn --cwd web test:unit` passes.
+  - [x] **5c (web).** Component and hook tests fail lint when they forget to await an async check or do work inside `waitFor`; the existing tests needed no fix.
   - [ ] **5d (web).** Browser tests fail lint when they sleep, wait for `networkidle`, forget an `await`, read the real clock, or read a box size outside `expect.poll`.
     - *Behaviours*:
       - The commit adds [eslint-plugin-playwright](https://github.com/mskelton/eslint-plugin-playwright) 2.12.1 for `tests/**` (2.12.2 is 3 days old), with only its flake rules:

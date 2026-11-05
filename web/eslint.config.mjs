@@ -3,6 +3,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier/flat";
+import testingLibrary from "eslint-plugin-testing-library";
 
 // a true/false name reads as a question or a fact: isSaved, hasEnded, doesExist.
 // The rule checks the format after it trims the prefix, so `isSaved` is `Saved`.
@@ -106,7 +107,7 @@ const eslintConfig = defineConfig([
   },
   {
     files: ["src/**/*.test.{ts,tsx}"],
-    plugins: { vitest },
+    plugins: { vitest, "testing-library": testingLibrary },
     rules: {
       // a helper named expect… holds the assertions of the tests that call it
       "vitest/expect-expect": [
@@ -117,6 +118,18 @@ const eslintConfig = defineConfig([
       "vitest/no-focused-tests": "error",
       "vitest/no-disabled-tests": "error",
       "vitest/no-conditional-expect": "error",
+      // only the testing-library rules that catch flakes, by name: a forgotten await
+      // (await-async-*), work inside waitFor (no-wait-for-side-effects), and the
+      // waitFor forms that retry badly (prefer-find-by, no-unnecessary-act).
+      // no-wait-for-multiple-assertions stays out because one waitFor may hold a
+      // presence check and an absence check; no-node-access and no-container
+      // guard style, not flakes.
+      "testing-library/await-async-queries": "error",
+      "testing-library/await-async-utils": "error",
+      "testing-library/await-async-events": "error",
+      "testing-library/no-wait-for-side-effects": "error",
+      "testing-library/prefer-find-by": "error",
+      "testing-library/no-unnecessary-act": "error",
     },
   },
 ]);

@@ -14,3 +14,4 @@ paths:
 - Assert an absence ("nothing shown", "not called", "dialog gone") only after a positive signal proves the check ran: a visible element on the same render, or, after async work, a signal in the same `waitFor`/`findBy` (the "Looks good" mark, `aria-invalid="false"` on the fixed field, the restored radio option, the rule's own result). Without it, a broken path passes.
 - Tests run in `Pacific/Chatham` unless the shell sets `TZ` (the Vitest config sets it), so never assume UTC.
 - Open a form page through `openFormPage` before typing or clicking, so the test starts after the page has attached its scripts.
+- Component and hook tests await every async query, util and user event, and keep side effects out of `waitFor`. Lint enforces it; `web/eslint.config.mjs` lists the rules.
