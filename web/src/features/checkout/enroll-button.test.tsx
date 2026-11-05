@@ -427,4 +427,102 @@ describe("EnrollButton", () => {
       await finishAction();
     });
   });
+
+  describe("on a paid course", () => {
+    const priceLabel = "$99.00";
+
+    async function openPaidFields() {
+      const user = userEvent.setup();
+      render(<EnrollButton courseId={courseId} priceLabel={priceLabel} />);
+      await user.click(
+        screen.getByRole("button", { name: "Enroll for $99.00" }),
+      );
+      return user;
+    }
+
+    async function sendPaidDetails(user: ReturnType<typeof userEvent.setup>) {
+      await user.type(screen.getByLabelText("Name"), "Ami Cohen");
+      await user.type(screen.getByLabelText("Email"), "ami@example.com");
+      await user.click(
+        screen.getByRole("button", { name: "Continue to payment" }),
+      );
+    }
+
+    it("starts as a closed button with the price", () => {
+      render(<EnrollButton courseId={courseId} priceLabel={priceLabel} />);
+
+      const button = screen.getByRole("button", { name: "Enroll for $99.00" });
+      expect(button).toHaveAttribute("aria-expanded", "false");
+      expect(
+        screen.queryByRole("button", { name: "Enroll for free" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("opens the fields with a Continue to payment button", async () => {
+      await openPaidFields();
+
+      expect(screen.getByLabelText("Name")).toHaveFocus();
+      expect(
+        screen.getByRole("button", { name: "Continue to payment" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "Email me the link" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("shows Opening payment… while the action runs", async () => {
+      const finishAction = holdAction();
+      const user = await openPaidFields();
+
+      await sendPaidDetails(user);
+
+      const button = await screen.findByRole("button", {
+        name: "Opening payment…",
+      });
+      expect(button).toHaveAttribute("aria-busy", "true");
+      await finishAction();
+    });
+
+    it("keeps Continue to payment beside a field message", async () => {
+      sendAction.mockResolvedValue(makeFieldFailure([emailError]));
+      const user = await openPaidFields();
+
+      await sendPaidDetails(user);
+
+      await screen.findByText(EMAIL_MESSAGE);
+      expect(
+        screen.getByRole("button", { name: "Continue to payment" }),
+      ).toBeInTheDocument();
+    });
+
+    it("keeps Continue to payment beside a refused course", async () => {
+      sendAction.mockResolvedValue(refused);
+      const user = await openPaidFields();
+
+      await sendPaidDetails(user);
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "This course has ended and can no longer be bought.",
+      );
+      expect(
+        screen.getByRole("button", { name: "Continue to payment" }),
+      ).toBeInTheDocument();
+    });
+
+    it("keeps Continue to payment beside a browser typo message", async () => {
+      const user = await openPaidFields();
+
+      await user.type(screen.getByLabelText("Name"), "Ami Cohen");
+      await user.type(screen.getByLabelText("Email"), "ami@");
+      await user.click(
+        screen.getByRole("button", { name: "Continue to payment" }),
+      );
+
+      await screen.findByText(EMAIL_MESSAGE);
+      expect(
+        screen.getByRole("button", { name: "Continue to payment" }),
+      ).toBeInTheDocument();
+      expect(sendAction).not.toHaveBeenCalled();
+    });
+  });
 });

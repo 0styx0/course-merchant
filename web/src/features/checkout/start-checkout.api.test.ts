@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { server } from "@/mocks/node";
 import {
-  startCheckoutSuccess,
+  startCheckoutCheckEmail,
   startCheckoutUrl,
 } from "@/mocks/handlers/start-checkout";
 import { problemResponse } from "@/mocks/problem-response";
@@ -41,7 +41,7 @@ describe("startCheckout", () => {
   });
 
   it("returns success for a check_email answer", async () => {
-    server.use(startCheckoutSuccess);
+    server.use(startCheckoutCheckEmail);
 
     await expect(startCheckout(courseId, customer)).resolves.toEqual({
       state: "success",

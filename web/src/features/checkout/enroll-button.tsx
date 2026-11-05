@@ -23,17 +23,41 @@ import {
 
 type EnrollButtonProps = {
   courseId: string;
+  /** The formatted price of a paid course; absent for a free course. */
+  priceLabel?: string;
 };
+
+type EnrollWords = {
+  open: string;
+  send: string;
+  sending: string;
+};
+
+function makeEnrollWords(priceLabel: string | undefined): EnrollWords {
+  if (priceLabel === undefined) {
+    return {
+      open: "Enroll for free",
+      send: "Email me the link",
+      sending: "Sending…",
+    };
+  }
+  return {
+    open: `Enroll for ${priceLabel}`,
+    send: "Continue to payment",
+    sending: "Opening payment…",
+  };
+}
 
 const EMPTY_FORM_STATE: StartCheckoutFormState = { state: "empty" };
 const NO_FIELD_ERRORS: FormFieldError[] = [];
 
 /** Shows one button; pressing it opens the name and email fields in place. */
-export function EnrollButton({ courseId }: EnrollButtonProps) {
+export function EnrollButton({ courseId, priceLabel }: EnrollButtonProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const words = makeEnrollWords(priceLabel);
 
   if (isFormOpen) {
-    return <EnrollForm courseId={courseId} />;
+    return <EnrollForm courseId={courseId} words={words} />;
   }
 
   return (
@@ -43,12 +67,17 @@ export function EnrollButton({ courseId }: EnrollButtonProps) {
       className="mt-6"
       onClick={() => setIsFormOpen(true)}
     >
-      Enroll for free <span aria-hidden="true">→</span>
+      {words.open} <span aria-hidden="true">→</span>
     </Button>
   );
 }
 
-function EnrollForm({ courseId }: EnrollButtonProps) {
+type EnrollFormProps = {
+  courseId: string;
+  words: EnrollWords;
+};
+
+function EnrollForm({ courseId, words }: EnrollFormProps) {
   const [state, sendAction, isPending] = useActionState(
     startCheckoutAction.bind(null, courseId),
     EMPTY_FORM_STATE,
@@ -94,7 +123,7 @@ function EnrollForm({ courseId }: EnrollButtonProps) {
         fieldErrors={isPending ? NO_FIELD_ERRORS : fieldErrors}
         isPending={isPending}
       />
-      <SendButton isPending={isPending} />
+      <SendButton words={words} isPending={isPending} />
     </form>
   );
 }
@@ -113,18 +142,24 @@ function FocusedCheckEmailNotice({ email }: { email: string }) {
   );
 }
 
-function SendButton({ isPending }: { isPending: boolean }) {
+function SendButton({
+  words,
+  isPending,
+}: {
+  words: EnrollWords;
+  isPending: boolean;
+}) {
   // Not disabled: a disabled button drops the keyboard focus.
   return (
     <Button type="submit" aria-busy={isPending}>
       {isPending ? (
         <>
           <LoaderCircle aria-hidden="true" className="animate-spin" />
-          Sending…
+          {words.sending}
         </>
       ) : (
         <>
-          Email me the link <span aria-hidden="true">→</span>
+          {words.send} <span aria-hidden="true">→</span>
         </>
       )}
     </Button>

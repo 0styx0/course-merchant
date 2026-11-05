@@ -6,7 +6,7 @@ import {
   startCheckoutEmailInvalid,
   startCheckoutNameInvalid,
   startCheckoutNotPurchasable,
-  startCheckoutSuccess,
+  startCheckoutCheckEmail,
   startCheckoutUnreachable,
   startCheckoutUrl,
 } from "@/mocks/handlers/start-checkout";
@@ -50,7 +50,7 @@ beforeEach(() => vi.mocked(redirect).mockClear());
 
 describe("startCheckoutAction", () => {
   it("returns success with the email for a check_email answer", async () => {
-    server.use(startCheckoutSuccess);
+    server.use(startCheckoutCheckEmail);
 
     await expect(
       startCheckoutAction(courseId, emptyState, typedForm()),

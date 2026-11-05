@@ -19,8 +19,19 @@ const checkEmailBody = {
   status: "check_email",
 } satisfies StartCheckoutSuccessResponse;
 
-export const startCheckoutSuccess = http.post(startCheckoutUrl, () => {
+export const startCheckoutCheckEmail = http.post(startCheckoutUrl, () => {
   return HttpResponse.json(checkEmailBody);
+});
+
+const redirectBody = {
+  status: "redirect",
+  url: "http://pay.localhost:3000/checkout/success?checkoutId=cs_test_mock",
+} satisfies StartCheckoutSuccessResponse;
+
+// The pause lets a test see "Opening payment…" before the browser leaves.
+const startCheckoutRedirect = http.post(startCheckoutUrl, async () => {
+  await delay(500);
+  return HttpResponse.json(redirectBody);
 });
 
 const startCheckoutSlow = http.post(startCheckoutUrl, async () => {
@@ -79,7 +90,10 @@ export const startCheckoutUnreachable = http.post(startCheckoutUrl, () =>
 );
 
 export const startCheckoutHandlers = {
-  success: startCheckoutSuccess,
+  // `success` is the name `dev:mock` falls back to for every endpoint.
+  success: startCheckoutCheckEmail,
+  checkEmail: startCheckoutCheckEmail,
+  redirect: startCheckoutRedirect,
   slow: startCheckoutSlow,
   notPurchasable: startCheckoutNotPurchasable,
   nameInvalid: startCheckoutNameInvalid,

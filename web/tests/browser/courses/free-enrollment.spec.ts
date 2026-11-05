@@ -1,13 +1,13 @@
 import { courseByIdSuccess } from "@/mocks/handlers/get-course";
 import { startCheckoutHandlers } from "@/mocks/handlers/start-checkout";
-import { freeCourse, reactCourse } from "@/mocks/fixtures/courses";
+import { freeCourse } from "@/mocks/fixtures/courses";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
 const { test, expect } = msw;
 
 test.use({
   mswHandlers: [
-    [courseByIdSuccess, startCheckoutHandlers.success],
+    [courseByIdSuccess, startCheckoutHandlers.checkEmail],
     { scope: "test" },
   ],
 });
@@ -76,13 +76,4 @@ test("a reload shows the closed button again", async ({ page }) => {
     page.getByRole("button", { name: "Enroll for free" }),
   ).toHaveAttribute("aria-expanded", "false");
   await expect(page.getByLabel("Name")).toHaveCount(0);
-});
-
-test("a paid course has no Enroll button", async ({ page }) => {
-  await page.goto(`/courses/${reactCourse.id}`);
-
-  await expect(
-    page.getByRole("heading", { level: 1, name: reactCourse.name }),
-  ).toBeVisible();
-  await expect(page.getByRole("button", { name: /Enroll/ })).toHaveCount(0);
 });

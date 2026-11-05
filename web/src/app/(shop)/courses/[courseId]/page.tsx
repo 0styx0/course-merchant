@@ -4,6 +4,7 @@ import { ProblemAlert } from "@/components/problem-alert";
 import { EnrollButton } from "@/features/checkout/enroll-button";
 import { CourseDetails } from "@/features/courses/course-details";
 import { getCourse } from "@/features/courses/courses.api";
+import { formatPrice } from "@/lib/utils/formatters";
 
 type CoursePageProps = {
   params: Promise<{ courseId: string }>;
@@ -41,11 +42,15 @@ export default async function CoursePage({ params }: CoursePageProps) {
   }
 
   const course = result.data;
+  const priceLabel =
+    course.price.amount === 0
+      ? undefined
+      : formatPrice(course.price.amount, course.price.currency);
 
   return (
     <>
       <CourseDetails course={course} />
-      {course.price.amount === 0 && <EnrollButton courseId={course.id} />}
+      <EnrollButton courseId={course.id} priceLabel={priceLabel} />
     </>
   );
 }
