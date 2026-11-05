@@ -24,7 +24,80 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **4a.** A visitor on a paid course opens the fields from "Enroll for $99.00 →", sends, sees "Opening payment…", and lands on the payment page.
 - [x] **4b.** A visitor who presses Back from Stripe finds the form ready to use, with their typed values; unit tests cover the restore, because Chromium under `yarn dev` never restores the page (its reason reads `masked`), and a browser test checks that Back otherwise loads a fresh closed button.
 - [x] **4c.** When Stripe or our API is down, a paid visitor sees the problem above the fields, keeps their typing, and the button reads "Try again →".
-- [ ] **5. Coming back from Stripe.** The return page says the email is on its way, or what happened instead. **Next** (a milestone not yet split into commits; run `/plan-create-implementation` before `/next-commit`)
+- **5. Coming back from Stripe.** The return page says the email is on its way, or what happened instead.
+  - [ ] **5a.** A developer finds the checkout code grouped by job: starting a checkout, the shared "check your email" box, and the form. *(mechanical)* **Next**
+    - *Behaviours*: none change.
+    - *New shared pieces*: none
+    - *Files*:
+      - `web/src/features/checkout/` (10 loose files beside `form/`) → `start-checkout/` (enroll button, action, API call, back-forward-cache hook, with tests: 8), `check-email-notice/` (2), `form/` (unchanged)
+      - `web/src/app/(shop)/courses/[courseId]/page.tsx` (import path)
+      - `ARCHITECTURE.md` (adds the missing `features/checkout/` row)
+    - *Done when*:
+      - `check:changed` passes
+      - the diff shows renames only
+      - the test count stays the same
+  - [ ] **5b.** A buyer back from Stripe after the webhook sees "Thank you." and Check your email, and a bad link shows the not-found page.
+    - *Behaviours*:
+      - succeeded: "Thank you." (h1) and the Check your email box naming no address
+      - any other status: "Thank you." and "We're confirming your payment." (until 5c)
+      - missing, empty or repeated `checkoutId`: the not-found page, with no request sent
+      - API 404 (`CHECKOUT_NOT_FOUND`): the not-found page
+      - API 500: the API's title and detail in the error box
+      - API unreachable or past the 10 s timeout: the status call throws, and the shop error page shows Try again (existing)
+      - the page asks search engines not to index it
+      - the free form's box still names the typed address
+    - *New shared pieces*:
+      - the status call (the page now, and the re-check in 5d through the same page)
+      - the Check your email box with an optional address (the free form and the return page)
+    - *Files*:
+      - `web/src/features/checkout/success-page/checkout-status.api.ts` (+ test)
+      - `web/src/mocks/handlers/get-checkout-status.ts` (all scenarios: `success` = succeeded, `checkoutPending`, `checkoutExpired`, `checkoutRefunded`, `checkoutNotFound`, `checkoutServerError`, `unreachable`)
+      - `web/src/mocks/node.ts` (wiring and the unknown-scenario check)
+      - `web/src/app/(shop)/checkout/success/page.tsx`
+      - `web/src/app/(shop)/checkout/success/not-found.tsx`
+      - `web/src/features/checkout/check-email-notice/check-email-notice.tsx` (+ test)
+      - `web/tests/browser/courses/checkout-return.spec.ts` (succeeded, not found, missing id, 500)
+    - *Needs*: 5a
+    - *Settled*:
+      - web.md's checkout-success row
+      - Decision rows "return page words" and "API failure on the return page"
+    - *Done when*:
+      - tests pass
+      - from `redirect`, pay a paid course in `dev:mock` and land on Check your email
+  - [ ] **5c.** A buyer whose checkout timed out, was refunded or is still confirming reads what happened.
+    - *Behaviours*:
+      - pending: "Thank you." and the confirming line with a spinner that turns only for visitors who allow motion
+      - expired: "Checkout timed out.", one sentence and a ghost "See current courses →" to the home page
+      - refunded: "Payment refunded.", one sentence and the same ghost link
+      - the page holds exactly one live region (the notice and the words share it)
+    - *New shared pieces*: none
+    - *Files*:
+      - `web/src/features/checkout/success-page/checkout-status-message.tsx` (+ test, picks the words per status)
+      - `web/src/app/(shop)/checkout/success/page.tsx` (uses it)
+      - `web/tests/browser/courses/checkout-return.spec.ts` (pending, expired, refunded)
+    - *Settled*: Decision row "return page words".
+    - *Done when*:
+      - tests pass
+      - each scenario walked at 400 px and desktop
+  - [ ] **5d.** A buyer who arrives before our server hears from Stripe watches the page switch to Check your email by itself, and after a minute reads that their payment was received.
+    - *Behaviours*:
+      - while pending, the line adds "This page updates by itself." and the browser re-asks the server every 3 seconds
+      - a new status replaces the line and checking stops
+      - after 60 seconds still pending, checking stops, the spinner goes and the line reads the decided sentence
+      - a re-check that gets a 500 shows the API's words and stops
+      - a re-check that can't reach the API shows the shop error page
+      - leaving the page stops the timer
+    - *New shared pieces*: none
+    - *Files*:
+      - `web/src/features/checkout/success-page/pending-checkout-notice.tsx` (+ test, client component, fake timers)
+      - `web/src/features/checkout/success-page/checkout-status-message.tsx` (uses it)
+      - `web/tests/browser/courses/checkout-return.spec.ts` (pending once then succeeded, pending then 500, always pending with `page.clock` past 60 s)
+      - `README.md` Status
+      - this file's tick and Retro
+    - *Settled*: Decision rows "after about a minute…" and "re-check timing".
+    - *Done when*:
+      - tests pass
+      - the step's journey walked
 - [ ] **6. Site header and footer.** Every public page has the header, the phone menu and the footer.
 - [ ] **7. Course page layout.** The image, title and description sit beside a sticky panel on desktop, stacked on a phone.
 - [ ] **8. Buy panel looks.** The panel shows the price, the button with its price, the after-enroll note, and the free, in-progress and ended looks.
@@ -128,6 +201,9 @@ Wireframe states and time variants, by the milestone that builds them:
 | The course image has `alt=""`; wireframe note 23 says so | The h1 right below names the course, so a screen reader would read the name twice; keeps courses.md's row and guide §6 | The course name as alt text |
 | Fixtures keep fixed times that hold for years (upcoming 2030, ended 2025, in progress 2020–2040); tests set the browser's clock with Playwright's [`page.clock`](https://playwright.dev/docs/clock); one `dev:mock`-only scenario uses times relative to now for walking "Starts in 4 days" | Failures repeat (web.md's fixtures row), and the default `dev:mock` course stays upcoming | Every fixture relative to now (results depend on the day) |
 | After about a minute the return page stops checking and says "We've received your payment. Your access email can take a few minutes. If it hasn't arrived, look in spam." whatever the status | A buyer reaches the page only after Stripe took the card, so "pending" means our server hasn't processed Stripe's webhook yet, and the sweeper rechecks late payments every 10 minutes. The words claim no delivery, so they stay true if a refund follows | "Your email is on its way" (a promise that fails if a refund follows); polling without end (a spinner with no outcome) |
+| The return page shows "Thank you." for pending and succeeded, and "Checkout timed out." and "Payment refunded." for the others, with one sentence and a ghost "See current courses →"; the Check your email box names no address (revisit after use) | The status answer holds no email; the refunded sentence matches the refund emails and stays true for a double purchase, where the buyer keeps access | Echoing the address (style guide §12 #4: an API change, and anyone with the link would see the email); a resend link (no endpoint) |
+| When the API answers 500 the return page shows its words in the error box, and when it can't be reached the shop error page shows; checking stops either way | Same as the course page, no extra code; the payment is safe and a reload checks again | Keeping the confirming line and checking on (hides the API's words; about 10 lines plus tests) |
+| While pending, the browser re-asks every 3 seconds for 60 seconds from page open | The webhook usually lands within seconds; at most 20 requests per visit | Every second (3× the requests); backoff (more code for a one-minute window); a minute kept across reloads (a timestamp in the URL) |
 | Hover colours are tokens (`--primary-hover`, `--secondary-hover`) in globals.css | The contrast spec reads every pair from the page, so the hover pairs get checked like the rest, and each colour lives in one place | Raw oklch values in button.tsx (the spec can't see them, so two places change) |
 | Headings take Playfair from `font-heading` plus a `text-h*` step on each heading; Playfair loads weight 400 only, and DM Sans loads as its variable font | A base rule on h1–h3 would turn alert titles and the description's headings serif, and render the existing bold headings in a fake bold; one heading weight keeps the download small | A base rule (one line, but every heading changes at once); Playfair variable (a bigger file for weights the guide bans) |
 | The Button primitive carries height, padding, label, radius, colours, ring and the 11rem minimum (link variant exempt); each public buy button adds full width below sm itself (step 8) (revisit after use) | Full width in the primitive would stretch admin's Remove and Cancel on a phone and break the price row | Full width in the primitive |
@@ -272,26 +348,77 @@ Free course page: unchanged
 ## Step 5. Coming back from Stripe
 
 ```
-/checkout/success after 5 (a new page; the words are set when the milestone is planned)
-+----------------------------------------------+
-| Pending:   we're confirming your payment     |  <- refreshes for about 1 min
-|            (after a minute: "We've received  |
-|             your payment. Your access email   |
-|             can take a few minutes. ...")     |
-| Succeeded: ✓ Check your email ...            |
-| Expired / refunded: one plain sentence       |
-|            + ghost "See current courses →"   |
-| Unknown id: 404 page                         |
-+----------------------------------------------+
+/checkout/success after 5 (shop layout; the words are final)
+Succeeded                              Pending (first minute)
+Thank you.                (h1)         Thank you.                (h1)
++-------------------------------+      ◌ We're confirming your payment.
+| ✓ Check your email            |        This page updates by itself.
+|   We've sent access to the    |
+|   email address you entered.  |      Pending (after a minute, no spinner)
+|   It can take a few minutes.  |      Thank you.
+|   If it hasn't arrived, look  |      We've received your payment. Your access
+|   in spam.                    |      email can take a few minutes. If it
++-------------------------------+      hasn't arrived, look in spam.
+
+Expired                                Refunded
+Checkout timed out.       (h1)         Payment refunded.         (h1)
+This checkout ended before payment,    We've refunded this payment. It can take
+so we charged you nothing.             a few days to appear on your statement.
+See current courses →  (ghost)         See current courses →  (ghost)
+
+Unknown or missing id (not-found)      API 500
+Checkout not found        (h1)         +-- error box ----------------------+
+We couldn't find a checkout for this   | ! <API title>                     |
+link. If you paid, look in your email  |   <API detail>                    |
+for your access link.                  +-----------------------------------+
+See current courses →  (ghost)
 ```
 
 - Why here: J1 ends here; the API's success URL already points at `/checkout/success`.
 - Needs: 4.
-- Size: 2 to 3 commits.
-- Data flow: the server page reads `checkoutId` from the URL and calls `getCheckoutStatus`; a small client component calls `router.refresh()` on a timer while the status is `pending` (web.md's row on the checkout success page). A missing `checkoutId` and the API's 404 both call `notFound()`.
-- Words: after about a minute the page stops checking and says exactly "We've received your payment. Your access email can take a few minutes. If it hasn't arrived, look in spam." (see the Decision row). Other screens (set finally in the plan pass, §9 voice): pending "We're confirming your payment."; succeeded the "Check your email" notice without an address (the status answer holds none); expired and refunded one plain sentence each plus a ghost "See current courses →". The same commit changes web.md's "your email is on its way" to these words.
+- Builds on: [web.md](web.md)'s row on the checkout success page, [start-checkout.api.ts](../web/src/features/checkout/start-checkout.api.ts) (the wrapper to copy), [check-email-notice.tsx](../web/src/features/checkout/check-email-notice.tsx), [not-found.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/not-found.tsx), [error.tsx](../web/src/app/%28shop%29/error.tsx), `getCheckoutStatus` in the OpenAPI contract.
+- Size: 4 commits (the overview said 2 to 3: the checkout folder needs its regroup first, and the re-checking stands alone because it needs fake timers and a browser clock).
 - Risk: the page is not in the wireframe; its look follows style guide §12 #4 minus the email echo and the resend link.
-- Done when: journey: open the page with pending, succeeded, expired, refunded and unknown ids, and see the matching screen each time; a pending id stops refreshing after about a minute and shows the sentence above.
+- Done when: journey (`dev:mock`, 400 px and desktop, keyboard only): from `redirect`, pay a paid course and see Check your email; under `checkoutPending` see the confirming line, and after a minute the received-payment sentence; under `checkoutExpired`, `checkoutRefunded`, `checkoutNotFound`, `checkoutServerError` and `unreachable` see their screens; with no `checkoutId`, see the not-found page.
+- Design notes *(temporary)*:
+  - `features/checkout/success-page/` holds the status call, the message and the pending notice.
+  - The pending notice is a client component. `router.refresh()` keeps its state ([Next useRouter docs](../web/node_modules/next/dist/docs/01-app/03-api-reference/04-functions/use-router.md)), so its minute counts from page open and a reload starts a new minute.
+  - No focus moves; one live region announces the switch, so the notice and the words share it.
+  - The page asks search engines not to index it (`robots: { index: false }`, as the admin pages do); the existing Referrer-Policy keeps the id off other sites.
+  - Mock scenario names carry a `checkout` prefix, because one scenario line drives every endpoint.
+  - An id over 255 characters gets the API's 404 (the controller has no length check), so the not-found branch covers it.
+- Failure table *(temporary)*:
+
+| Actor | Abuse or failure | What the system does | Test |
+|---|---|---|---|
+| Buyer | returns before the webhook | confirming line, re-checks every 3 s | 5d |
+| Stripe | webhook later than a minute | stops, shows the received-payment sentence; the sweeper rechecks within 10 minutes | 5d |
+| Buyer | reloads or reopens later | fresh check, current status | 5b |
+| Anyone | guesses, edits or lengthens the id | not-found page; the status shows no name, email or course | 5b |
+| Anyone | id missing, empty, repeated | not-found page, no request | 5b |
+| API | 500, on load or on a re-check | the API's words, checking stops | 5b, 5d |
+| API | unreachable or past the timeout | shop error page with Try again | 5b, 5d |
+| Buyer | double purchase | refunded words; their "already own" email still arrives | 5c |
+| Buyer | JavaScript off | confirming line stays; a reload checks again | accepted |
+
+- Flow *(temporary)*:
+
+```
+Stripe sends the buyer to /checkout/success?checkoutId=…
+├── checkoutId missing, empty or repeated ....... not-found page, no request      5b
+└── server asks the API for the status .......... status call                     5b
+    ├── 404 ......................................... not-found page                 5b
+    ├── 500 problem ................................. API's words in error box      5b
+    ├── unreachable / no problem body (throws) ...... shop error page + Try again  existing (error.tsx)
+    ├── succeeded ................................... Thank you + Check your email  5b
+    ├── expired ..................................... sentence + ghost link         5c
+    ├── refunded .................................... sentence + ghost link         5c
+    └── pending ..................................... confirming line + spinner     5c
+        └── browser re-asks every 3 s ............... router.refresh                5d
+            ├── status changed ........................ matching screen, stops      5d
+            ├── 500 or unreachable .................... branches above, stops       5d
+            └── 60 s, still pending ................... received-payment sentence   5d
+```
 
 ## Step 6. Site header and footer
 
