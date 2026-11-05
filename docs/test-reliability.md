@@ -24,13 +24,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3b3 (web).** Web tests read the frozen time from `Temporal.Now` too, on Node builds that include Temporal (CI) and on builds that leave it out.
   - [x] **3d (api).** An API test can no longer leak a mock into the next: the three API Vitest configs restore spies and stubs after each test, and the hand-written restores are gone.
   - [x] **3e (web).** A web test can no longer leak a mock into the next: the web Vitest config restores spies and stubs after each test, and the hand-written restores are gone.
-  - [ ] **3f (api).** API tests run in `Pacific/Chatham`, so a test that assumes UTC fails on every machine. **Next**
-    - *Behaviours*:
-      - `env: { TZ }` is set in the 3 API Vitest configs, and exposed tests are fixed.
-      - The unit suite passes once under `TZ=Pacific/Kiritimati`.
-    - *New shared pieces*: none.
-    - *Done when*: the API suites pass.
-  - [ ] **3g (web).** Web tests run in the same zone.
+  - [x] **3f (api).** API tests run in `Pacific/Chatham` unless the shell sets `TZ`; no existing test needed a fix.
+  - [ ] **3g (web).** Web tests run in the same zone. **Next**
     - *Behaviours*:
       - `env: { TZ }` goes into the web config, and exposed tests are fixed.
       - The web suite passes once under `TZ=Pacific/Kiritimati`.
@@ -117,6 +112,7 @@ Measured on 2026-11-04 in a separate worktree, on a busy 8-core machine (load av
 | `restoreMocks`, `unstubEnvs` and `unstubGlobals` on in every Vitest config | A failed test no longer leaks its mock into the tests after it | An `afterEach` in each file (easy to forget) |
 | `Pacific/Chatham` (+12:45, an offset no common machine uses) pinned for Vitest and for Playwright's `timezoneId`; the stress command also runs `Pacific/Kiritimati` (+14:00) | A test that assumes UTC or the developer's own zone fails on every machine, instead of only on some | Leaving the zone to the machine (today's tests pass by luck); pinning UTC (hides tests that assume UTC) |
 | The web setup file makes every `Temporal.Now` method read the faked `Date` before each test | On a Node build with the built-in Temporal, the polyfill hands back the built-in, which reads the machine clock. A test reading `Temporal.Now` then sees today's time on CI and the frozen time locally | Deleting the built-in before the polyfill loads (tests run a different Temporal than the app, and it breaks once the polyfill goes); pinning CI's Node (every official Node 26 build includes Temporal); Vitest's `toFake: ["Temporal"]` alone (it swaps only the global, and our code holds the polyfill's import); a clock function in app code (app code already reads one clock, `Date.now()`) |
+| The API Vitest configs read `process.env.TZ` and fall back to `Pacific/Chatham` | The stress command must override the zone from the shell, and `test.env` would otherwise overwrite it | A fixed `TZ` in `test.env` (ignores the shell, so the Kiritimati runs would silently use Chatham) |
 | A 15-second timeout for web unit tests | The heavy form tests pass alone but hit the 5-second default under load | Raising the timeout per test (a growing list); cutting the typing in each test first (worth doing later, but bigger) |
 | Browser layout and font checks go through `expect.poll` and `document.fonts.ready` | A single read right after a scroll or a focus lost to late layout | `waitForTimeout` (a guess); `networkidle` (waits for neither layout nor fonts) |
 | Lint bans real clocks in test files outright, and a line that needs real time carries `eslint-disable-next-line` with its reason | A list of exempt files goes stale, while a comment sits on the line it excuses | Per-file exemption lists; detecting a frozen clock (lint can't) |

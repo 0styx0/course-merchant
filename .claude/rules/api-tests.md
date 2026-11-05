@@ -16,3 +16,4 @@ Unit tests sit in `<module>/test/unit/`, integration tests in `<module>/test/int
 - Write "future" as `utcIn()` or from a frozen clock. Type a calendar date only beside a frozen "now" and only when the test checks the date's text format, because a typed date alone turns into the past.
 - Freeze `Temporal.Now` in `beforeEach` (`vi.spyOn(Temporal.Now, "instant").mockReturnValue(now)`). Spies restore themselves (`restoreMocks`, `unstubEnvs` and `unstubGlobals` are on in the Vitest configs), so a test never sleeps or races the real clock.
 - Read times that Postgres stamps (`DEFAULT now()`) from the stored row or from *Clock* (`DatabaseClock`, see [api/CLAUDE.md](../../api/CLAUDE.md)), not from `Temporal.Now`.
+- Tests run in `Pacific/Chatham` unless the shell sets `TZ` (the Vitest configs set it), so never assume UTC.

@@ -11,6 +11,7 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   test: {
+    env: { TZ: process.env.TZ ?? "Pacific/Chatham" },
     restoreMocks: true,
     unstubEnvs: true,
     unstubGlobals: true,
