@@ -28,7 +28,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3g (web).** Web tests run in `Pacific/Chatham` unless the shell sets `TZ`; no existing test needed a fix.
 - [ ] **4. Browser tests wait for the page.** Layout checks retry until they hold, tests type only once the page is ready, and the course list's loading-state test stops racing a timer. Split into commits, one per kind of fix:
   - [x] **4a.** Admin form tests open their page through one helper that waits for the Bold button, so typing starts after the page has attached its scripts. The re-run found 3 slow-save failures in 170 runs, so the plan needs a commit for them.
-  - [ ] **4b.** The Save bar and phone-width card checks retry until the layout settles. **Next**
+  - [ ] **4b.** The Save bar and phone-width card checks retry until the layout settles.
     - *Behaviours*:
       - Each save-bar position check reads both boxes inside one `expect.poll`: the bar inside the screen, the last price above the bar, a focused field above the bar, and a chosen field below the error box.
       - The save-bar block opens the page through 4a's helper and drops `networkidle`.
@@ -77,7 +77,47 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
     - *Done when*:
       - `yarn --cwd web playwright test --repeat-each=5 --workers=8` passes.
       - The milestone's Retro is added.
-- [ ] **5. Lint rejects the patterns behind the flakes.** Test files can't read the real clock, sleep, or read a layout value once, unless a comment says why.
+- [ ] **5. Lint rejects the patterns behind the flakes.** Component and browser tests fail lint when they forget to wait for an async step, sleep, wait for the network to go quiet, read the real clock (browser tests), or read a layout value once. Planned out of order, before step 4 finishes; one commit per plugin:
+  - [ ] **5c (web).** Component and hook tests fail lint when they forget to await an async check or do work inside `waitFor`. **Next**
+    - *Behaviours*:
+      - The commit adds [eslint-plugin-testing-library](https://github.com/testing-library/eslint-plugin-testing-library) 7.16.2 for `src/**/*.test.{ts,tsx}`, with only its flake rules:
+        - `await-async-queries`
+        - `await-async-utils`
+        - `await-async-events`
+        - `no-wait-for-side-effects`
+        - `prefer-find-by`
+        - `no-unnecessary-act`
+      - It leaves out `no-wait-for-multiple-assertions`, because `web-tests.md` puts a positive signal and an absence in one `waitFor`.
+      - It leaves out `no-node-access` and `no-container`, because they guard style, not flakes and today's tests use container queries in several files.
+      - The commit starts by running lint and fixes what it flags. It re-plans when a dozen or more files need a fix.
+      - Break it once: dropping the `await` before a `findBy` fails lint.
+    - *New shared pieces*: none.
+    - *Files*: [web/package.json](../web/package.json), `web/yarn.lock` (generated), [web/eslint.config.mjs](../web/eslint.config.mjs), [web-tests.md](../.claude/rules/web-tests.md), plus any test the run flags
+    - *Settled*: the decision row "Test lint turns on each plugin's flake rules by name…".
+    - *Done when*: `yarn --cwd web lint` prints nothing, and `yarn --cwd web test:unit` passes.
+  - [ ] **5d (web).** Browser tests fail lint when they sleep, wait for `networkidle`, forget an `await`, read the real clock, or read a box size outside `expect.poll`.
+    - *Behaviours*:
+      - The commit adds [eslint-plugin-playwright](https://github.com/mskelton/eslint-plugin-playwright) 2.12.1 for `tests/**` (2.12.2 is 3 days old), with only its flake rules:
+        - `no-wait-for-timeout`
+        - `no-networkidle`
+        - `missing-playwright-await`
+        - `prefer-web-first-assertions`
+      - A `no-restricted-syntax` block for `tests/**` rejects three things:
+        - `boundingBox()` outside an `expect.poll` callback;
+        - `Date.now()`, `new Date()` with no arguments, and `Temporal.Now.*()`;
+        - a sleep (`setTimeout` inside `new Promise`, or an import from `timers/promises`).
+      - The "no Google fonts" test keeps `networkidle`, with a disable comment saying it counts requests.
+      - The commit starts by running lint. It re-plans when a dozen or more specs need a fix.
+      - Break it once, with scratch specs:
+        - one with `waitForTimeout(100)` fails lint;
+        - one with a bare `boundingBox()` read fails lint.
+    - *New shared pieces*: none.
+    - *Files*: [web/package.json](../web/package.json), `web/yarn.lock` (generated), [web/eslint.config.mjs](../web/eslint.config.mjs), [web-tests.md](../.claude/rules/web-tests.md), plus any spec the run flags
+    - *Needs*: all of step 4.
+    - *Settled*: the decision rows on browser clocks and sleeps, and on flake rules by name.
+    - *Done when*:
+      - `yarn --cwd web lint` prints nothing.
+      - The milestone's Retro is added.
 - [ ] **6. The commit hook skips tests a change can't affect, and checks both packages together.** A CSS-only commit no longer runs a whole suite, and the checks before push stay the same.
 - [ ] **7. One command stresses the suites on demand.** It runs shuffled, time-zone and repeated runs, so a new flake shows up before it reaches a commit.
 
@@ -157,7 +197,8 @@ Measured on 2026-11-04 in a separate worktree, on a busy 8-core machine (load av
 | Admin form tests wait for the description editor's Bold button before typing or clicking | React resets a value typed before it attaches, as the "error list" runs showed, and the editor only enables Bold once React has attached | `networkidle` (small, but it waits for requests, not React, and those runs used it); a "ready" marker in the app (exact, but app code that exists only for tests) |
 | A slow mock answer waits on a promise the test releases | The test sees the loading or sending state however busy the machine is | A longer delay (one line, but still a guess, and it slows every run) |
 | The dev server under Playwright runs in UTC, and only the browser takes `Pacific/Chatham` | Production renders on a UTC server for visitors in other zones, so a page that formats a time in the server's zone fails the test | The same zone for both (one more line, but it hides that bug); the machine's zone (differs between CI and laptops) |
-| Lint bans real clocks in test files outright, and a line that needs real time carries `eslint-disable-next-line` with its reason | A list of exempt files goes stale, while a comment sits on the line it excuses | Per-file exemption lists; detecting a frozen clock (lint can't) |
+| Lint bans real-clock reads and sleeps in browser tests only, and a line that needs one carries `eslint-disable-next-line` with its reason | Browser tests run against a real clock, so a read there races the page. Web unit tests already read a frozen clock, and API tests use "now" only as a starting point. A comment sits on the line it excuses, where a list of exempt files goes stale | Per-file exemption lists (go stale); an outright ban in every test (36 identical disable comments in API integration and end-to-end tests, plus a fix commit for 8 unit reads); detecting a frozen clock (lint can't) |
+| Test lint turns on each plugin's flake rules by name, not its recommended set | They catch what makes tests flaky; the recommended sets add style rules that would flag 31 node-access lines and unrecognised `expect…` helpers first | The recommended sets (a style-fix commit each, and warnings that break a clean lint); no plugins (a missing `await` needs scope analysis, which `no-restricted-syntax` can't do) |
 | The stress command runs on demand (weekly, or before a release) and never in a hook | Shuffled, repeated and zone runs take many minutes | Running it before every push |
 
 ## Step 1. A test comparing two times fails when they differ
@@ -277,23 +318,29 @@ Every page renders in a pinned zone and locale ............... 4e
   - The Vitest blocks in [api/eslint.config.mjs](../api/eslint.config.mjs) and [web/eslint.config.mjs](../web/eslint.config.mjs).
   - [.lintstagedrc.json](../.lintstagedrc.json).
   - Twin code: the two ESLint configs repeat the same Vitest rules.
-- **Size:** 3 commits:
-  1. Built-in `no-restricted-syntax` rules against real clocks and against reading a layout value once inside `expect`, with a reasoned disable comment on each line that needs real time.
-  2. The plugin for component tests.
-  3. The plugin for Playwright.
-- **Risk:** both plugins are new dependencies, and the library check hasn't been run on either yet. This milestone's planning pass runs it, with the criteria in [library-check.md](../.claude/skills/plan-create-overview/library-check.md) (maintained, used, fits the stack, small, simpler overall), on [eslint-plugin-testing-library](https://github.com/testing-library/eslint-plugin-testing-library) and [eslint-plugin-playwright](https://github.com/mskelton/eslint-plugin-playwright). If either fails, it falls back to the built-in rules alone.
+- **Size:** 2 commits, one per plugin (5c, 5d). The overview's third commit, built-in clock and sleep rules for API and web unit tests, was cut by the owner on 2026-11-05.
 - **Done when:**
-  - `yarn --cwd api lint` and `yarn --cwd web lint` print nothing.
-  - A scratch test using `Date.now()`, a single layout read inside `expect`, or `waitForTimeout` fails lint.
+  - `yarn --cwd web lint` prints nothing.
+  - A scratch component test with an un-awaited `findBy`, and a scratch browser test using `waitForTimeout` or a bare `boundingBox()` read, fail lint.
 - **Scope:** the rules cover test files only. Production code, `web/src/mocks/` (which `dev:mock` runs) and generated code stay outside them.
-- **Blocks the split:** none.
-- **Can wait:** each plugin's exact rule list.
-- **Re-measure:**
-  - Lines that need a reasoned disable comment:
-    `git grep -nE 'Date\.now|new Date\(\)|Temporal\.Now' -- 'api/src/**/test/**' 'api/src/test/**' 'web/src/**/*.test.ts*' 'web/tests'`
-  - Lint results:
-    `yarn --cwd web lint`
-    `yarn --cwd api lint`
+- **Design notes *(temporary)*:**
+  - The box-read selector uses `:not(<expect.poll call> *)`. esquery 1.7.0 passes ancestry into `:not` (checked in `node_modules/esquery/dist/esquery.esm.js`), so a descendant selector works there. A box read in a helper called from `expect.poll` would still fail, so 5d either inlines that read or comments it.
+  - Both plugins pass the library check:
+    - MIT licence;
+    - a release within a year;
+    - 7.8 M and 10.6 M downloads a week;
+    - ESLint 9 flat config;
+    - 1–2 dependencies.
+  - Each plugin covers what `no-restricted-syntax` can't: catching a missing `await` takes scope analysis.
+- **Flow *(temporary)*:**
+
+```
+Developer stages a web test file → lint-staged runs eslint --fix
+├── component/hook test skips an await, works in waitFor ........ 5c
+└── browser test sleeps, networkidle, missing await,
+    real clock, or a box read outside expect.poll ............... 5d (after step 4)
+Each branch: the commit fails with the rule's message, unless the line carries eslint-disable-next-line with its reason.
+```
 
 ## Step 6. The commit hook skips tests a change can't affect, and checks both packages together
 
@@ -329,6 +376,12 @@ Every page renders in a pinned zone and locale ............... 4e
 - **Blocks the split:** none.
 - **Can wait:** the script's name, and whether it lives at the root or per package.
 - **Re-measure:** time the command.
+
+## Changes
+
+| Date | Change | Why |
+|---|---|---|
+| 2026-11-05 | Milestone 5 planned before 4b–4e, and narrowed to the two plugins; the built-in clock and sleep rules for API and web unit tests are cut | The owner asked for it out of order and slimmed it down. 5c has nothing to wait for; 5d needs all of step 4 |
 
 ## Out of scope
 
