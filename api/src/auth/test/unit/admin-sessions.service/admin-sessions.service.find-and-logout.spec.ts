@@ -1,13 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
-import {
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AdminLoginAttemptsRepository } from "@/auth/login/admin-login-attempts.repository.js";
 import { AdminSessionsRepository } from "@/auth/sessions/admin-sessions.repository.js";
@@ -53,10 +45,6 @@ describe("AdminSessionsService", () => {
   >;
   let service: AdminSessionsService;
   let fake: ReturnType<typeof fakePrisma>;
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
 
   beforeEach(() => {
     calls = [];

@@ -4,7 +4,6 @@ import request from "supertest";
 import Stripe from "stripe";
 import {
   afterAll,
-  afterEach,
   beforeAll,
   beforeEach,
   describe,
@@ -38,10 +37,6 @@ describe("POST /v1/webhooks/stripe (e2e)", () => {
   beforeEach(() => {
     now = Temporal.Now.instant();
     vi.spyOn(Temporal.Now, "instant").mockReturnValue(now);
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   // starts a paid checkout and returns the Payment it created

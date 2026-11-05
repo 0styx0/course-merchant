@@ -11,6 +11,9 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   test: {
+    restoreMocks: true,
+    unstubEnvs: true,
+    unstubGlobals: true,
     include: ["src/**/*.integration.spec.ts"],
     fileParallelism: false,
     setupFiles: [

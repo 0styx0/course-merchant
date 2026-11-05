@@ -2,7 +2,6 @@ import { Temporal } from "@js-temporal/polyfill";
 import { Test, type TestingModule } from "@nestjs/testing";
 import {
   afterAll,
-  afterEach,
   beforeAll,
   beforeEach,
   describe,
@@ -41,10 +40,6 @@ describe("AdminCoursesService integration", () => {
 
   beforeEach(() => {
     vi.spyOn(Temporal.Now, "instant").mockReturnValue(NOW);
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   afterAll(async () => {

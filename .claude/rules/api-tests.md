@@ -14,5 +14,5 @@ Unit tests sit in `<module>/test/unit/`, integration tests in `<module>/test/int
 - Compare times with `toEqual`, or with `toMatchObject` under the shared Temporal equality tester (`src/test/temporal-equality.ts`, loaded by every Vitest config), so two different times fail.
 - Round test inputs with `toDatabasePrecision` before comparing them with stored values, because Postgres keeps microseconds and `Temporal.Now.instant()` has nanoseconds.
 - Write "future" as `utcIn()` or from a frozen clock. Type a calendar date only beside a frozen "now" and only when the test checks the date's text format, because a typed date alone turns into the past.
-- Freeze `Temporal.Now` in `beforeEach` (`vi.spyOn(Temporal.Now, "instant").mockReturnValue(now)`) and restore it in `afterEach` (`vi.restoreAllMocks()`), so a test never sleeps or races the real clock.
+- Freeze `Temporal.Now` in `beforeEach` (`vi.spyOn(Temporal.Now, "instant").mockReturnValue(now)`). Spies restore themselves (`restoreMocks`, `unstubEnvs` and `unstubGlobals` are on in the Vitest configs), so a test never sleeps or races the real clock.
 - Read times that Postgres stamps (`DEFAULT now()`) from the stored row or from *Clock* (`DatabaseClock`, see [api/CLAUDE.md](../../api/CLAUDE.md)), not from `Temporal.Now`.

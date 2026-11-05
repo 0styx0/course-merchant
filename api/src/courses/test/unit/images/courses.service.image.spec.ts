@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   asDependency,
@@ -35,10 +35,6 @@ describe("CoursesService.findImageBytes", () => {
       asDependency<CoursesRepository>({}),
       asDependency<CourseImagesRepository>(imagesRepository),
     );
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   it("returns the bytes when the version is the current one", async () => {

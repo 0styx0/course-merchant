@@ -1,5 +1,5 @@
 import { Logger } from "@nestjs/common";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EmailOutboxRepository } from "@/email/outbox/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
@@ -110,10 +110,6 @@ describe("FulfillmentService", () => {
       asDependency<EmailOutboxRepository>(emailOutbox),
       asDependency<PaymentRefunds>(paymentRefunds),
     );
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   const emailIds = { courseId: COURSE_ID, customerId: CUSTOMER_ID };

@@ -8,7 +8,15 @@ import { instant } from "../../test-helpers.js";
 import type { INestApplication } from "@nestjs/common";
 import { Temporal } from "@js-temporal/polyfill";
 import request from "supertest";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import {
   createE2eApp,
   httpServer,
@@ -22,13 +30,15 @@ describe("GET /v1/courses (e2e)", () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    vi.spyOn(Temporal.Now, "instant").mockReturnValue(NOW);
     app = await createE2eApp();
+  });
+
+  beforeEach(() => {
+    vi.spyOn(Temporal.Now, "instant").mockReturnValue(NOW);
   });
 
   afterAll(async () => {
     await app.close();
-    vi.restoreAllMocks();
   });
 
   it("returns available courses in ascending start-time order", async () => {

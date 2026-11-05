@@ -1,6 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { Logger } from "@nestjs/common";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EmailOutboxRepository } from "@/email/outbox/email-outbox.repository.js";
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
@@ -71,10 +71,6 @@ describe("PaymentSweeper (integration)", () => {
     vi.spyOn(Logger.prototype, "warn").mockImplementation(() => {});
     vi.spyOn(Logger.prototype, "log").mockImplementation(() => {});
     errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   function paymentFields() {

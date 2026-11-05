@@ -6,7 +6,7 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiException } from "@/common/errors/api.exception.js";
 import {
   ERROR_DEFINITIONS,
@@ -47,10 +47,6 @@ describe("ProblemDetailsFilter", () => {
 
   beforeEach(() => {
     errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   describe("ApiException", () => {

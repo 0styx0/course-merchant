@@ -11,6 +11,9 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   test: {
+    restoreMocks: true,
+    unstubEnvs: true,
+    unstubGlobals: true,
     setupFiles: ["./src/test/temporal-equality.ts"],
     include: ["src/**/*.spec.ts"],
     exclude: ["src/**/*.integration.spec.ts", "src/test/e2e/"],

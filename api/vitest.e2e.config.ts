@@ -11,6 +11,9 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   test: {
+    restoreMocks: true,
+    unstubEnvs: true,
+    unstubGlobals: true,
     include: ["src/test/e2e/**/*.spec.ts"],
     fileParallelism: false,
     setupFiles: [

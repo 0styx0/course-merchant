@@ -1,6 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { Logger } from "@nestjs/common";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EnrollmentsRepository } from "@/enrollments/enrollments.repository.js";
 import { FulfillmentService } from "@/payments/fulfillment/fulfillment.service.js";
@@ -88,10 +88,6 @@ describe("PaymentSweeper", () => {
     vi.spyOn(Logger.prototype, "warn").mockImplementation(() => {});
     vi.spyOn(Logger.prototype, "log").mockImplementation(() => {});
     errorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   it("expires payments with no checkout that are older than Stripe's webhook retries", async () => {

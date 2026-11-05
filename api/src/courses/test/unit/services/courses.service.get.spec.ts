@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   asDependency,
@@ -56,10 +56,6 @@ describe("CoursesService", () => {
       asDependency<CoursesRepository>(coursesRepository),
       asDependency<CourseImagesRepository>({}),
     );
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   describe("findById", () => {

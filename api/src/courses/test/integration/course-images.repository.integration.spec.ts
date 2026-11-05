@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CourseImagesRepository } from "@/courses/repositories/course-images.repository.js";
 import { AdminCoursesRepository } from "@/courses/repositories/admin-courses.repository.js";
@@ -34,10 +34,6 @@ describe("CourseImagesRepository (integration)", () => {
     });
 
     courseId = course.id;
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   describe("saveImage", () => {

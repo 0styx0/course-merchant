@@ -4,7 +4,6 @@ import request from "supertest";
 import sharp from "sharp";
 import {
   afterAll,
-  afterEach,
   beforeAll,
   beforeEach,
   describe,
@@ -55,10 +54,6 @@ describe("Admin course image API (e2e)", () => {
         timeZone: "UTC",
       })
     ).id;
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   afterAll(async () => {

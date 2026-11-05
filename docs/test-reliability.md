@@ -22,16 +22,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3b2 (web).** The edit-form schedule and saving tests and the prices action test start at the frozen time and build their times from it.
   - [x] **3c (web).** A web test asserts "nothing shown" only after something visible proves the check ran; each fixed test fails when the code it guards breaks. The prices zone test now uses a time that has passed in New York and lies ahead in Los Angeles, so only the zone change clears its error.
   - [x] **3b3 (web).** Web tests read the frozen time from `Temporal.Now` too, on Node builds that include Temporal (CI) and on builds that leave it out.
-  - [ ] **3d (api).** An API test can no longer leak a mock into the next. **Next**
-    - *Start with*: add the three settings to `api/vitest.unit.config.ts`, `api/vitest.integration.config.ts` and `api/vitest.e2e.config.ts`, run each suite, and list what fails. Then remove the `vi.restoreAllMocks` calls in the 20 spec and fixture files that `git grep -l restoreAllMocks -- api` lists.
-    - *Behaviours*:
-      - `restoreMocks`, `unstubEnvs` and `unstubGlobals` are on in the 3 API Vitest configs.
-      - The hand-written `vi.restoreAllMocks` calls are gone.
-      - A test that leaned on a leaked mock gets fixed.
-    - *New shared pieces*: none.
-    - *Files*: the 3 API Vitest configs and the specs with hand restores.
-    - *Done when*: the API suites pass.
-  - [ ] **3e (web).** A web test can no longer leak a mock into the next.
+  - [x] **3d (api).** An API test can no longer leak a mock into the next: the three API Vitest configs restore spies and stubs after each test, and the hand-written restores are gone.
+  - [ ] **3e (web).** A web test can no longer leak a mock into the next. **Next**
     - *Behaviours*:
       - The same three settings go into `web/vitest.config.mts`.
       - The hand restores are gone.
