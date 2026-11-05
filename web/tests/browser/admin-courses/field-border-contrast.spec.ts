@@ -9,6 +9,7 @@ import {
   readRootToken,
   toRgb,
 } from "../contrast/measure-contrast";
+import { openFormPage } from "./open-form-page";
 
 const { test, expect } = msw;
 
@@ -66,7 +67,7 @@ async function expectIconContrast(icon: Locator) {
 
 test.describe("create page", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(createPath);
+    await openFormPage(page, createPath);
   });
 
   test("the Course name box border reaches 3:1", async ({ page }) => {
@@ -110,7 +111,7 @@ test.describe("create page", () => {
 test.describe("edit page", () => {
   test.beforeEach(async ({ page, msw }) => {
     msw.use(getCourseAsAdminHandlers.success);
-    await page.goto(editPath);
+    await openFormPage(page, editPath);
     await expect(
       page.getByLabel("Course name", { exact: true }),
     ).not.toHaveValue("");

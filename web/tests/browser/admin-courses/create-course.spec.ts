@@ -14,6 +14,7 @@ import {
 } from "@/mocks/handlers/upload-course-image";
 
 import { collectConsoleErrors, fillValidForm } from "./fill-valid-course-form";
+import { openFormPage } from "./open-form-page";
 
 const { test, expect } = msw;
 
@@ -31,7 +32,7 @@ test("saves a new course and opens its edit page", async ({ page, msw }) => {
   );
   const consoleErrors = collectConsoleErrors(page);
 
-  await page.goto("/admin/courses/new");
+  await openFormPage(page, "/admin/courses/new");
   await fillValidForm(page);
   await expect(page.getByText(/Lasts 2 hours 30 minutes\./)).toBeVisible();
   await expect(
@@ -51,7 +52,7 @@ test("shows the API's refusal and lets the admin try again", async ({
   msw.use(createCourseValidationFailed);
   const consoleErrors = collectConsoleErrors(page);
 
-  await page.goto("/admin/courses/new");
+  await openFormPage(page, "/admin/courses/new");
   await fillValidForm(page);
 
   const save = page.getByRole("button", { name: "Save as draft" });
@@ -79,7 +80,7 @@ test("keeps the draft when the image upload fails and uploads on retry", async (
   msw.use(createCourseSuccess, uploadCourseImageError);
   const consoleErrors = collectConsoleErrors(page);
 
-  await page.goto("/admin/courses/new");
+  await openFormPage(page, "/admin/courses/new");
   await fillValidForm(page);
 
   const save = page.getByRole("button", { name: "Save as draft" });
@@ -111,8 +112,7 @@ test("keeps bold and a list when pasting from Google Docs", async ({
     "utf8",
   );
 
-  await page.goto("/admin/courses/new");
-  await expect(page.getByRole("button", { name: "Bold" })).toBeEnabled();
+  await openFormPage(page, "/admin/courses/new");
   const description = page.getByLabel("Description");
   await description.click();
   await description.evaluate((editor, html) => {
@@ -134,7 +134,7 @@ test("keeps bold and a list when pasting from Google Docs", async ({
 
 test("draws each section as a card at phone width", async ({ page }) => {
   await page.setViewportSize({ width: 400, height: 800 });
-  await page.goto("/admin/courses/new");
+  await openFormPage(page, "/admin/courses/new");
 
   const sections = page.locator("form fieldset");
   await expect(sections).toHaveCount(4);

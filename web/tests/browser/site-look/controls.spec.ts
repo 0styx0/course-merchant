@@ -5,6 +5,7 @@ import { getCourseAsAdminHandlers } from "@/mocks/handlers/get-course-as-admin";
 import { coursesSuccess } from "@/mocks/handlers/list-courses";
 
 import { readRootToken, toRgb } from "../contrast/measure-contrast";
+import { openFormPage } from "../admin-courses/open-form-page";
 
 const { test, expect } = msw;
 
@@ -42,7 +43,7 @@ async function readVisibleShadowLayers(element: Locator) {
 
 test.beforeEach(async ({ page, msw }) => {
   msw.use(getCourseAsAdminHandlers.success);
-  await page.goto(editPath);
+  await openFormPage(page, editPath);
 });
 
 test("the default button is 48px high", async ({ page }) => {

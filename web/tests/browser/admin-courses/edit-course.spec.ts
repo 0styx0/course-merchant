@@ -13,6 +13,9 @@ import {
 } from "@/mocks/handlers/update-course";
 import { uploadCourseImageUrl } from "@/mocks/handlers/upload-course-image";
 
+import { collectConsoleErrors } from "./fill-valid-course-form";
+import { openFormPage } from "./open-form-page";
+
 const { test, expect } = msw;
 
 test.use({
@@ -20,16 +23,6 @@ test.use({
 });
 
 const editPath = "/admin/courses/3f0c1c1e-8f4e-4c3e-9a57-0d6a4f0b9a11/edit";
-
-/** Console errors (a hydration warning is one) seen while the page is used. */
-function collectConsoleErrors(page: Page) {
-  const errors: string[] = [];
-  page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
-  });
-  page.on("pageerror", (error) => errors.push(error.message));
-  return errors;
-}
 
 /** A save keeps the admin on the edit page, which says "Saved". */
 async function expectStayedWithSavedNote(page: Page) {
@@ -44,7 +37,7 @@ test("shows the course's details and saves a new name", async ({
   msw.use(getCourseAsAdminHandlers.success, makeTwoRoundsRefusalHandler());
   const consoleErrors = collectConsoleErrors(page);
 
-  await page.goto(editPath);
+  await openFormPage(page, editPath);
   await expect(
     page.getByRole("heading", { name: "Edit course" }),
   ).toBeVisible();
@@ -84,7 +77,7 @@ test("fills the schedule boxes and shows a past start under the start time box",
   msw,
 }) => {
   msw.use(getCourseAsAdminHandlers.success);
-  await page.goto(editPath);
+  await openFormPage(page, editPath);
 
   await expect(page.getByLabel("Start date", { exact: true })).toHaveValue(
     "2026-10-01",
@@ -107,7 +100,7 @@ test("lists the price in effect and saves a changed future price", async ({
   msw,
 }) => {
   msw.use(getCourseAsAdminHandlers.success, updateCourseHandlers.success);
-  await page.goto(editPath);
+  await openFormPage(page, editPath);
 
   await expect(
     page.getByRole("list", { name: /^Prices in effect/ }),
@@ -148,7 +141,7 @@ test("saves the details without the image, then uploads the newly chosen image",
 }) => {
   const saves = makeSaveRecordingHandlers();
   msw.use(getCourseAsAdminHandlers.success, ...saves.handlers);
-  await page.goto(editPath);
+  await openFormPage(page, editPath);
   await expect(page.getByText("No image yet.", { exact: false })).toBeVisible();
 
   await page
@@ -173,7 +166,7 @@ test("shows the stored image and uploads nothing when only the name changes", as
     getCourseImageAsAdminHandlers.success,
     ...saves.handlers,
   );
-  await page.goto(editPath);
+  await openFormPage(page, editPath);
   await expect(page.getByAltText("Current course image")).toBeVisible();
 
   await page.getByLabel("Course name", { exact: true }).fill("A better name");
@@ -220,7 +213,7 @@ test("asks before deleting, then saves the course as deleted", async ({
 }) => {
   const saves = makeSaveRecordingHandlers();
   msw.use(getCourseAsAdminHandlers.success, ...saves.handlers);
-  await page.goto(editPath);
+  await openFormPage(page, editPath);
 
   await page.getByRole("radio", { name: "Deleted" }).click();
   await page.getByRole("button", { name: "Save changes" }).click();
@@ -239,7 +232,7 @@ test("shows the API's refusal under Status when a student enrolled after the pag
   msw,
 }) => {
   msw.use(getCourseAsAdminHandlers.success, updateCourseHandlers.deleteRefused);
-  await page.goto(editPath);
+  await openFormPage(page, editPath);
 
   await page.getByRole("radio", { name: "Deleted" }).click();
   await page.getByRole("button", { name: "Save changes" }).click();
@@ -258,7 +251,7 @@ test("shows the API's refusal under Status when a student enrolled after the pag
 test("greys out Deleted on a course with students", async ({ page, msw }) => {
   msw.use(getCourseAsAdminHandlers.withEnrollment);
 
-  await page.goto(editPath);
+  await openFormPage(page, editPath);
 
   await expect(page.getByRole("radio", { name: "Deleted" })).toBeDisabled();
   await expect(
@@ -272,7 +265,7 @@ test("says the course was saved as a draft on arrival from create, once", async 
 }) => {
   msw.use(getCourseAsAdminHandlers.success);
 
-  await page.goto(`${editPath}?saved=draft`);
+  await openFormPage(page, `${editPath}?saved=draft`);
 
   await expect(page.getByRole("status")).toHaveText("Saved as a draft");
   await expect(page).toHaveURL(editPath);
@@ -308,7 +301,7 @@ for (const size of screenSizes) {
     test.beforeEach(async ({ page, msw }) => {
       msw.use(getCourseAsAdminHandlers.success);
       await page.setViewportSize({ width: size.width, height: size.height });
-      await page.goto(editPath);
+      await openFormPage(page, editPath);
       await page.waitForLoadState("networkidle");
     });
 
@@ -380,7 +373,7 @@ test("keeps Save at the end of the create form, with no bar", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 400, height: 800 });
-  await page.goto("/admin/courses/new");
+  await openFormPage(page, "/admin/courses/new");
 
   const save = page.getByRole("button", { name: /^Save/ });
   await expect(save).not.toBeInViewport();

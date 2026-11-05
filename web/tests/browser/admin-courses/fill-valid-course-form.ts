@@ -26,9 +26,7 @@ export async function fillValidForm(page: Page) {
     .fill("Intro to Emptiness");
   await page.getByLabel("Summary", { exact: true }).fill("A short summary.");
 
-  // The toolbar is enabled once the editor exists in the browser
   const bold = page.getByRole("button", { name: "Bold" });
-  await expect(bold).toBeEnabled();
   const description = page.getByLabel("Description");
   await description.click();
   await page.keyboard.type("Welcome to the ");

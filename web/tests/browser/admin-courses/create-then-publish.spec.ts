@@ -9,6 +9,7 @@ import { makeRememberedUploadHandler } from "@/mocks/handlers/upload-course-imag
 import { makeRememberedCourse } from "@/mocks/remembered-course";
 
 import { collectConsoleErrors, fillValidForm } from "./fill-valid-course-form";
+import { openFormPage } from "./open-form-page";
 
 const { test, expect } = msw;
 
@@ -30,7 +31,7 @@ test("creates a draft, publishes it, and saves again after its start has passed"
   );
   const consoleErrors = collectConsoleErrors(page);
 
-  await page.goto("/admin/courses/new");
+  await openFormPage(page, "/admin/courses/new");
   await fillValidForm(page);
   await page.getByRole("button", { name: "Save as draft" }).click();
 
