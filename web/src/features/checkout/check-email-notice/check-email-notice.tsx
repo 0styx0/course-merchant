@@ -2,14 +2,16 @@ import { CircleCheck } from "lucide-react";
 import type { Ref } from "react";
 
 type CheckEmailNoticeProps = {
-  /** The address the access went to. */
-  email: string;
+  /** The address the access went to; without it the text says "the email address you entered". */
+  email?: string;
   /** Lets the parent move focus to the notice once it appears. */
   ref?: Ref<HTMLDivElement>;
 };
 
 /** The green box that tells a visitor the course link is on its way. */
 export function CheckEmailNotice({ email, ref }: CheckEmailNoticeProps) {
+  const recipient = email ?? "the email address you entered";
+
   return (
     <div
       ref={ref}
@@ -21,7 +23,7 @@ export function CheckEmailNotice({ email, ref }: CheckEmailNoticeProps) {
       <div>
         <p className="font-medium">Check your email</p>
         <p className="mt-1 text-muted-foreground">
-          {`We've sent access to ${email}. It can take a few minutes. If it hasn't arrived, look in spam.`}
+          {`We've sent access to ${recipient}. It can take a few minutes. If it hasn't arrived, look in spam.`}
         </p>
       </div>
     </div>

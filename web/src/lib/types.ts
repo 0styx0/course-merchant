@@ -25,3 +25,4 @@ export type ValidationProblemDetails =
 export type CheckoutCustomer = components["schemas"]["CheckoutCustomer"];
 export type StartCheckoutResponse =
   components["schemas"]["StartCheckoutResponse"];
+export type CheckoutStatus = components["schemas"]["CheckoutStatus"];

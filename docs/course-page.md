@@ -26,35 +26,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **4c.** When Stripe or our API is down, a paid visitor sees the problem above the fields, keeps their typing, and the button reads "Try again →".
 - **5. Coming back from Stripe.** The return page says the email is on its way, or what happened instead.
   - [x] **5a.** The checkout code sits grouped by job: starting a checkout, the shared "check your email" box, and the form.
-  - [ ] **5b.** A buyer back from Stripe after the webhook sees "Thank you." and Check your email, and a bad link shows the not-found page. **Next**
-    - *Behaviours*:
-      - succeeded: "Thank you." (h1) and the Check your email box naming no address
-      - any other status: "Thank you." and "We're confirming your payment." (until 5c)
-      - missing, empty or repeated `checkoutId`: the not-found page, with no request sent
-      - API 404 (`CHECKOUT_NOT_FOUND`): the not-found page
-      - API 500: the API's title and detail in the error box
-      - API unreachable or past the 10 s timeout: the status call throws, and the shop error page shows Try again (existing)
-      - the page asks search engines not to index it
-      - the free form's box still names the typed address
-    - *New shared pieces*:
-      - the status call (the page now, and the re-check in 5d through the same page)
-      - the Check your email box with an optional address (the free form and the return page)
-    - *Files*:
-      - `web/src/features/checkout/success-page/checkout-status.api.ts` (+ test)
-      - `web/src/mocks/handlers/get-checkout-status.ts` (all scenarios: `success` = succeeded, `checkoutPending`, `checkoutExpired`, `checkoutRefunded`, `checkoutNotFound`, `checkoutServerError`, `unreachable`)
-      - `web/src/mocks/node.ts` (wiring and the unknown-scenario check)
-      - `web/src/app/(shop)/checkout/success/page.tsx`
-      - `web/src/app/(shop)/checkout/success/not-found.tsx`
-      - `web/src/features/checkout/check-email-notice/check-email-notice.tsx` (+ test)
-      - `web/tests/browser/courses/checkout-return.spec.ts` (succeeded, not found, missing id, 500)
-    - *Needs*: 5a
-    - *Settled*:
-      - web.md's checkout-success row
-      - Decision rows "return page words" and "API failure on the return page"
-    - *Done when*:
-      - tests pass
-      - from `redirect`, pay a paid course in `dev:mock` and land on Check your email
-  - [ ] **5c.** A buyer whose checkout timed out, was refunded or is still confirming reads what happened.
+  - [x] **5b.** A buyer back from Stripe after the webhook sees "Thank you." and Check your email, and a bad link shows the not-found page.
+  - [ ] **5c.** A buyer whose checkout timed out, was refunded or is still confirming reads what happened. **Next**
     - *Behaviours*:
       - pending: "Thank you." and the confirming line with a spinner that turns only for visitors who allow motion
       - expired: "Checkout timed out.", one sentence and a ghost "See current courses →" to the home page
@@ -553,7 +526,9 @@ Top of page              Scrolled into description    After tapping the bar
 - Findings *(temporary)*:
   - The retryable error codes ("Try again") are plain strings in `enroll-button.tsx`, and the action invents `API_UNREACHABLE` separately. The test repeats the literals. Fix: one exported constant for the code the web app makes itself, imported in all three places.
   - `enroll-button.tsx` runs 246 lines and holds `EnrollForm`, `SendButton`, `FocusedCheckEmailNotice` and the label and retry rules. Fix: move the form and the label rules into their own files, and the focused notice into `check-email-notice/`.
-- Size: 2 commits (the shared code; the split).
+  - The Back-button test "keeps the check-email notice when the page restores after a send" never shows the restore handler ran, because the right outcome is that nothing happens. Fix: restore after a failed send and after a successful one, and compare the two.
+  - The test "keeps the typed values beside a field message" types `ami@example.com` while the fake action returns `ami@`, so a reader cannot tell which email the visitor typed. Fix: `submitTypedDetails` types the address the default fake customer holds.
+- Size: 2 commits (the shared code; the split), plus the two test fixes in whichever commit touches `enroll-button.test.tsx`.
 - Done when: renaming the code fails a test, and `check:changed` passes with an unchanged test count.
 
 ## Open questions

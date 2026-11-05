@@ -14,6 +14,14 @@ describe("CheckEmailNotice", () => {
     );
   });
 
+  it("refers to the address the visitor entered when it has none to name", () => {
+    render(<CheckEmailNotice />);
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "We've sent access to the email address you entered. It can take a few minutes. If it hasn't arrived, look in spam.",
+    );
+  });
+
   it("takes focus from a script through its ref", () => {
     let noticeElement: HTMLDivElement | null = null;
     render(
