@@ -25,14 +25,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3d (api).** An API test can no longer leak a mock into the next: the three API Vitest configs restore spies and stubs after each test, and the hand-written restores are gone.
   - [x] **3e (web).** A web test can no longer leak a mock into the next: the web Vitest config restores spies and stubs after each test, and the hand-written restores are gone.
   - [x] **3f (api).** API tests run in `Pacific/Chatham` unless the shell sets `TZ`; no existing test needed a fix.
-  - [ ] **3g (web).** Web tests run in the same zone. **Next**
-    - *Behaviours*:
-      - `env: { TZ }` goes into the web config, and exposed tests are fixed.
-      - The web suite passes once under `TZ=Pacific/Kiritimati`.
-    - *New shared pieces*: none.
-    - *Needs*: 3b
-    - *Done when*: the web suite passes.
-  - [ ] **3h (web).** Heavy web form tests finish under load.
+  - [x] **3g (web).** Web tests run in `Pacific/Chatham` unless the shell sets `TZ`; no existing test needed a fix.
+  - [ ] **3h (web).** Heavy web form tests finish under load. **Next**
     - *Behaviours*:
       - A 15-second `testTimeout` goes into the web config.
       - The unit suites pass 5 times under `--sequence.shuffle`, once under Kiritimati, and once on a busy machine with no 5-second timeouts.
