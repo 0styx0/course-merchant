@@ -27,22 +27,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - **5. Coming back from Stripe.** The return page says the email is on its way, or what happened instead.
   - [x] **5a.** The checkout code sits grouped by job: starting a checkout, the shared "check your email" box, and the form.
   - [x] **5b.** A buyer back from Stripe after the webhook sees "Thank you." and Check your email, and a bad link shows the not-found page.
-  - [ ] **5c.** A buyer whose checkout timed out, was refunded or is still confirming reads what happened. **Next**
-    - *Behaviours*:
-      - pending: "Thank you." and the confirming line with a spinner that turns only for visitors who allow motion
-      - expired: "Checkout timed out.", one sentence and a ghost "See current courses →" to the home page
-      - refunded: "Payment refunded.", one sentence and the same ghost link
-      - the page holds exactly one live region (the notice and the words share it)
-    - *New shared pieces*: none
-    - *Files*:
-      - `web/src/features/checkout/success-page/checkout-status-message.tsx` (+ test, picks the words per status)
-      - `web/src/app/(shop)/checkout/success/page.tsx` (uses it)
-      - `web/tests/browser/courses/checkout-return.spec.ts` (pending, expired, refunded)
-    - *Settled*: Decision row "return page words".
-    - *Done when*:
-      - tests pass
-      - each scenario walked at 400 px and desktop
-  - [ ] **5d.** A buyer who arrives before our server hears from Stripe watches the page switch to Check your email by itself, and after a minute reads that their payment was received.
+  - [x] **5c.** A buyer whose checkout timed out, was refunded or is still confirming reads what happened.
+  - [ ] **5d.** A buyer who arrives before our server hears from Stripe watches the page switch to Check your email by itself, and after a minute reads that their payment was received. **Next**
     - *Behaviours*:
       - while pending, the line adds "This page updates by itself." and the browser re-asks the server every 3 seconds
       - a new status replaces the line and checking stops

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ProblemAlert } from "@/components/problem-alert";
-import { CheckEmailNotice } from "@/features/checkout/check-email-notice/check-email-notice";
+import { CheckoutStatusMessage } from "@/features/checkout/success-page/checkout-status-message";
 import { getCheckoutStatus } from "@/features/checkout/success-page/checkout-status.api";
 
 export const metadata: Metadata = {
@@ -46,20 +46,7 @@ async function CheckoutReturn({ checkoutId }: { checkoutId: string }) {
     return <ProblemAlert problem={result.error} />;
   }
 
-  return (
-    <>
-      <h1 className="font-heading text-h2 md:text-h1">Thank you.</h1>
-      <div className="mt-4">
-        {result.data.status === "succeeded" ? (
-          <CheckEmailNotice />
-        ) : (
-          <p className="text-muted-foreground">
-            We&apos;re confirming your payment.
-          </p>
-        )}
-      </div>
-    </>
-  );
+  return <CheckoutStatusMessage status={result.data.status} />;
 }
 
 export default async function CheckoutSuccessPage({

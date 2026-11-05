@@ -36,22 +36,22 @@ describe("CheckoutSuccessPage", () => {
   });
 
   it.each([
-    ["checkoutPending"],
-    ["checkoutExpired"],
-    ["checkoutRefunded"],
-  ] as const)("says it is confirming the payment for %s", async (scenario) => {
-    server.use(getCheckoutStatusHandlers[scenario]);
+    ["checkoutPending", "Thank you."],
+    ["checkoutExpired", "Checkout timed out."],
+    ["checkoutRefunded", "Payment refunded."],
+  ] as const)(
+    "shows the words for the %s status",
+    async (scenario, heading) => {
+      server.use(getCheckoutStatusHandlers[scenario]);
 
-    await renderPage("cs_test_1");
+      await renderPage("cs_test_1");
 
-    expect(
-      screen.getByRole("heading", { level: 1, name: "Thank you." }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("We're confirming your payment."),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
-  });
+      expect(
+        screen.getByRole("heading", { level: 1, name: heading }),
+      ).toBeInTheDocument();
+      expect(screen.getAllByRole("status")).toHaveLength(1);
+    },
+  );
 
   it.each([
     ["missing", undefined],
