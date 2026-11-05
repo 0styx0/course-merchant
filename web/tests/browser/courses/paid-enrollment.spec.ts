@@ -65,3 +65,25 @@ test("pressing Back from the payment page loads a fresh page with the closed but
     page.getByRole("button", { name: "Enroll for $99.00" }),
   ).toHaveAttribute("aria-expanded", "false");
 });
+
+test("when Stripe is down, the visitor sees the API's words, keeps their typing and sees Try again", async ({
+  page,
+  msw,
+}) => {
+  msw.use(startCheckoutHandlers.paymentProviderDown);
+  await page.goto(`/courses/${reactCourse.id}`);
+
+  await page.getByRole("button", { name: "Enroll for $99.00" }).click();
+  await page.getByLabel("Name").fill("Ami Cohen");
+  await page.getByLabel("Email").fill("ami@example.com");
+  await page.getByRole("button", { name: "Continue to payment" }).click();
+
+  const alert = page.getByRole("main").getByRole("alert");
+  await expect(alert).toContainText("Payment provider unavailable");
+  await expect(alert).toContainText(
+    "Payments can't be taken right now. Try again later.",
+  );
+  await expect(page.getByLabel("Name")).toHaveValue("Ami Cohen");
+  await expect(page.getByLabel("Email")).toHaveValue("ami@example.com");
+  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+});

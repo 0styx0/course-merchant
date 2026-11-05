@@ -23,26 +23,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **3e.** A typo or a too-long name or email shows its message at once, with no request sent.
 - [x] **4a.** A visitor on a paid course opens the fields from "Enroll for $99.00 →", sends, sees "Opening payment…", and lands on the payment page.
 - [x] **4b.** A visitor who presses Back from Stripe finds the form ready to use, with their typed values; unit tests cover the restore, because Chromium under `yarn dev` never restores the page (its reason reads `masked`), and a browser test checks that Back otherwise loads a fresh closed button.
-- [ ] **4c.** When Stripe or our API is down, a paid visitor sees the problem above the fields, keeps their typing, and the button reads "Try again →". **Next**
-  - *Behaviours*:
-    - the API's 503 shows its own title and detail ("Payment provider unavailable", "Payments can't be taken right now. Try again later.") in the error box, values kept
-    - after a 503, a 500 or our `API_UNREACHABLE` problem, a paid form's button reads "Try again →"
-    - after a 400, 404, 409 or a browser-check error it keeps "Continue to payment →"
-    - a free form keeps "Email me the link →" after every failure
-    - "Try again →" sends again and shows "Opening payment…"
-  - *New shared pieces*: none
-  - *Files*:
-    - [enroll-button.tsx](../web/src/features/checkout/enroll-button.tsx#L116) (the send button's label reads the failure's code)
-    - [start-checkout.ts](../web/src/mocks/handlers/start-checkout.ts#L81) (adds `paymentProviderDown`)
-    - tests: enroll-button.test.tsx, paid-enrollment.spec.ts
-    - docs: tick step 4, move the next-step mark to step 5, add the Retro lines
-  - *Settled*:
-    - style guide "Payment failure" row
-    - the Try again Decision row
-  - *Done when*:
-    - `yarn --cwd web check:changed` passes
-    - `paymentProviderDown` and `unreachable` walked on the paid course in `dev:mock`, keyboard only, at 400 px and desktop
-- [ ] **5. Coming back from Stripe.** The return page says the email is on its way, or what happened instead.
+- [x] **4c.** When Stripe or our API is down, a paid visitor sees the problem above the fields, keeps their typing, and the button reads "Try again →".
+- [ ] **5. Coming back from Stripe.** The return page says the email is on its way, or what happened instead. **Next** (a milestone not yet split into commits; run `/plan-create-implementation` before `/next-commit`)
 - [ ] **6. Site header and footer.** Every public page has the header, the phone menu and the footer.
 - [ ] **7. Course page layout.** The image, title and description sit beside a sticky panel on desktop, stacked on a phone.
 - [ ] **8. Buy panel looks.** The panel shows the price, the button with its price, the after-enroll note, and the free, in-progress and ended looks.
@@ -282,43 +264,10 @@ Free course page: unchanged
 - Size: 3 commits (words and redirect; Back from Stripe; Try again). The overview said 2 to 3; the Back fix stands alone because its risk needs a browser check, and it comes before Try again so the risk retires early.
 - Risk: pressing Back from Stripe makes the browser show its frozen copy of the page (the back-forward cache), so the visitor would see the button stuck on "Opening payment… ◌" with read-only fields and need a reload. Direction: on the `pageshow` event with `persisted` true, the form starts over (the button returns to "Continue to payment →", the fields become editable, the typed values stay). The check in Chromium under `yarn dev` found it never restores the page (`notRestoredReasons` read `masked`), so unit tests with a fake `pageshow` cover the restore; a walk against a production build remains open.
 - Done when: journey: continue to payment, land on the mock success page, press Back and find a usable form; with the Stripe-down scenario, see the API's message, the kept values and Try again.
-- Flow *(temporary)*:
-
-```
-Visitor on a paid course presses "Enroll for $99.00 →"            4a
-└── fields open, focus on Name                                    existing (2c)
-    Visitor presses "Continue to payment →"
-    ├── browser check fails → message under the box, no request   existing (3e)
-    └── "Opening payment…", fields read-only                      4a
-        API answers
-        ├── redirect → full page load to Stripe                   existing (2b), mock 4a
-        │   └── visitor presses Back
-        │       ├── cache restores the page → form starts over,   4b
-        │       │   values kept, "Continue to payment →"
-        │       └── no cache → fresh page, closed button          4b (test only)
-        ├── check_email → "Check your email", focused             existing (2c)
-        ├── 400 / 404 / 409 → message, values kept, "Continue…"   existing (3c, 3d)
-        └── 503 / 500 / API unreachable → error box, values kept, 4c
-            "Try again →"
-```
-
-- Design notes *(temporary)*:
-  - Words: one small map in `enroll-button.tsx` from free or paid to the open, send, sending and retry labels; the page passes only the price string.
-  - Restore: the cached page keeps React's pending send forever, because Next suspends its router until the page unloads ([app-router.js](../web/node_modules/next/dist/client/components/app-router.js#L203)). Next resets its own router on `pageshow`; our form remounts.
-  - The mock redirect needs another origin because Next does a full page load only for one ([server-action-reducer.js](../web/node_modules/next/dist/client/components/router-reducer/reducers/server-action-reducer.js#L248)).
-  - Playwright's Chromium starts with `--disable-back-forward-cache`; removing it with `ignoreDefaultArgs` still left the page unrestored under `yarn dev` (`masked`), so the Back spec checks only the fresh page.
-  - Security: the redirect URL comes only from our API's answer, never from the form.
-  - Nothing deploys from `main` (only `ci.yml` exists, and auth's Launch item is open), so a paid button without the step 5 return page ships to no buyer.
-- Failure table *(temporary)*:
-
-| Actor | Abuse or failure | What the system does | Test that pins it |
-|---|---|---|---|
-| Visitor | presses Continue twice | the second press sends nothing | existing "sends one request…" |
-| Visitor | Back from Stripe | form starts over with values | 4b unit (restore); 4b spec (fresh page) |
-| Visitor | Back, then pays in a second checkout | API refunds the double purchase ([fulfillment.md](payments/fulfillment.md)) | API's own specs |
-| Stripe | down or slow (503) | API's words, values kept, Try again | 4c unit + spec |
-| Our API | unreachable, timing out or 500 | its title, values kept, Try again | 4c unit |
-| Course | deleted (404) or ended (409) between load and send | API's words, Continue to payment | existing (3c) + 4c unit |
+- Retro:
+  - Planned 3 commits (4a to 4c); shipped 3.
+  - Owner changes after using the page: not yet recorded.
+  - Rule friction: the browser's back-forward cache never restores the page under `yarn dev`, so unit tests with a fake `pageshow` cover the restore.
 
 ## Step 5. Coming back from Stripe
 

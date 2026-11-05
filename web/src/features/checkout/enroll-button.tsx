@@ -34,6 +34,8 @@ type EnrollWords = {
   open: string;
   send: string;
   sending: string;
+  /** The send label after a failure a second press can fix; absent for a free course. */
+  retry?: string;
 };
 
 function makeEnrollWords(priceLabel: string | undefined): EnrollWords {
@@ -48,7 +50,28 @@ function makeEnrollWords(priceLabel: string | undefined): EnrollWords {
     open: `Enroll for ${priceLabel}`,
     send: "Continue to payment",
     sending: "Opening payment…",
+    retry: "Try again",
   };
+}
+
+const RETRYABLE_PROBLEM_CODES = new Set([
+  "PAYMENT_PROVIDER_UNAVAILABLE",
+  "INTERNAL_SERVER_ERROR",
+  "API_UNREACHABLE",
+]);
+
+function isRetryableProblemCode(problemCode: string | undefined): boolean {
+  return problemCode !== undefined && RETRYABLE_PROBLEM_CODES.has(problemCode);
+}
+
+function chooseSendLabel(
+  words: EnrollWords,
+  failedProblemCode: string | undefined,
+): string {
+  if (words.retry && isRetryableProblemCode(failedProblemCode)) {
+    return words.retry;
+  }
+  return words.send;
 }
 
 const EMPTY_FORM_STATE: StartCheckoutFormState = { state: "empty" };
@@ -170,7 +193,13 @@ function EnrollForm({
         fieldErrors={isPending ? NO_FIELD_ERRORS : fieldErrors}
         isPending={isPending}
       />
-      <SendButton words={words} isPending={isPending} />
+      <SendButton
+        words={words}
+        failedProblemCode={
+          state.state === "failure" ? state.problem.code : undefined
+        }
+        isPending={isPending}
+      />
     </form>
   );
 }
@@ -191,9 +220,11 @@ function FocusedCheckEmailNotice({ email }: { email: string }) {
 
 function SendButton({
   words,
+  failedProblemCode,
   isPending,
 }: {
   words: EnrollWords;
+  failedProblemCode: string | undefined;
   isPending: boolean;
 }) {
   // Not disabled: a disabled button drops the keyboard focus.
@@ -206,7 +237,8 @@ function SendButton({
         </>
       ) : (
         <>
-          {words.send} <span aria-hidden="true">→</span>
+          {chooseSendLabel(words, failedProblemCode)}{" "}
+          <span aria-hidden="true">→</span>
         </>
       )}
     </Button>

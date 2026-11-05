@@ -89,6 +89,19 @@ export const startCheckoutUnreachable = http.post(startCheckoutUrl, () =>
   HttpResponse.error(),
 );
 
+type PaymentProviderDownResponse =
+  operations["startCheckout"]["responses"][503]["content"]["application/problem+json"];
+
+const startCheckoutPaymentProviderDown = http.post(startCheckoutUrl, () => {
+  const body = {
+    title: "Payment provider unavailable",
+    detail: "Payments can't be taken right now. Try again later.",
+    code: "PAYMENT_PROVIDER_UNAVAILABLE",
+  } satisfies PaymentProviderDownResponse;
+
+  return problemResponse(503, body);
+});
+
 export const startCheckoutHandlers = {
   // `success` is the name `dev:mock` falls back to for every endpoint.
   success: startCheckoutCheckEmail,
@@ -99,4 +112,5 @@ export const startCheckoutHandlers = {
   nameInvalid: startCheckoutNameInvalid,
   emailInvalid: startCheckoutEmailInvalid,
   unreachable: startCheckoutUnreachable,
+  paymentProviderDown: startCheckoutPaymentProviderDown,
 };

@@ -105,6 +105,21 @@ describe("EnrollButton", () => {
     sendAction.mockReset();
   });
 
+  it("a free form keeps Email me the link after a 503", async () => {
+    sendAction.mockResolvedValue({
+      ...refused,
+      problem: { ...refused.problem, code: "PAYMENT_PROVIDER_UNAVAILABLE" },
+    });
+    const user = await openFields();
+
+    await submitTypedDetails(user);
+
+    await screen.findByRole("alert");
+    expect(
+      screen.getByRole("button", { name: "Email me the link" }),
+    ).toBeInTheDocument();
+  });
+
   it("starts as a closed button", () => {
     render(<EnrollButton courseId={courseId} />);
 
@@ -528,6 +543,91 @@ describe("EnrollButton", () => {
         screen.getByRole("button", { name: "Continue to payment" }),
       ).toBeInTheDocument();
       expect(sendAction).not.toHaveBeenCalled();
+    });
+
+    describe("after a failure a retry can fix", () => {
+      const typedCustomer = { name: "Ami Cohen", email: "ami@example.com" };
+
+      function makeFailureWithCode(code: string): StartCheckoutFormState {
+        return {
+          state: "failure",
+          problem: { title: "Trouble", detail: "Something broke.", code },
+          customer: typedCustomer,
+          fieldErrors: [],
+        };
+      }
+
+      it.each([
+        "PAYMENT_PROVIDER_UNAVAILABLE",
+        "INTERNAL_SERVER_ERROR",
+        "API_UNREACHABLE",
+      ])(
+        "reads Try again after %s and keeps the typed values",
+        async (code) => {
+          sendAction.mockResolvedValue(makeFailureWithCode(code));
+          const user = await openPaidFields();
+
+          await sendPaidDetails(user);
+
+          expect(
+            await screen.findByRole("button", { name: "Try again" }),
+          ).toBeInTheDocument();
+          expect(
+            screen.queryByRole("button", { name: "Continue to payment" }),
+          ).not.toBeInTheDocument();
+          expect(screen.getByLabelText("Name")).toHaveValue("Ami Cohen");
+          expect(screen.getByLabelText("Email")).toHaveValue("ami@example.com");
+        },
+      );
+
+      it("keeps Continue to payment after a missing course", async () => {
+        sendAction.mockResolvedValue(makeFailureWithCode("COURSE_NOT_FOUND"));
+        const user = await openPaidFields();
+
+        await sendPaidDetails(user);
+
+        await screen.findByRole("alert");
+        expect(
+          screen.getByRole("button", { name: "Continue to payment" }),
+        ).toBeInTheDocument();
+      });
+
+      it("sends again from Try again and shows Opening payment…", async () => {
+        sendAction.mockResolvedValueOnce(
+          makeFailureWithCode("PAYMENT_PROVIDER_UNAVAILABLE"),
+        );
+        const user = await openPaidFields();
+        await sendPaidDetails(user);
+        await screen.findByRole("button", { name: "Try again" });
+        const finishAction = holdAction();
+        await user.click(
+          await screen.findByRole("button", { name: "Try again" }),
+        );
+
+        const button = await screen.findByRole("button", {
+          name: "Opening payment…",
+        });
+        expect(button).toHaveAttribute("aria-busy", "true");
+        expect(sendAction).toHaveBeenCalledTimes(2);
+        await finishAction();
+      });
+
+      it("keeps Try again after a second failure", async () => {
+        sendAction.mockResolvedValue(
+          makeFailureWithCode("PAYMENT_PROVIDER_UNAVAILABLE"),
+        );
+        const user = await openPaidFields();
+        await sendPaidDetails(user);
+
+        await user.click(
+          await screen.findByRole("button", { name: "Try again" }),
+        );
+
+        await waitFor(() => expect(sendAction).toHaveBeenCalledTimes(2));
+        expect(
+          await screen.findByRole("button", { name: "Try again" }),
+        ).toBeInTheDocument();
+      });
     });
 
     describe("when the browser restores the page from its cache", () => {
