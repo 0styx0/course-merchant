@@ -46,3 +46,22 @@ test("when the API answers check_email on a paid course, the notice replaces the
   await expect(notice).toContainText("Check your email");
   await expect(notice).toBeFocused();
 });
+
+test("pressing Back from the payment page loads a fresh page with the closed button", async ({
+  page,
+  msw,
+}) => {
+  msw.use(startCheckoutHandlers.redirect);
+  await page.goto(`/courses/${reactCourse.id}`);
+  await page.getByRole("button", { name: "Enroll for $99.00" }).click();
+  await page.getByLabel("Name").fill("Ami Cohen");
+  await page.getByLabel("Email").fill("ami@example.com");
+  await page.getByRole("button", { name: "Continue to payment" }).click();
+  await page.waitForURL(/pay\.localhost/);
+
+  await page.goBack();
+
+  await expect(
+    page.getByRole("button", { name: "Enroll for $99.00" }),
+  ).toHaveAttribute("aria-expanded", "false");
+});

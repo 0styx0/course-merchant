@@ -22,26 +22,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **3d.** A visitor keeps their typed values when the API is down or slow.
 - [x] **3e.** A typo or a too-long name or email shows its message at once, with no request sent.
 - [x] **4a.** A visitor on a paid course opens the fields from "Enroll for $99.00 →", sends, sees "Opening payment…", and lands on the payment page.
-- [ ] **4b.** A visitor who presses Back from Stripe finds the form ready to use, with their typed values. **Next**
-  - *Behaviours*:
-    - first step, before any code: in Chromium under `yarn dev`, go to `pay.localhost`, press Back, and read `performance.getEntriesByType("navigation")[0].notRestoredReasons`; if Chrome never restores the page, stop and ask (fallback: unit test only)
-    - on `pageshow` with `persisted` true, the open form starts over: "Continue to payment →", editable fields, the typed name and email kept
-    - a send after Back starts a new checkout (React queues sends per form, so the frozen send would block it; the new form has its own queue)
-    - with the cache off (Playwright's default), Back loads a fresh page with the closed "Enroll for $99.00 →" button
-    - a `pageshow` with `persisted` false leaves "Opening payment…" showing (the test checks it shows first)
-  - *New shared pieces*: none
-  - *Files*:
-    - [enroll-button.tsx](../web/src/features/checkout/enroll-button.tsx#L32) (remounts the form with a new `key` and the values read from the form)
-    - new hook in the [checkout/](../web/src/features/checkout/) root (not in `form/`, which is at the 10-file limit once a hook and its test land there)
-    - tests: enroll-button.test.tsx (a fake `pageshow` event), paid-enrollment.spec.ts (one `describe` with the cache flag removed)
-  - *Settled*:
-    - the Step 4 Risk
-    - the back-forward cache restore Decision row
-    - the Chromium-only Decision row
-  - *Done when*:
-    - the spec fails first with the stuck button, then passes
-    - the journey walked in Chrome
-- [ ] **4c.** When Stripe or our API is down, a paid visitor sees the problem above the fields, keeps their typing, and the button reads "Try again →".
+- [x] **4b.** A visitor who presses Back from Stripe finds the form ready to use, with their typed values; unit tests cover the restore, because Chromium under `yarn dev` never restores the page (its reason reads `masked`), and a browser test checks that Back otherwise loads a fresh closed button.
+- [ ] **4c.** When Stripe or our API is down, a paid visitor sees the problem above the fields, keeps their typing, and the button reads "Try again →". **Next**
   - *Behaviours*:
     - the API's 503 shows its own title and detail ("Payment provider unavailable", "Payments can't be taken right now. Try again later.") in the error box, values kept
     - after a 503, a 500 or our `API_UNREACHABLE` problem, a paid form's button reads "Try again →"
@@ -158,8 +140,8 @@ Wireframe states and time variants, by the milestone that builds them:
 | Admin's course-length formatter moves to shared code, so the page reads "1 hour 30 minutes" and "2 days 2 hours" | One rule for one fact; admin and the page never show the same length two ways | The guide's "90 min" as a second rule; `Intl.DurationFormat` (writes units in the visitor's language inside English sentences) |
 | The mock checkout's redirect goes to the success page on another origin, `http://pay.localhost:3000/checkout/success?checkoutId=cs_test_mock` | Next does a full page load only for another origin, like real Stripe, so Back reaches the back-forward cache; the dev server allows `*.localhost` with no config | The same origin (an in-app move that never shows the stuck button); `127.0.0.1` (the dev server blocks its scripts there without `allowedDevOrigins`); a real Stripe URL (walks need the internet); a stand-in Stripe page that exists only while mocking (about 30 lines, a guard and a test) |
 | A paid form's button reads "Try again →" after a 503, a 500 or our `API_UNREACHABLE` problem; every other failure keeps "Continue to payment →", and a free form never changes (revisit after use) | A retry can fix only those three; the style guide's "Payment failure" row | Stripe down only (our "Try again in a moment" under a Continue button); every failure (a retry can't fix a typo or an ended course) |
-| On a back-forward cache restore the form remounts with the typed values | The cached page keeps the send pending forever and blocks the next one | `location.reload()` (one line, but the visitor retypes); clearing React's pending flag (React offers no way) |
-| The Back check runs in Chromium only, with Playwright's `--disable-back-forward-cache` removed for that spec | Owner choice; Safari doesn't run on Linux | A WebKit project (an install in CI and a slower suite); a one-off WebKit run |
+| On a back-forward cache restore the form remounts with the typed values; unit tests cover it, because Chromium under `yarn dev` reported `masked` and never restored the page | The cached page keeps the send pending forever and blocks the next one | `location.reload()` (one line, but the visitor retypes); clearing React's pending flag (React offers no way) |
+| The browser spec checks only the no-cache Back (a fresh page with the closed button); it keeps Playwright's default Chromium, which disables the cache | Chromium under `yarn dev` never restored the page even with the flag removed (`notRestoredReasons` read `masked`), so a restore spec cannot pass; owner choice, Safari doesn't run on Linux | A WebKit project (an install in CI and a slower suite); a one-off WebKit run |
 | Contact is a `mailto:` link from the setting `CONTACT_EMAIL`, read once and checked at boot like `API_BASE_URL`; the wordmark is "Embodying Emptiness", one constant shared with the site title | The link always goes somewhere, and the header and tab title always agree | Leaving Contact out (departs from the wireframe); "Course Merchant" |
 | The course image has `alt=""`; wireframe note 23 says so | The h1 right below names the course, so a screen reader would read the name twice; keeps courses.md's row and guide §6 | The course name as alt text |
 | Fixtures keep fixed times that hold for years (upcoming 2030, ended 2025, in progress 2020–2040); tests set the browser's clock with Playwright's [`page.clock`](https://playwright.dev/docs/clock); one `dev:mock`-only scenario uses times relative to now for walking "Starts in 4 days" | Failures repeat (web.md's fixtures row), and the default `dev:mock` course stays upcoming | Every fixture relative to now (results depend on the day) |
@@ -298,7 +280,7 @@ Free course page: unchanged
 - Why here: the redirect only adds to the form from 2 and 3.
 - Needs: 3.
 - Size: 3 commits (words and redirect; Back from Stripe; Try again). The overview said 2 to 3; the Back fix stands alone because its risk needs a browser check, and it comes before Try again so the risk retires early.
-- Risk: pressing Back from Stripe makes the browser show its frozen copy of the page (the back-forward cache), so the visitor would see the button stuck on "Opening payment… ◌" with read-only fields and need a reload. Direction: on the `pageshow` event with `persisted` true, the form starts over (the button returns to "Continue to payment →", the fields become editable, the typed values stay). The plan pass could not run a browser, so 4b starts with a check in Chromium under `yarn dev`; if Chrome never restores the page, 4b stops and asks.
+- Risk: pressing Back from Stripe makes the browser show its frozen copy of the page (the back-forward cache), so the visitor would see the button stuck on "Opening payment… ◌" with read-only fields and need a reload. Direction: on the `pageshow` event with `persisted` true, the form starts over (the button returns to "Continue to payment →", the fields become editable, the typed values stay). The check in Chromium under `yarn dev` found it never restores the page (`notRestoredReasons` read `masked`), so unit tests with a fake `pageshow` cover the restore; a walk against a production build remains open.
 - Done when: journey: continue to payment, land on the mock success page, press Back and find a usable form; with the Stripe-down scenario, see the API's message, the kept values and Try again.
 - Flow *(temporary)*:
 
@@ -324,7 +306,7 @@ Visitor on a paid course presses "Enroll for $99.00 →"            4a
   - Words: one small map in `enroll-button.tsx` from free or paid to the open, send, sending and retry labels; the page passes only the price string.
   - Restore: the cached page keeps React's pending send forever, because Next suspends its router until the page unloads ([app-router.js](../web/node_modules/next/dist/client/components/app-router.js#L203)). Next resets its own router on `pageshow`; our form remounts.
   - The mock redirect needs another origin because Next does a full page load only for one ([server-action-reducer.js](../web/node_modules/next/dist/client/components/router-reducer/reducers/server-action-reducer.js#L248)).
-  - Playwright's Chromium starts with `--disable-back-forward-cache`, so the Back spec removes that flag with `ignoreDefaultArgs`.
+  - Playwright's Chromium starts with `--disable-back-forward-cache`; removing it with `ignoreDefaultArgs` still left the page unrestored under `yarn dev` (`masked`), so the Back spec checks only the fresh page.
   - Security: the redirect URL comes only from our API's answer, never from the form.
   - Nothing deploys from `main` (only `ci.yml` exists, and auth's Launch item is open), so a paid button without the step 5 return page ships to no buyer.
 - Failure table *(temporary)*:
@@ -332,7 +314,7 @@ Visitor on a paid course presses "Enroll for $99.00 →"            4a
 | Actor | Abuse or failure | What the system does | Test that pins it |
 |---|---|---|---|
 | Visitor | presses Continue twice | the second press sends nothing | existing "sends one request…" |
-| Visitor | Back from Stripe | form starts over with values | 4b unit + spec |
+| Visitor | Back from Stripe | form starts over with values | 4b unit (restore); 4b spec (fresh page) |
 | Visitor | Back, then pays in a second checkout | API refunds the double purchase ([fulfillment.md](payments/fulfillment.md)) | API's own specs |
 | Stripe | down or slow (503) | API's words, values kept, Try again | 4c unit + spec |
 | Our API | unreachable, timing out or 500 | its title, values kept, Try again | 4c unit |

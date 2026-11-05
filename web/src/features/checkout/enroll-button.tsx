@@ -4,6 +4,7 @@ import { LoaderCircle } from "lucide-react";
 import {
   useActionState,
   type FormEvent,
+  type RefObject,
   useEffect,
   useRef,
   useState,
@@ -11,11 +12,13 @@ import {
 import { ProblemAlert } from "@/components/problem-alert";
 import { Button } from "@/components/ui/button";
 import type { FormFieldError } from "@/lib/api/form-errors";
+import type { CheckoutCustomer } from "@/lib/types";
 import { CheckEmailNotice } from "./check-email-notice";
 import { findCheckoutCustomerErrors } from "./form/checkout-customer.schema";
 import { CustomerDetailFields } from "./form/customer-detail-fields";
 import { readCheckoutCustomer } from "./form/read-checkout-customer";
 import { useFocusFirstInvalidField } from "./form/use-focus-first-invalid-field";
+import { usePageRestoredFromCache } from "./use-page-restored-from-cache";
 import {
   startCheckoutAction,
   type StartCheckoutFormState,
@@ -54,10 +57,26 @@ const NO_FIELD_ERRORS: FormFieldError[] = [];
 /** Shows one button; pressing it opens the name and email fields in place. */
 export function EnrollButton({ courseId, priceLabel }: EnrollButtonProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  // A new key remounts the form, which drops React's frozen pending send.
+  const [restartCount, setRestartCount] = useState(0);
+  const [typedCustomer, setTypedCustomer] = useState<CheckoutCustomer>();
   const words = makeEnrollWords(priceLabel);
 
+  function restartWithCustomer(customer: CheckoutCustomer) {
+    setTypedCustomer(customer);
+    setRestartCount((count) => count + 1);
+  }
+
   if (isFormOpen) {
-    return <EnrollForm courseId={courseId} words={words} />;
+    return (
+      <EnrollForm
+        key={restartCount}
+        courseId={courseId}
+        words={words}
+        startCustomer={typedCustomer}
+        onRestoredFromCache={restartWithCustomer}
+      />
+    );
   }
 
   return (
@@ -75,9 +94,38 @@ export function EnrollButton({ courseId, priceLabel }: EnrollButtonProps) {
 type EnrollFormProps = {
   courseId: string;
   words: EnrollWords;
+  /** The values to show in the boxes until a failed send hands back its own. */
+  startCustomer: CheckoutCustomer | undefined;
+  onRestoredFromCache: (typedCustomer: CheckoutCustomer) => void;
 };
 
-function EnrollForm({ courseId, words }: EnrollFormProps) {
+/** The browser's messages win over the API's, because they show at once. */
+function chooseFieldErrors(
+  browserErrors: FormFieldError[],
+  state: StartCheckoutFormState,
+): FormFieldError[] {
+  if (browserErrors.length > 0) return browserErrors;
+  return state.state === "failure" ? state.fieldErrors : NO_FIELD_ERRORS;
+}
+
+/** On a cache restore, hands the caller the values typed in the form. */
+function useReportTypedCustomerOnRestore(
+  formRef: RefObject<HTMLFormElement | null>,
+  onRestoredFromCache: (typedCustomer: CheckoutCustomer) => void,
+) {
+  usePageRestoredFromCache(() => {
+    if (formRef.current) {
+      onRestoredFromCache(readCheckoutCustomer(new FormData(formRef.current)));
+    }
+  });
+}
+
+function EnrollForm({
+  courseId,
+  words,
+  startCustomer,
+  onRestoredFromCache,
+}: EnrollFormProps) {
   const [state, sendAction, isPending] = useActionState(
     startCheckoutAction.bind(null, courseId),
     EMPTY_FORM_STATE,
@@ -85,10 +133,9 @@ function EnrollForm({ courseId, words }: EnrollFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [browserErrors, setBrowserErrors] =
     useState<FormFieldError[]>(NO_FIELD_ERRORS);
-  const serverErrors =
-    state.state === "failure" ? state.fieldErrors : NO_FIELD_ERRORS;
-  const fieldErrors = browserErrors.length > 0 ? browserErrors : serverErrors;
+  const fieldErrors = chooseFieldErrors(browserErrors, state);
   useFocusFirstInvalidField(formRef, fieldErrors);
+  useReportTypedCustomerOnRestore(formRef, onRestoredFromCache);
 
   function checkTypedDetailsBeforeSending(event: FormEvent<HTMLFormElement>) {
     // A second press while sending would start a second checkout.
@@ -118,7 +165,7 @@ function EnrollForm({ courseId, words }: EnrollFormProps) {
     >
       {state.state === "failure" && <ProblemAlert problem={state.problem} />}
       <CustomerDetailFields
-        customer={state.state === "failure" ? state.customer : undefined}
+        customer={state.state === "failure" ? state.customer : startCustomer}
         // Sending again clears the old messages.
         fieldErrors={isPending ? NO_FIELD_ERRORS : fieldErrors}
         isPending={isPending}

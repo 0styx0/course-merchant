@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -69,15 +69,20 @@ const nameError = {
  * actions one after another across roots, so a pending one that never ends
  * would block every later test.
  */
-function holdAction() {
-  let finish: () => void = () => {};
+function holdActionUntilReleased() {
+  let release: () => void = () => {};
   sendAction.mockReturnValue(
     new Promise((resolve) => {
-      finish = () => resolve(sent);
+      release = () => resolve(sent);
     }),
   );
+  return () => act(async () => release());
+}
+
+function holdAction() {
+  const release = holdActionUntilReleased();
   return async () => {
-    finish();
+    await release();
     await screen.findByRole("status");
   };
 }
@@ -523,6 +528,81 @@ describe("EnrollButton", () => {
         screen.getByRole("button", { name: "Continue to payment" }),
       ).toBeInTheDocument();
       expect(sendAction).not.toHaveBeenCalled();
+    });
+
+    describe("when the browser restores the page from its cache", () => {
+      function restorePage(isPersisted: boolean) {
+        act(() => {
+          window.dispatchEvent(
+            new PageTransitionEvent("pageshow", { persisted: isPersisted }),
+          );
+        });
+      }
+
+      async function holdPaidSendPending() {
+        const releaseSend = holdActionUntilReleased();
+        const user = await openPaidFields();
+        await sendPaidDetails(user);
+        await screen.findByRole("button", { name: "Opening payment…" });
+        return { user, releaseSend };
+      }
+
+      it("restarts the form with editable fields and the typed values", async () => {
+        const { releaseSend } = await holdPaidSendPending();
+
+        restorePage(true);
+        await releaseSend();
+
+        expect(
+          await screen.findByRole("button", { name: "Continue to payment" }),
+        ).toHaveAttribute("aria-busy", "false");
+        expect(screen.getByLabelText("Name")).not.toHaveAttribute("readonly");
+        expect(screen.getByLabelText("Name")).toHaveFocus();
+        expect(screen.getByLabelText("Name")).toHaveValue("Ami Cohen");
+        expect(screen.getByLabelText("Email")).not.toHaveAttribute("readonly");
+        expect(screen.getByLabelText("Email")).toHaveValue("ami@example.com");
+      });
+
+      it("sends again after the restart", async () => {
+        const { user, releaseSend } = await holdPaidSendPending();
+        restorePage(true);
+        await releaseSend();
+        await screen.findByRole("button", { name: "Continue to payment" });
+        sendAction.mockClear();
+        const finishSecondSend = holdAction();
+
+        await user.click(
+          screen.getByRole("button", { name: "Continue to payment" }),
+        );
+
+        expect(sendAction).toHaveBeenCalledTimes(1);
+        expect(
+          await screen.findByRole("button", { name: "Opening payment…" }),
+        ).toBeInTheDocument();
+        await finishSecondSend();
+      });
+
+      it("keeps the check-email notice when the page restores after a send", async () => {
+        sendAction.mockResolvedValue(sent);
+        const user = await openPaidFields();
+        await sendPaidDetails(user);
+        await screen.findByRole("status");
+
+        restorePage(true);
+
+        expect(screen.getByRole("status")).toBeInTheDocument();
+      });
+
+      it("keeps Opening payment… for a normal page show", async () => {
+        const { releaseSend } = await holdPaidSendPending();
+
+        restorePage(false);
+
+        expect(
+          screen.getByRole("button", { name: "Opening payment…" }),
+        ).toBeInTheDocument();
+        await releaseSend();
+      });
     });
   });
 });
