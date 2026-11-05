@@ -15,3 +15,5 @@ paths:
 - Tests run in `Pacific/Chatham` unless the shell sets `TZ` (the Vitest config sets it), so never assume UTC.
 - Open a form page through `openFormPage` before typing or clicking, so the test starts after the page has attached its scripts.
 - Component and hook tests await every async query, util and user event, and keep side effects out of `waitFor`. Lint enforces it; `web/eslint.config.mjs` lists the rules.
+- Write each Playwright text locator to match one element, now and after the page grows. `getByText("…")` matches substrings, so a new button or link with the same words breaks the test (strict mode refuses two matches, as "$99.00" did once "Enroll for $99.00" appeared). Prefer `getByRole`; for text, pass `{ exact: true }` or a regex. Lint (`no-restricted-syntax` on `tests/browser`) refuses a bare string.
+- After you change page markup or edit a browser spec, run the affected specs: `yarn --cwd web test:browser <spec file>`. `check:changed` skips browser tests, so a new element can break a spec it never touched.

@@ -36,7 +36,7 @@ test("saves a new course and opens its edit page", async ({ page, msw }) => {
   await fillValidForm(page);
   await expect(page.getByText(/Lasts 2 hours 30 minutes\./)).toBeVisible();
   await expect(
-    page.getByText("$79.50 from when the course is published"),
+    page.getByText(/\$79\.50 from when the course is published/),
   ).toBeVisible();
 
   await page.getByRole("button", { name: "Save as draft" }).click();

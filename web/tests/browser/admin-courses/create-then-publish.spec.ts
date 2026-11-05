@@ -52,7 +52,7 @@ test("creates a draft, publishes it, and saves again after its start has passed"
 
   await expect(page.getByRole("status")).toHaveText("Saved");
   await expect(
-    page.getByText("The start time must be in the future."),
+    page.getByText("The start time must be in the future.", { exact: true }),
   ).toHaveCount(0);
   await expect(page.getByLabel("Course name", { exact: true })).toHaveValue(
     "Renamed",

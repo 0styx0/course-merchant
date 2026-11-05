@@ -90,7 +90,9 @@ test("the delete dialog's title is DM Sans, not Playfair", async ({ page }) => {
   await page.getByRole("radio", { name: "Deleted" }).click();
   await page.getByRole("button", { name: "Save changes" }).click();
   const dialog = page.getByRole("alertdialog", { name: "Delete this course?" });
-  const title = dialog.getByText("Delete this course?").first();
+  const title = dialog
+    .getByText("Delete this course?", { exact: true })
+    .first();
   expect(await readStyle(title, "font-family")).toMatch(/^"DM Sans"/);
 });
 

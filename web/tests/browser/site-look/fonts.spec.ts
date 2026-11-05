@@ -126,6 +126,8 @@ test("the pages request no font from Google", async ({ page }) => {
   page.on("request", (request) => requestedUrls.push(request.url()));
 
   for (const path of ["/", createPath]) {
+    // networkidle lets late font requests arrive before the assertion reads them
+    // eslint-disable-next-line playwright/no-networkidle
     await page.goto(path, { waitUntil: "networkidle" });
     await page.evaluate(() => document.fonts.ready);
   }

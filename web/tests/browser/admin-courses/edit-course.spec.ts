@@ -244,7 +244,9 @@ test("shows the API's refusal under Status when a student enrolled after the pag
   await expect(
     page
       .getByRole("group", { name: "Status" })
-      .getByText("Students are enrolled in this course. Archive it instead."),
+      .getByText("Students are enrolled in this course. Archive it instead.", {
+        exact: true,
+      }),
   ).toBeVisible();
 });
 
@@ -255,7 +257,9 @@ test("greys out Deleted on a course with students", async ({ page, msw }) => {
 
   await expect(page.getByRole("radio", { name: "Deleted" })).toBeDisabled();
   await expect(
-    page.getByText("Students are enrolled. Archive it instead."),
+    page.getByText("Students are enrolled. Archive it instead.", {
+      exact: true,
+    }),
   ).toBeVisible();
 });
 
@@ -302,7 +306,6 @@ for (const size of screenSizes) {
       msw.use(getCourseAsAdminHandlers.success);
       await page.setViewportSize({ width: size.width, height: size.height });
       await openFormPage(page, editPath);
-      await page.waitForLoadState("networkidle");
     });
 
     test("keeps Save on screen at the top, in the middle and at the end", async ({

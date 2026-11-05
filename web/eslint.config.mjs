@@ -3,6 +3,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier/flat";
+import playwright from "eslint-plugin-playwright";
 import testingLibrary from "eslint-plugin-testing-library";
 
 // a true/false name reads as a question or a fact: isSaved, hasEnded, doesExist.
@@ -130,6 +131,35 @@ const eslintConfig = defineConfig([
       "testing-library/no-wait-for-side-effects": "error",
       "testing-library/prefer-find-by": "error",
       "testing-library/no-unnecessary-act": "error",
+    },
+  },
+  {
+    files: ["tests/browser/**/*.ts"],
+    ...playwright.configs["flat/recommended"],
+    rules: {
+      ...playwright.configs["flat/recommended"].rules,
+      // a click with `force` skips the visibility checks a user's click meets
+      "playwright/no-force-option": "error",
+      // a helper named expect… holds the assertions of the tests that call it
+      "playwright/expect-expect": [
+        "warn",
+        {
+          assertFunctionNames: ["expect"],
+          assertFunctionPatterns: ["^expect[A-Z]"],
+        },
+      ],
+      // getByText matches any element whose text contains the string, so a new
+      // button or link with the same words breaks the test (strict mode refuses
+      // two matches). A regex or an options object (exact: true) says what to match.
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.property.name='getByText'][arguments.length=1] > Literal:not([regex]).arguments:first-child",
+          message:
+            "getByText matches substrings. Pass { exact: true }, use a regex, or use getByRole.",
+        },
+      ],
     },
   },
 ]);

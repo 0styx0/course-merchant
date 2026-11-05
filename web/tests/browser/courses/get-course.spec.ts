@@ -39,9 +39,11 @@ test("displays course details", async ({ page }) => {
     "https://react.dev",
   );
 
-  await expect(page.getByText("$99.00")).toBeVisible();
-  await expect(page.getByText("12 enrolled")).toBeVisible();
-  await expect(page.getByText("America/New_York")).toBeVisible();
+  await expect(page.getByText("$99.00", { exact: true })).toBeVisible();
+  await expect(page.getByText("12 enrolled", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("America/New_York", { exact: true }),
+  ).toBeVisible();
 
   const startTime = page.locator(
     `time[datetime="${reactCourse.schedule.startTime}"]`,
@@ -80,7 +82,7 @@ test("displays an error when the API returns a server error", async ({
   await expect(alert).toBeVisible();
   await expect(alert).toContainText("We couldn't load this course");
 
-  await expect(page.getByRole("heading", { level: 1 })).not.toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeHidden();
 });
 
 test("shows a 404 page when the course does not exist", async ({

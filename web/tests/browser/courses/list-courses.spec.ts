@@ -91,7 +91,9 @@ test("displays loading state while courses are loading", async ({
 
   const courses = page.getByRole("region", { name: "Courses" });
 
-  await expect(courses.getByText("Loading courses...")).toBeVisible();
+  await expect(
+    courses.getByText("Loading courses...", { exact: true }),
+  ).toBeVisible();
 
   await navigation;
 
