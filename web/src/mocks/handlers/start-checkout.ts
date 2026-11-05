@@ -74,10 +74,15 @@ export const startCheckoutEmailInvalid = http.post(startCheckoutUrl, () =>
   ]),
 );
 
+export const startCheckoutUnreachable = http.post(startCheckoutUrl, () =>
+  HttpResponse.error(),
+);
+
 export const startCheckoutHandlers = {
   success: startCheckoutSuccess,
   slow: startCheckoutSlow,
   notPurchasable: startCheckoutNotPurchasable,
   nameInvalid: startCheckoutNameInvalid,
   emailInvalid: startCheckoutEmailInvalid,
+  unreachable: startCheckoutUnreachable,
 };

@@ -7,7 +7,7 @@ import {
 } from "@/lib/api/form-errors";
 import type { CheckoutCustomer, ProblemDetails } from "@/lib/types";
 import { checkoutFormPath } from "./form/checkout-form-path";
-import { startCheckout } from "./start-checkout.api";
+import { startCheckout, type StartCheckoutResult } from "./start-checkout.api";
 
 export type StartCheckoutFormState =
   | { state: "empty" }
@@ -18,6 +18,26 @@ export type StartCheckoutFormState =
       customer: CheckoutCustomer;
       fieldErrors: FormFieldError[];
     };
+
+// The web app makes up this problem; the API never sends this code.
+const UNREACHABLE_PROBLEM: ProblemDetails = {
+  title: "Can't reach the server",
+  detail: "Your details are still here. Try again in a moment.",
+  code: "API_UNREACHABLE",
+};
+
+/** A network error, a timeout or an answer without a problem body becomes a failure, so the form keeps the typed values. */
+async function startCheckoutCatchingThrows(
+  courseId: string,
+  customer: CheckoutCustomer,
+): Promise<StartCheckoutResult> {
+  try {
+    return await startCheckout(courseId, customer);
+  } catch (error) {
+    console.error(error);
+    return { state: "failure", error: UNREACHABLE_PROBLEM };
+  }
+}
 
 /** A missing field or an uploaded file reads as "", so the API's 400 answers. */
 function readText(formData: FormData, fieldName: string): string {
@@ -43,7 +63,7 @@ export async function startCheckoutAction(
   formData: FormData,
 ): Promise<StartCheckoutFormState> {
   const customer = readCustomer(formData);
-  const result = await startCheckout(courseId, customer);
+  const result = await startCheckoutCatchingThrows(courseId, customer);
 
   if (result.state === "failure") {
     return {

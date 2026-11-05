@@ -19,18 +19,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **3a.** Admin and checkout share one routine that turns the API's field errors into form-field errors.
 - [x] **3b.** The API words a bad name or email in plain sentences; admin login shares the email words.
 - [x] **3c.** A visitor sees the API's field messages under Name and Email, with a red border, and focus lands on the first wrong field.
-- [ ] **3d.** A visitor keeps their typed values when the API is down or slow. **Next**
-  - *Behaviours*:
-    - A thrown call returns a failure with fixed title and detail above the fields, and the values stay.
-    - The server logs the thrown error.
-    - A timeout past 10 s takes the same path (one test throws a timeout error).
-  - *New shared pieces*: none.
-  - *Files*:
-    - [start-checkout.action.ts](../web/src/features/checkout/start-checkout.action.ts)
-    - [start-checkout.ts](../web/src/mocks/handlers/start-checkout.ts) (`unreachable`)
-    - the action test
-  - *Done when*: in `dev:mock` with `unreachable`, the box shows above the fields and the values stay.
-- [ ] **3e.** A typo shows its message at once, with no request sent.
+- [x] **3d.** A visitor keeps their typed values when the API is down or slow.
+- [ ] **3e.** A typo shows its message at once, with no request sent. **Next**
   - *Behaviours*:
     - A bad email shows the 3b sentence and sends nothing.
     - An empty name shows "Enter your name."

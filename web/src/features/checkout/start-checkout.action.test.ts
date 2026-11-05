@@ -7,6 +7,7 @@ import {
   startCheckoutNameInvalid,
   startCheckoutNotPurchasable,
   startCheckoutSuccess,
+  startCheckoutUnreachable,
   startCheckoutUrl,
 } from "@/mocks/handlers/start-checkout";
 import {
@@ -131,24 +132,49 @@ describe("startCheckoutAction", () => {
     });
   });
 
-  it("throws when the API is unreachable", async () => {
-    server.use(http.post(startCheckoutUrl, () => HttpResponse.error()));
+  describe("when the call throws", () => {
+    const unreachableState = {
+      state: "failure",
+      problem: {
+        title: "Can't reach the server",
+        detail: "Your details are still here. Try again in a moment.",
+        code: "API_UNREACHABLE",
+      },
+      customer: { name: "Ada Lovelace", email: "ada@example.com" },
+      fieldErrors: [],
+    };
 
-    await expect(
-      startCheckoutAction(courseId, emptyState, typedForm()),
-    ).rejects.toThrow();
-  });
+    beforeEach(() => {
+      vi.spyOn(console, "error").mockImplementation(() => undefined);
+    });
 
-  it("throws when the API answers past the timeout", async () => {
-    server.use(
-      http.post(startCheckoutUrl, async () => {
-        await delay(500);
-        return HttpResponse.json({ status: "check_email" });
-      }),
-    );
+    it("returns the fixed problem with the typed values when the API is unreachable", async () => {
+      server.use(startCheckoutUnreachable);
 
-    await expect(
-      startCheckoutAction(courseId, emptyState, typedForm()),
-    ).rejects.toThrow();
+      await expect(
+        startCheckoutAction(courseId, emptyState, typedForm()),
+      ).resolves.toEqual(unreachableState);
+    });
+
+    it("returns the same problem when the API answers past the timeout", async () => {
+      server.use(
+        http.post(startCheckoutUrl, async () => {
+          await delay(500);
+          return HttpResponse.json({ status: "check_email" });
+        }),
+      );
+
+      await expect(
+        startCheckoutAction(courseId, emptyState, typedForm()),
+      ).resolves.toEqual(unreachableState);
+    });
+
+    it("logs the thrown error", async () => {
+      server.use(startCheckoutUnreachable);
+
+      await startCheckoutAction(courseId, emptyState, typedForm());
+
+      expect(console.error).toHaveBeenCalledExactlyOnceWith(expect.any(Error));
+    });
   });
 });
