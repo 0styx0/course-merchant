@@ -6,6 +6,9 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   test: {
+    restoreMocks: true,
+    unstubEnvs: true,
+    unstubGlobals: true,
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts", "./src/test/temporal-equality.ts"],
     // The address the MSW handlers listen on

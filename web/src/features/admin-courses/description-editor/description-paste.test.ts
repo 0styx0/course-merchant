@@ -1,14 +1,6 @@
 import { Editor, type JSONContent } from "@tiptap/core";
 import { readFileSync } from "node:fs";
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { toCourseDescription } from "@/features/course-description/description-document";
 import { descriptionExtensions } from "@/features/course-description/description-extensions";
@@ -40,11 +32,10 @@ class FakeClipboardEvent extends Event {
   }
 }
 
-beforeAll(() => {
+beforeEach(() => {
   vi.stubGlobal("DataTransfer", FakeDataTransfer);
   vi.stubGlobal("ClipboardEvent", FakeClipboardEvent);
 });
-afterAll(() => vi.unstubAllGlobals());
 
 /** What the API would receive after `html` is pasted into an empty editor. */
 function paste(html: string): JSONContent[] {

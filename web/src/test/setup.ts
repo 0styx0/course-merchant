@@ -11,14 +11,12 @@ beforeAll(() => {
     onUnhandledRequest: "error",
   });
 });
-let restoreTemporalNow: () => void = () => {};
 beforeEach(() => {
   // Only Date is faked, so timers, user-event and findBy queries keep running in real time.
   vi.useFakeTimers({ toFake: ["Date"], now: FROZEN_NOW });
-  restoreTemporalNow = spyTemporalNowOnDate();
+  spyTemporalNowOnDate();
 });
 afterEach(() => {
-  restoreTemporalNow();
   vi.useRealTimers();
   cleanup();
   server.resetHandlers();

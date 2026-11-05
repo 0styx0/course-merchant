@@ -1,5 +1,4 @@
 import {
-  afterEach,
   beforeEach,
   describe,
   expect,
@@ -24,11 +23,6 @@ describe("register", () => {
     exit = vi
       .spyOn(process, "exit")
       .mockImplementation(() => undefined as never);
-  });
-
-  afterEach(() => {
-    vi.unstubAllEnvs();
-    vi.restoreAllMocks();
   });
 
   it("stops the server when API_BASE_URL is invalid", async () => {

@@ -23,15 +23,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3c (web).** A web test asserts "nothing shown" only after something visible proves the check ran; each fixed test fails when the code it guards breaks. The prices zone test now uses a time that has passed in New York and lies ahead in Los Angeles, so only the zone change clears its error.
   - [x] **3b3 (web).** Web tests read the frozen time from `Temporal.Now` too, on Node builds that include Temporal (CI) and on builds that leave it out.
   - [x] **3d (api).** An API test can no longer leak a mock into the next: the three API Vitest configs restore spies and stubs after each test, and the hand-written restores are gone.
-  - [ ] **3e (web).** A web test can no longer leak a mock into the next. **Next**
-    - *Behaviours*:
-      - The same three settings go into `web/vitest.config.mts`.
-      - The hand restores are gone.
-      - `web-tests.md` says spies restore themselves.
-    - *New shared pieces*: none.
-    - *Needs*: 3c
-    - *Done when*: the web suite passes.
-  - [ ] **3f (api).** API tests run in `Pacific/Chatham`, so a test that assumes UTC fails on every machine.
+  - [x] **3e (web).** A web test can no longer leak a mock into the next: the web Vitest config restores spies and stubs after each test, and the hand-written restores are gone.
+  - [ ] **3f (api).** API tests run in `Pacific/Chatham`, so a test that assumes UTC fails on every machine. **Next**
     - *Behaviours*:
       - `env: { TZ }` is set in the 3 API Vitest configs, and exposed tests are fixed.
       - The unit suite passes once under `TZ=Pacific/Kiritimati`.

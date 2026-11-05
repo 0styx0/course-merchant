@@ -59,7 +59,6 @@ describe("CourseForm", () => {
         "Europe/Paris",
       ),
     );
-    vi.restoreAllMocks();
   });
 
   it("keeps the default time zone when the browser's isn't in the list", async () => {
@@ -70,7 +69,6 @@ describe("CourseForm", () => {
     expect(screen.getByRole("combobox", { name: "Time zone" })).toHaveValue(
       "America/New_York",
     );
-    vi.restoreAllMocks();
   });
 
   it("uses the zone the admin picks in the schedule summary", async () => {

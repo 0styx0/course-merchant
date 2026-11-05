@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   courseImageSchema,
@@ -67,8 +67,6 @@ describe("courseImageSchema", () => {
 });
 
 describe("measureImage", () => {
-  afterEach(() => vi.unstubAllGlobals());
-
   it("reads the size with the photo's orientation, then releases the bitmap", async () => {
     const close = vi.fn();
     const createImageBitmap = vi.fn().mockResolvedValue({

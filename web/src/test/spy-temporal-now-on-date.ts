@@ -19,19 +19,16 @@ const currentPlainTime = (zone?: ZoneArgument) =>
 
 // Replaces the five time-returning methods of the polyfill's `Temporal.Now` with versions that
 // read the (faked) `Date`. Official Node builds include a built-in Temporal, which the polyfill
-// hands back, and its `Temporal.Now` reads the machine clock instead. Returns a function that
-// puts the original methods back.
+// hands back, and its `Temporal.Now` reads the machine clock instead. Vitest restores the spies
+// after each test.
 export function spyTemporalNowOnDate() {
-  const spies = [
-    vi.spyOn(Temporal.Now, "instant").mockImplementation(currentInstant),
-    vi
-      .spyOn(Temporal.Now, "zonedDateTimeISO")
-      .mockImplementation(currentZonedDateTime),
-    vi
-      .spyOn(Temporal.Now, "plainDateTimeISO")
-      .mockImplementation(currentPlainDateTime),
-    vi.spyOn(Temporal.Now, "plainDateISO").mockImplementation(currentPlainDate),
-    vi.spyOn(Temporal.Now, "plainTimeISO").mockImplementation(currentPlainTime),
-  ];
-  return () => spies.forEach((spy) => spy.mockRestore());
+  vi.spyOn(Temporal.Now, "instant").mockImplementation(currentInstant);
+  vi.spyOn(Temporal.Now, "zonedDateTimeISO").mockImplementation(
+    currentZonedDateTime,
+  );
+  vi.spyOn(Temporal.Now, "plainDateTimeISO").mockImplementation(
+    currentPlainDateTime,
+  );
+  vi.spyOn(Temporal.Now, "plainDateISO").mockImplementation(currentPlainDate);
+  vi.spyOn(Temporal.Now, "plainTimeISO").mockImplementation(currentPlainTime);
 }

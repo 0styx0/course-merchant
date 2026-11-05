@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 async function freshApiBaseUrl() {
   vi.resetModules();
@@ -7,10 +7,6 @@ async function freshApiBaseUrl() {
 }
 
 describe("apiBaseUrl", () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
   it("returns the configured URL", async () => {
     vi.stubEnv("API_BASE_URL", "http://api.example.com");
     const apiBaseUrl = await freshApiBaseUrl();

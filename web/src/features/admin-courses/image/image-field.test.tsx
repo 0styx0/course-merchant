@@ -22,7 +22,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.unstubAllGlobals();
   createObjectURL.mockReset();
   revokeObjectURL.mockReset();
 });
