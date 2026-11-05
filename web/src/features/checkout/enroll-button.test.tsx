@@ -26,6 +26,37 @@ const refused: StartCheckoutFormState = {
     code: "COURSE_NOT_PURCHASABLE",
   },
   customer: { name: "Ami Cohen", email: "ami@example.com" },
+  fieldErrors: [],
+};
+
+const validationProblem = {
+  title: "Validation failed",
+  detail: "The request contains 1 invalid field.",
+  code: "VALIDATION_FAILED",
+};
+
+function makeFieldFailure(
+  fieldErrors: { path: string; message: string }[],
+): StartCheckoutFormState {
+  return {
+    state: "failure",
+    problem: validationProblem,
+    customer: { name: "Ami Cohen", email: "ami@" },
+    fieldErrors,
+  };
+}
+
+const EMAIL_MESSAGE =
+  "That email address looks incomplete. It should look like name@example.com.";
+const NAME_MESSAGE = "Enter your name.";
+
+const emailError = {
+  path: "customer.email",
+  message: EMAIL_MESSAGE,
+};
+const nameError = {
+  path: "customer.name",
+  message: NAME_MESSAGE,
 };
 
 /**
@@ -44,13 +75,6 @@ function holdAction() {
     finish();
     await screen.findByRole("status");
   };
-}
-
-/** Records the browser's `invalid` event, which fires when a submit finds the box failing its checks. */
-function watchInvalidEvent(box: HTMLElement) {
-  const onInvalid = vi.fn();
-  box.addEventListener("invalid", onInvalid);
-  return onInvalid;
 }
 
 async function openFields() {
@@ -179,28 +203,98 @@ describe("EnrollButton", () => {
     expect(sendAction).toHaveBeenCalledTimes(2);
   });
 
-  it("sends no request when the name is empty", async () => {
+  it("shows the email message under Email and links it to the box", async () => {
+    sendAction.mockResolvedValue(makeFieldFailure([emailError]));
     const user = await openFields();
-    await user.type(screen.getByLabelText("Email"), "ami@example.com");
-    const nameInvalid = watchInvalidEvent(screen.getByLabelText("Name"));
 
-    await user.click(screen.getByRole("button", { name: "Email me the link" }));
+    await submitTypedDetails(user);
 
-    expect(nameInvalid).toHaveBeenCalledOnce();
-    expect(sendAction).not.toHaveBeenCalled();
-    expect(screen.getByLabelText("Name")).toBeInvalid();
+    const email = await screen.findByLabelText("Email");
+    await waitFor(() => expect(email).toBeInvalid());
+    expect(email).toHaveAccessibleDescription(
+      `We send the course link to this address. ${EMAIL_MESSAGE}`,
+    );
+    expect(screen.getByLabelText("Name")).toBeValid();
   });
 
-  it("sends no request when the email is malformed", async () => {
+  it("shows the name message under Name", async () => {
+    sendAction.mockResolvedValue(makeFieldFailure([nameError]));
     const user = await openFields();
-    await user.type(screen.getByLabelText("Name"), "Ami Cohen");
-    await user.type(screen.getByLabelText("Email"), "not-an-email");
-    const emailInvalid = watchInvalidEvent(screen.getByLabelText("Email"));
+
+    await submitTypedDetails(user);
+
+    const name = await screen.findByLabelText("Name");
+    await waitFor(() => expect(name).toBeInvalid());
+    expect(name).toHaveAccessibleDescription(NAME_MESSAGE);
+  });
+
+  it("shows both messages and focuses Name when both boxes are wrong", async () => {
+    sendAction.mockResolvedValue(makeFieldFailure([nameError, emailError]));
+    const user = await openFields();
+
+    await submitTypedDetails(user);
+
+    expect(await screen.findByText(NAME_MESSAGE)).toBeVisible();
+    expect(screen.getByText(EMAIL_MESSAGE)).toBeVisible();
+    await waitFor(() => expect(screen.getByLabelText("Name")).toHaveFocus());
+  });
+
+  it("focuses the first wrong box when only Email is wrong", async () => {
+    sendAction.mockResolvedValue(makeFieldFailure([emailError]));
+    const user = await openFields();
+
+    await submitTypedDetails(user);
+
+    await waitFor(() => expect(screen.getByLabelText("Email")).toHaveFocus());
+  });
+
+  it("keeps the typed values beside a field message", async () => {
+    sendAction.mockResolvedValue(makeFieldFailure([emailError]));
+    const user = await openFields();
+
+    await submitTypedDetails(user);
+
+    await screen.findByText(EMAIL_MESSAGE);
+    expect(screen.getByLabelText("Name")).toHaveValue("Ami Cohen");
+    expect(screen.getByLabelText("Email")).toHaveValue("ami@");
+  });
+
+  it("shows no field message for a problem without field errors", async () => {
+    sendAction.mockResolvedValue(refused);
+    const user = await openFields();
+
+    await submitTypedDetails(user);
+
+    await screen.findByRole("alert");
+    expect(screen.getByLabelText("Name")).toBeValid();
+    expect(screen.getByLabelText("Email")).toBeValid();
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+  });
+
+  it("hides the old messages while the next send runs", async () => {
+    sendAction.mockResolvedValueOnce(makeFieldFailure([emailError]));
+    const user = await openFields();
+    await submitTypedDetails(user);
+    await screen.findByText(EMAIL_MESSAGE);
+    const finishAction = holdAction();
 
     await user.click(screen.getByRole("button", { name: "Email me the link" }));
 
-    expect(emailInvalid).toHaveBeenCalledOnce();
-    expect(sendAction).not.toHaveBeenCalled();
-    expect(screen.getByLabelText("Email")).toBeInvalid();
+    await screen.findByRole("button", { name: "Sending…" });
+    expect(screen.queryByText(EMAIL_MESSAGE)).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Email")).toBeValid();
+    await finishAction();
+  });
+
+  it("sends an empty form to the action", async () => {
+    sendAction.mockResolvedValue(sent);
+    const user = await openFields();
+
+    await user.click(screen.getByRole("button", { name: "Email me the link" }));
+
+    await screen.findByRole("status");
+    const [, , formData] = sendAction.mock.calls[0];
+    expect(formData.get("customer.name")).toBe("");
+    expect(formData.get("customer.email")).toBe("");
   });
 });

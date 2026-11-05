@@ -18,27 +18,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **2c.** A visitor on a free course opens the fields in place, sends a name and email, sees "Sending…", then "Check your email" with focus on it; a problem shows above the fields with the values kept.
 - [x] **3a.** Admin and checkout share one routine that turns the API's field errors into form-field errors.
 - [x] **3b.** The API words a bad name or email in plain sentences; admin login shares the email words.
-- [ ] **3c.** A visitor sees the API's field messages under Name and Email, with a red border, and focus lands on the first wrong field. **Next**
-  - *Behaviours*:
-    - A 400 on the email shows its message under Email, with `aria-invalid` and `aria-describedby` listing the hint and the message.
-    - A 400 on the name shows its message under Name.
-    - Both wrong shows both messages.
-    - A 409 shows above the fields and no field shows an error.
-    - Typed values stay in every case.
-    - The form has `noValidate`, so the browser's own bubbles never replace the messages.
-    - Resubmitting clears the old messages.
-  - *New shared pieces*:
-    - One field-error display and one "focus the first invalid field" hook, keyed by form path; 3e feeds its errors to the same pieces.
-    - One words file for the checkout messages, shared by the mock handlers and 3e's schema.
-  - *Files*:
-    - [start-checkout.action.ts](../web/src/features/checkout/start-checkout.action.ts) (returns `fieldErrors`)
-    - [enroll-button.tsx](../web/src/features/checkout/enroll-button.tsx) (the fields move to their own file)
-    - [start-checkout.ts](../web/src/mocks/handlers/start-checkout.ts) (`nameInvalid`, `emailInvalid`)
-    - new form files, words file and tests under `web/src/features/checkout/form/`
-    - Folder count: `checkout/` holds 8 files, so the form files group into `checkout/form/`.
-  - *Needs*: 3a. *Settled*: the Words bullet and the Decisions on the mapper and typed values.
-  - *Done when*: in `dev:mock` with `emailInvalid`, the message shows under Email with the values kept.
-- [ ] **3d.** A visitor keeps their typed values when the API is down or slow.
+- [x] **3c.** A visitor sees the API's field messages under Name and Email, with a red border, and focus lands on the first wrong field.
+- [ ] **3d.** A visitor keeps their typed values when the API is down or slow. **Next**
   - *Behaviours*:
     - A thrown call returns a failure with fixed title and detail above the fields, and the values stay.
     - The server logs the thrown error.

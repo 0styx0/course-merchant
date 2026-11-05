@@ -4,14 +4,10 @@ import { LoaderCircle } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { ProblemAlert } from "@/components/problem-alert";
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import type { FormFieldError } from "@/lib/api/form-errors";
 import { CheckEmailNotice } from "./check-email-notice";
+import { CustomerDetailFields } from "./form/customer-detail-fields";
+import { useFocusFirstInvalidField } from "./form/use-focus-first-invalid-field";
 import {
   startCheckoutAction,
   type StartCheckoutFormState,
@@ -21,12 +17,8 @@ type EnrollButtonProps = {
   courseId: string;
 };
 
-type CustomerDetailFieldsProps = {
-  state: StartCheckoutFormState;
-  isPending: boolean;
-};
-
 const EMPTY_FORM_STATE: StartCheckoutFormState = { state: "empty" };
+const NO_FIELD_ERRORS: FormFieldError[] = [];
 
 /** Shows one button; pressing it opens the name and email fields in place. */
 export function EnrollButton({ courseId }: EnrollButtonProps) {
@@ -53,6 +45,10 @@ function EnrollForm({ courseId }: EnrollButtonProps) {
     startCheckoutAction.bind(null, courseId),
     EMPTY_FORM_STATE,
   );
+  const formRef = useRef<HTMLFormElement>(null);
+  const fieldErrors =
+    state.state === "failure" ? state.fieldErrors : NO_FIELD_ERRORS;
+  useFocusFirstInvalidField(formRef, fieldErrors);
 
   if (state.state === "success") {
     return <FocusedCheckEmailNotice email={state.customer.email} />;
@@ -60,6 +56,8 @@ function EnrollForm({ courseId }: EnrollButtonProps) {
 
   return (
     <form
+      ref={formRef}
+      noValidate
       action={sendAction}
       // A second press while sending would start a second checkout.
       onSubmit={(event) => {
@@ -68,7 +66,12 @@ function EnrollForm({ courseId }: EnrollButtonProps) {
       className="mt-6 space-y-4"
     >
       {state.state === "failure" && <ProblemAlert problem={state.problem} />}
-      <CustomerDetailFields state={state} isPending={isPending} />
+      <CustomerDetailFields
+        customer={state.state === "failure" ? state.customer : undefined}
+        // Sending again clears the old messages.
+        fieldErrors={isPending ? NO_FIELD_ERRORS : fieldErrors}
+        isPending={isPending}
+      />
       <SendButton isPending={isPending} />
     </form>
   );
@@ -85,50 +88,6 @@ function FocusedCheckEmailNotice({ email }: { email: string }) {
     <div className="mt-6">
       <CheckEmailNotice ref={noticeRef} email={email} />
     </div>
-  );
-}
-
-function CustomerDetailFields({ state, isPending }: CustomerDetailFieldsProps) {
-  const nameInputRef = useRef<HTMLInputElement>(null);
-  // React 19 resets uncontrolled fields after every action, so a failure
-  // hands the typed values back as the new defaults.
-  const customer = state.state === "failure" ? state.customer : undefined;
-
-  useEffect(() => {
-    nameInputRef.current?.focus();
-  }, []);
-
-  return (
-    <FieldGroup>
-      <Field>
-        <FieldLabel htmlFor="enroll-name">Name</FieldLabel>
-        <Input
-          ref={nameInputRef}
-          id="enroll-name"
-          name="customer.name"
-          autoComplete="name"
-          defaultValue={customer?.name}
-          readOnly={isPending}
-          required
-        />
-      </Field>
-      <Field>
-        <FieldLabel htmlFor="enroll-email">Email</FieldLabel>
-        <Input
-          id="enroll-email"
-          name="customer.email"
-          type="email"
-          autoComplete="email"
-          defaultValue={customer?.email}
-          readOnly={isPending}
-          aria-describedby="enroll-email-hint"
-          required
-        />
-        <FieldDescription id="enroll-email-hint">
-          We send the course link to this address.
-        </FieldDescription>
-      </Field>
-    </FieldGroup>
   );
 }
 

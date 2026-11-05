@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { server } from "@/mocks/node";
 import {
+  startCheckoutEmailInvalid,
+  startCheckoutNameInvalid,
   startCheckoutNotPurchasable,
   startCheckoutSuccess,
   startCheckoutUrl,
@@ -25,6 +27,9 @@ vi.mock("@/lib/api/config/api-config", async (importOriginal) => ({
 
 const { redirect } = await import("next/navigation");
 
+const EMAIL_MESSAGE =
+  "That email address looks incomplete. It should look like name@example.com.";
+const NAME_MESSAGE = "Enter your name.";
 const courseId = "11111111-1111-4111-8111-111111111111";
 const emptyState: StartCheckoutFormState = { state: "empty" };
 
@@ -81,6 +86,28 @@ describe("startCheckoutAction", () => {
         code: "COURSE_NOT_PURCHASABLE",
       },
       customer: { name: "Ada Lovelace", email: "ada@example.com" },
+      fieldErrors: [],
+    });
+  });
+
+  it("returns the email message for the Email box", async () => {
+    server.use(startCheckoutEmailInvalid);
+
+    await expect(
+      startCheckoutAction(courseId, emptyState, typedForm()),
+    ).resolves.toMatchObject({
+      state: "failure",
+      fieldErrors: [{ path: "customer.email", message: EMAIL_MESSAGE }],
+    });
+  });
+
+  it("returns the name message for the Name box", async () => {
+    server.use(startCheckoutNameInvalid);
+
+    await expect(
+      startCheckoutAction(courseId, emptyState, typedForm()),
+    ).resolves.toMatchObject({
+      fieldErrors: [{ path: "customer.name", message: NAME_MESSAGE }],
     });
   });
 
