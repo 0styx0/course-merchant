@@ -1,9 +1,9 @@
-import { LoaderCircle } from "lucide-react";
 import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
 import { CheckEmailNotice } from "@/features/checkout/check-email-notice/check-email-notice";
 import type { CheckoutStatus } from "@/lib/types";
+import { PendingCheckoutNotice } from "./pending-checkout-notice";
 
 type CheckoutStatusMessageProps = {
   status: CheckoutStatus["status"];
@@ -20,18 +20,6 @@ const ENDED_CHECKOUT_WORDS = {
       "We've refunded this payment. It can take a few days to appear on your statement.",
   },
 } as const;
-
-function ConfirmingLine() {
-  return (
-    <p role="status" className="flex gap-2 text-muted-foreground">
-      <LoaderCircle
-        aria-hidden="true"
-        className="mt-0.5 size-5 shrink-0 motion-safe:animate-spin"
-      />
-      We&apos;re confirming your payment.
-    </p>
-  );
-}
 
 function ReturnLink() {
   return (
@@ -63,7 +51,11 @@ function ThankYouWords({ status }: { status: "succeeded" | "pending" }) {
     <>
       <h1 className="font-heading text-h2 md:text-h1">Thank you.</h1>
       <div className="mt-4">
-        {status === "succeeded" ? <CheckEmailNotice /> : <ConfirmingLine />}
+        {status === "succeeded" ? (
+          <CheckEmailNotice />
+        ) : (
+          <PendingCheckoutNotice />
+        )}
       </div>
     </>
   );

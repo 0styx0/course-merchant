@@ -1,4 +1,8 @@
-import { getCheckoutStatusHandlers } from "@/mocks/handlers/get-checkout-status";
+import {
+  checkoutStatusUrl,
+  getCheckoutStatusHandlers,
+} from "@/mocks/handlers/get-checkout-status";
+import { http, HttpResponse } from "msw";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
 const { test, expect } = msw;
@@ -107,5 +111,79 @@ test("when the API fails, the buyer sees its words", async ({ page, msw }) => {
   await expect(alert).toContainText("Internal server error");
   await expect(alert).toContainText(
     "Something went wrong on our side. Please try again later.",
+  );
+});
+
+// Each msw.use call puts its handlers before the earlier ones, so a test
+// registers the fallback first and the answer for the first check last.
+const makePendingFirstCheckHandler = () =>
+  http.get(checkoutStatusUrl, () => HttpResponse.json({ status: "pending" }), {
+    once: true,
+  });
+
+test("a pending page switches to Check your email by itself once the payment succeeds", async ({
+  page,
+  msw,
+}) => {
+  msw.use(getCheckoutStatusHandlers.success);
+  msw.use(makePendingFirstCheckHandler());
+  await page.clock.install();
+
+  await page.goto("/checkout/success?checkoutId=cs_test_mock");
+  await expect(page.getByRole("status")).toContainText(
+    "This page updates by itself.",
+  );
+  await page.clock.runFor(5000);
+
+  await expect(page.getByRole("status")).toContainText("Check your email");
+});
+
+test("a pending page shows the API's words when a re-check gets a 500", async ({
+  page,
+  msw,
+}) => {
+  msw.use(getCheckoutStatusHandlers.checkoutServerError);
+  msw.use(makePendingFirstCheckHandler());
+  await page.clock.install();
+
+  await page.goto("/checkout/success?checkoutId=cs_test_mock");
+  await page.clock.runFor(5000);
+
+  const alert = page.getByRole("main").getByRole("alert");
+  await expect(alert).toContainText("Internal server error");
+  await expect(alert).toContainText(
+    "Something went wrong on our side. Please try again later.",
+  );
+});
+
+test("a pending page shows the shop error page when a re-check cannot reach the API", async ({
+  page,
+  msw,
+}) => {
+  msw.use(getCheckoutStatusHandlers.unreachable);
+  msw.use(makePendingFirstCheckHandler());
+  await page.clock.install();
+
+  await page.goto("/checkout/success?checkoutId=cs_test_mock");
+  await page.clock.runFor(5000);
+
+  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+});
+
+test("a page that stays pending for a minute stops checking and reads the received-payment sentence", async ({
+  page,
+  msw,
+}) => {
+  msw.use(getCheckoutStatusHandlers.checkoutPending);
+  await page.clock.install();
+
+  await page.goto("/checkout/success?checkoutId=cs_test_mock");
+  await page.clock.runFor(61_000);
+
+  await expect(page.getByRole("status")).toContainText(
+    "We've received your payment.",
+  );
+  await expect(page.getByRole("status")).not.toContainText(
+    "We're confirming your payment.",
   );
 });

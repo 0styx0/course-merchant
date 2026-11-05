@@ -1,7 +1,14 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { CheckoutStatusMessage } from "./checkout-status-message";
+
+// Next's useRouter returns the same object on every render; the mock must too.
+const router = { refresh: vi.fn() };
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => router,
+}));
 
 describe("CheckoutStatusMessage", () => {
   it("thanks the buyer and shows the Check your email box when the payment succeeded", () => {
@@ -24,6 +31,7 @@ describe("CheckoutStatusMessage", () => {
     ).toBeInTheDocument();
     const confirming = screen.getByRole("status");
     expect(confirming).toHaveTextContent("We're confirming your payment.");
+    expect(confirming).toHaveTextContent("This page updates by itself.");
     expect(confirming.querySelector("svg")).toHaveAttribute(
       "aria-hidden",
       "true",

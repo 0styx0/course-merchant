@@ -15,6 +15,7 @@ One row per behaviour the commit adds or changes:
 - Follow the test rules in `.claude/rules/` and the package CLAUDE.md files for where each kind of test lives.
 - A test must be able to fail: assert on the outcome, not on "it ran".
 - Write the tests first, as SKILL.md *Build* says.
+- The hand-off repeats this table with each cell naming its test ([handoff.md](handoff.md) *Tests*), so every cell needs a test or a stated reason.
 
 ## Structure
 

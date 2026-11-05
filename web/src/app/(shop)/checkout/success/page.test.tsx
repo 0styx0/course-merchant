@@ -8,6 +8,14 @@ import CheckoutSuccessPage, { metadata } from "./page";
 // Its default export throws outside a React Server Component build
 vi.mock("server-only", () => ({}));
 
+// Next's useRouter returns the same object on every render; the mock must too.
+const router = { refresh: vi.fn() };
+
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
+  useRouter: () => router,
+}));
+
 const NOT_FOUND_DIGEST = "NEXT_HTTP_ERROR_FALLBACK;404";
 
 async function renderPage(checkoutId: string | string[] | undefined) {
@@ -36,12 +44,12 @@ describe("CheckoutSuccessPage", () => {
   });
 
   it.each([
-    ["checkoutPending", "Thank you."],
-    ["checkoutExpired", "Checkout timed out."],
-    ["checkoutRefunded", "Payment refunded."],
+    ["checkoutPending", "Thank you.", "We're confirming your payment."],
+    ["checkoutExpired", "Checkout timed out.", "charged you nothing"],
+    ["checkoutRefunded", "Payment refunded.", "We've refunded this payment."],
   ] as const)(
     "shows the words for the %s status",
-    async (scenario, heading) => {
+    async (scenario, heading, sentence) => {
       server.use(getCheckoutStatusHandlers[scenario]);
 
       await renderPage("cs_test_1");
@@ -50,6 +58,7 @@ describe("CheckoutSuccessPage", () => {
         screen.getByRole("heading", { level: 1, name: heading }),
       ).toBeInTheDocument();
       expect(screen.getAllByRole("status")).toHaveLength(1);
+      expect(screen.getByRole("status")).toHaveTextContent(sentence);
     },
   );
 
