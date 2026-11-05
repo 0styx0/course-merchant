@@ -29,7 +29,90 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **5b.** A buyer back from Stripe after the webhook sees "Thank you." and Check your email, and a bad link shows the not-found page.
   - [x] **5c.** A buyer whose checkout timed out, was refunded or is still confirming reads what happened.
   - [x] **5d.** A buyer who arrives before our server hears from Stripe watches the page switch to Check your email by itself, and after a minute reads that their payment was received.
-- [ ] **6. Site header and footer.** Every public page has the header, the phone menu and the footer. **Next**
+- **6. Site header and footer.** Every public page has the header, the phone menu and the footer.
+  - [ ] **6a.** Every public page shows a sticky header with the wordmark and Courses, and a footer with the wordmark and Courses. **Next**
+    - *Behaviours*:
+      - The header shows "Embodying Emptiness", which links to `/`, and a Courses link to `/`, inside `<nav aria-label="Main">`.
+      - The footer shows the wordmark (a link) and Courses, inside `<nav aria-label="Footer">`, with links in `--muted-foreground` that turn `--foreground` on hover.
+      - The header stays on top while the page scrolls: sticky, 72px, `bg-background`, with a z-index above page content.
+      - Header and footer links are at least 44px tall.
+      - Below `md`, the footer stacks and left-aligns with 16px side padding; the header pads 16px.
+      - A short page (the 404) keeps its footer at the bottom of the screen.
+      - The page keeps one h1, because the wordmark is a link in the h3 type step, not a heading.
+      - The tab title and the wordmark read one constant.
+      - The public page layout renders the banner and contentinfo landmarks around its children; one unit test covers this, because every shop page, the 404s and the error page use that layout.
+      - The Courses link stays visible at phone width until 6d.
+      - Browser tests: none. Unit tests prove the markup, and the walk at 400px checks the footer stacking.
+    - *New shared pieces*:
+      - the site-name constant (root title, header, footer)
+      - the public page layout (shop layout now, root not-found in 6b)
+    - *Files*:
+      - web/src/lib/site-config/site-name.ts (new folder)
+      - web/src/app/layout.tsx
+      - web/src/features/site-layout/site-header.tsx (+ test)
+      - web/src/features/site-layout/site-footer.tsx (+ test)
+      - web/src/features/site-layout/public-page-layout.tsx (+ test)
+      - web/src/app/(shop)/layout.tsx
+    - *Settled*: the Contact and wordmark row, and the header-extras and wordmark-link rows.
+    - *Done when*:
+      - `check:changed` passes
+      - the existing browser specs for the touched pages pass
+  - [ ] **6b.** A visitor who mistypes a URL sees "Page not found" with the header and footer, and a link back to the courses.
+    - *Behaviours*:
+      - `/nope` answers 404 with h1 "Page not found", "This page doesn't exist. The link may have a typo, or the page has moved." and a ghost "See current courses →" to `/`.
+      - An admin URL for a missing course shows the same page.
+      - The course and checkout 404s render the shared block and keep their titles and sentences.
+      - The course 404's link changes from an underlined "Browse all courses" to the ghost "See current courses →".
+      - The tab reads "Page not found · Embodying Emptiness"; the outline confirms how, because Next documents `metadata` only for `global-not-found`, so React 19's `<title>` may be needed.
+      - One browser test: `/nope` answers 404 with the banner landmark and the h1, because only a running Next server sends an unmatched URL to the root not-found page.
+    - *New shared pieces*: the not-found message block (title, detail, link), with three users.
+    - *Files*:
+      - web/src/components/not-found-message.tsx (+ test)
+      - web/src/app/not-found.tsx (new)
+      - web/src/app/(shop)/courses/[courseId]/not-found.tsx
+      - web/src/app/(shop)/checkout/success/not-found.tsx
+      - ARCHITECTURE.md (the app/ row)
+      - web/tests/browser/site-layout/unknown-url.spec.ts (one test)
+    - *Settled*: the unknown-URL row.
+    - *Done when*: the one browser test passes, and the existing 404 unit and browser tests pass.
+  - [ ] **6c.** The footer's Contact link opens an email to the shop, and the web server refuses to start without a valid address.
+    - *Behaviours*:
+      - Contact's href is `mailto:` plus `CONTACT_EMAIL`.
+      - When the setting is missing, boot stops with "CONTACT_EMAIL is not configured".
+      - When Zod's email check refuses the value, boot stops with "CONTACT_EMAIL is not a valid email address".
+      - The server reads the setting once and remembers it.
+      - `dev:mock` and Playwright set an example address, so neither needs `.env.local`.
+    - *New shared pieces*: none (the boot check becomes one helper both settings use, inside instrumentation-node).
+    - *Files*:
+      - web/src/lib/site-config/contact-email.ts (+ test): a pure check, plus a wrapper that remembers the value
+      - web/src/instrumentation-node.ts
+      - web/src/features/site-layout/site-footer.tsx
+      - web/package.json
+      - web/playwright.config.ts
+      - README.md (`.env.local` step)
+    - *Settled*: the Contact row.
+    - *Done when*: unit tests cover missing, invalid, valid and remembered values, and the footer's mailto href; this commit adds no browser test.
+  - [ ] **6d.** On a phone, a Menu button opens a full-height sheet with Courses; Escape, the close button or a link closes it, and focus returns to Menu.
+    - *Behaviours*:
+      - Below `md`, the header hides Courses and shows a 44×44 button named "Menu".
+      - Pressing Menu opens a sheet from the right with Courses in a 48px row, and focus moves into the sheet.
+      - Tab stays inside the open sheet.
+      - Escape closes the sheet and returns focus to Menu.
+      - The close button does the same.
+      - Tapping Courses closes the sheet and goes home, even when already home.
+      - From `md` up, Menu hides and Courses shows.
+      - Unit tests cover opening, the focus trap, Escape, the close button and tapping Courses (jsdom runs Base UI dialogs, as the admin delete test shows).
+      - One browser test at 400px: Menu shows, Escape closes the sheet, and focus is back on Menu, because only a real browser applies the `md` breakpoint.
+    - *New shared pieces*: the shadcn Sheet primitive.
+    - *Files*:
+      - web/src/components/ui/sheet.tsx (from `yarn --cwd web shadcn add sheet`)
+      - web/src/features/site-layout/phone-menu.tsx (+ test)
+      - web/src/features/site-layout/site-header.tsx
+      - web/tests/browser/site-layout/phone-menu.spec.ts (one test)
+      - README.md Status
+      - docs/web.md (the shadcn row's `npx shadcn add` becomes `yarn --cwd web shadcn add`)
+    - *Settled*: the Sheet row.
+    - *Done when*: the milestone journey passes (see *Step 6*).
 - [ ] **7. Course page layout.** The image, title and description sit beside a sticky panel on desktop, stacked on a phone.
 - [ ] **8. Buy panel looks.** The panel shows the price, the button with its price, the after-enroll note, and the free, in-progress and ended looks.
 - [ ] **9. Course times in the visitor's words.** The panel shows the course's own time, the visitor's only when it differs, the length, and the status line.
@@ -144,6 +227,9 @@ Wireframe states and time variants, by the milestone that builds them:
 | The mock course endpoint answers with the fixture whose id is in the URL, and the mock home list shows every public fixture | Any checkout scenario then works on the free course (and later the in-progress and ended ones) with one `scenario` line | A `freeCourse` scenario plus per-scenario pairings in node.ts (about 6 lines now, one more per later walk; names multiply, and a missed pairing shows the paid course with no form) |
 | The API words a bad email as "…It should look like name@example.com." | The wireframe's "include an @" misleads on `a@b` | The wireframe sentence |
 | The action catches a thrown API call and returns fixed words with the typed values | An unreachable API sends no text to show, and the visitor keeps their typing (note 17's "API's own message" covers answers only) | The full-page error (the visitor retypes) |
+| The header shows no scroll shadow and no current-page pill, though style guide §7 describes both | The wireframe draws neither, and with one link the pill would mark only the home page (revisit after use) | Both now (a client component watching scroll and the path, about 40 lines plus tests); the pill only (about 15 lines) |
+| The wordmark links to the home page in the header and the footer | Without it, a phone visitor must open the menu to go home (revisit after use) | Plain text as drawn (one fewer link, two taps home) |
+| A root `not-found.tsx` inside the public page layout answers unknown URLs and an admin URL for a missing course | Next sends every unmatched URL there, and the visitor keeps a way back | Next's bare default (no way home but Back); `global-not-found` (experimental, and it skips the layout, so it must re-import styles and fonts) |
 
 ## Step 1. Site look
 
@@ -324,23 +410,49 @@ See current courses →  (ghost)
 Every public page after 6
 Desktop                                    Phone
 +--------------------------------------+   +-----------------------+
-| Embodying Emptiness         Courses  |   | Embodying Emptiness ☰ |
+| Embodying Emptiness (link)  Courses  |   | Embodying Emptiness ☰ |
 +--------------------------------------+   +-----------------------+
 | (course page as after 4)             |   | ☰ opens a full-height |
-|                                      |   |   sheet: Courses      |
+|                                      |   |   sheet from the right|
+|                                      |   |   [x]                 |
+|                                      |   |   Courses (48px row)  |
 +--------------------------------------+   +-----------------------+
 | Embodying Emptiness  Courses Contact |   | Embodying Emptiness   |
 +--------------------------------------+   | Courses               |
                                            | Contact (mailto)      |
-                                           +-----------------------+
+/nope: Page not found (h1)                 +-----------------------+
+       This page doesn't exist. The link may have a typo, or the page has moved.
+       See current courses →  (ghost)
 ```
 
 - Why here: the sticky panel's 96px top is measured from the 72px header.
 - Needs: 1.
-- Size: 2 to 3 commits (header and footer in the shop layout; phone menu).
-- Contact: the setting is `CONTACT_EMAIL`, in a config file beside the header code (it is not an API setting, so not in `lib/api/config/`). The same commit adds it to the README's `web/.env.local` step; `web/` has no `.env.example`.
-- Risk: focus returning to the menu button when the sheet closes.
-- Done when: journey at 400 px: open the menu, press Escape, see focus back on the menu button; the same header and footer show on the home, course and 404 pages.
+- Builds on: [layout.tsx](../web/src/app/%28shop%29/layout.tsx) (the shop layout), [layout.tsx](../web/src/app/layout.tsx) (the title template), [api-config.ts](../web/src/lib/api/config/api-config.ts) and [base-url.ts](../web/src/lib/api/config/base-url.ts) (the twin of the Contact setting), [instrumentation-node.ts](../web/src/instrumentation-node.ts), [alert-dialog.tsx](../web/src/components/ui/alert-dialog.tsx) (a sibling Base UI primitive), the two existing `not-found.tsx` files, style guide §7 (*Nav header*, *Footer*), and the wireframe's `.site-header` and `.site-footer` rules.
+- Size: 4 commits (the overview said 2 to 3: the unknown-URL page and the Contact setting each stand alone, so every commit stays within 6 files).
+- Done when: journey (`dev:mock`, 400 px and desktop, keyboard only): the same header and footer show on the home, course, course 404 and `/nope` pages; at 400 px open the menu, press Escape and see focus back on the menu button; the footer's Contact link opens a mail to `CONTACT_EMAIL`.
+- Design notes *(temporary)*:
+  - Base UI's Dialog returns focus to its trigger on close by default (`finalFocus`), which retires the focus risk.
+  - A link inside the sheet closes it itself, because the shop layout survives client navigation and the sheet would stay open.
+  - The contact setting lives in `lib/site-config/` beside the site name, because it is not an API setting and keeps the header folder small. It has a pure check and a wrapper that remembers the value, like `base-url.ts` and `api-config.ts`; one boot-check helper in `instrumentation-node.ts` serves both settings.
+  - `yarn build` prerenders the home page, so the build also needs `CONTACT_EMAIL`; the README's `web/.env.local` step covers it. `web/` has no `.env.example`.
+  - The wordmark shows twice on every page, so tests find it inside the banner or contentinfo landmark.
+  - Browser tests stay at two for the milestone (`/nope` in 6b, the 400 px menu in 6d), each for a fact jsdom can't show; [browser-tests.md](../.claude/rules/browser-tests.md) states the rule.
+  - Folder counts after the milestone: `features/site-layout/` 8 files, `lib/site-config/` 3, `tests/browser/site-layout/` 2.
+- Flow *(temporary)*:
+
+```
+Server boots
+├── CONTACT_EMAIL missing or invalid → logs the named error, exits    6c
+└── valid → remembered                                                6c
+Visitor opens a URL
+├── public page → header + page + footer                              6a
+├── unknown URL or missing admin course → Page not found, 404         6b
+└── course or checkout 404 → shared message inside the shop layout    6b
+Visitor presses Contact → mail app opens to CONTACT_EMAIL             6c
+Phone visitor presses Menu → sheet opens, focus inside                6d
+├── Escape or close button → closes, focus on Menu                    6d
+└── taps Courses → closes, goes home                                  6d
+```
 
 ## Step 7. Course page layout
 
