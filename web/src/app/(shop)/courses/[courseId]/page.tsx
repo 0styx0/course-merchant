@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProblemAlert } from "@/components/problem-alert";
-import { EnrollButton } from "@/features/checkout/enroll-button";
+import { EnrollButton } from "@/features/checkout/start-checkout/enroll-button";
 import { CourseDetails } from "@/features/courses/course-details";
 import { getCourse } from "@/features/courses/courses.api";
 import { formatPrice } from "@/lib/utils/formatters";

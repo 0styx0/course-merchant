@@ -13,11 +13,11 @@ import { ProblemAlert } from "@/components/problem-alert";
 import { Button } from "@/components/ui/button";
 import type { FormFieldError } from "@/lib/api/form-errors";
 import type { CheckoutCustomer } from "@/lib/types";
-import { CheckEmailNotice } from "./check-email-notice";
-import { findCheckoutCustomerErrors } from "./form/checkout-customer.schema";
-import { CustomerDetailFields } from "./form/customer-detail-fields";
-import { readCheckoutCustomer } from "./form/read-checkout-customer";
-import { useFocusFirstInvalidField } from "./form/use-focus-first-invalid-field";
+import { CheckEmailNotice } from "../check-email-notice/check-email-notice";
+import { findCheckoutCustomerErrors } from "../form/checkout-customer.schema";
+import { CustomerDetailFields } from "../form/customer-detail-fields";
+import { readCheckoutCustomer } from "../form/read-checkout-customer";
+import { useFocusFirstInvalidField } from "../form/use-focus-first-invalid-field";
 import { usePageRestoredFromCache } from "./use-page-restored-from-cache";
 import {
   startCheckoutAction,

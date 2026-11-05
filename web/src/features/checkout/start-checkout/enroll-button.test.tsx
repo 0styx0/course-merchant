@@ -10,7 +10,7 @@ import { EnrollButton } from "./enroll-button";
 import {
   CHECKOUT_EMAIL_TOO_LONG_MESSAGE,
   CHECKOUT_NAME_TOO_LONG_MESSAGE,
-} from "./form/checkout-messages";
+} from "../form/checkout-messages";
 
 vi.mock("./start-checkout.action", () => ({ startCheckoutAction: vi.fn() }));
 

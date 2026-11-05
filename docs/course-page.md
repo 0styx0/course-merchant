@@ -25,18 +25,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **4b.** A visitor who presses Back from Stripe finds the form ready to use, with their typed values; unit tests cover the restore, because Chromium under `yarn dev` never restores the page (its reason reads `masked`), and a browser test checks that Back otherwise loads a fresh closed button.
 - [x] **4c.** When Stripe or our API is down, a paid visitor sees the problem above the fields, keeps their typing, and the button reads "Try again →".
 - **5. Coming back from Stripe.** The return page says the email is on its way, or what happened instead.
-  - [ ] **5a.** A developer finds the checkout code grouped by job: starting a checkout, the shared "check your email" box, and the form. *(mechanical)* **Next**
-    - *Behaviours*: none change.
-    - *New shared pieces*: none
-    - *Files*:
-      - `web/src/features/checkout/` (10 loose files beside `form/`) → `start-checkout/` (enroll button, action, API call, back-forward-cache hook, with tests: 8), `check-email-notice/` (2), `form/` (unchanged)
-      - `web/src/app/(shop)/courses/[courseId]/page.tsx` (import path)
-      - `ARCHITECTURE.md` (adds the missing `features/checkout/` row)
-    - *Done when*:
-      - `check:changed` passes
-      - the diff shows renames only
-      - the test count stays the same
-  - [ ] **5b.** A buyer back from Stripe after the webhook sees "Thank you." and Check your email, and a bad link shows the not-found page.
+  - [x] **5a.** The checkout code sits grouped by job: starting a checkout, the shared "check your email" box, and the form.
+  - [ ] **5b.** A buyer back from Stripe after the webhook sees "Thank you." and Check your email, and a bad link shows the not-found page. **Next**
     - *Behaviours*:
       - succeeded: "Thank you." (h1) and the Check your email box naming no address
       - any other status: "Thank you." and "We're confirming your payment." (until 5c)
@@ -104,6 +94,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [ ] **9. Course times in the visitor's words.** The panel shows the course's own time, the visitor's only when it differs, the length, and the status line.
 - [ ] **10. Phone buy bar.** A slim bar keeps the button on screen once the panel scrolls away; a tap opens the fields.
 - [ ] **11. Fixes from using the page.** The owner's findings from the full walk are fixed.
+- [ ] **12. Checkout button cleanup.** A developer reads the enroll button's code in small files, and a renamed error code breaks a test instead of silently dropping "Try again".
 
 Every UI milestone's *Done when* also includes: keyboard only (Enter, Escape, Tab), one mock scenario per state it builds, and the owner's findings fixed in its last commit.
 
@@ -376,7 +367,7 @@ See current courses →  (ghost)
 
 - Why here: J1 ends here; the API's success URL already points at `/checkout/success`.
 - Needs: 4.
-- Builds on: [web.md](web.md)'s row on the checkout success page, [start-checkout.api.ts](../web/src/features/checkout/start-checkout.api.ts) (the wrapper to copy), [check-email-notice.tsx](../web/src/features/checkout/check-email-notice.tsx), [not-found.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/not-found.tsx), [error.tsx](../web/src/app/%28shop%29/error.tsx), `getCheckoutStatus` in the OpenAPI contract.
+- Builds on: [web.md](web.md)'s row on the checkout success page, [start-checkout.api.ts](../web/src/features/checkout/start-checkout/start-checkout.api.ts) (the wrapper to copy), [check-email-notice.tsx](../web/src/features/checkout/check-email-notice/check-email-notice.tsx), [not-found.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/not-found.tsx), [error.tsx](../web/src/app/%28shop%29/error.tsx), `getCheckoutStatus` in the OpenAPI contract.
 - Size: 4 commits (the overview said 2 to 3: the checkout folder needs its regroup first, and the re-checking stands alone because it needs fake timers and a browser clock).
 - Risk: the page is not in the wireframe; its look follows style guide §12 #4 minus the email echo and the resend link.
 - Done when: journey (`dev:mock`, 400 px and desktop, keyboard only): from `redirect`, pay a paid course and see Check your email; under `checkoutPending` see the confirming line, and after a minute the received-payment sentence; under `checkoutExpired`, `checkoutRefunded`, `checkoutNotFound`, `checkoutServerError` and `unreachable` see their screens; with no `checkoutId`, see the not-found page.
@@ -554,6 +545,16 @@ Top of page              Scrolled into description    After tapping the bar
 - Needs: 10.
 - Size: 2 to 5 commits, set after the walk.
 - Done when: J1 to J3 walked again.
+
+## Step 12. Checkout button cleanup
+
+- Why here: the newcomer-reader found two weaknesses in code that predates the 5a regroup; they wait until the page is done so the cleanup touches stable code.
+- Needs: 11.
+- Findings *(temporary)*:
+  - The retryable error codes ("Try again") are plain strings in `enroll-button.tsx`, and the action invents `API_UNREACHABLE` separately. The test repeats the literals. Fix: one exported constant for the code the web app makes itself, imported in all three places.
+  - `enroll-button.tsx` runs 246 lines and holds `EnrollForm`, `SendButton`, `FocusedCheckEmailNotice` and the label and retry rules. Fix: move the form and the label rules into their own files, and the focused notice into `check-email-notice/`.
+- Size: 2 commits (the shared code; the split).
+- Done when: renaming the code fails a test, and `check:changed` passes with an unchanged test count.
 
 ## Open questions
 

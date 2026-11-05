@@ -6,8 +6,8 @@ import {
   type FormFieldError,
 } from "@/lib/api/form-errors";
 import type { CheckoutCustomer, ProblemDetails } from "@/lib/types";
-import { checkoutFormPath } from "./form/checkout-form-path";
-import { readCheckoutCustomer } from "./form/read-checkout-customer";
+import { checkoutFormPath } from "../form/checkout-form-path";
+import { readCheckoutCustomer } from "../form/read-checkout-customer";
 import { startCheckout, type StartCheckoutResult } from "./start-checkout.api";
 
 export type StartCheckoutFormState =
