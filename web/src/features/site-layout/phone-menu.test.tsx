@@ -52,6 +52,13 @@ describe("PhoneMenu", () => {
     await expectFocusInside(sheet);
   });
 
+  it("shows the sheet on the page's cream background, not the white popover surface", async () => {
+    const { sheet } = await openMenuSheet();
+
+    expect(sheet).toHaveClass("bg-background");
+    expect(sheet).not.toHaveClass("bg-popover");
+  });
+
   it("moves Tab and Shift+Tab between the sheet's Courses link and Close button", async () => {
     const { user, sheet } = await openMenuSheet();
     const coursesLink = within(sheet).getByRole("link", { name: "Courses" });

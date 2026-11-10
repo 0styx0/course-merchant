@@ -70,6 +70,7 @@ Register each with a `--color-*` alias in `@theme inline` (`--color-surface-alt:
 |---|---|
 | `--foreground` `oklch(0.153 0.006 107.1)` | Headings, nav links, input text |
 | `--card` `oklch(1 0 0)` | Inputs and popovers only: the one place white appears |
+| `--background` on sheets | Full-height sheets (the phone menu) use the page's cream, not the white popover surface |
 | `--border` `oklch(0.93 0.007 106.5)` | Decorative dividers only (1.15:1, never load-bearing) |
 | `--accent` / `--accent-foreground` | Ghost-button and menu hover surface |
 

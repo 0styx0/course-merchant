@@ -22,7 +22,7 @@ function MenuButton() {
 
 function MenuSheetContent({ onLinkTap }: { onLinkTap: () => void }) {
   return (
-    <SheetContent side="right" className="px-4 pt-14">
+    <SheetContent side="right" className="bg-background px-4 pt-14">
       <SheetTitle className="sr-only">Menu</SheetTitle>
       <nav aria-label="Phone">
         <Link
