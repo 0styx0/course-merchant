@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { SITE_NAME } from "@/lib/site-config/site-name";
 import { cn } from "@/lib/utils/cn";
 
 const dmSans = DM_Sans({
@@ -25,8 +26,8 @@ const playfairDisplay = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s · Embodying Emptiness",
-    default: "Embodying Emptiness",
+    template: `%s · ${SITE_NAME}`,
+    default: SITE_NAME,
   },
   description:
     "A storefront for selling online courses, with payment through Stripe Checkout.",

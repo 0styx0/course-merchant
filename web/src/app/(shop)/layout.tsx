@@ -1,3 +1,5 @@
+import { PublicPageLayout } from "@/features/site-layout/public-page-layout";
+
 export default function ShopLayout({ children }: LayoutProps<"/">) {
-  return <main className="mx-auto max-w-6xl px-6 py-12">{children}</main>;
+  return <PublicPageLayout>{children}</PublicPageLayout>;
 }

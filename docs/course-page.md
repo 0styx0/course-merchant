@@ -30,34 +30,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **5c.** A buyer whose checkout timed out, was refunded or is still confirming reads what happened.
   - [x] **5d.** A buyer who arrives before our server hears from Stripe watches the page switch to Check your email by itself, and after a minute reads that their payment was received.
 - **6. Site header and footer.** Every public page has the header, the phone menu and the footer.
-  - [ ] **6a.** Every public page shows a sticky header with the wordmark and Courses, and a footer with the wordmark and Courses. **Next**
-    - *Behaviours*:
-      - The header shows "Embodying Emptiness", which links to `/`, and a Courses link to `/`, inside `<nav aria-label="Main">`.
-      - The footer shows the wordmark (a link) and Courses, inside `<nav aria-label="Footer">`, with links in `--muted-foreground` that turn `--foreground` on hover.
-      - The header stays on top while the page scrolls: sticky, 72px, `bg-background`, with a z-index above page content.
-      - Header and footer links are at least 44px tall.
-      - Below `md`, the footer stacks and left-aligns with 16px side padding; the header pads 16px.
-      - A short page (the 404) keeps its footer at the bottom of the screen.
-      - The page keeps one h1, because the wordmark is a link in the h3 type step, not a heading.
-      - The tab title and the wordmark read one constant.
-      - The public page layout renders the banner and contentinfo landmarks around its children; one unit test covers this, because every shop page, the 404s and the error page use that layout.
-      - The Courses link stays visible at phone width until 6d.
-      - Browser tests: none. Unit tests prove the markup, and the walk at 400px checks the footer stacking.
-    - *New shared pieces*:
-      - the site-name constant (root title, header, footer)
-      - the public page layout (shop layout now, root not-found in 6b)
-    - *Files*:
-      - web/src/lib/site-config/site-name.ts (new folder)
-      - web/src/app/layout.tsx
-      - web/src/features/site-layout/site-header.tsx (+ test)
-      - web/src/features/site-layout/site-footer.tsx (+ test)
-      - web/src/features/site-layout/public-page-layout.tsx (+ test)
-      - web/src/app/(shop)/layout.tsx
-    - *Settled*: the Contact and wordmark row, and the header-extras and wordmark-link rows.
-    - *Done when*:
-      - `check:changed` passes
-      - the existing browser specs for the touched pages pass
-  - [ ] **6b.** A visitor who mistypes a URL sees "Page not found" with the header and footer, and a link back to the courses.
+  - [x] **6a.** Every public page shows a sticky header with the wordmark and Courses, and a footer with the wordmark and Courses.
+  - [ ] **6b.** A visitor who mistypes a URL sees "Page not found" with the header and footer, and a link back to the courses. **Next**
     - *Behaviours*:
       - `/nope` answers 404 with h1 "Page not found", "This page doesn't exist. The link may have a typo, or the page has moved." and a ghost "See current courses →" to `/`.
       - An admin URL for a missing course shows the same page.
@@ -229,6 +203,7 @@ Wireframe states and time variants, by the milestone that builds them:
 | The action catches a thrown API call and returns fixed words with the typed values | An unreachable API sends no text to show, and the visitor keeps their typing (note 17's "API's own message" covers answers only) | The full-page error (the visitor retypes) |
 | The header shows no scroll shadow and no current-page pill, though style guide §7 describes both | The wireframe draws neither, and with one link the pill would mark only the home page (revisit after use) | Both now (a client component watching scroll and the path, about 40 lines plus tests); the pill only (about 15 lines) |
 | The wordmark links to the home page in the header and the footer | Without it, a phone visitor must open the menu to go home (revisit after use) | Plain text as drawn (one fewer link, two taps home) |
+| The header is 56px tall below `md` and 72px from `md` | A sticky 72px bar covers a tenth of a phone screen, and step 7's phone Enroll bar takes more; the desktop panel's 96px top still measures from 72px | 72px everywhere, as the guide first said |
 | A root `not-found.tsx` inside the public page layout answers unknown URLs and an admin URL for a missing course | Next sends every unmatched URL there, and the visitor keeps a way back | Next's bare default (no way home but Back); `global-not-found` (experimental, and it skips the layout, so it must re-import styles and fonts) |
 
 ## Step 1. Site look
@@ -425,7 +400,7 @@ Desktop                                    Phone
        See current courses →  (ghost)
 ```
 
-- Why here: the sticky panel's 96px top is measured from the 72px header.
+- Why here: the sticky panel's 96px top is measured from the desktop header's 72px.
 - Needs: 1.
 - Builds on: [layout.tsx](../web/src/app/%28shop%29/layout.tsx) (the shop layout), [layout.tsx](../web/src/app/layout.tsx) (the title template), [api-config.ts](../web/src/lib/api/config/api-config.ts) and [base-url.ts](../web/src/lib/api/config/base-url.ts) (the twin of the Contact setting), [instrumentation-node.ts](../web/src/instrumentation-node.ts), [alert-dialog.tsx](../web/src/components/ui/alert-dialog.tsx) (a sibling Base UI primitive), the two existing `not-found.tsx` files, style guide §7 (*Nav header*, *Footer*), and the wireframe's `.site-header` and `.site-footer` rules.
 - Size: 4 commits (the overview said 2 to 3: the unknown-URL page and the Contact setting each stand alone, so every commit stays within 6 files).

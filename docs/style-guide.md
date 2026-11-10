@@ -19,6 +19,7 @@ Derived from two planned screenshots (the Courses page and the Free Gifts page) 
 4. **One accent, one CTA per block.** Deep green is the only action colour. Gold marks the current location or a single CTA on dark. A block never uses both.
 5. **Only a purchase asks for an email.** The site has no newsletter band, no modal and no exit-intent capture. The visitor gives an email once, at checkout. See [future-milestones.md](future-milestones.md) *Newsletter signup*.
 6. **Generous, not dense — except in admin.** Admin may halve section spacing. Admin keeps the same type, colour and radius.
+7. **Phone first.** Every page, public and admin, must look at least as good at 400px as on desktop. When a size suits desktop but crowds a phone, the phone gets its own value below `md`.
 
 ## 2. Colour
 
@@ -134,7 +135,7 @@ Below `md`: display becomes `text-h1`, h1 becomes `text-h2`, h2 becomes `text-h3
 | Between full-width sections | 0 (bands butt together) |
 | Section inner padding | 96 / 64 / 48px (desktop / tablet / phone) |
 | Hero height | 420 / 320 / 280px |
-| Header height | 72px |
+| Header height | 56px below `md`, 72px from `md` |
 | Eyebrow → title | 12px |
 | Title → description | 16px |
 | Description → meta | 20px |
@@ -225,7 +226,7 @@ Errors appear inline above the form they concern, never as a floating toast.
 
 ### Nav header
 
-72px tall, `bg-background`, `sticky top-0`, `shadow-sm` after 8px of scroll. The wordmark sits left (h3, heading font). Links sit right (meta, weight 500, 32px gap).
+56px tall below `md` and 72px from `md`, `bg-background`, `sticky top-0`, `shadow-sm` after 8px of scroll. The wordmark sits left (h3, heading font). Links sit right (meta, weight 500, 32px gap).
 
 The current page carries four signals, and none of them is colour alone: a `rounded-full bg-secondary px-4 py-2` fill, label weight 600, a `1px solid var(--primary)` border (8.90:1 against the gold, 11.23:1 against the page) and `aria-current="page"`.
 
