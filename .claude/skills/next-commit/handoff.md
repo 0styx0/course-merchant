@@ -21,7 +21,7 @@ Used in the *Hand off* section of [SKILL.md](SKILL.md). Keep it short, and follo
     - One row per test file, with the link on the first added or modified test, as `[file.test.tsx](path/file.test.tsx#L42)`. A new test file gets `(new)` after the link, in the file cell.
     - The changes column names each test added or modified in that file, in plain words, and says which are new and which were changed.
     - Fixtures, mocks and other test helpers go in the files-changed table, not here.
-  - Then the coverage map: the approved test table ([quality.md](quality.md) *Test table*) with each cell filled by the name of the test that proves it, as a markdown bulleted list `test title ([file.test.tsx](path/file.test.tsx#L42))`.
+  - Then the coverage map: the approved test table ([quality.md](quality.md) *Test table*) with each cell filled by the name of the test that proves it, as a markdown list `test title ([file.test.tsx](path/file.test.tsx#L42))`.
     - Keep the table's rows and columns unchanged, so the owner compares it with the outline cell by cell.
     - Write `NOT TESTED: <reason>` in a cell that has no test, and never leave one blank, so a gap shows on sight.
     - Cells the outline left empty stay empty, with the outline's reason.

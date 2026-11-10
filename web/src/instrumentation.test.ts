@@ -15,11 +15,12 @@ async function freshRegister() {
 
 describe("register", () => {
   let exit: MockInstance<typeof process.exit>;
+  let logError: MockInstance<typeof console.error>;
 
   beforeEach(() => {
     vi.stubEnv("NEXT_RUNTIME", "nodejs");
     vi.stubEnv("API_MOCKING", "");
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    logError = vi.spyOn(console, "error").mockImplementation(() => {});
     exit = vi
       .spyOn(process, "exit")
       .mockImplementation(() => undefined as never);
@@ -31,14 +32,38 @@ describe("register", () => {
 
     await register();
 
+    expect(logError).toHaveBeenCalledWith("API_BASE_URL is not a valid URL");
     expect(exit).toHaveBeenCalledWith(1);
   });
 
-  it("starts when API_BASE_URL is valid", async () => {
+  it("stops the server with a message when CONTACT_EMAIL is missing", async () => {
+    vi.stubEnv("CONTACT_EMAIL", "");
     const register = await freshRegister();
 
     await register();
 
+    expect(logError).toHaveBeenCalledWith("CONTACT_EMAIL is not configured");
+    expect(exit).toHaveBeenCalledWith(1);
+  });
+
+  it("stops the server with a message when CONTACT_EMAIL is invalid", async () => {
+    vi.stubEnv("CONTACT_EMAIL", "nope");
+    const register = await freshRegister();
+
+    await register();
+
+    expect(logError).toHaveBeenCalledWith(
+      "CONTACT_EMAIL is not a valid email address",
+    );
+    expect(exit).toHaveBeenCalledWith(1);
+  });
+
+  it("starts when API_BASE_URL and CONTACT_EMAIL are valid", async () => {
+    const register = await freshRegister();
+
+    await register();
+
+    expect(logError).not.toHaveBeenCalled();
     expect(exit).not.toHaveBeenCalled();
   });
 });

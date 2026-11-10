@@ -32,24 +32,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - **6. Site header and footer.** Every public page has the header, the phone menu and the footer.
   - [x] **6a.** Every public page shows a sticky header with the wordmark and Courses, and a footer with the wordmark and Courses.
   - [x] **6b.** A visitor who mistypes a URL sees "Page not found" with the header and footer and a ghost link to the courses; the course and checkout 404s share its look, and each 404 names its tab.
-  - [ ] **6c.** The footer's Contact link opens an email to the shop, and the web server refuses to start without a valid address. **Next**
-    - *Behaviours*:
-      - Contact's href is `mailto:` plus `CONTACT_EMAIL`.
-      - When the setting is missing, boot stops with "CONTACT_EMAIL is not configured".
-      - When Zod's email check refuses the value, boot stops with "CONTACT_EMAIL is not a valid email address".
-      - The server reads the setting once and remembers it.
-      - `dev:mock` and Playwright set an example address, so neither needs `.env.local`.
-    - *New shared pieces*: none (the boot check becomes one helper both settings use, inside instrumentation-node).
-    - *Files*:
-      - web/src/lib/site-config/contact-email.ts (+ test): a pure check, plus a wrapper that remembers the value
-      - web/src/instrumentation-node.ts
-      - web/src/features/site-layout/site-footer.tsx
-      - web/package.json
-      - web/playwright.config.ts
-      - README.md (`.env.local` step)
-    - *Settled*: the Contact row.
-    - *Done when*: unit tests cover missing, invalid, valid and remembered values, and the footer's mailto href; this commit adds no browser test.
-  - [ ] **6d.** On a phone, a Menu button opens a full-height sheet with Courses; Escape, the close button or a link closes it, and focus returns to Menu.
+  - [x] **6c.** The footer's Contact link opens an email to the shop, and the web server refuses to start without a valid address.
+  - [ ] **6d.** On a phone, a Menu button opens a full-height sheet with Courses; Escape, the close button or a link closes it, and focus returns to Menu. **Next**
     - *Behaviours*:
       - Below `md`, the header hides Courses and shows a 44×44 button named "Menu".
       - Pressing Menu opens a sheet from the right with Courses in a 48px row, and focus moves into the sheet.

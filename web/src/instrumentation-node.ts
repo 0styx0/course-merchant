@@ -1,5 +1,9 @@
+import { apiBaseUrl } from "./lib/api/config/api-config";
+import { contactEmail } from "./lib/site-config/contact-email";
+
 export async function registerNode() {
-  await checkApiBaseUrl();
+  exitIfSettingInvalid(apiBaseUrl);
+  exitIfSettingInvalid(contactEmail);
 
   if (process.env.API_MOCKING === "enabled") {
     const { server } = await import("./mocks/node");
@@ -12,10 +16,9 @@ export async function registerNode() {
  * A throw here only logs "Failed to prepare server" and every request then
  * fails, so a bad setting stops the server instead.
  */
-async function checkApiBaseUrl() {
-  const { apiBaseUrl } = await import("./lib/api/config/api-config");
+function exitIfSettingInvalid(readSetting: () => string) {
   try {
-    apiBaseUrl();
+    readSetting();
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
     process.exit(1);

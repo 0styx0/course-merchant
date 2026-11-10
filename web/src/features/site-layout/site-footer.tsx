@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { contactEmail } from "@/lib/site-config/contact-email";
 import { SITE_NAME } from "@/lib/site-config/site-name";
 
 const footerLinkClass =
@@ -18,6 +19,12 @@ export function SiteFooter() {
         <Link href="/" className={`${footerLinkClass} text-sm`}>
           Courses
         </Link>
+        <a
+          href={`mailto:${contactEmail()}`}
+          className={`${footerLinkClass} text-sm`}
+        >
+          Contact
+        </a>
       </nav>
     </footer>
   );

@@ -102,13 +102,13 @@ yarn --cwd api build && yarn --cwd api admin:set-password you@example.com
 yarn --cwd api start:dev
 
 # 7. In a second terminal, run the web app on http://localhost:3000
-echo 'API_BASE_URL=http://localhost:3001' > web/.env.local
+printf 'API_BASE_URL=http://localhost:3001\nCONTACT_EMAIL=you@example.com\n' > web/.env.local
 yarn --cwd web dev
 ```
 
 The API and the web app check their settings when they start. A missing or invalid one stops them with an error naming the variable.
 
-In production the web app refuses to start unless `API_BASE_URL` starts with `https://` (or points at the same machine), because admin tokens travel in that connection. `yarn --cwd web build` needs the API running: it renders the home page once, and the server then renders it again at most once a minute.
+In production the web app refuses to start unless `API_BASE_URL` starts with `https://` (or points at the same machine), because admin tokens travel in that connection. The footer's Contact link opens an email to `CONTACT_EMAIL`, so the web app also needs it, for `yarn --cwd web dev` and for `yarn --cwd web build` (which renders the footer). `yarn --cwd web build` needs the API running: it renders the home page once, and the server then renders it again at most once a minute.
 
 **Emails locally:** run `docker run -d -p 1025:1025 -p 8025:8025 axllent/mailpit`, set `SMTP_URL="smtp://localhost:1025"`, and read the mail at http://localhost:8025.
 

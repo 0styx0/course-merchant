@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { SITE_NAME } from "@/lib/site-config/site-name";
 
@@ -23,6 +23,18 @@ describe("SiteFooter", () => {
     );
   });
 
+  it("opens an email to the shop from the Contact link", async () => {
+    vi.stubEnv("CONTACT_EMAIL", "hello@shop.test");
+    vi.resetModules();
+    const { SiteFooter: FreshSiteFooter } = await import("./site-footer");
+    render(<FreshSiteFooter />);
+
+    expect(screen.getByRole("link", { name: "Contact" })).toHaveAttribute(
+      "href",
+      "mailto:hello@shop.test",
+    );
+  });
+
   it("greys the links and darkens them on hover", () => {
     render(<SiteFooter />);
 
@@ -36,7 +48,7 @@ describe("SiteFooter", () => {
     }
   });
 
-  it("makes both links at least 44px tall", () => {
+  it("makes every link at least 44px tall", () => {
     render(<SiteFooter />);
 
     for (const link of within(screen.getByRole("contentinfo")).getAllByRole(
