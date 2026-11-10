@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { getCheckoutStatusHandlers } from "@/mocks/handlers/get-checkout-status";
 import { server } from "@/mocks/node";
-import CheckoutSuccessPage, { metadata } from "./page";
+import CheckoutSuccessPage, { generateMetadata } from "./page";
 
 // Its default export throws outside a React Server Component build
 vi.mock("server-only", () => ({}));
@@ -18,6 +18,12 @@ vi.mock("next/navigation", async (importOriginal) => ({
 
 const NOT_FOUND_DIGEST = "NEXT_HTTP_ERROR_FALLBACK;404";
 
+function readMetadata(checkoutId: string | undefined) {
+  return generateMetadata({
+    searchParams: Promise.resolve({ checkoutId }),
+  });
+}
+
 async function renderPage(checkoutId: string | string[] | undefined) {
   const page = await CheckoutSuccessPage({
     searchParams: Promise.resolve({ checkoutId }),
@@ -26,8 +32,25 @@ async function renderPage(checkoutId: string | string[] | undefined) {
 }
 
 describe("CheckoutSuccessPage", () => {
-  it("asks search engines not to index the page", () => {
-    expect(metadata.robots).toEqual({ index: false });
+  it("names the tab Thank you and asks search engines not to index the page", async () => {
+    server.use(getCheckoutStatusHandlers.success);
+
+    expect(await readMetadata("cs_test_1")).toEqual({
+      title: "Thank you",
+      robots: { index: false },
+    });
+  });
+
+  it("names the tab Checkout not found when the API answers 404", async () => {
+    server.use(getCheckoutStatusHandlers.checkoutNotFound);
+
+    expect((await readMetadata("cs_test_unknown")).title).toBe(
+      "Checkout not found",
+    );
+  });
+
+  it("names the tab Checkout not found when the link has no checkout id", async () => {
+    expect((await readMetadata(undefined)).title).toBe("Checkout not found");
   });
 
   it("thanks the buyer and names no address when the payment succeeded", async () => {

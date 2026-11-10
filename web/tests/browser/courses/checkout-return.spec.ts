@@ -3,6 +3,7 @@ import {
   getCheckoutStatusHandlers,
 } from "@/mocks/handlers/get-checkout-status";
 import { http, HttpResponse } from "msw";
+import { SITE_NAME } from "@/lib/site-config/site-name";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
 const { test, expect } = msw;
@@ -87,6 +88,7 @@ test("a checkout the API does not know shows the not-found page", async ({
   await expect(
     page.getByRole("heading", { level: 1, name: "Checkout not found" }),
   ).toBeVisible();
+  await expect(page).toHaveTitle(`Checkout not found · ${SITE_NAME}`);
   await expect(
     page.getByRole("link", { name: "See current courses →" }),
   ).toHaveAttribute("href", "/");

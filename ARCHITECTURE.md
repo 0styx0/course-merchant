@@ -62,7 +62,7 @@ Stripe is the record of money: the app stores only what it needs to decide who h
 
 | Folder | Responsibility |
 |---|---|
-| [app/](web/src/app/) | Routes only. The public pages sit in a `(shop)` group whose layout owns the page's `<main>`: the home page with the course list (rendered again at most once a minute), and a page for each course. |
+| [app/](web/src/app/) | Routes only. The public pages sit in a `(shop)` group whose layout owns the page's `<main>`: the home page with the course list (rendered again at most once a minute), and a page for each course. A root `not-found.tsx` wraps itself in the same header and footer and answers unknown URLs with "Page not found". |
 | [features/](web/src/features/) | One folder per area: server-only API wrappers (`<feature>.api.ts`), async *sections* that fetch, and components that take plain data. The areas are listed in the next four rows. |
 | [features/courses/](web/src/features/courses/) | The public course list and course page. |
 | [features/course-description/](web/src/features/course-description/) | The rich-text course description: the formatting it allows, and cleaning a description before it is sent to the API. |

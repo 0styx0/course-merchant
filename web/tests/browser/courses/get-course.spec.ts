@@ -4,6 +4,7 @@ import {
   courseByIdNotFound,
   courseByIdInvalidId,
 } from "@/mocks/handlers/get-course";
+import { SITE_NAME } from "@/lib/site-config/site-name";
 import { reactCourse, typescriptCourse } from "@/mocks/fixtures/courses";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
@@ -97,6 +98,7 @@ test("shows a 404 page when the course does not exist", async ({
   await expect(
     page.getByRole("heading", { level: 1, name: "Course not found" }),
   ).toBeVisible();
+  await expect(page).toHaveTitle(`Course not found · ${SITE_NAME}`);
 });
 
 test("shows a 404 page for an invalid course ID", async ({ page, msw }) => {

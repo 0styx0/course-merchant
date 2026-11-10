@@ -31,25 +31,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **5d.** A buyer who arrives before our server hears from Stripe watches the page switch to Check your email by itself, and after a minute reads that their payment was received.
 - **6. Site header and footer.** Every public page has the header, the phone menu and the footer.
   - [x] **6a.** Every public page shows a sticky header with the wordmark and Courses, and a footer with the wordmark and Courses.
-  - [ ] **6b.** A visitor who mistypes a URL sees "Page not found" with the header and footer, and a link back to the courses. **Next**
-    - *Behaviours*:
-      - `/nope` answers 404 with h1 "Page not found", "This page doesn't exist. The link may have a typo, or the page has moved." and a ghost "See current courses →" to `/`.
-      - An admin URL for a missing course shows the same page.
-      - The course and checkout 404s render the shared block and keep their titles and sentences.
-      - The course 404's link changes from an underlined "Browse all courses" to the ghost "See current courses →".
-      - The tab reads "Page not found · Embodying Emptiness"; the outline confirms how, because Next documents `metadata` only for `global-not-found`, so React 19's `<title>` may be needed.
-      - One browser test: `/nope` answers 404 with the banner landmark and the h1, because only a running Next server sends an unmatched URL to the root not-found page.
-    - *New shared pieces*: the not-found message block (title, detail, link), with three users.
-    - *Files*:
-      - web/src/components/not-found-message.tsx (+ test)
-      - web/src/app/not-found.tsx (new)
-      - web/src/app/(shop)/courses/[courseId]/not-found.tsx
-      - web/src/app/(shop)/checkout/success/not-found.tsx
-      - ARCHITECTURE.md (the app/ row)
-      - web/tests/browser/site-layout/unknown-url.spec.ts (one test)
-    - *Settled*: the unknown-URL row.
-    - *Done when*: the one browser test passes, and the existing 404 unit and browser tests pass.
-  - [ ] **6c.** The footer's Contact link opens an email to the shop, and the web server refuses to start without a valid address.
+  - [x] **6b.** A visitor who mistypes a URL sees "Page not found" with the header and footer and a ghost link to the courses; the course and checkout 404s share its look, and each 404 names its tab.
+  - [ ] **6c.** The footer's Contact link opens an email to the shop, and the web server refuses to start without a valid address. **Next**
     - *Behaviours*:
       - Contact's href is `mailto:` plus `CONTACT_EMAIL`.
       - When the setting is missing, boot stops with "CONTACT_EMAIL is not configured".

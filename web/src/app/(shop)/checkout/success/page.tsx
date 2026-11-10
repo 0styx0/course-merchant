@@ -3,12 +3,10 @@ import { notFound } from "next/navigation";
 
 import { ProblemAlert } from "@/components/problem-alert";
 import { CheckoutStatusMessage } from "@/features/checkout/success-page/checkout-status-message";
-import { getCheckoutStatus } from "@/features/checkout/success-page/checkout-status.api";
-
-export const metadata: Metadata = {
-  title: "Thank you",
-  robots: { index: false },
-};
+import {
+  getCheckoutStatus,
+  type GetCheckoutStatusResult,
+} from "@/features/checkout/success-page/checkout-status.api";
 
 type CheckoutSuccessPageProps = {
   searchParams: Promise<{ checkoutId?: string | string[] }>;
@@ -32,13 +30,36 @@ function readCheckoutId(
     : undefined;
 }
 
+function isCheckoutNotFound(result: GetCheckoutStatusResult): boolean {
+  return (
+    result.state === "failure" && result.error.code === "CHECKOUT_NOT_FOUND"
+  );
+}
+
+async function readTabTitle(checkoutId: string | undefined): Promise<string> {
+  if (checkoutId === undefined) {
+    return "Checkout not found";
+  }
+  const result = await getCheckoutStatus(checkoutId);
+  return isCheckoutNotFound(result) ? "Checkout not found" : "Thank you";
+}
+
+// A not-found page's own metadata never reaches the tab, so the page names the
+// tab for both outcomes.
+export async function generateMetadata({
+  searchParams,
+}: CheckoutSuccessPageProps): Promise<Metadata> {
+  const checkoutId = readCheckoutId((await searchParams).checkoutId);
+  return {
+    title: await readTabTitle(checkoutId),
+    robots: { index: false },
+  };
+}
+
 async function CheckoutReturn({ checkoutId }: { checkoutId: string }) {
   const result = await getCheckoutStatus(checkoutId);
 
-  if (
-    result.state === "failure" &&
-    result.error.code === "CHECKOUT_NOT_FOUND"
-  ) {
+  if (isCheckoutNotFound(result)) {
     notFound();
   }
 

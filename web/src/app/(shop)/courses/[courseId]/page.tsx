@@ -3,12 +3,23 @@ import { notFound } from "next/navigation";
 import { ProblemAlert } from "@/components/problem-alert";
 import { EnrollButton } from "@/features/checkout/start-checkout/enroll-button";
 import { CourseDetails } from "@/features/courses/course-details";
-import { getCourse } from "@/features/courses/courses.api";
+import {
+  getCourse,
+  type GetCourseResult,
+} from "@/features/courses/courses.api";
 import { formatPrice } from "@/lib/utils/formatters";
 
 type CoursePageProps = {
   params: Promise<{ courseId: string }>;
 };
+
+function isCourseNotFound(result: GetCourseResult): boolean {
+  return (
+    result.state === "failure" &&
+    (result.error.code === "COURSE_NOT_FOUND" ||
+      result.error.code === "INVALID_COURSE_ID")
+  );
+}
 
 export async function generateMetadata({
   params,
@@ -16,10 +27,12 @@ export async function generateMetadata({
   const { courseId } = await params;
   const result = await getCourse(courseId);
 
-  // The page alone decides on a 404.
-  return result.state === "success"
-    ? { title: result.data.name, description: result.data.summary }
-    : {};
+  if (result.state === "success") {
+    return { title: result.data.name, description: result.data.summary };
+  }
+  // A not-found page's own metadata never reaches the tab, so the page names
+  // the tab for a missing course.
+  return isCourseNotFound(result) ? { title: "Course not found" } : {};
 }
 
 export default async function CoursePage({ params }: CoursePageProps) {
@@ -29,11 +42,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
   // can no longer become 404.
   const result = await getCourse(courseId);
 
-  if (
-    result.state === "failure" &&
-    (result.error.code === "COURSE_NOT_FOUND" ||
-      result.error.code === "INVALID_COURSE_ID")
-  ) {
+  if (isCourseNotFound(result)) {
     notFound();
   }
 
