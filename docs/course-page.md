@@ -33,28 +33,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **6a.** Every public page shows a sticky header with the wordmark and Courses, and a footer with the wordmark and Courses.
   - [x] **6b.** A visitor who mistypes a URL sees "Page not found" with the header and footer and a ghost link to the courses; the course and checkout 404s share its look, and each 404 names its tab.
   - [x] **6c.** The footer's Contact link opens an email to the shop, and the web server refuses to start without a valid address.
-  - [ ] **6d.** On a phone, a Menu button opens a full-height sheet with Courses; Escape, the close button or a link closes it, and focus returns to Menu. **Next**
-    - *Behaviours*:
-      - Below `md`, the header hides Courses and shows a 44×44 button named "Menu".
-      - Pressing Menu opens a sheet from the right with Courses in a 48px row, and focus moves into the sheet.
-      - Tab stays inside the open sheet.
-      - Escape closes the sheet and returns focus to Menu.
-      - The close button does the same.
-      - Tapping Courses closes the sheet and goes home, even when already home.
-      - From `md` up, Menu hides and Courses shows.
-      - Unit tests cover opening, the focus trap, Escape, the close button and tapping Courses (jsdom runs Base UI dialogs, as the admin delete test shows).
-      - One browser test at 400px: Menu shows, Escape closes the sheet, and focus is back on Menu, because only a real browser applies the `md` breakpoint.
-    - *New shared pieces*: the shadcn Sheet primitive.
-    - *Files*:
-      - web/src/components/ui/sheet.tsx (from `yarn --cwd web shadcn add sheet`)
-      - web/src/features/site-layout/phone-menu.tsx (+ test)
-      - web/src/features/site-layout/site-header.tsx
-      - web/tests/browser/site-layout/phone-menu.spec.ts (one test)
-      - README.md Status
-      - docs/web.md (the shadcn row's `npx shadcn add` becomes `yarn --cwd web shadcn add`)
-    - *Settled*: the Sheet row.
-    - *Done when*: the milestone journey passes (see *Step 6*).
-- [ ] **7. Course page layout.** The image, title and description sit beside a sticky panel on desktop, stacked on a phone.
+  - [x] **6d.** On a phone, a Menu button opens a full-height sheet with Courses; Escape, the close button or a link closes it, and focus returns to Menu.
+- [ ] **7. Course page layout.** The image, title and description sit beside a sticky panel on desktop, stacked on a phone. **Next**
 - [ ] **8. Buy panel looks.** The panel shows the price, the button with its price, the after-enroll note, and the free, in-progress and ended looks.
 - [ ] **9. Course times in the visitor's words.** The panel shows the course's own time, the visitor's only when it differs, the length, and the status line.
 - [ ] **10. Phone buy bar.** A slim bar keeps the button on screen once the panel scrolls away; a tap opens the fields.
@@ -372,29 +352,10 @@ Desktop                                    Phone
 - Builds on: [layout.tsx](../web/src/app/%28shop%29/layout.tsx) (the shop layout), [layout.tsx](../web/src/app/layout.tsx) (the title template), [api-config.ts](../web/src/lib/api/config/api-config.ts) and [base-url.ts](../web/src/lib/api/config/base-url.ts) (the twin of the Contact setting), [instrumentation-node.ts](../web/src/instrumentation-node.ts), [alert-dialog.tsx](../web/src/components/ui/alert-dialog.tsx) (a sibling Base UI primitive), the two existing `not-found.tsx` files, style guide §7 (*Nav header*, *Footer*), and the wireframe's `.site-header` and `.site-footer` rules.
 - Size: 4 commits (the overview said 2 to 3: the unknown-URL page and the Contact setting each stand alone, so every commit stays within 6 files).
 - Done when: journey (`dev:mock`, 400 px and desktop, keyboard only): the same header and footer show on the home, course, course 404 and `/nope` pages; at 400 px open the menu, press Escape and see focus back on the menu button; the footer's Contact link opens a mail to `CONTACT_EMAIL`.
-- Design notes *(temporary)*:
-  - Base UI's Dialog returns focus to its trigger on close by default (`finalFocus`), which retires the focus risk.
-  - A link inside the sheet closes it itself, because the shop layout survives client navigation and the sheet would stay open.
-  - The contact setting lives in `lib/site-config/` beside the site name, because it is not an API setting and keeps the header folder small. It has a pure check and a wrapper that remembers the value, like `base-url.ts` and `api-config.ts`; one boot-check helper in `instrumentation-node.ts` serves both settings.
-  - `yarn build` prerenders the home page, so the build also needs `CONTACT_EMAIL`; the README's `web/.env.local` step covers it. `web/` has no `.env.example`.
-  - The wordmark shows twice on every page, so tests find it inside the banner or contentinfo landmark.
-  - Browser tests stay at two for the milestone (`/nope` in 6b, the 400 px menu in 6d), each for a fact jsdom can't show; [browser-tests.md](../.claude/rules/browser-tests.md) states the rule.
-  - Folder counts after the milestone: `features/site-layout/` 8 files, `lib/site-config/` 3, `tests/browser/site-layout/` 2.
-- Flow *(temporary)*:
-
-```
-Server boots
-├── CONTACT_EMAIL missing or invalid → logs the named error, exits    6c
-└── valid → remembered                                                6c
-Visitor opens a URL
-├── public page → header + page + footer                              6a
-├── unknown URL or missing admin course → Page not found, 404         6b
-└── course or checkout 404 → shared message inside the shop layout    6b
-Visitor presses Contact → mail app opens to CONTACT_EMAIL             6c
-Phone visitor presses Menu → sheet opens, focus inside                6d
-├── Escape or close button → closes, focus on Menu                    6d
-└── taps Courses → closes, goes home                                  6d
-```
+- Retro:
+  - Planned 4 commits (6a to 6d); shipped 4.
+  - Owner changes after using the page: not yet recorded.
+  - Rule friction: the shadcn CLI asks before overwriting `button.tsx`, which carries a local change, so `shadcn add` needs a "no" answer to keep it.
 
 ## Step 7. Course page layout
 
@@ -417,7 +378,10 @@ Desktop                                          Phone
 - Why here: the layout needs the header (6) and the form (2) to arrange.
 - Needs: 2, 6.
 - Size: 3 to 4 commits (image route; grid; description styles). Twins: [course-details.tsx](../web/src/features/courses/course-details.tsx), `.description-content` in globals.css (shared with the admin editor), courses.md *Course images*, item 5 (*Showing it*). Cards keep no image until the homepage redesign, so that item stays open for the card half.
+- Builds on: [course-details.tsx](../web/src/features/courses/course-details.tsx), [the course page route](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx) (the 56px and 72px heights the sticky top measures from), `.description-content` in [globals.css](../web/src/app/globals.css), courses.md *Course images*, style guide §7, the wireframe's course page grid, and the Decision rows on the desktop panel and the header heights.
 - Risk: restyling `.description-content` changes the admin editor.
+- Blocks the split: does the image route ship alone or with the grid; does restyling the description need its own commit for the admin editor's sake.
+- Re-measure: `ls web/src/features/courses` (folder count before adding files).
 - Done when: journey: scroll the course page at 1280 px and see the panel stay 96px under the header; at 320 px a long name wraps; a slow image keeps its 16:9 box.
 
 ## Step 8. Buy panel looks

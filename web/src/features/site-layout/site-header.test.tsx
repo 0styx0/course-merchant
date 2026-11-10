@@ -38,7 +38,22 @@ describe("SiteHeader", () => {
     );
   });
 
-  it("makes both links at least 44px tall", () => {
+  it("gives the Courses link and the Menu button opposite md breakpoint classes", () => {
+    render(<SiteHeader />);
+
+    const banner = screen.getByRole("banner");
+    expect(within(banner).getByRole("link", { name: "Courses" })).toHaveClass(
+      "hidden",
+      "md:flex",
+    );
+    expect(
+      within(banner)
+        .getByRole("button", { name: "Menu" })
+        .closest(".md\\:hidden"),
+    ).not.toBeNull();
+  });
+
+  it("makes the header links at least 44px tall", () => {
     render(<SiteHeader />);
 
     for (const link of within(screen.getByRole("banner")).getAllByRole(
