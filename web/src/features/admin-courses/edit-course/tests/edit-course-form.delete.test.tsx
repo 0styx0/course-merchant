@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -93,6 +93,20 @@ describe("EditCourseForm delete confirmation", () => {
       "It leaves the admin list, and students can no longer find or buy it.",
     );
     expect(saveAction).not.toHaveBeenCalled();
+  });
+
+  // Playfair loads weight 400 only, so the bold title keeps the body font.
+  it("draws the dialog title in the body font, not the heading font", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await saveAsDeleted(user);
+
+    const title = within(await findDeleteDialog()).getByText(
+      "Delete this course?",
+      { exact: true },
+    );
+    expect(title).not.toHaveClass("font-heading");
   });
 
   it("shows the usual errors and no dialog when the form is invalid", async () => {

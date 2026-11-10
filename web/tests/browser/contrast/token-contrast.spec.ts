@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { wcagContrast } from "culori";
 
 import { readRootToken, white } from "./measure-contrast";
@@ -75,22 +75,28 @@ const lightPairs: TokenPair[] = [
   })),
 ];
 
-test.beforeEach(async ({ page }) => {
+/** "white" names the literal colour; anything else names a root token. */
+function readForeground(page: Page, foreground: string) {
+  if (foreground === "white") return Promise.resolve(white);
+  return readRootToken(page, foreground);
+}
+
+// The pairs only read root tokens, so one page load serves them all; soft
+// checks report every failing pair, not just the first.
+test("every §11 colour pair reaches its contrast floor", async ({ page }) => {
   // Any page that loads globals.css works; the 404 page calls no API.
   await page.goto("/no-such-page");
-});
 
-for (const { foreground, background, floor } of lightPairs) {
-  const pairName = `${foreground} on ${background}`;
-
-  test(`${pairName} reaches ${floor}:1`, async ({ page }) => {
-    const foregroundColour =
-      foreground === "white" ? white : await readRootToken(page, foreground);
+  for (const { foreground, background, floor } of lightPairs) {
+    const pairName = `${foreground} on ${background}`;
+    const foregroundColour = await readForeground(page, foreground);
     const backgroundColour = await readRootToken(page, background);
 
-    expect(
-      wcagContrast(foregroundColour, backgroundColour),
-      `${pairName} needs ${floor}:1`,
-    ).toBeGreaterThanOrEqual(floor);
-  });
-}
+    expect
+      .soft(
+        wcagContrast(foregroundColour, backgroundColour),
+        `${pairName} needs ${floor}:1`,
+      )
+      .toBeGreaterThanOrEqual(floor);
+  }
+});

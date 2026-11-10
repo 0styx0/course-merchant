@@ -46,58 +46,9 @@ test.beforeEach(async ({ page, msw }) => {
   await openFormPage(page, editPath);
 });
 
-test("the default button is 48px high", async ({ page }) => {
-  const save = page.getByRole("button", { name: "Save changes" });
-  expect(await readStyle(save, "height")).toBe("48px");
-});
-
-test("Tab onto Save shows a 2px --primary ring 2px off the button", async ({
-  page,
-}) => {
-  const save = page.getByRole("button", { name: "Save changes" });
-  await tabUntilFocused(page, save);
-
+async function expectRingLayers(element: Locator, page: Page, token: string) {
   // The colour transition takes 150ms, so the ring needs a moment. The two
   // layers are the 2px gap in the page colour and the ring (4px with the gap).
-  await expect
-    .poll(async () =>
-      (await readVisibleShadowLayers(save)).map((layer) =>
-        layer.replace(/^\w+\([^)]*\) /, ""),
-      ),
-    )
-    .toEqual(["0px 0px 0px 2px", "0px 0px 0px 4px"]);
-
-  const [, ringLayer] = await readVisibleShadowLayers(save);
-  const ringColour = toRgb(ringLayer.replace(/ [^)]*$/, ""));
-  const primary = await readRootToken(page, "--primary");
-  expect(ringColour.r).toBeCloseTo(primary.r, 1);
-  expect(ringColour.g).toBeCloseTo(primary.g, 1);
-  expect(ringColour.b).toBeCloseTo(primary.b, 1);
-});
-
-test("pressing the mouse on Save shows no ring", async ({ page }) => {
-  const save = page.getByRole("button", { name: "Save changes" });
-  await save.hover();
-  await page.mouse.down();
-  await expect(save).toBeFocused();
-  // Moving off before the release sends no click, so the form submits nothing.
-  await page.mouse.move(0, 0);
-  await page.mouse.up();
-  await expect.poll(() => readVisibleShadowLayers(save)).toEqual([]);
-});
-
-test("the delete dialog's title is DM Sans, not Playfair", async ({ page }) => {
-  await page.getByRole("radio", { name: "Deleted" }).click();
-  await page.getByRole("button", { name: "Save changes" }).click();
-  const dialog = page.getByRole("alertdialog", { name: "Delete this course?" });
-  const title = dialog
-    .getByText("Delete this course?", { exact: true })
-    .first();
-  expect(await readStyle(title, "font-family")).toMatch(/^"DM Sans"/);
-});
-
-async function expectRingLayers(element: Locator, page: Page) {
-  // The two layers are the 2px gap in the page colour and the ring (4px with the gap).
   await expect
     .poll(async () =>
       (await readVisibleShadowLayers(element)).map((layer) =>
@@ -108,15 +59,19 @@ async function expectRingLayers(element: Locator, page: Page) {
 
   const [, ringLayer] = await readVisibleShadowLayers(element);
   const ringColour = toRgb(ringLayer.replace(/ [^)]*$/, ""));
-  const ring = await readRootToken(page, "--ring");
-  expect(ringColour.r).toBeCloseTo(ring.r, 1);
-  expect(ringColour.g).toBeCloseTo(ring.g, 1);
-  expect(ringColour.b).toBeCloseTo(ring.b, 1);
+  const tokenColour = await readRootToken(page, token);
+  expect(ringColour.r).toBeCloseTo(tokenColour.r, 1);
+  expect(ringColour.g).toBeCloseTo(tokenColour.g, 1);
+  expect(ringColour.b).toBeCloseTo(tokenColour.b, 1);
 }
 
-test("Course name and the time zone box are 48px high with the --card fill", async ({
+// Each test reads several controls on one page load; jsdom applies no CSS.
+test("Save, Course name and the time zone box are 48px high, and the boxes have the --card fill", async ({
   page,
 }) => {
+  const save = page.getByRole("button", { name: "Save changes" });
+  expect(await readStyle(save, "height")).toBe("48px");
+
   const card = await readRootToken(page, "--card");
   const boxes = [
     page.getByLabel("Course name", { exact: true }),
@@ -132,14 +87,31 @@ test("Course name and the time zone box are 48px high with the --card fill", asy
   }
 });
 
-test("a mouse click into Course name shows the ring", async ({ page }) => {
-  const name = page.getByLabel("Course name", { exact: true });
-  await name.click();
-  await expectRingLayers(name, page);
-});
-
-test("Tab onto the status radio shows the ring", async ({ page }) => {
+test("Tab shows the --ring ring on the status radio, then a 2px --primary ring 2px off Save", async ({
+  page,
+}) => {
   const radio = page.getByRole("radio", { checked: true });
   await tabUntilFocused(page, radio);
-  await expectRingLayers(radio, page);
+  await expectRingLayers(radio, page, "--ring");
+
+  const save = page.getByRole("button", { name: "Save changes" });
+  await tabUntilFocused(page, save);
+  await expectRingLayers(save, page, "--primary");
+});
+
+test("a mouse click into Course name shows the ring, and pressing the mouse on Save shows none", async ({
+  page,
+}) => {
+  const name = page.getByLabel("Course name", { exact: true });
+  await name.click();
+  await expectRingLayers(name, page, "--ring");
+
+  const save = page.getByRole("button", { name: "Save changes" });
+  await save.hover();
+  await page.mouse.down();
+  await expect(save).toBeFocused();
+  // Moving off before the release sends no click, so the form submits nothing.
+  await page.mouse.move(0, 0);
+  await page.mouse.up();
+  await expect.poll(() => readVisibleShadowLayers(save)).toEqual([]);
 });

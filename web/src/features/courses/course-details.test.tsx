@@ -59,4 +59,12 @@ describe("CourseDetails", () => {
     expect(screen.getByText("0 enrolled")).toBeVisible();
     expect(screen.getByText(formatPrice(1250, "EUR"))).toBeVisible();
   });
+
+  it("shows the summary in the muted text colour", () => {
+    render(<CourseDetails course={course} />);
+
+    expect(screen.getByText(course.summary)).toHaveClass(
+      "text-muted-foreground",
+    );
+  });
 });

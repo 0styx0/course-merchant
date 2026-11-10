@@ -65,75 +65,56 @@ async function expectIconContrast(icon: Locator) {
   expect(ratio).toBeGreaterThanOrEqual(minimumContrast);
 }
 
-test.describe("create page", () => {
-  test.beforeEach(async ({ page }) => {
-    await openFormPage(page, createPath);
-  });
+// One page load per form: each check reads computed colours on the same page,
+// and the date boxes share the Course name box's input styles.
+test("the create page's borders and field icons reach 3:1", async ({
+  page,
+}) => {
+  await openFormPage(page, createPath);
+  const name = page.getByLabel("Course name", { exact: true });
 
-  test("the Course name box border reaches 3:1", async ({ page }) => {
-    await expectBorderContrast(page.getByLabel("Course name", { exact: true }));
-  });
+  await expectBorderContrast(name);
+  await expectBorderContrast(page.locator(".description-content"));
 
-  test("a date box border reaches 3:1", async ({ page }) => {
-    await expectBorderContrast(page.getByLabel("Start date", { exact: true }));
-  });
+  await name.focus();
+  await expectBorderContrast(name);
 
-  test("the description editor border reaches 3:1", async ({ page }) => {
-    await expectBorderContrast(page.locator(".description-content"));
-  });
+  await name.fill("x");
+  await name.fill("");
+  await name.blur();
+  await expectIconContrast(
+    page.getByRole("img", { name: "Needs a fix" }).first(),
+  );
 
-  test("a focused box's border reaches 3:1", async ({ page }) => {
-    const name = page.getByLabel("Course name", { exact: true });
-    await name.focus();
-    await expectBorderContrast(name);
-  });
-
-  test("the cross beside an invalid field reaches 3:1", async ({ page }) => {
-    const name = page.getByLabel("Course name", { exact: true });
-    await name.fill("x");
-    await name.fill("");
-    await name.blur();
-    await expectIconContrast(
-      page.getByRole("img", { name: "Needs a fix" }).first(),
-    );
-  });
-
-  test("the check beside a valid field reaches 3:1", async ({ page }) => {
-    const name = page.getByLabel("Course name", { exact: true });
-    await name.fill("A valid course name");
-    await name.blur();
-    await expectIconContrast(
-      page.getByRole("img", { name: "Looks good" }).first(),
-    );
-  });
+  await name.fill("A valid course name");
+  await name.blur();
+  await expectIconContrast(
+    page.getByRole("img", { name: "Looks good" }).first(),
+  );
 });
 
-test.describe("edit page", () => {
-  test.beforeEach(async ({ page, msw }) => {
-    msw.use(getCourseAsAdminHandlers.success);
-    await openFormPage(page, editPath);
-    await expect(
-      page.getByLabel("Course name", { exact: true }),
-    ).not.toHaveValue("");
-  });
+// The greyed-out Deleted circle is left out: it is disabled, which WCAG exempts.
+test("the edit page's unchecked status circle reaches 3:1 and the checked one keeps the primary colour", async ({
+  page,
+  msw,
+}) => {
+  msw.use(getCourseAsAdminHandlers.success);
+  await openFormPage(page, editPath);
+  await expect(page.getByLabel("Course name", { exact: true })).not.toHaveValue(
+    "",
+  );
 
-  // The greyed-out Deleted circle is left out: it is disabled, which WCAG exempts.
-  test("an unchecked status circle border reaches 3:1", async ({ page }) => {
-    const unchecked = page
-      .getByRole("radio", { checked: false, disabled: false })
-      .first();
-    await expectBorderContrast(unchecked);
-  });
+  await expectBorderContrast(
+    page.getByRole("radio", { checked: false, disabled: false }).first(),
+  );
 
-  test("the checked status circle keeps the primary colour", async ({
-    page,
-  }) => {
-    const checked = page.getByRole("radio", { checked: true });
-    const { colour } = await readColours(checked, "border-top-color");
-    const { colour: primary } = await readColours(
-      page.getByRole("button", { name: "Save changes" }),
-      "background-color",
-    );
-    expect(formatHex(toRgb(colour))).toBe(formatHex(toRgb(primary)));
-  });
+  const { colour } = await readColours(
+    page.getByRole("radio", { checked: true }),
+    "border-top-color",
+  );
+  const { colour: primary } = await readColours(
+    page.getByRole("button", { name: "Save changes" }),
+    "background-color",
+  );
+  expect(formatHex(toRgb(colour))).toBe(formatHex(toRgb(primary)));
 });
