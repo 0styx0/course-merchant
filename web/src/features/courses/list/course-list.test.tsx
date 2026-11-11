@@ -37,7 +37,7 @@ describe("CourseList", () => {
     const courses = screen.getByRole("region", { name: "Courses" });
     const cards = within(courses).getAllByRole("article");
 
-    expect(cards).toHaveLength(4);
+    expect(cards).toHaveLength(5);
     expect(cards[0]).toHaveTextContent("React Fundamentals");
     expect(cards[1]).toHaveTextContent("Advanced TypeScript");
     expect(cards[2]).toHaveTextContent("Mindful Breathing");

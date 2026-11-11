@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { ProblemAlert } from "@/components/problem-alert";
 import { EnrollButton } from "@/features/checkout/start-checkout/enroll-button";
 import { BuyPanel } from "@/features/courses/buy-panel/buy-panel";
+import {
+  getCourseStage,
+  type CourseStage,
+} from "@/features/courses/buy-panel/course-stage";
 import { CourseDetails } from "@/features/courses/course-details";
 import {
   getCourse,
   type GetCourseResult,
 } from "@/features/courses/courses.api";
+import type { Course } from "@/lib/types";
 import { formatPrice } from "@/lib/utils/formatters";
 import { isFreePrice } from "@/lib/utils/is-free-price";
 
@@ -52,7 +58,26 @@ export default async function CoursePage({ params }: CoursePageProps) {
     return <ProblemAlert problem={result.error} />;
   }
 
+  // The stage depends on the current time, so the page renders per request.
+  await connection();
   const course = result.data;
+
+  return (
+    <CourseDetails course={course}>
+      <CourseBuyPanel
+        course={course}
+        stage={getCourseStage(course.schedule, new Date())}
+      />
+    </CourseDetails>
+  );
+}
+
+type CourseBuyPanelProps = {
+  course: Course;
+  stage: CourseStage;
+};
+
+function CourseBuyPanel({ course, stage }: CourseBuyPanelProps) {
   const formattedPrice = formatPrice(
     course.price.amount,
     course.price.currency,
@@ -62,14 +87,13 @@ export default async function CoursePage({ params }: CoursePageProps) {
     : formattedPrice;
 
   return (
-    <CourseDetails course={course}>
-      <BuyPanel
-        courseName={course.name}
-        schedule={course.schedule}
-        price={formattedPrice}
-      >
-        <EnrollButton courseId={course.id} priceLabel={priceLabel} />
-      </BuyPanel>
-    </CourseDetails>
+    <BuyPanel
+      courseName={course.name}
+      schedule={course.schedule}
+      price={formattedPrice}
+      stage={stage}
+    >
+      <EnrollButton courseId={course.id} priceLabel={priceLabel} />
+    </BuyPanel>
   );
 }

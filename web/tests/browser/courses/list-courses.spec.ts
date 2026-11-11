@@ -31,7 +31,7 @@ test("displays available courses", async ({ page }) => {
   const courses = page.getByRole("region", { name: "Courses" });
   const cards = courses.getByRole("article");
 
-  await expect(cards).toHaveCount(4);
+  await expect(cards).toHaveCount(5);
 
   await expect(cards.nth(0)).toContainText(reactCourse.name);
   await expect(cards.nth(1)).toContainText(typescriptCourse.name);

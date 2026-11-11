@@ -17,3 +17,10 @@ export function dateTimeFormatter(timeZone: string) {
     timeZone: timeZone,
   });
 }
+
+export function dateOnlyFormatter(timeZone: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeZone: timeZone,
+  });
+}

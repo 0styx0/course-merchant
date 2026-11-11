@@ -5,7 +5,11 @@ import {
   courseByIdInvalidId,
 } from "@/mocks/handlers/courses/get-course";
 import { SITE_NAME } from "@/lib/site-config/site-name";
-import { reactCourse, typescriptCourse } from "@/mocks/fixtures/courses";
+import {
+  inProgressCourse,
+  reactCourse,
+  typescriptCourse,
+} from "@/mocks/fixtures/courses";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
 const { test, expect } = msw;
@@ -133,4 +137,19 @@ test("shows the course image in a 16:9 box served by Next's resizer", async ({
       `^/_next/image\\?url=${encodeURIComponent(`/courses/${reactCourse.id}/image/${reactCourse.image.version}`)}&`,
     ),
   );
+});
+
+// Unit tests pass the stage in by hand; only a real request shows that the
+// page reads the server's clock and hands the right stage to the panel.
+test("labels a course by where the server's clock puts it", async ({
+  page,
+}) => {
+  await page.goto(`/courses/${reactCourse.id}`);
+  await expect(
+    page.getByText("Starts Oct 1, 2030", { exact: true }),
+  ).toBeVisible();
+
+  await page.goto(`/courses/${inProgressCourse.id}`);
+  await expect(page.getByText("In progress", { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Starts/)).toHaveCount(0);
 });

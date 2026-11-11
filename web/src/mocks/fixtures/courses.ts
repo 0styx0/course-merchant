@@ -213,9 +213,28 @@ export const longCourse = {
   },
 } as const satisfies Course;
 
+export const inProgressCourse = {
+  id: "a4c8e2f6-1b39-4d75-9e0a-3f5b7d9c1e24",
+  name: "Rust for Busy Developers",
+  summary: "A started course that still takes enrollments",
+  description: paragraphDoc("Ownership, borrowing and lifetimes in practice."),
+  enrollmentCount: 12,
+  image: { version: sampleImageVersion },
+  price: {
+    amount: 12900,
+    currency: "USD",
+  },
+  schedule: {
+    startTime: "2020-01-01T00:00:00Z",
+    endTime: "2040-12-01T00:00:00Z",
+    timeZone: "America/New_York",
+  },
+} as const satisfies Course;
+
 export const publicCourses = [
   reactCourse,
   typescriptCourse,
   freeCourse,
   longCourse,
+  inProgressCourse,
 ];
