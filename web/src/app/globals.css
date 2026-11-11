@@ -189,19 +189,37 @@
   .description-content {
     > * + *,
     li > * + * {
-      margin-top: 0.75rem;
+      margin-top: 1rem;
+    }
+    h2,
+    h3,
+    h4 {
+      color: var(--foreground);
     }
     h2 {
+      margin-top: 2.5rem;
+      font-family: var(--font-heading);
       font-size: 1.5rem;
-      font-weight: 700;
+      font-weight: 400;
+      line-height: 1.25;
     }
     h3 {
-      font-size: 1.25rem;
-      font-weight: 700;
+      margin-top: 2rem;
+      font-family: var(--font-sans);
+      font-size: 1.125rem;
+      font-weight: 500;
+      line-height: 1.55;
     }
     h4 {
-      font-size: 1.125rem;
-      font-weight: 600;
+      margin-top: 1.5rem;
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      font-weight: 500;
+      line-height: 1.6;
+    }
+    /* Outranks the heading margins above, so the first heading sits flush */
+    > :first-child {
+      margin-top: 0;
     }
     ul,
     ol {
@@ -213,20 +231,23 @@
     ol {
       list-style: decimal;
     }
+    li + li,
     li > ul,
     li > ol {
       margin-top: 0.25rem;
     }
     a {
+      color: var(--primary);
       text-decoration: underline;
     }
     blockquote {
-      border-left: 4px solid var(--border);
-      padding-left: 1rem;
-      font-style: italic;
+      border-left: 1px solid var(--input);
+      padding-left: 1.5rem;
+      color: var(--foreground);
     }
     hr {
       border-top: 1px solid var(--border);
+      margin-block: 2rem;
     }
   }
 }

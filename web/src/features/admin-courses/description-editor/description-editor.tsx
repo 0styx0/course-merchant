@@ -32,7 +32,7 @@ type DescriptionEditorProps = {
 const editorExtensions = [...descriptionExtensions, CharacterCountExtension];
 
 const EDITABLE_AREA_CLASSES =
-  "description-content min-h-40 w-full rounded-md border border-input bg-card px-4 py-3 text-base outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background aria-invalid:border-destructive";
+  "description-content min-h-40 w-full rounded-md border border-input bg-card px-4 py-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background aria-invalid:border-destructive";
 
 function useDescriptionEditor({
   value,

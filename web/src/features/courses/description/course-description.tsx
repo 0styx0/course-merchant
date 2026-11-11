@@ -12,8 +12,10 @@ type CourseDescriptionProps = {
 };
 
 export function CourseDescription({ description }: CourseDescriptionProps) {
+  // The admin editor shares `description-content` but sets no size or colour,
+  // so the admin types in full-contrast 16px text; only this page mutes it.
   return (
-    <div className="description-content">
+    <div className="description-content text-body-lg text-muted-foreground">
       {renderToReactElement({
         content: description,
         extensions: descriptionExtensions,

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { CourseDescription } from "./course-description";
 
 describe("CourseDescription on the server", () => {
-  it("renders to HTML without a browser", () => {
+  it("renders to HTML without a browser, in the shared description class plus the public muted body text", () => {
     const html = renderToStaticMarkup(
       <CourseDescription
         description={{
@@ -24,7 +24,7 @@ describe("CourseDescription on the server", () => {
     );
 
     expect(html).toBe(
-      '<div class="description-content"><p>Hello <strong>world</strong></p></div>',
+      '<div class="description-content text-body-lg text-muted-foreground"><p>Hello <strong>world</strong></p></div>',
     );
   });
 });

@@ -39,25 +39,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **7b.** A visitor who opens a course's image address sees its image; nothing shows on the page until 7c.
   - [x] **7c.** The course page shows the image above the title in a 16:9 box, resized by Next for each screen.
   - [x] **7d.** On desktop, the details and the Enroll button stay 96px from the top while the description scrolls; on a phone, they sit under the summary.
-  - [ ] **7e.** The description reads in the wireframe's rich-text look. **Next**
-    - *Behaviours*:
-      - h2 shows Playfair weight 400 at 1.5rem; h3 and h4 show DM Sans weight 500.
-      - Headings get 40, 32 and 24px top margins, and the first child gets none.
-      - Lists indent 24px with a 4px gap.
-      - Quotes take a 1px `--input` rule, 24px padding and the foreground colour.
-      - Dividers sit 32px from the text.
-      - Links show `--primary` and an underline.
-      - The public page alone sets body-lg muted body text.
-      - The admin editor keeps 16px body text in the foreground colour, and drops its `text-base` so it shows the shared heading and list styles.
-    - *New shared pieces*: none.
-    - *Files*:
-      - [globals.css](../web/src/app/globals.css) (`.description-content`)
-      - [course-description.tsx](../web/src/features/courses/description/course-description.tsx)
-      - [description-editor.tsx](../web/src/features/admin-courses/description-editor/description-editor.tsx)
-      - one browser spec reading computed styles on the public page and in the editor
-    - *Settled*: the row on the shared description class.
-    - *Done when*: the spec matches the values above, and the contrast spec passes.
-- [ ] **8. Buy panel looks.** The panel shows the price, the button with its price, the after-enroll note, and the free, in-progress and ended looks.
+  - [x] **7e.** The description reads in the wireframe's rich-text look on the public page and in the admin editor.
+- [ ] **8. Buy panel looks.** The panel shows the price, the button with its price, the after-enroll note, and the free, in-progress and ended looks. **Next** (needs `/plan-create-implementation` first)
 - [ ] **9. Course times in the visitor's words.** The panel shows the course's own time, the visitor's only when it differs, the length, and the status line.
 - [ ] **10. Phone buy bar.** A slim bar keeps the button on screen once the panel scrolls away; a tap opens the fields.
 - [ ] **11. Fixes from using the page.** The owner's findings from the full walk are fixed.
@@ -410,26 +393,10 @@ While the image loads: an empty 16:9 box, so nothing below it moves.
 - Builds on: [course-details.tsx](../web/src/features/courses/course-details.tsx), [the course page route](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx) (the 56px and 72px heights the sticky top measures from), `.description-content` in [globals.css](../web/src/app/globals.css), courses.md *Course images*, style guide §7, the wireframe's course page grid, and the Decision rows on the desktop panel and the header heights.
 - Risk: restyling `.description-content` changes the admin editor.
 - Done when: journey: scroll the course page at 1280 px and see the panel stay 96px under the header; at 320 px a long name wraps; a slow image keeps its 16:9 box.
-- Design notes *(temporary)*:
-  - Image: Next's resizer with `localPatterns` `{ pathname: "/courses/*/image/*", search: "" }` and `qualities: [75]`. Next 16 renamed `priority` to `preload`.
-  - Browser tests and the resizer: the resizer's internal request drops the mock-proxy header, so specs check the box and address; `dev:mock` shows the pixels.
-  - Grid: one 12-column grid from `md`; the side column spans both rows (summary, description), with `self-start` and `sticky top-24`.
-  - Folder count: 7c adds a file and its test to `features/courses`; re-measure with `ls web/src/features/courses` first.
-  - Editor: `text-base` on the editor beats the shared class, so 7e removes it; the shared class carries structure only, and the public wrapper adds body-lg muted text.
-- Flow *(temporary)*:
-
-```
-Visitor opens a course page                                   existing
-└── page draws the image through Next's resizer                7c
-      └── resizer asks /courses/{id}/image/{version}           7b
-            ├── id isn't a UUID, or version isn't digits
-            │     → 404, no API call                           7b
-            ├── API 404 COURSE_NOT_FOUND or 400 INVALID_COURSE_ID
-            │     → 404; the 16:9 box stays empty              7b
-            ├── API 500 → throw → 500; the box stays empty     7b
-            └── 200 → WebP bytes with the API's long cache
-                  → resizer sends a size that fits the screen  7c
-```
+- Retro:
+  - Planned 5 commits (7a to 7e); shipped 5.
+  - Owner changes after using the page: not yet recorded.
+  - Rule friction: the editor's `text-base` beat the shared class, so the editor drops it and the public wrapper adds the muted body-lg text.
 
 ## Step 8. Buy panel looks
 
