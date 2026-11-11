@@ -35,23 +35,40 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **6c.** The footer's Contact link opens an email to the shop, and the web server refuses to start without a valid address.
   - [x] **6d.** On a phone, a Menu button opens a full-height sheet with Courses; Escape, the close button or a link closes it, and focus returns to Menu.
 - **7. Course page layout.** The image, title and description sit beside a sticky panel on desktop, stacked on a phone.
-  - [ ] **7a.** A visitor who opens a course's image address sees its image. **Next**
+  - [ ] **7a.** The mock handlers sit in topic folders, so the next handler fits. *(mechanical)* **Next**
+    - *Behaviours*: none change.
+    - *New shared pieces*: `storedCourseImageBytes` moves into `web/src/mocks/fixtures/`, because the admin and public image handlers both use it.
+    - *Files*:
+      - `web/src/mocks/handlers/admin-courses/`: create-course, get-course-as-admin, update-course, upload-course-image, get-course-image-as-admin.
+      - `web/src/mocks/handlers/courses/`: list-courses, get-course, get-course.test.
+      - `web/src/mocks/handlers/checkout/`: start-checkout, get-checkout-status.
+      - Every file that imports a handler (26 files); each handler's own `../` imports become `../../`.
+      - [node.ts](../web/src/mocks/node.ts) and `remembered-handlers.test.ts` (new paths).
+      - Wording in [web/CLAUDE.md](../web/CLAUDE.md) (line 28), [CONTRIBUTING.md](../CONTRIBUTING.md) (line 72), [test-reliability.md](test-reliability.md) (lines 53, 273) and [course-creation.md](course-creation.md) (line 165).
+      - Folder counts after the move: 5, 3 and 2.
+    - *Settled*: web/CLAUDE.md's one-file-per-endpoint rule, now applied inside topic folders.
+    - *Done when*: `yarn --cwd web check:changed` passes, the unit test count matches before and after, and the browser specs that use handlers pass.
+  - [ ] **7b.** A visitor who opens a course's image address sees its image. Nothing shows on the page until 7c.
     - *Behaviours*:
       - Answers 200 with `image/webp`, which the route sets itself, plus the API's `Cache-Control`.
+      - Answers 200 with no `Cache-Control` when the API sends none; the route still serves the image.
       - Answers 404 without calling the API for an id that isn't a UUID.
-      - Answers 404 without calling the API for a version that isn't digits.
+      - Answers 404 without calling the API for a version that isn't digits (`"1a"`, `""`, `"0"` and `"007"` each get a case).
       - Answers 404 when the API says 404 `COURSE_NOT_FOUND`.
       - Answers 404 when the API says 400 `INVALID_COURSE_ID`.
-      - Throws, so Next answers 500, when the API answers 500.
-    - *New shared pieces*: the public image mock handler, which 7b and 7c walk with; it reuses `storedCourseImageBytes` from [get-course-image-as-admin.ts](../web/src/mocks/handlers/get-course-image-as-admin.ts).
+      - Throws, so Next answers 500, for any other API problem (a 500, or a 404 or 400 with another code), because the API's problem body makes `toResult` return a failure.
+      - Throws when the API can't be reached.
+    - *New shared pieces*: the public image mock handler (`success`, `notFound`, `error`), which 7c and 7d walk with; it reuses `storedCourseImageBytes` from `web/src/mocks/fixtures/`.
     - *Files*:
-      - `web/src/app/(shop)/courses/[courseId]/image/[version]/route.ts` (new)
-      - [courses.api.ts](../web/src/features/courses/courses.api.ts) (an image wrapper, `parseAs: "arrayBuffer"`, returns a `Result`)
-      - `web/src/mocks/handlers/get-course-image.ts` (new)
+      - `web/src/app/(shop)/courses/[courseId]/image/[version]/route.ts` (new, with its test)
+      - [courses.api.ts](../web/src/features/courses/courses.api.ts) (an image wrapper, `parseAs: "arrayBuffer"`; its success holds the bytes and the API's `Cache-Control`, because `toResult` drops the headers)
+      - `web/src/mocks/handlers/courses/get-course-image.ts` (new)
       - [node.ts](../web/src/mocks/node.ts) (registers the handler)
+    - *Copy reason*: the route and wrapper repeat the admin image route's shape (the `arrayBuffer` parse, the UUID check). They differ by checking the version, passing `Cache-Control` through, throwing on other failures, and answering 404 where admin answers 502; a shared helper would need three parameters.
+    - *Needs*: 7a.
     - *Settled*: courses.md *Course images → Showing it*.
-    - *Done when*: the route and wrapper unit tests pass; 7b uses the route next.
-  - [ ] **7b.** The course page shows the image above the title, resized by Next for each screen.
+    - *Done when*: the route and wrapper unit tests pass; 7c uses the route next.
+  - [ ] **7c.** The course page shows the image above the title, resized by Next for each screen.
     - *Behaviours*:
       - Shows the image 16:9, with `alt=""`, square corners, `preload`, and `sizes` for columns 1–7 on desktop and full width on a phone.
       - Keeps the 16:9 box while the image loads.
@@ -66,14 +83,14 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
     - *Done when*:
       - The browser spec sees a 16:9 box whose address points at the resizer with our image route.
       - The owner walks `dev:mock` and sees the image load.
-  - [ ] **7c.** On desktop, the details and the Enroll button stay 96px from the top while the description scrolls; on a phone, they sit under the summary.
+  - [ ] **7d.** On desktop, the details and the Enroll button stay 96px from the top while the description scrolls; on a phone, they sit under the summary.
     - *Behaviours*:
       - Desktop: columns 1–7 hold the image, title, summary and description; columns 9–12 hold the sticky details and button.
       - Phone order: image, title, summary, details and button, description.
       - Keyboard order follows the phone order.
       - At 320px the page has no horizontal scroll, and a long title wraps.
       - The public page frame is 1200px wide, with 48px side padding from `md` and 24px below.
-    - *New shared pieces*: a mock course with a long rich description (headings, lists, quote, divider, link), used by 7c and 7d and shown on the mock home list.
+    - *New shared pieces*: a mock course with a long rich description (headings, lists, quote, divider, link), used by 7d and 7e and shown on the mock home list.
     - *Files*:
       - [course-details.tsx](../web/src/features/courses/course-details.tsx) (grid; takes the buy block as `children`)
       - [page.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx) (passes the Enroll button in)
@@ -83,7 +100,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
       - one browser spec for the layout
     - *Settled*: the rows on the desktop panel, the header heights, the page frame and the course page's DOM order.
     - *Done when*: at 1280px the column stays 96px down after scrolling; at 400px it stacks in the phone order.
-  - [ ] **7d.** The description reads in the wireframe's rich-text look.
+  - [ ] **7e.** The description reads in the wireframe's rich-text look.
     - *Behaviours*:
       - h2 shows Playfair weight 400 at 1.5rem; h3 and h4 show DM Sans weight 500.
       - Headings get 40, 32 and 24px top margins, and the first child gets none.
@@ -450,7 +467,7 @@ While the image loads: an empty 16:9 box, so nothing below it moves.
 
 - Why here: the layout needs the header (6) and the form (2) to arrange.
 - Needs: 2, 6.
-- Size: 4 commits (image route; image on the page; grid; description styles). Twins: [course-details.tsx](../web/src/features/courses/course-details.tsx), `.description-content` in globals.css (shared with the admin editor), courses.md *Course images*, item 5 (*Showing it*). Cards keep no image until the homepage redesign, so that item stays open for the card half.
+- Size: 5 commits (handler folders; image route; image on the page; grid; description styles); the handler folders came first because `mocks/handlers/` held 10 files. Twins: [course-details.tsx](../web/src/features/courses/course-details.tsx), `.description-content` in globals.css (shared with the admin editor), courses.md *Course images*, item 5 (*Showing it*). Cards keep no image until the homepage redesign, so that item stays open for the card half.
 - Builds on: [course-details.tsx](../web/src/features/courses/course-details.tsx), [the course page route](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx) (the 56px and 72px heights the sticky top measures from), `.description-content` in [globals.css](../web/src/app/globals.css), courses.md *Course images*, style guide §7, the wireframe's course page grid, and the Decision rows on the desktop panel and the header heights.
 - Risk: restyling `.description-content` changes the admin editor.
 - Done when: journey: scroll the course page at 1280 px and see the panel stay 96px under the header; at 320 px a long name wraps; a slow image keeps its 16:9 box.
@@ -458,21 +475,21 @@ While the image loads: an empty 16:9 box, so nothing below it moves.
   - Image: Next's resizer with `localPatterns` `{ pathname: "/courses/*/image/*", search: "" }` and `qualities: [75]`. Next 16 renamed `priority` to `preload`.
   - Browser tests and the resizer: the resizer's internal request drops the mock-proxy header, so specs check the box and address; `dev:mock` shows the pixels.
   - Grid: one 12-column grid from `md`; the side column spans both rows (summary, description), with `self-start` and `sticky top-24`.
-  - Folder count: 7b adds a file and its test to `features/courses`; re-measure with `ls web/src/features/courses` first.
-  - Editor: `text-base` on the editor beats the shared class, so 7d removes it; the shared class carries structure only, and the public wrapper adds body-lg muted text.
+  - Folder count: 7c adds a file and its test to `features/courses`; re-measure with `ls web/src/features/courses` first.
+  - Editor: `text-base` on the editor beats the shared class, so 7e removes it; the shared class carries structure only, and the public wrapper adds body-lg muted text.
 - Flow *(temporary)*:
 
 ```
 Visitor opens a course page                                   existing
-└── page draws the image through Next's resizer                7b
-      └── resizer asks /courses/{id}/image/{version}           7a
+└── page draws the image through Next's resizer                7c
+      └── resizer asks /courses/{id}/image/{version}           7b
             ├── id isn't a UUID, or version isn't digits
-            │     → 404, no API call                           7a
+            │     → 404, no API call                           7b
             ├── API 404 COURSE_NOT_FOUND or 400 INVALID_COURSE_ID
-            │     → 404; the 16:9 box stays empty              7a
-            ├── API 500 → throw → 500; the box stays empty     7a
+            │     → 404; the 16:9 box stays empty              7b
+            ├── API 500 → throw → 500; the box stays empty     7b
             └── 200 → WebP bytes with the API's long cache
-                  → resizer sends a size that fits the screen  7b
+                  → resizer sends a size that fits the screen  7c
 ```
 
 ## Step 8. Buy panel looks
