@@ -34,7 +34,73 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **6b.** A visitor who mistypes a URL sees "Page not found" with the header and footer and a ghost link to the courses; the course and checkout 404s share its look, and each 404 names its tab.
   - [x] **6c.** The footer's Contact link opens an email to the shop, and the web server refuses to start without a valid address.
   - [x] **6d.** On a phone, a Menu button opens a full-height sheet with Courses; Escape, the close button or a link closes it, and focus returns to Menu.
-- [ ] **7. Course page layout.** The image, title and description sit beside a sticky panel on desktop, stacked on a phone. **Next**
+- **7. Course page layout.** The image, title and description sit beside a sticky panel on desktop, stacked on a phone.
+  - [ ] **7a.** A visitor who opens a course's image address sees its image. **Next**
+    - *Behaviours*:
+      - Answers 200 with `image/webp`, which the route sets itself, plus the API's `Cache-Control`.
+      - Answers 404 without calling the API for an id that isn't a UUID.
+      - Answers 404 without calling the API for a version that isn't digits.
+      - Answers 404 when the API says 404 `COURSE_NOT_FOUND`.
+      - Answers 404 when the API says 400 `INVALID_COURSE_ID`.
+      - Throws, so Next answers 500, when the API answers 500.
+    - *New shared pieces*: the public image mock handler, which 7b and 7c walk with; it reuses `storedCourseImageBytes` from [get-course-image-as-admin.ts](../web/src/mocks/handlers/get-course-image-as-admin.ts).
+    - *Files*:
+      - `web/src/app/(shop)/courses/[courseId]/image/[version]/route.ts` (new)
+      - [courses.api.ts](../web/src/features/courses/courses.api.ts) (an image wrapper, `parseAs: "arrayBuffer"`, returns a `Result`)
+      - `web/src/mocks/handlers/get-course-image.ts` (new)
+      - [node.ts](../web/src/mocks/node.ts) (registers the handler)
+    - *Settled*: courses.md *Course images → Showing it*.
+    - *Done when*: the route and wrapper unit tests pass; 7b uses the route next.
+  - [ ] **7b.** The course page shows the image above the title, resized by Next for each screen.
+    - *Behaviours*:
+      - Shows the image 16:9, with `alt=""`, square corners, `preload`, and `sizes` for columns 1–7 on desktop and full width on a phone.
+      - Keeps the 16:9 box while the image loads.
+      - Next resizes only addresses that match `/courses/*/image/*` with no query string.
+    - *New shared pieces*: none.
+    - *Files*:
+      - `web/src/features/courses/course-image.tsx` (new)
+      - [course-details.tsx](../web/src/features/courses/course-details.tsx)
+      - [next.config.ts](../web/next.config.ts) (`images.localPatterns`, `qualities: [75]`)
+      - [get-course.spec.ts](../web/tests/browser/courses/get-course.spec.ts)
+    - *Settled*: the rows on the course image, `alt=""`, Next's resizer and the image's browser check.
+    - *Done when*:
+      - The browser spec sees a 16:9 box whose address points at the resizer with our image route.
+      - The owner walks `dev:mock` and sees the image load.
+  - [ ] **7c.** On desktop, the details and the Enroll button stay 96px from the top while the description scrolls; on a phone, they sit under the summary.
+    - *Behaviours*:
+      - Desktop: columns 1–7 hold the image, title, summary and description; columns 9–12 hold the sticky details and button.
+      - Phone order: image, title, summary, details and button, description.
+      - Keyboard order follows the phone order.
+      - At 320px the page has no horizontal scroll, and a long title wraps.
+      - The public page frame is 1200px wide, with 48px side padding from `md` and 24px below.
+    - *New shared pieces*: a mock course with a long rich description (headings, lists, quote, divider, link), used by 7c and 7d and shown on the mock home list.
+    - *Files*:
+      - [course-details.tsx](../web/src/features/courses/course-details.tsx) (grid; takes the buy block as `children`)
+      - [page.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx) (passes the Enroll button in)
+      - [public-page-layout.tsx](../web/src/features/site-layout/public-page-layout.tsx) (width and padding)
+      - [courses.ts](../web/src/mocks/fixtures/courses.ts) (the long course; tests that count courses change with it)
+      - [course-details.test.tsx](../web/src/features/courses/course-details.test.tsx) (rework for `children`)
+      - one browser spec for the layout
+    - *Settled*: the rows on the desktop panel, the header heights, the page frame and the course page's DOM order.
+    - *Done when*: at 1280px the column stays 96px down after scrolling; at 400px it stacks in the phone order.
+  - [ ] **7d.** The description reads in the wireframe's rich-text look.
+    - *Behaviours*:
+      - h2 shows Playfair weight 400 at 1.5rem; h3 and h4 show DM Sans weight 500.
+      - Headings get 40, 32 and 24px top margins, and the first child gets none.
+      - Lists indent 24px with a 4px gap.
+      - Quotes take a 1px `--input` rule, 24px padding and the foreground colour.
+      - Dividers sit 32px from the text.
+      - Links show `--primary` and an underline.
+      - The public page alone sets body-lg muted body text.
+      - The admin editor keeps 16px body text in the foreground colour, and drops its `text-base` so it shows the shared heading and list styles.
+    - *New shared pieces*: none.
+    - *Files*:
+      - [globals.css](../web/src/app/globals.css) (`.description-content`)
+      - [course-description.tsx](../web/src/features/courses/description/course-description.tsx)
+      - [description-editor.tsx](../web/src/features/admin-courses/description-editor/description-editor.tsx)
+      - one browser spec reading computed styles on the public page and in the editor
+    - *Settled*: the row on the shared description class.
+    - *Done when*: the spec matches the values above, and the contrast spec passes.
 - [ ] **8. Buy panel looks.** The panel shows the price, the button with its price, the after-enroll note, and the free, in-progress and ended looks.
 - [ ] **9. Course times in the visitor's words.** The panel shows the course's own time, the visitor's only when it differs, the length, and the status line.
 - [ ] **10. Phone buy bar.** A slim bar keeps the button on screen once the panel scrolls away; a tap opens the fields.
@@ -153,6 +219,11 @@ Wireframe states and time variants, by the milestone that builds them:
 | The wordmark links to the home page in the header and the footer | Without it, a phone visitor must open the menu to go home (revisit after use) | Plain text as drawn (one fewer link, two taps home) |
 | The header is 56px tall below `md` and 72px from `md` | A sticky 72px bar covers a tenth of a phone screen, and step 7's phone Enroll bar takes more; the desktop panel's 96px top still measures from 72px | 72px everywhere, as the guide first said |
 | A root `not-found.tsx` inside the public page layout answers unknown URLs and an admin URL for a missing course | Next sends every unmatched URL there, and the visitor keeps a way back | Next's bare default (no way home but Back); `global-not-found` (experimental, and it skips the layout, so it must re-import styles and fonts) |
+| The course image goes through Next's resizer (`localPatterns`, `qualities: [75]`, `preload`) | Phones download a smaller file | Serving the API's 1600×900 file unoptimized (shapes what visitors get to suit a test) |
+| The browser spec checks the image's box and address, not its pixels; the `dev:mock` walk shows it loading | Next's resizer fetches our route through an internal request that drops Playwright's mock-proxy header (`fetchInternalImage` in Next's `image-optimizer.js`), so the resized image can't load under the test proxy | Disabling the resizer in tests only (the test would check a different page than visitors get) |
+| The public page frame is 1200px wide with 48px side padding from `md` | Style guide §4 and the wireframe; the side column gets its drawn width (revisit after use) | Today's 1152px with 24px padding (narrower side column) |
+| The course page's DOM order is summary, details and button, then description; on desktop the grid places the side column across both rows | Phone and keyboard order match what the visitor sees, and the button comes before 5,000 characters of text (revisit after use) | Description first with CSS `order` (phone tab order jumps around); two copies of the panel (two buttons) |
+| The shared description class sets headings, lists, quotes and links; only the public page sets the muted body-lg text | The admin edits in the public structure while typing in full-contrast 16px text | Muted text in the editor too (lower contrast while typing) |
 
 ## Step 1. Site look
 
@@ -362,28 +433,47 @@ Desktop                                    Phone
 
 ```
 Course page after 7
-Desktop                                          Phone
-+------------------------------------------+     +------------------+
-| header                                   |     | header        ☰  |
-| [ image 16:9, alt="" ]  | Price $99.00   |     | [ image 16:9 ]   |
-| React Fundamentals (h1) | Schedule ...   |     | React Fund... h1 |
-| summary                 | [Enroll ... →] |     | summary          |
-| description, styled:    |  ^ sticky,     |     | Price / Schedule |
-|  h2 · lists · quote ·   |    96px down   |     | [ Enroll ... → ] |
-|  rule · links           |  (not yet a    |     | description ...  |
-|  (columns 1–7)          |   panel; 9–12) |     |                  |
-| footer                                   |     | footer           |
-+------------------------------------------+     +------------------+
+Desktop (frame 1200px, 48px sides)             Phone (24px sides)
++------------------------------------------+   +------------------+
+| header 72px                              |   | header 56px   ☰  |
+| [ image 16:9, alt="" ]  | Price $99.00   |   | [ image 16:9 ]   |
+| React Fundamentals (h1) | Schedule ...   |   | React Fund... h1 |
+| summary (muted)         | 12 enrolled    |   | summary          |
+| description, rich text: | [Enroll ... →] |   | Price / Schedule |
+|  h2 · lists · quote ·   |  ^ sticky 96px |   | 12 enrolled      |
+|  divider · links        |  (a panel in 8)|   | [ Enroll ... → ] |
+|  cols 1–7               |  cols 9–12     |   | description ...  |
+| footer                                   |   | footer           |
++------------------------------------------+   +------------------+
+While the image loads: an empty 16:9 box, so nothing below it moves.
 ```
 
 - Why here: the layout needs the header (6) and the form (2) to arrange.
 - Needs: 2, 6.
-- Size: 3 to 4 commits (image route; grid; description styles). Twins: [course-details.tsx](../web/src/features/courses/course-details.tsx), `.description-content` in globals.css (shared with the admin editor), courses.md *Course images*, item 5 (*Showing it*). Cards keep no image until the homepage redesign, so that item stays open for the card half.
+- Size: 4 commits (image route; image on the page; grid; description styles). Twins: [course-details.tsx](../web/src/features/courses/course-details.tsx), `.description-content` in globals.css (shared with the admin editor), courses.md *Course images*, item 5 (*Showing it*). Cards keep no image until the homepage redesign, so that item stays open for the card half.
 - Builds on: [course-details.tsx](../web/src/features/courses/course-details.tsx), [the course page route](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx) (the 56px and 72px heights the sticky top measures from), `.description-content` in [globals.css](../web/src/app/globals.css), courses.md *Course images*, style guide §7, the wireframe's course page grid, and the Decision rows on the desktop panel and the header heights.
 - Risk: restyling `.description-content` changes the admin editor.
-- Blocks the split: does the image route ship alone or with the grid; does restyling the description need its own commit for the admin editor's sake.
-- Re-measure: `ls web/src/features/courses` (folder count before adding files).
 - Done when: journey: scroll the course page at 1280 px and see the panel stay 96px under the header; at 320 px a long name wraps; a slow image keeps its 16:9 box.
+- Design notes *(temporary)*:
+  - Image: Next's resizer with `localPatterns` `{ pathname: "/courses/*/image/*", search: "" }` and `qualities: [75]`. Next 16 renamed `priority` to `preload`.
+  - Browser tests and the resizer: the resizer's internal request drops the mock-proxy header, so specs check the box and address; `dev:mock` shows the pixels.
+  - Grid: one 12-column grid from `md`; the side column spans both rows (summary, description), with `self-start` and `sticky top-24`.
+  - Folder count: 7b adds a file and its test to `features/courses`; re-measure with `ls web/src/features/courses` first.
+  - Editor: `text-base` on the editor beats the shared class, so 7d removes it; the shared class carries structure only, and the public wrapper adds body-lg muted text.
+- Flow *(temporary)*:
+
+```
+Visitor opens a course page                                   existing
+└── page draws the image through Next's resizer                7b
+      └── resizer asks /courses/{id}/image/{version}           7a
+            ├── id isn't a UUID, or version isn't digits
+            │     → 404, no API call                           7a
+            ├── API 404 COURSE_NOT_FOUND or 400 INVALID_COURSE_ID
+            │     → 404; the 16:9 box stays empty              7a
+            ├── API 500 → throw → 500; the box stays empty     7a
+            └── 200 → WebP bytes with the API's long cache
+                  → resizer sends a size that fits the screen  7b
+```
 
 ## Step 8. Buy panel looks
 
