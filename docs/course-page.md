@@ -44,17 +44,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **8a.** Prices read "$99", "$49.50" and "Free" on the course page, its Enroll button and the course card.
   - [x] **8b.** The course page's side column is a flat panel with the schedule, the price, a full-width Enroll button and the "After you enroll." note, and it no longer shows the enrollment count.
   - [x] **8c.** An upcoming course's panel opens with "Starts Oct 1, 2030", and a course in progress reads "In progress" and "This course has started. You can still enroll." above its button.
-  - [ ] **8d.** The three "See current courses →" links share one component. *(mechanical)* **Next**
-    - *Behaviours*:
-      - Nothing changes for visitors; the 404 page and the checkout return page keep their link.
-      - Each caller sets its own margin.
-    - *New shared pieces*: the "See current courses" link, used by the 404 message, the checkout return page and 8e's ended panel.
-    - *Files*:
-      - `web/src/components/see-current-courses-link.tsx` (new)
-      - [not-found-message.tsx](../web/src/components/not-found-message.tsx)
-      - [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx)
-    - *Done when*: `check:changed` passes with an unchanged test count.
-  - [ ] **8e.** A visitor who opens an ended course sees the Ended pill, its date, "This course has ended." and "See current courses →", with no price, fields or button.
+  - [x] **8d.** The 404 message and the checkout return page share one "See current courses →" link.
+  - [ ] **8e.** A visitor who opens an ended course sees the Ended pill, its date, "This course has ended." and "See current courses →", with no price, fields or button. **Next**
     - *Behaviours*:
       - The pill has a `--muted` fill and `--muted-foreground` text, in eyebrow type, with `rounded-full` corners.
       - The date shows the start date only, in the course's zone.

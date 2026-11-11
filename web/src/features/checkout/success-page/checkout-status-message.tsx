@@ -1,6 +1,4 @@
-import Link from "next/link";
-
-import { buttonVariants } from "@/components/ui/button";
+import { SeeCurrentCoursesLink } from "@/components/see-current-courses-link";
 import { CheckEmailNotice } from "@/features/checkout/check-email-notice/check-email-notice";
 import type { CheckoutStatus } from "@/lib/types";
 import { PendingCheckoutNotice } from "./pending-checkout-notice";
@@ -21,17 +19,6 @@ const ENDED_CHECKOUT_WORDS = {
   },
 } as const;
 
-function ReturnLink() {
-  return (
-    <Link
-      href="/"
-      className={buttonVariants({ variant: "ghost", className: "mt-4" })}
-    >
-      See current courses →
-    </Link>
-  );
-}
-
 function EndedCheckoutWords({ status }: { status: "expired" | "refunded" }) {
   const { heading, sentence } = ENDED_CHECKOUT_WORDS[status];
 
@@ -41,7 +28,7 @@ function EndedCheckoutWords({ status }: { status: "expired" | "refunded" }) {
       <p role="status" className="mt-4 text-muted-foreground">
         {sentence}
       </p>
-      <ReturnLink />
+      <SeeCurrentCoursesLink className="mt-4" />
     </>
   );
 }
