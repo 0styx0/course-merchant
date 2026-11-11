@@ -1,8 +1,8 @@
 import { http, HttpResponse } from "msw";
 
 import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
-import { updateCourseUrl } from "@/mocks/handlers/update-course";
-import { server } from "@/mocks/node";
+import { updateCourseUrl } from "@/mocks/handlers/admin-courses/update-course";
+import { server } from "@/mocks/server";
 
 import type {
   EditedDetailsValues,

@@ -6,7 +6,7 @@ export async function registerNode() {
   exitIfSettingInvalid(contactEmail);
 
   if (process.env.API_MOCKING === "enabled") {
-    const { server } = await import("./mocks/node");
+    const { server } = await import("./mocks/server");
     server.listen({ onUnhandledRequest: "bypass" });
     console.log("[msw] server-side mocking enabled");
   }

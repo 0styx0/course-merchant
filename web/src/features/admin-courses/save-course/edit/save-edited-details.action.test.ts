@@ -5,8 +5,8 @@ import {
   updateCourseError,
   updateCourseSuccess,
   updateCourseValidationFailed,
-} from "@/mocks/handlers/update-course";
-import { server } from "@/mocks/node";
+} from "@/mocks/handlers/admin-courses/update-course";
+import { server } from "@/mocks/server";
 
 import {
   captureBody,

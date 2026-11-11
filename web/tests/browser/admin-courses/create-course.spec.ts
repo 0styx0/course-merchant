@@ -4,14 +4,14 @@ import msw from "next/experimental/testmode/playwright/msw.js";
 import {
   createCourseSuccess,
   createCourseValidationFailed,
-} from "@/mocks/handlers/create-course";
-import { getCourseAsAdminHandlers } from "@/mocks/handlers/get-course-as-admin";
-import { coursesSuccess } from "@/mocks/handlers/list-courses";
-import { updateCourseSuccess } from "@/mocks/handlers/update-course";
+} from "@/mocks/handlers/admin-courses/create-course";
+import { getCourseAsAdminHandlers } from "@/mocks/handlers/admin-courses/get-course-as-admin";
+import { coursesSuccess } from "@/mocks/handlers/courses/list-courses";
+import { updateCourseSuccess } from "@/mocks/handlers/admin-courses/update-course";
 import {
   uploadCourseImageError,
   uploadCourseImageSuccess,
-} from "@/mocks/handlers/upload-course-image";
+} from "@/mocks/handlers/admin-courses/upload-course-image";
 
 import { collectConsoleErrors, fillValidForm } from "./fill-valid-course-form";
 import { openFormPage } from "./open-form-page";

@@ -1,5 +1,5 @@
-import { courseByIdSuccess } from "@/mocks/handlers/get-course";
-import { startCheckoutHandlers } from "@/mocks/handlers/start-checkout";
+import { courseByIdSuccess } from "@/mocks/handlers/courses/get-course";
+import { startCheckoutHandlers } from "@/mocks/handlers/checkout/start-checkout";
 import { freeCourse } from "@/mocks/fixtures/courses";
 import msw from "next/experimental/testmode/playwright/msw.js";
 

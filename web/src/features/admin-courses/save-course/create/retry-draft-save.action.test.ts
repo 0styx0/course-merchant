@@ -7,8 +7,8 @@ import {
   updateCourseSuccess,
   updateCourseUrl,
   updateCourseValidationFailed,
-} from "@/mocks/handlers/update-course";
-import { server } from "@/mocks/node";
+} from "@/mocks/handlers/admin-courses/update-course";
+import { server } from "@/mocks/server";
 
 import { retryDraftSaveAction } from "./retry-draft-save.action";
 import type { CourseFormValues } from "../../validation/course-form-schema";

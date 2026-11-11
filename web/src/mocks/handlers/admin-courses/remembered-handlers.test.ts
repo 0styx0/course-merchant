@@ -3,15 +3,17 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { AdminCourse, UpdateCourseRequest } from "@/lib/types";
 
-import { draftedAdminCourse } from "./fixtures/admin-courses";
-import { makeRememberedCreateHandler } from "./handlers/create-course";
-import { makeRememberedGetHandler } from "./handlers/get-course-as-admin";
-import { makeRememberedUpdateHandler } from "./handlers/update-course";
-import { makeRememberedUploadHandler } from "./handlers/upload-course-image";
-import { MOCK_API_BASE_URL } from "./mock-api";
-import { server } from "./node";
+import { draftedAdminCourse } from "../../fixtures/admin-courses";
+import { makeRememberedCreateHandler } from "./create-course";
+import { makeRememberedGetHandler } from "./get-course-as-admin";
+import { makeRememberedUpdateHandler } from "./update-course";
+import { makeRememberedUploadHandler } from "./upload-course-image";
+import { MOCK_API_BASE_URL } from "../../mock-api";
+import { server } from "../../server";
 import { makeRememberedCourse } from "./remembered-course";
 
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const coursesUrl = `${MOCK_API_BASE_URL}/v1/admin/courses`;
 const courseUrl = `${coursesUrl}/${draftedAdminCourse.id}`;
 
@@ -88,11 +90,17 @@ describe("remembered handlers", () => {
   it("gives saved prices new ids", async () => {
     useRememberedHandlers();
 
-    await sendJson("PUT", courseUrl, request);
+    await sendJson("PUT", courseUrl, {
+      ...request,
+      prices: [...request.prices, ...request.prices],
+    });
 
-    expect((await getCourse()).prices[0].id).not.toBe(
-      draftedAdminCourse.prices[0].id,
-    );
+    const savedIds = (await getCourse()).prices.map((price) => price.id);
+    expect(savedIds).toHaveLength(2);
+    expect(savedIds[0]).toMatch(uuidPattern);
+    expect(savedIds[1]).toMatch(uuidPattern);
+    expect(savedIds[0]).not.toBe(savedIds[1]);
+    expect(savedIds).not.toContain(draftedAdminCourse.prices[0].id);
   });
 
   it("shows an image version after an upload", async () => {
@@ -108,7 +116,7 @@ describe("remembered handlers", () => {
     });
   });
 
-  it("starts a second handler set empty", async () => {
+  it("x", async () => {
     useRememberedHandlers();
     await sendJson("PUT", courseUrl, request);
 

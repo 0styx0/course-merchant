@@ -1,28 +1,28 @@
 import type { RequestHandler } from "msw";
 import { setupServer } from "msw/node";
-import { listCoursesHandlers } from "./handlers/list-courses";
-import { getCourseHandlers } from "./handlers/get-course";
+import { listCoursesHandlers } from "./handlers/courses/list-courses";
+import { getCourseHandlers } from "./handlers/courses/get-course";
 import {
   createCourseHandlers,
   makeRememberedCreateHandler,
-} from "./handlers/create-course";
+} from "./handlers/admin-courses/create-course";
 import {
   getCourseAsAdminHandlers,
   makeRememberedGetHandler,
-} from "./handlers/get-course-as-admin";
+} from "./handlers/admin-courses/get-course-as-admin";
 import {
   makeRememberedUpdateHandler,
   makeTwoRoundsRefusalHandler,
   updateCourseHandlers,
-} from "./handlers/update-course";
+} from "./handlers/admin-courses/update-course";
 import {
   makeRememberedUploadHandler,
   uploadCourseImageHandlers,
-} from "./handlers/upload-course-image";
-import { getCourseImageAsAdminHandlers } from "./handlers/get-course-image-as-admin";
-import { startCheckoutHandlers } from "./handlers/start-checkout";
-import { getCheckoutStatusHandlers } from "./handlers/get-checkout-status";
-import { makeRememberedCourse } from "./remembered-course";
+} from "./handlers/admin-courses/upload-course-image";
+import { getCourseImageAsAdminHandlers } from "./handlers/admin-courses/get-course-image-as-admin";
+import { startCheckoutHandlers } from "./handlers/checkout/start-checkout";
+import { getCheckoutStatusHandlers } from "./handlers/checkout/get-checkout-status";
+import { makeRememberedCourse } from "./handlers/admin-courses/remembered-course";
 
 const scenario = "success"; // change to the mock you want to test
 
@@ -30,7 +30,6 @@ const scenario = "success"; // change to the mock you want to test
 // saved in the `remembered` scenario.
 const rememberedCourse = makeRememberedCourse();
 
-// Only the update endpoint has `twoRounds`, so the rest use their success one.
 const updateCourseScenarios = {
   ...updateCourseHandlers,
   twoRounds: makeTwoRoundsRefusalHandler(),
@@ -50,11 +49,16 @@ const uploadCourseImageScenarios = {
   remembered: makeRememberedUploadHandler(rememberedCourse),
 };
 
-// An endpoint without the chosen scenario falls back to its success one.
 function scenarioHandler(
   handlers: Record<string, RequestHandler>,
 ): RequestHandler {
-  return handlers[scenario] ?? handlers.success;
+  if (scenario in handlers) {
+    return handlers[scenario];
+  }
+  console.info(
+    `[MSW Setup] An endpoint has no "${scenario}" scenario, so it serves "success".`,
+  );
+  return handlers.success;
 }
 
 if (
@@ -69,7 +73,7 @@ if (
   !(scenario in getCheckoutStatusHandlers)
 ) {
   throw new Error(
-    `[MSW Setup] Unknown scenario "${scenario}". Pick one in src/mocks/node.ts`,
+    `[MSW Setup] Unknown scenario "${scenario}". Pick one in src/mocks/server.ts`,
   );
 }
 

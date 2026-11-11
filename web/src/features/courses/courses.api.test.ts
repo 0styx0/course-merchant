@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { server } from "@/mocks/node";
-import { coursesError, coursesSuccess } from "@/mocks/handlers/list-courses";
+import { server } from "@/mocks/server";
+import {
+  coursesError,
+  coursesSuccess,
+} from "@/mocks/handlers/courses/list-courses";
 import { publicCourses } from "@/mocks/fixtures/courses";
 import { listCourses } from "./courses.api";
 

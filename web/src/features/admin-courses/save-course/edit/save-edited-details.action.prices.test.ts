@@ -6,8 +6,8 @@ import { FROZEN_NOW } from "@/test/frozen-now";
 import {
   updateCourseSuccess,
   updateCourseUrl,
-} from "@/mocks/handlers/update-course";
-import { server } from "@/mocks/node";
+} from "@/mocks/handlers/admin-courses/update-course";
+import { server } from "@/mocks/server";
 
 import type {
   EditCourseFormValues,

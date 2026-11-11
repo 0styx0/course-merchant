@@ -1,9 +1,9 @@
 import type { operations } from "@/lib/api/generated";
 import type { CoursesResponse } from "@/lib/types";
 import { http, HttpResponse, delay } from "msw";
-import { publicCourses } from "../fixtures/courses";
-import { MOCK_API_BASE_URL } from "../mock-api";
-import { problemResponse } from "../problem-response";
+import { publicCourses } from "../../fixtures/courses";
+import { MOCK_API_BASE_URL } from "../../mock-api";
+import { problemResponse } from "../../problem-response";
 
 type InternalServerError =
   operations["listCourses"]["responses"][500]["content"]["application/problem+json"];

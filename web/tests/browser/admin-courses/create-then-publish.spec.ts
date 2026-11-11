@@ -1,12 +1,12 @@
 import msw from "next/experimental/testmode/playwright/msw.js";
 
-import { makeRememberedCreateHandler } from "@/mocks/handlers/create-course";
-import { makeRememberedGetHandler } from "@/mocks/handlers/get-course-as-admin";
-import { getCourseImageAsAdminHandlers } from "@/mocks/handlers/get-course-image-as-admin";
-import { coursesSuccess } from "@/mocks/handlers/list-courses";
-import { makeRememberedUpdateHandler } from "@/mocks/handlers/update-course";
-import { makeRememberedUploadHandler } from "@/mocks/handlers/upload-course-image";
-import { makeRememberedCourse } from "@/mocks/remembered-course";
+import { makeRememberedCreateHandler } from "@/mocks/handlers/admin-courses/create-course";
+import { makeRememberedGetHandler } from "@/mocks/handlers/admin-courses/get-course-as-admin";
+import { getCourseImageAsAdminHandlers } from "@/mocks/handlers/admin-courses/get-course-image-as-admin";
+import { coursesSuccess } from "@/mocks/handlers/courses/list-courses";
+import { makeRememberedUpdateHandler } from "@/mocks/handlers/admin-courses/update-course";
+import { makeRememberedUploadHandler } from "@/mocks/handlers/admin-courses/upload-course-image";
+import { makeRememberedCourse } from "@/mocks/handlers/admin-courses/remembered-course";
 
 import { collectConsoleErrors, fillValidForm } from "./fill-valid-course-form";
 import { openFormPage } from "./open-form-page";

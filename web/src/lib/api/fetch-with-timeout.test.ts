@@ -1,7 +1,7 @@
 import { delay, http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 
-import { server } from "@/mocks/node";
+import { server } from "@/mocks/server";
 import { MOCK_API_BASE_URL } from "@/mocks/mock-api";
 import { fetchWithTimeout } from "./fetch-with-timeout";
 

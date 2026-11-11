@@ -8,8 +8,8 @@ import {
   uploadCourseImageSuccess,
   uploadCourseImageUrl,
   uploadCourseImageValidationFailed,
-} from "@/mocks/handlers/upload-course-image";
-import { server } from "@/mocks/node";
+} from "@/mocks/handlers/admin-courses/upload-course-image";
+import { server } from "@/mocks/server";
 
 import { uploadCourseImageAction } from "./upload-course-image.action";
 

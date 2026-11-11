@@ -1,10 +1,10 @@
 import type { UpdateCourseRequest } from "@/lib/types";
 import type { operations } from "@/lib/api/generated";
 import { http, HttpResponse } from "msw";
-import { draftedAdminCourse } from "../fixtures/admin-courses";
-import { MOCK_API_BASE_URL } from "../mock-api";
-import { problemResponse } from "../problem-response";
-import type { RememberedCourse } from "../remembered-course";
+import { draftedAdminCourse } from "../../fixtures/admin-courses";
+import { MOCK_API_BASE_URL } from "../../mock-api";
+import { problemResponse } from "../../problem-response";
+import type { RememberedCourse } from "./remembered-course";
 
 type ValidationFailedResponse =
   operations["updateCourse"]["responses"][400]["content"]["application/problem+json"];

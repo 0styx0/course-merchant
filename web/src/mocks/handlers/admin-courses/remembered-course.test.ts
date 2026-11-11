@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { CreateCourseRequest, UpdateCourseRequest } from "@/lib/types";
 
-import { draftedAdminCourse } from "./fixtures/admin-courses";
+import { draftedAdminCourse } from "../../fixtures/admin-courses";
 import { makeRememberedCourse } from "./remembered-course";
 
 const savedAt = new Date("2026-11-03T10:00:00Z");

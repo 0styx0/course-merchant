@@ -7,8 +7,8 @@ import {
   createCourseSuccess,
   createCourseUrl,
   createCourseValidationFailed,
-} from "@/mocks/handlers/create-course";
-import { server } from "@/mocks/node";
+} from "@/mocks/handlers/admin-courses/create-course";
+import { server } from "@/mocks/server";
 
 import { createCourseAction } from "./create-course.action";
 import type { CourseFormValues } from "../../validation/course-form-schema";

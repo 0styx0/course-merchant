@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { getCheckoutStatusHandlers } from "@/mocks/handlers/get-checkout-status";
-import { server } from "@/mocks/node";
+import { getCheckoutStatusHandlers } from "@/mocks/handlers/checkout/get-checkout-status";
+import { server } from "@/mocks/server";
 import CheckoutSuccessPage, { generateMetadata } from "./page";
 
 // Its default export throws outside a React Server Component build

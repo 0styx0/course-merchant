@@ -1,8 +1,8 @@
 import type { operations } from "@/lib/api/generated";
 import { delay, http, HttpResponse } from "msw";
-import { MOCK_API_BASE_URL } from "../mock-api";
-import { publicCourses } from "../fixtures/courses";
-import { problemResponse } from "../problem-response";
+import { MOCK_API_BASE_URL } from "../../mock-api";
+import { publicCourses } from "../../fixtures/courses";
+import { problemResponse } from "../../problem-response";
 
 type GetCourseResponse =
   operations["getCourse"]["responses"][200]["content"]["application/json"];

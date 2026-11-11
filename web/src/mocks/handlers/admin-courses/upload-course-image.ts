@@ -1,8 +1,8 @@
 import type { operations } from "@/lib/api/generated";
 import { http, HttpResponse } from "msw";
-import { MOCK_API_BASE_URL } from "../mock-api";
-import { problemResponse } from "../problem-response";
-import type { RememberedCourse } from "../remembered-course";
+import { MOCK_API_BASE_URL } from "../../mock-api";
+import { problemResponse } from "../../problem-response";
+import type { RememberedCourse } from "./remembered-course";
 
 type ValidationFailedResponse =
   operations["uploadCourseImage"]["responses"][400]["content"]["application/problem+json"];

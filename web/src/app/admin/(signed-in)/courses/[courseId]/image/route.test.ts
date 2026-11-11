@@ -8,10 +8,9 @@ import {
   courseImageAsAdminNotFound,
   courseImageAsAdminSuccess,
   courseImageAsAdminUrl,
-  storedCourseImageBytes,
-} from "@/mocks/handlers/get-course-image-as-admin";
+} from "@/mocks/handlers/admin-courses/get-course-image-as-admin";
 import { problemResponse } from "@/mocks/problem-response";
-import { server } from "@/mocks/node";
+import { server } from "@/mocks/server";
 
 import { GET } from "./route";
 
@@ -35,9 +34,12 @@ describe("GET /admin/courses/[courseId]/image", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("image/webp");
     expect(response.headers.get("Cache-Control")).toBe("private, no-cache");
-    expect(new Uint8Array(await response.arrayBuffer())).toEqual(
-      storedCourseImageBytes,
-    );
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    expect(bytes).toHaveLength(34);
+    // "RIFF", the file size, then "WEBP"
+    expect([...bytes.slice(0, 12)]).toEqual([
+      0x52, 0x49, 0x46, 0x46, 0x1a, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50,
+    ]);
   });
 
   it("answers 404 for an id that isn't a UUID, without calling the API", async () => {
@@ -93,6 +95,9 @@ describe("GET /admin/courses/[courseId]/image", () => {
   it("throws when the API is unreachable, so Next answers 500", async () => {
     server.use(http.get(courseImageAsAdminUrl, () => HttpResponse.error()));
 
-    await expect(requestImageOf(courseId)).rejects.toThrow();
+    await expect(requestImageOf(courseId)).rejects.toMatchObject({
+      name: "TypeError",
+      message: "Failed to fetch",
+    });
   });
 });

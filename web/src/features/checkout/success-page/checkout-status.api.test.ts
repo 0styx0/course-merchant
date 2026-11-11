@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import {
   checkoutStatusUrl,
   getCheckoutStatusHandlers,
-} from "@/mocks/handlers/get-checkout-status";
-import { server } from "@/mocks/node";
+} from "@/mocks/handlers/checkout/get-checkout-status";
+import { server } from "@/mocks/server";
 import { problemResponse } from "@/mocks/problem-response";
 import type { ProblemDetails } from "@/lib/types";
 import { getCheckoutStatus } from "./checkout-status.api";

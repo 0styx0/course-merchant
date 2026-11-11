@@ -2,8 +2,8 @@ import type { Locator } from "@playwright/test";
 import { formatHex, wcagContrast } from "culori";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
-import { getCourseAsAdminHandlers } from "@/mocks/handlers/get-course-as-admin";
-import { coursesSuccess } from "@/mocks/handlers/list-courses";
+import { getCourseAsAdminHandlers } from "@/mocks/handlers/admin-courses/get-course-as-admin";
+import { coursesSuccess } from "@/mocks/handlers/courses/list-courses";
 import {
   compositeOver,
   readRootToken,

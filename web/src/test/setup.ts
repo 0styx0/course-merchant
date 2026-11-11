@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
-import { server } from "../mocks/node";
+import { server } from "../mocks/server";
 import { FROZEN_NOW } from "./frozen-now";
 import { spyTemporalNowOnDate } from "./spy-temporal-now-on-date";
 

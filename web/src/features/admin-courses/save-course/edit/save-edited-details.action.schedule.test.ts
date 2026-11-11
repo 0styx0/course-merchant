@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { updateCourseSuccess } from "@/mocks/handlers/update-course";
-import { server } from "@/mocks/node";
+import { updateCourseSuccess } from "@/mocks/handlers/admin-courses/update-course";
+import { server } from "@/mocks/server";
 
 import type { LoadedSchedule } from "../../validation/edit-course-form-schema";
 import {

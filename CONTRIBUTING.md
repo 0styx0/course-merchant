@@ -69,11 +69,11 @@ The OpenAPI spec is the source of truth, so a change starts there:
 ### Web
 
 - **Unit tests target the pure `*-view.tsx` component**, with a hand-built `Result`. No network is needed.
-- **MSW handlers** live in [src/mocks/handlers/](web/src/mocks/handlers/), one file per endpoint, typed from the generated contract. Each exports named scenarios (`success`, `notFound`, `error`, `slow`, …). In Vitest, a request with no handler fails the test.
+- **MSW handlers** live in [src/mocks/handlers/](web/src/mocks/handlers/), in topic folders with one file per endpoint, typed from the generated contract. Each exports named scenarios (`success`, `notFound`, `error`, `slow`, …). In Vitest, a request with no handler fails the test.
 - **Playwright tests** import `test` from `next/experimental/testmode/playwright/msw` and switch scenarios with `msw.use(...)`.
 - **Sample courses** are in [src/mocks/fixtures/courses.ts](web/src/mocks/fixtures/courses.ts); handlers, Vitest and Playwright all import them. Handlers build problem+json answers with `problemResponse` from [problem-response.ts](web/src/mocks/problem-response.ts).
 - **Playwright tests** (called browser tests) live in `web/tests/browser/` and run with `yarn --cwd web test:browser`.
-- **To pick a scenario for `yarn dev:mock`**, edit [src/mocks/node.ts](web/src/mocks/node.ts). An endpoint without that scenario serves its `success` one.
+- **To pick a scenario for `yarn dev:mock`**, edit [src/mocks/server.ts](web/src/mocks/server.ts). An endpoint without that scenario serves its `success` one.
 
 ## Changing the database schema
 

@@ -1,7 +1,7 @@
 import {
   checkoutStatusUrl,
   getCheckoutStatusHandlers,
-} from "@/mocks/handlers/get-checkout-status";
+} from "@/mocks/handlers/checkout/get-checkout-status";
 import { http, HttpResponse } from "msw";
 import { SITE_NAME } from "@/lib/site-config/site-name";
 import msw from "next/experimental/testmode/playwright/msw.js";

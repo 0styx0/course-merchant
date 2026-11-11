@@ -4,8 +4,8 @@ import {
   CHECKOUT_EMAIL_INCOMPLETE_MESSAGE,
   CHECKOUT_NAME_MISSING_MESSAGE,
 } from "@/features/checkout/form/checkout-messages";
-import { MOCK_API_BASE_URL } from "../mock-api";
-import { problemResponse } from "../problem-response";
+import { MOCK_API_BASE_URL } from "../../mock-api";
+import { problemResponse } from "../../problem-response";
 
 type StartCheckoutSuccessResponse =
   operations["startCheckout"]["responses"][200]["content"]["application/json"];

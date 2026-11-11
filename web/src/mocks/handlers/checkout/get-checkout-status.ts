@@ -1,7 +1,7 @@
 import type { operations } from "@/lib/api/generated";
 import { http, HttpResponse } from "msw";
-import { MOCK_API_BASE_URL } from "../mock-api";
-import { problemResponse } from "../problem-response";
+import { MOCK_API_BASE_URL } from "../../mock-api";
+import { problemResponse } from "../../problem-response";
 
 type CheckoutStatusResponse =
   operations["getCheckoutStatus"]["responses"][200]["content"]["application/json"];

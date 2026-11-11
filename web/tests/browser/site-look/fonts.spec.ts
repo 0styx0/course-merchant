@@ -1,6 +1,6 @@
 import msw from "next/experimental/testmode/playwright/msw.js";
 
-import { coursesSuccess } from "@/mocks/handlers/list-courses";
+import { coursesSuccess } from "@/mocks/handlers/courses/list-courses";
 
 const { test, expect } = msw;
 

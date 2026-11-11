@@ -1,8 +1,8 @@
 import type { Locator, Page } from "@playwright/test";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
-import { getCourseAsAdminHandlers } from "@/mocks/handlers/get-course-as-admin";
-import { coursesSuccess } from "@/mocks/handlers/list-courses";
+import { getCourseAsAdminHandlers } from "@/mocks/handlers/admin-courses/get-course-as-admin";
+import { coursesSuccess } from "@/mocks/handlers/courses/list-courses";
 
 import { readRootToken, toRgb } from "../contrast/measure-contrast";
 import { openFormPage } from "../admin-courses/open-form-page";

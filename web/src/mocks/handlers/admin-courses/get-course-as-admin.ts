@@ -5,10 +5,10 @@ import {
   adminCourseWithEnrollment,
   adminCourseWithFuturePrice,
   adminCourseWithImage,
-} from "../fixtures/admin-courses";
-import { MOCK_API_BASE_URL } from "../mock-api";
-import { problemResponse } from "../problem-response";
-import type { RememberedCourse } from "../remembered-course";
+} from "../../fixtures/admin-courses";
+import { MOCK_API_BASE_URL } from "../../mock-api";
+import { problemResponse } from "../../problem-response";
+import type { RememberedCourse } from "./remembered-course";
 
 type InvalidCourseIdResponse =
   operations["getCourseAsAdmin"]["responses"][400]["content"]["application/problem+json"];

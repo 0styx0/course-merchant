@@ -1,6 +1,6 @@
 import msw from "next/experimental/testmode/playwright/msw.js";
 
-import { courseByIdSuccess } from "@/mocks/handlers/get-course";
+import { courseByIdSuccess } from "@/mocks/handlers/courses/get-course";
 import {
   freeCourse,
   reactCourse,
@@ -10,7 +10,7 @@ import {
   coursesError,
   coursesSlow,
   coursesSuccess,
-} from "@/mocks/handlers/list-courses";
+} from "@/mocks/handlers/courses/list-courses";
 
 const { test, expect } = msw;
 

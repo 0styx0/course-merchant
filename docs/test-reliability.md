@@ -50,7 +50,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
       - Break it once: with no release, the test times out on the course heading.
       - `web-tests.md` gains: gate a slow mock answer with a promise, never a delay.
     - *New shared pieces*: none. Each mock file owns its factory, built on `Promise.withResolvers`.
-    - *Files*: [list-courses.ts](../web/src/mocks/handlers/list-courses.ts), [start-checkout.ts](../web/src/mocks/handlers/start-checkout.ts), [list-courses.spec.ts](../web/tests/browser/courses/list-courses.spec.ts), [free-enrollment.spec.ts](../web/tests/browser/courses/free-enrollment.spec.ts), [web-tests.md](../.claude/rules/web-tests.md)
+    - *Files*: [list-courses.ts](../web/src/mocks/handlers/courses/list-courses.ts), [start-checkout.ts](../web/src/mocks/handlers/checkout/start-checkout.ts), [list-courses.spec.ts](../web/tests/browser/courses/list-courses.spec.ts), [free-enrollment.spec.ts](../web/tests/browser/courses/free-enrollment.spec.ts), [web-tests.md](../.claude/rules/web-tests.md)
     - *Settled*: the decision row on gated mock answers.
     - *Done when*: both specs pass `--repeat-each=5 --workers=8`.
   - [ ] **4d.** Font and size checks wait until the style applies.
@@ -270,7 +270,7 @@ Measured on 2026-11-04 in a separate worktree, on a busy 8-core machine (load av
 - **Needs:** none. Milestone 2 is dropped, so a repeated run needs the dev server stopped first.
 - **Builds on:**
   - [edit-course.spec.ts](../web/tests/browser/admin-courses/edit-course.spec.ts), [fill-valid-course-form.ts](../web/tests/browser/admin-courses/fill-valid-course-form.ts), [list-courses.spec.ts](../web/tests/browser/courses/list-courses.spec.ts) and [fonts.spec.ts](../web/tests/browser/site-look/fonts.spec.ts).
-  - `coursesSlow` in [list-courses.ts](../web/src/mocks/handlers/list-courses.ts).
+  - `coursesSlow` in [list-courses.ts](../web/src/mocks/handlers/courses/list-courses.ts).
   - Twin code: the create and edit specs share `fillValidForm`.
 - **Done when:** this command passes with no failures:
   `yarn --cwd web playwright test --repeat-each=5 --workers=8`

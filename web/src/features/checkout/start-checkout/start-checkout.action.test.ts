@@ -1,7 +1,7 @@
 import { delay, http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { server } from "@/mocks/node";
+import { server } from "@/mocks/server";
 import {
   startCheckoutEmailInvalid,
   startCheckoutNameInvalid,
@@ -9,7 +9,7 @@ import {
   startCheckoutCheckEmail,
   startCheckoutUnreachable,
   startCheckoutUrl,
-} from "@/mocks/handlers/start-checkout";
+} from "@/mocks/handlers/checkout/start-checkout";
 import {
   startCheckoutAction,
   type StartCheckoutFormState,

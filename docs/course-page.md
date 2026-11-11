@@ -35,20 +35,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **6c.** The footer's Contact link opens an email to the shop, and the web server refuses to start without a valid address.
   - [x] **6d.** On a phone, a Menu button opens a full-height sheet with Courses; Escape, the close button or a link closes it, and focus returns to Menu.
 - **7. Course page layout.** The image, title and description sit beside a sticky panel on desktop, stacked on a phone.
-  - [ ] **7a.** The mock handlers sit in topic folders, so the next handler fits. *(mechanical)* **Next**
-    - *Behaviours*: none change.
-    - *New shared pieces*: `storedCourseImageBytes` moves into `web/src/mocks/fixtures/`, because the admin and public image handlers both use it.
-    - *Files*:
-      - `web/src/mocks/handlers/admin-courses/`: create-course, get-course-as-admin, update-course, upload-course-image, get-course-image-as-admin.
-      - `web/src/mocks/handlers/courses/`: list-courses, get-course, get-course.test.
-      - `web/src/mocks/handlers/checkout/`: start-checkout, get-checkout-status.
-      - Every file that imports a handler (26 files); each handler's own `../` imports become `../../`.
-      - [node.ts](../web/src/mocks/node.ts) and `remembered-handlers.test.ts` (new paths).
-      - Wording in [web/CLAUDE.md](../web/CLAUDE.md) (line 28), [CONTRIBUTING.md](../CONTRIBUTING.md) (line 72), [test-reliability.md](test-reliability.md) (lines 53, 273) and [course-creation.md](course-creation.md) (line 165).
-      - Folder counts after the move: 5, 3 and 2.
-    - *Settled*: web/CLAUDE.md's one-file-per-endpoint rule, now applied inside topic folders.
-    - *Done when*: `yarn --cwd web check:changed` passes, the unit test count matches before and after, and the browser specs that use handlers pass.
-  - [ ] **7b.** A visitor who opens a course's image address sees its image. Nothing shows on the page until 7c.
+  - [x] **7a.** The mock handlers sit in topic folders (admin-courses, courses, checkout), so the next handler fits.
+  - [ ] **7b.** A visitor who opens a course's image address sees its image. Nothing shows on the page until 7c. **Next**
     - *Behaviours*:
       - Answers 200 with `image/webp`, which the route sets itself, plus the API's `Cache-Control`.
       - Answers 200 with no `Cache-Control` when the API sends none; the route still serves the image.
@@ -63,7 +51,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
       - `web/src/app/(shop)/courses/[courseId]/image/[version]/route.ts` (new, with its test)
       - [courses.api.ts](../web/src/features/courses/courses.api.ts) (an image wrapper, `parseAs: "arrayBuffer"`; its success holds the bytes and the API's `Cache-Control`, because `toResult` drops the headers)
       - `web/src/mocks/handlers/courses/get-course-image.ts` (new)
-      - [node.ts](../web/src/mocks/node.ts) (registers the handler)
+      - [server.ts](../web/src/mocks/server.ts) (registers the handler)
     - *Copy reason*: the route and wrapper repeat the admin image route's shape (the `arrayBuffer` parse, the UUID check). They differ by checking the version, passing `Cache-Control` through, throwing on other failures, and answering 404 where admin answers 502; a shared helper would need three parameters.
     - *Needs*: 7a.
     - *Settled*: courses.md *Course images → Showing it*.
@@ -176,7 +164,7 @@ Wireframe states and time variants, by the milestone that builds them:
 
 ## Mocks and commands
 
-- **`dev:mock`** picks one scenario through the single hand-edited line `const scenario = "success"` in [node.ts](../web/src/mocks/node.ts). Each endpoint's handler file exports one named handler per scenario, and an endpoint without the chosen one falls back to its `success`.
+- **`dev:mock`** picks one scenario through the single hand-edited line `const scenario = "success"` in [server.ts](../web/src/mocks/server.ts). Each endpoint's handler file exports one named handler per scenario, and an endpoint without the chosen one falls back to its `success`.
 - **Playwright and Vitest** pick nothing: each test lists its own handlers (`mswHandlers`).
 - **In this area** every state gets a named handler, so the owner can walk it by editing that one line. Names to use: `redirect`, `checkEmail`, `nameInvalid`, `emailInvalid`, `notPurchasable`, `paymentProviderDown`, `slow`, plus one handler per checkout status.
 - **Courses are not scenarios.** The mock course endpoint answers with the fixture whose id is in the URL, and the home list links to each one, so the owner opens the free course from the home page and the chosen scenario applies to its form.
@@ -229,7 +217,7 @@ Wireframe states and time variants, by the milestone that builds them:
 | The Button primitive carries height, padding, label, radius, colours, ring and the 11rem minimum (link variant exempt); each public buy button adds full width below sm itself (step 8) (revisit after use) | Full width in the primitive would stretch admin's Remove and Cancel on a phone and break the price row | Full width in the primitive |
 | ProblemAlert takes a title and detail and is the one error box; the shop error page uses it | Today two files copy one class string; this keeps shadcn files untouched | shadcn Alert with local edits (an avoidable primitive edit, and a second box beside StickyFormNotice) |
 | The §11 check is a browser spec reading root tokens with `getComputedStyle`, sharing the border spec's colour helpers | The browser resolves `var()`, one set of helpers serves both specs, and the spec checks surfaces no page shows yet | A Vitest test parsing globals.css (a second copy of the helpers and a hand-made `var()` resolver) |
-| The mock course endpoint answers with the fixture whose id is in the URL, and the mock home list shows every public fixture | Any checkout scenario then works on the free course (and later the in-progress and ended ones) with one `scenario` line | A `freeCourse` scenario plus per-scenario pairings in node.ts (about 6 lines now, one more per later walk; names multiply, and a missed pairing shows the paid course with no form) |
+| The mock course endpoint answers with the fixture whose id is in the URL, and the mock home list shows every public fixture | Any checkout scenario then works on the free course (and later the in-progress and ended ones) with one `scenario` line | A `freeCourse` scenario plus per-scenario pairings in server.ts (about 6 lines now, one more per later walk; names multiply, and a missed pairing shows the paid course with no form) |
 | The API words a bad email as "…It should look like name@example.com." | The wireframe's "include an @" misleads on `a@b` | The wireframe sentence |
 | The action catches a thrown API call and returns fixed words with the typed values | An unreachable API sends no text to show, and the visitor keeps their typing (note 17's "API's own message" covers answers only) | The full-page error (the visitor retypes) |
 | The header shows no scroll shadow and no current-page pill, though style guide §7 describes both | The wireframe draws neither, and with one link the pill would mark only the home page (revisit after use) | Both now (a client component watching scroll and the path, about 40 lines plus tests); the pill only (about 15 lines) |

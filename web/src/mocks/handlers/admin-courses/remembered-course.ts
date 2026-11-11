@@ -4,7 +4,7 @@ import type {
   UpdateCourseRequest,
 } from "@/lib/types";
 
-import { draftedAdminCourse } from "./fixtures/admin-courses";
+import { draftedAdminCourse } from "../../fixtures/admin-courses";
 
 type SavedCourseRequest = CreateCourseRequest | UpdateCourseRequest;
 

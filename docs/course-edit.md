@@ -77,7 +77,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 
 Each milestone's *Done when* walks its own in `dev:mock`.
 
-- J3 (10): the admin creates a course, lands on its edit page with "Saved as a draft", then publishes it there. Needs `scenario = "remembered"` in `src/mocks/node.ts`.
+- J3 (10): the admin creates a course, lands on its edit page with "Saved as a draft", then publishes it there. Needs `scenario = "remembered"` in `src/mocks/server.ts`.
 - J4 (12): on a course with students, Deleted is greyed out with "Students are enrolled. Archive it instead."
 
 ## Principles
