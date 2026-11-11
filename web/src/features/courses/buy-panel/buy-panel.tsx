@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { SeeCurrentCoursesLink } from "@/components/see-current-courses-link";
 import { makeCourseTimeLines } from "../course-time/course-time-lines";
+import { VisitorTimeLine } from "../course-time/visitor-time-line";
 import type { Course } from "@/lib/types";
 import { dateOnlyFormatter } from "@/lib/utils/formatters";
 import type { CourseStage } from "./course-stage";
@@ -64,6 +65,7 @@ function CourseTime({ schedule, locale }: CourseTimeProps) {
           {firstStartToLastEndLine}
         </p>
       )}
+      <VisitorTimeLine schedule={schedule} locale={locale} />
       <p className="mt-1 text-sm text-muted-foreground">{lengthLine}</p>
     </div>
   );

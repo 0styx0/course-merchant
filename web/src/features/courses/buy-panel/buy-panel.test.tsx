@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Course } from "@/lib/types";
 import { endedCourse, freeCourse, reactCourse } from "@/mocks/fixtures/courses";
@@ -23,6 +23,20 @@ function renderPanel(props: Partial<Parameters<typeof BuyPanel>[0]> = {}) {
 }
 
 describe("BuyPanel", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("shows the course's time in the visitor's zone when the offsets differ", () => {
+    vi.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions").mockReturnValue({
+      timeZone: "Asia/Tokyo",
+    } as Intl.ResolvedDateTimeFormatOptions);
+
+    renderPanel();
+
+    expect(screen.getByText(/Wed, Oct 2.*GMT\+9 your time/)).toBeVisible();
+  });
+
   it("is a region named after the course", () => {
     renderPanel();
 
