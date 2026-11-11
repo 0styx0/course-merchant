@@ -2,14 +2,15 @@ import Link from "next/link";
 
 import { SITE_NAME } from "@/lib/site-config/site-name";
 
+import { pageFrameClasses } from "./page-frame-classes";
 import { PhoneMenu } from "./phone-menu";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-10 h-14 md:h-18 bg-background px-4 md:px-6">
+    <header className="sticky top-0 z-10 h-14 md:h-18 bg-background">
       <nav
         aria-label="Main"
-        className="mx-auto flex h-full max-w-6xl items-center justify-between"
+        className={`${pageFrameClasses} flex h-full items-center justify-between`}
       >
         <Link
           href="/"

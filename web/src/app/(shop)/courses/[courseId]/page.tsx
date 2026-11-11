@@ -57,9 +57,8 @@ export default async function CoursePage({ params }: CoursePageProps) {
       : formatPrice(course.price.amount, course.price.currency);
 
   return (
-    <>
-      <CourseDetails course={course} />
+    <CourseDetails course={course}>
       <EnrollButton courseId={course.id} priceLabel={priceLabel} />
-    </>
+    </CourseDetails>
   );
 }

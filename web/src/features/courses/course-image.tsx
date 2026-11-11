@@ -17,8 +17,8 @@ export function CourseImage({ courseId, imageVersion }: CourseImageProps) {
       alt=""
       // the largest thing on screen, so the browser fetches it first
       preload
-      // columns 1-7 of the 1200px frame from md; full width on a phone
-      sizes="(min-width: 768px) 680px, 100vw"
+      // columns 1-7 of the 1200px frame (1104px inside its padding, 32px gaps) from md; full width on a phone
+      sizes="(min-width: 768px) 631px, 100vw"
       className="aspect-video w-full"
     />
   );

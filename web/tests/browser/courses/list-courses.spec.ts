@@ -3,6 +3,7 @@ import msw from "next/experimental/testmode/playwright/msw.js";
 import { courseByIdSuccess } from "@/mocks/handlers/courses/get-course";
 import {
   freeCourse,
+  longCourse,
   reactCourse,
   typescriptCourse,
 } from "@/mocks/fixtures/courses";
@@ -30,11 +31,12 @@ test("displays available courses", async ({ page }) => {
   const courses = page.getByRole("region", { name: "Courses" });
   const cards = courses.getByRole("article");
 
-  await expect(cards).toHaveCount(3);
+  await expect(cards).toHaveCount(4);
 
   await expect(cards.nth(0)).toContainText(reactCourse.name);
   await expect(cards.nth(1)).toContainText(typescriptCourse.name);
   await expect(cards.nth(2)).toContainText(freeCourse.name);
+  await expect(cards.nth(3)).toContainText(longCourse.name);
 
   await expect(
     courses.getByRole("heading", {

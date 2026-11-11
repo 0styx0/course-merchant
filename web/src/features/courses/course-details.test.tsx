@@ -2,15 +2,15 @@ import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { describe, expect, it } from "vitest";
 
-import { formatPrice } from "@/lib/utils/formatters";
 import { reactCourse } from "@/mocks/fixtures/courses";
 import { CourseDetails } from "./course-details";
 
 const course = reactCourse;
+const buyBlock = <button type="button">Enroll now</button>;
 
 describe("CourseDetails", () => {
   it("displays the course details", () => {
-    render(<CourseDetails course={course} />);
+    render(<CourseDetails course={course}>{buyBlock}</CourseDetails>);
 
     expect(
       screen.getByRole("heading", {
@@ -30,7 +30,7 @@ describe("CourseDetails", () => {
       "https://react.dev",
     );
 
-    expect(screen.getByText(formatPrice(9900, "USD"))).toBeVisible();
+    expect(screen.getByText("$99.00")).toBeVisible();
 
     expect(screen.getByText("Oct 1, 2030, 2:00 PM")).toHaveAttribute(
       "datetime",
@@ -43,10 +43,32 @@ describe("CourseDetails", () => {
 
     expect(screen.getByText("America/New_York")).toBeVisible();
     expect(screen.getByText("12 enrolled")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Enroll now" })).toBeVisible();
+  });
+
+  it("places the details and the buy block before the description", () => {
+    render(<CourseDetails course={course}>{buyBlock}</CourseDetails>);
+
+    const description = screen.getByRole("heading", {
+      level: 2,
+      name: "What you will build",
+    });
+    const isAfterDescription = (element: HTMLElement) =>
+      Boolean(
+        description.compareDocumentPosition(element) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+
+    expect(isAfterDescription(screen.getByText("Price"))).toBe(false);
+    expect(
+      isAfterDescription(screen.getByRole("button", { name: "Enroll now" })),
+    ).toBe(false);
   });
 
   it("shows the course image before the title", () => {
-    const { container } = render(<CourseDetails course={course} />);
+    const { container } = render(
+      <CourseDetails course={course}>{buyBlock}</CourseDetails>,
+    );
 
     const [image, title] = container.querySelectorAll("img, h1");
     expect(image.tagName).toBe("IMG");
@@ -61,15 +83,17 @@ describe("CourseDetails", () => {
           enrollmentCount: 0,
           price: { amount: 1250, currency: "EUR" },
         }}
-      />,
+      >
+        {buyBlock}
+      </CourseDetails>,
     );
 
     expect(screen.getByText("0 enrolled")).toBeVisible();
-    expect(screen.getByText(formatPrice(1250, "EUR"))).toBeVisible();
+    expect(screen.getByText("€12.50")).toBeVisible();
   });
 
   it("shows the summary in the muted text colour", () => {
-    render(<CourseDetails course={course} />);
+    render(<CourseDetails course={course}>{buyBlock}</CourseDetails>);
 
     expect(screen.getByText(course.summary)).toHaveClass(
       "text-muted-foreground",

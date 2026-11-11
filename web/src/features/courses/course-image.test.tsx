@@ -30,7 +30,7 @@ describe("CourseImage", () => {
 
     expect(container.querySelector("img")).toHaveAttribute(
       "sizes",
-      "(min-width: 768px) 680px, 100vw",
+      "(min-width: 768px) 631px, 100vw",
     );
   });
 });

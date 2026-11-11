@@ -37,9 +37,12 @@ describe("CourseList", () => {
     const courses = screen.getByRole("region", { name: "Courses" });
     const cards = within(courses).getAllByRole("article");
 
-    expect(cards).toHaveLength(3);
+    expect(cards).toHaveLength(4);
     expect(cards[0]).toHaveTextContent("React Fundamentals");
     expect(cards[1]).toHaveTextContent("Advanced TypeScript");
     expect(cards[2]).toHaveTextContent("Mindful Breathing");
+    expect(cards[3]).toHaveTextContent(
+      "Supercalifragilisticexpialidocious Contemplative Practice for Absolutely Everyone",
+    );
   });
 });

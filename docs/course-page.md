@@ -38,24 +38,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **7a.** The mock handlers sit in topic folders (admin-courses, courses, checkout), so the next handler fits.
   - [x] **7b.** A visitor who opens a course's image address sees its image; nothing shows on the page until 7c.
   - [x] **7c.** The course page shows the image above the title in a 16:9 box, resized by Next for each screen.
-  - [ ] **7d.** On desktop, the details and the Enroll button stay 96px from the top while the description scrolls; on a phone, they sit under the summary. **Next**
-    - *Behaviours*:
-      - Desktop: columns 1–7 hold the image, title, summary and description; columns 9–12 hold the sticky details and button.
-      - Phone order: image, title, summary, details and button, description.
-      - Keyboard order follows the phone order.
-      - At 320px the page has no horizontal scroll, and a long title wraps.
-      - The public page frame is 1200px wide, with 48px side padding from `md` and 24px below.
-    - *New shared pieces*: a mock course with a long rich description (headings, lists, quote, divider, link), used by 7d and 7e and shown on the mock home list.
-    - *Files*:
-      - [course-details.tsx](../web/src/features/courses/course-details.tsx) (grid; takes the buy block as `children`)
-      - [page.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx) (passes the Enroll button in)
-      - [public-page-layout.tsx](../web/src/features/site-layout/public-page-layout.tsx) (width and padding)
-      - [courses.ts](../web/src/mocks/fixtures/courses.ts) (the long course; tests that count courses change with it)
-      - [course-details.test.tsx](../web/src/features/courses/course-details.test.tsx) (rework for `children`)
-      - one browser spec for the layout
-    - *Settled*: the rows on the desktop panel, the header heights, the page frame and the course page's DOM order.
-    - *Done when*: at 1280px the column stays 96px down after scrolling; at 400px it stacks in the phone order.
-  - [ ] **7e.** The description reads in the wireframe's rich-text look.
+  - [x] **7d.** On desktop, the details and the Enroll button stay 96px from the top while the description scrolls; on a phone, they sit under the summary.
+  - [ ] **7e.** The description reads in the wireframe's rich-text look. **Next**
     - *Behaviours*:
       - h2 shows Playfair weight 400 at 1.5rem; h3 and h4 show DM Sans weight 500.
       - Headings get 40, 32 and 24px top margins, and the first child gets none.
@@ -159,7 +143,7 @@ Wireframe states and time variants, by the milestone that builds them:
 | The locale comes from `Accept-Language`, parsed by our own small function that drops `*` and bad tags and sorts by q | Variants d and e need it; Intl accepts any valid tag, so no matching list is needed | [`negotiator`](https://github.com/jshttp/negotiator) + [`@formatjs/intl-localematcher`](https://formatjs.github.io/docs/polyfills/intl-localematcher/): two dependencies to match against a list we don't have; fixed `en-US` breaks d and e |
 | `Intl.DateTimeFormat` writes every time string; `temporal-polyfill` does only arithmetic (the UTC offset at the start instant in both zones, calendar days to the start in the visitor's zone, the length) | One source of wording, and the arithmetic Intl can't do cleanly | Temporal formatting (a second way to write the same strings) |
 | No live clock; a course that ends mid-visit gets the API's 409 message | Note 14 covers it | A timer that re-renders |
-| The page's half of courses.md *Course images*, item 5 (image route, `next/image`) is built here; seven columns are 680 px, inside the old 800 px cap (revisit after use) | The image lands with its layout. Cards stay without images until the homepage redesign | An 800 px single column (it clashes with the grid) |
+| The page's half of courses.md *Course images*, item 5 (image route, `next/image`) is built here; the 1200px frame includes its 48px padding, so seven columns are about 631px (the image's `sizes` says so), inside the old 800px cap (revisit after use) | The image lands with its layout. Cards stay without images until the homepage redesign. A `sizes` hint that matches the real width saves phones and desktops from downloading a larger file than they show | An 800px single column (it clashes with the grid); a 1296px outer frame, which gives the wireframe's 680px columns but contradicts the row that fixes the frame at 1200px with 48px padding |
 | Step 2 puts a bare Enroll button and the form block under today's details list; step 7 moves them into the grid and step 8 wraps them in the panel | The riskiest milestone (payments) stays free of layout and panel work | Building the panel in step 2 (it pulls steps 7 and 8 into it) |
 | Desktop: columns 1–7 plus a panel in 9–12, sticky at 96 px; phone: the panel inline plus a bar (revisit after use) | Notes 1 and 21 | A dialog (note 2); a bar alone (note 21) |
 | The phone menu is shadcn's [Sheet](https://ui.shadcn.com/docs/components/sheet) | Its focus trap and Escape key come built in | A panel we build ourselves |
