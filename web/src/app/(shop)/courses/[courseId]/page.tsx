@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProblemAlert } from "@/components/problem-alert";
 import { EnrollButton } from "@/features/checkout/start-checkout/enroll-button";
+import { BuyPanel } from "@/features/courses/buy-panel/buy-panel";
 import { CourseDetails } from "@/features/courses/course-details";
 import {
   getCourse,
@@ -52,13 +53,23 @@ export default async function CoursePage({ params }: CoursePageProps) {
   }
 
   const course = result.data;
+  const formattedPrice = formatPrice(
+    course.price.amount,
+    course.price.currency,
+  );
   const priceLabel = isFreePrice(course.price.amount)
     ? undefined
-    : formatPrice(course.price.amount, course.price.currency);
+    : formattedPrice;
 
   return (
     <CourseDetails course={course}>
-      <EnrollButton courseId={course.id} priceLabel={priceLabel} />
+      <BuyPanel
+        courseName={course.name}
+        schedule={course.schedule}
+        price={formattedPrice}
+      >
+        <EnrollButton courseId={course.id} priceLabel={priceLabel} />
+      </BuyPanel>
     </CourseDetails>
   );
 }

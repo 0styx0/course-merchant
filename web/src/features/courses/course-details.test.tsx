@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { describe, expect, it } from "vitest";
 
-import { freeCourse, reactCourse } from "@/mocks/fixtures/courses";
+import { reactCourse } from "@/mocks/fixtures/courses";
 import { CourseDetails } from "./course-details";
 
 const course = reactCourse;
@@ -30,23 +30,18 @@ describe("CourseDetails", () => {
       "https://react.dev",
     );
 
-    expect(screen.getByText("$99")).toBeVisible();
-
-    expect(screen.getByText("Oct 1, 2030, 2:00 PM")).toHaveAttribute(
-      "datetime",
-      "2030-10-01T18:00:00Z",
-    );
-    expect(screen.getByText("Oct 1, 2030, 4:00 PM")).toHaveAttribute(
-      "datetime",
-      "2030-10-01T20:00:00Z",
-    );
-
-    expect(screen.getByText("America/New_York")).toBeVisible();
-    expect(screen.getByText("12 enrolled")).toBeVisible();
     expect(screen.getByRole("button", { name: "Enroll now" })).toBeVisible();
   });
 
-  it("places the details and the buy block before the description", () => {
+  it("shows no price, schedule or enrollment count of its own", () => {
+    render(<CourseDetails course={course}>{buyBlock}</CourseDetails>);
+
+    expect(screen.queryByText("12 enrolled")).not.toBeInTheDocument();
+    expect(screen.queryByText("$99")).not.toBeInTheDocument();
+    expect(screen.queryByText("America/New_York")).not.toBeInTheDocument();
+  });
+
+  it("puts the buy block before the description in the page source", () => {
     render(<CourseDetails course={course}>{buyBlock}</CourseDetails>);
 
     const description = screen.getByRole("heading", {
@@ -59,7 +54,6 @@ describe("CourseDetails", () => {
         Node.DOCUMENT_POSITION_FOLLOWING,
       );
 
-    expect(isAfterDescription(screen.getByText("Price"))).toBe(false);
     expect(
       isAfterDescription(screen.getByRole("button", { name: "Enroll now" })),
     ).toBe(false);
@@ -75,34 +69,11 @@ describe("CourseDetails", () => {
     expect(title).toBe(screen.getByRole("heading", { level: 1 }));
   });
 
-  it("displays zero enrollment and formats other currencies", () => {
-    render(
-      <CourseDetails
-        course={{
-          ...course,
-          enrollmentCount: 0,
-          price: { amount: 1250, currency: "EUR" },
-        }}
-      >
-        {buyBlock}
-      </CourseDetails>,
-    );
-
-    expect(screen.getByText("0 enrolled")).toBeVisible();
-    expect(screen.getByText("€12.50")).toBeVisible();
-  });
-
   it("shows the summary in the muted text colour", () => {
     render(<CourseDetails course={course}>{buyBlock}</CourseDetails>);
 
     expect(screen.getByText(course.summary)).toHaveClass(
       "text-muted-foreground",
     );
-  });
-
-  it("shows Free for a course that costs nothing", () => {
-    render(<CourseDetails course={freeCourse}>{buyBlock}</CourseDetails>);
-
-    expect(screen.getByText("Free")).toBeVisible();
   });
 });

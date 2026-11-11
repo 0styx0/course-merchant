@@ -100,6 +100,11 @@ async function submitTypedDetails(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Email me the link" }));
 }
 
+const FREE_NOTE =
+  "We email you a link to the course material. You don't need an account.";
+const PAID_NOTE =
+  "You pay on Stripe's secure page. Then we email you a link to the course material. You don't need an account.";
+
 describe("EnrollButton", () => {
   beforeEach(() => {
     sendAction.mockReset();
@@ -118,6 +123,61 @@ describe("EnrollButton", () => {
     expect(
       screen.getByRole("button", { name: "Email me the link" }),
     ).toBeInTheDocument();
+  });
+
+  it("shows the free note under the closed button", () => {
+    render(<EnrollButton courseId={courseId} />);
+
+    expect(screen.getByText(FREE_NOTE)).toBeVisible();
+  });
+
+  it("keeps the free note under the open fields and after a problem", async () => {
+    sendAction.mockResolvedValue(refused);
+    const user = await openFields();
+    expect(screen.getByText(FREE_NOTE)).toBeVisible();
+
+    await submitTypedDetails(user);
+
+    await screen.findByRole("alert");
+    expect(screen.getByText(FREE_NOTE)).toBeVisible();
+  });
+
+  it("keeps the free note while sending", async () => {
+    const finishAction = holdAction();
+    const user = await openFields();
+
+    await submitTypedDetails(user);
+
+    await screen.findByRole("button", { name: "Sending…" });
+    expect(screen.getByText(FREE_NOTE)).toBeVisible();
+    await finishAction();
+  });
+
+  it("hides the note after Check your email", async () => {
+    sendAction.mockResolvedValue(sent);
+    const user = await openFields();
+    expect(screen.getByText(FREE_NOTE)).toBeVisible();
+
+    await submitTypedDetails(user);
+
+    await screen.findByRole("status");
+    expect(screen.queryByText(FREE_NOTE)).not.toBeInTheDocument();
+  });
+
+  it("makes the free send button full width", async () => {
+    await openFields();
+
+    expect(
+      screen.getByRole("button", { name: "Email me the link" }),
+    ).toHaveClass("w-full");
+  });
+
+  it("makes the closed enroll button full width", () => {
+    render(<EnrollButton courseId={courseId} />);
+
+    expect(screen.getByRole("button", { name: "Enroll for free" })).toHaveClass(
+      "w-full",
+    );
   });
 
   it("starts as a closed button", () => {
@@ -465,6 +525,37 @@ describe("EnrollButton", () => {
         screen.getByRole("button", { name: "Continue to payment" }),
       );
     }
+
+    it("shows the paid note under the closed button and the open fields", async () => {
+      render(<EnrollButton courseId={courseId} priceLabel={priceLabel} />);
+      expect(screen.getByText(PAID_NOTE)).toBeVisible();
+      expect(screen.queryByText(FREE_NOTE)).not.toBeInTheDocument();
+
+      await userEvent.click(
+        screen.getByRole("button", { name: "Enroll for $99" }),
+      );
+
+      expect(screen.getByText(PAID_NOTE)).toBeVisible();
+    });
+
+    it("hides the paid note after Check your email", async () => {
+      sendAction.mockResolvedValue(sent);
+      const user = await openPaidFields();
+      expect(screen.getByText(PAID_NOTE)).toBeVisible();
+
+      await sendPaidDetails(user);
+
+      await screen.findByRole("status");
+      expect(screen.queryByText(PAID_NOTE)).not.toBeInTheDocument();
+    });
+
+    it("makes Continue to payment full width", async () => {
+      await openPaidFields();
+
+      expect(
+        screen.getByRole("button", { name: "Continue to payment" }),
+      ).toHaveClass("w-full");
+    });
 
     it("starts as a closed button with the price", () => {
       render(<EnrollButton courseId={courseId} priceLabel={priceLabel} />);

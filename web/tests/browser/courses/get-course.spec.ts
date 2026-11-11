@@ -40,8 +40,13 @@ test("displays course details", async ({ page }) => {
     "https://react.dev",
   );
 
-  await expect(page.getByText("$99", { exact: true })).toBeVisible();
-  await expect(page.getByText("12 enrolled", { exact: true })).toBeVisible();
+  const buyPanel = page.getByRole("complementary", {
+    name: `Enroll in ${reactCourse.name}`,
+  });
+  await expect(buyPanel.getByText("$99", { exact: true })).toBeVisible();
+  await expect(page.getByText(/enrolled/)).toHaveCount(0);
+  await expect(buyPanel).toBeVisible();
+  await expect(page.getByText(/You pay on Stripe/)).toBeVisible();
   await expect(
     page.getByText("America/New_York", { exact: true }),
   ).toBeVisible();

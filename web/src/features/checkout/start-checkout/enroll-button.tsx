@@ -13,6 +13,7 @@ import { ProblemAlert } from "@/components/problem-alert";
 import { Button } from "@/components/ui/button";
 import type { FormFieldError } from "@/lib/api/form-errors";
 import type { CheckoutCustomer } from "@/lib/types";
+import { AfterEnrollNote } from "./after-enroll-note";
 import { CheckEmailNotice } from "../check-email-notice/check-email-notice";
 import { findCheckoutCustomerErrors } from "../form/checkout-customer.schema";
 import { CustomerDetailFields } from "../form/customer-detail-fields";
@@ -84,6 +85,7 @@ export function EnrollButton({ courseId, priceLabel }: EnrollButtonProps) {
   const [restartCount, setRestartCount] = useState(0);
   const [typedCustomer, setTypedCustomer] = useState<CheckoutCustomer>();
   const words = makeEnrollWords(priceLabel);
+  const isPaid = priceLabel !== undefined;
 
   function restartWithCustomer(customer: CheckoutCustomer) {
     setTypedCustomer(customer);
@@ -96,6 +98,7 @@ export function EnrollButton({ courseId, priceLabel }: EnrollButtonProps) {
         key={restartCount}
         courseId={courseId}
         words={words}
+        isPaid={isPaid}
         startCustomer={typedCustomer}
         onRestoredFromCache={restartWithCustomer}
       />
@@ -103,20 +106,24 @@ export function EnrollButton({ courseId, priceLabel }: EnrollButtonProps) {
   }
 
   return (
-    <Button
-      type="button"
-      aria-expanded={false}
-      className="mt-6"
-      onClick={() => setIsFormOpen(true)}
-    >
-      {words.open} <span aria-hidden="true">→</span>
-    </Button>
+    <>
+      <Button
+        type="button"
+        aria-expanded={false}
+        className="mt-6 w-full"
+        onClick={() => setIsFormOpen(true)}
+      >
+        {words.open} <span aria-hidden="true">→</span>
+      </Button>
+      <AfterEnrollNote isPaid={isPaid} />
+    </>
   );
 }
 
 type EnrollFormProps = {
   courseId: string;
   words: EnrollWords;
+  isPaid: boolean;
   /** The values to show in the boxes until a failed send hands back its own. */
   startCustomer: CheckoutCustomer | undefined;
   onRestoredFromCache: (typedCustomer: CheckoutCustomer) => void;
@@ -146,6 +153,7 @@ function useReportTypedCustomerOnRestore(
 function EnrollForm({
   courseId,
   words,
+  isPaid,
   startCustomer,
   onRestoredFromCache,
 }: EnrollFormProps) {
@@ -179,28 +187,31 @@ function EnrollForm({
   }
 
   return (
-    <form
-      ref={formRef}
-      noValidate
-      action={sendAction}
-      onSubmit={checkTypedDetailsBeforeSending}
-      className="mt-6 space-y-4"
-    >
-      {state.state === "failure" && <ProblemAlert problem={state.problem} />}
-      <CustomerDetailFields
-        customer={state.state === "failure" ? state.customer : startCustomer}
-        // Sending again clears the old messages.
-        fieldErrors={isPending ? NO_FIELD_ERRORS : fieldErrors}
-        isPending={isPending}
-      />
-      <SendButton
-        words={words}
-        failedProblemCode={
-          state.state === "failure" ? state.problem.code : undefined
-        }
-        isPending={isPending}
-      />
-    </form>
+    <>
+      <form
+        ref={formRef}
+        noValidate
+        action={sendAction}
+        onSubmit={checkTypedDetailsBeforeSending}
+        className="mt-6 space-y-4"
+      >
+        {state.state === "failure" && <ProblemAlert problem={state.problem} />}
+        <CustomerDetailFields
+          customer={state.state === "failure" ? state.customer : startCustomer}
+          // Sending again clears the old messages.
+          fieldErrors={isPending ? NO_FIELD_ERRORS : fieldErrors}
+          isPending={isPending}
+        />
+        <SendButton
+          words={words}
+          failedProblemCode={
+            state.state === "failure" ? state.problem.code : undefined
+          }
+          isPending={isPending}
+        />
+      </form>
+      <AfterEnrollNote isPaid={isPaid} />
+    </>
   );
 }
 
@@ -229,7 +240,7 @@ function SendButton({
 }) {
   // Not disabled: a disabled button drops the keyboard focus.
   return (
-    <Button type="submit" aria-busy={isPending}>
+    <Button type="submit" aria-busy={isPending} className="w-full">
       {isPending ? (
         <>
           <LoaderCircle aria-hidden="true" className="animate-spin" />
