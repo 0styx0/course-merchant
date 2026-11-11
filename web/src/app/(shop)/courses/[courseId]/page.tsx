@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { ProblemAlert } from "@/components/problem-alert";
 import { EnrollButton } from "@/features/checkout/start-checkout/enroll-button";
-import { BuyPanel } from "@/features/courses/buy-panel/buy-panel";
+import { BuyPanel, EndedPanel } from "@/features/courses/buy-panel/buy-panel";
 import {
   getCourseStage,
   type CourseStage,
@@ -78,6 +78,10 @@ type CourseBuyPanelProps = {
 };
 
 function CourseBuyPanel({ course, stage }: CourseBuyPanelProps) {
+  if (stage === "ended") {
+    return <EndedPanel courseName={course.name} schedule={course.schedule} />;
+  }
+
   const formattedPrice = formatPrice(
     course.price.amount,
     course.price.currency,

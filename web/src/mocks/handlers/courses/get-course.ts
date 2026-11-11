@@ -1,7 +1,7 @@
 import type { operations } from "@/lib/api/generated";
 import { delay, http, HttpResponse } from "msw";
 import { MOCK_API_BASE_URL } from "../../mock-api";
-import { publicCourses } from "../../fixtures/courses";
+import { endedCourse, publicCourses } from "../../fixtures/courses";
 import { problemResponse } from "../../problem-response";
 
 type GetCourseResponse =
@@ -19,9 +19,11 @@ type InternalServerErrorResponse =
 const courseByIdUrl = `${MOCK_API_BASE_URL}/v1/courses/:courseId`;
 
 function respondWithCourse(courseId: string | readonly string[]) {
-  const course: GetCourseResponse | undefined = publicCourses.find(
-    (publicCourse) => publicCourse.id === courseId,
-  );
+  // The API's list leaves ended courses out, but its course endpoint serves them.
+  const course: GetCourseResponse | undefined = [
+    ...publicCourses,
+    endedCourse,
+  ].find((publicCourse) => publicCourse.id === courseId);
 
   return course ? HttpResponse.json(course) : respondCourseNotFound(courseId);
 }

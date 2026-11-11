@@ -45,29 +45,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **8b.** The course page's side column is a flat panel with the schedule, the price, a full-width Enroll button and the "After you enroll." note, and it no longer shows the enrollment count.
   - [x] **8c.** An upcoming course's panel opens with "Starts Oct 1, 2030", and a course in progress reads "In progress" and "This course has started. You can still enroll." above its button.
   - [x] **8d.** The 404 message and the checkout return page share one "See current courses →" link.
-  - [ ] **8e.** A visitor who opens an ended course sees the Ended pill, its date, "This course has ended." and "See current courses →", with no price, fields or button. **Next**
-    - *Behaviours*:
-      - The pill has a `--muted` fill and `--muted-foreground` text, in eyebrow type, with `rounded-full` corners.
-      - The date shows the start date only, in the course's zone.
-      - The page draws no Enroll button for an ended course, so no form can reach the API's 409.
-      - The ended panel is labelled with the course name rather than "Enroll in…".
-      - The mock course endpoint answers for the ended course, and the mock list leaves it out, as the API's list does.
-      - A browser test checks that the ended course page shows "Ended" and no Enroll button; it is the only check of the page's wiring.
-    - *New shared pieces*: none
-    - *Files*:
-      - `buy-panel.tsx` (test updated)
-      - [page.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx)
-      - [courses.ts](../web/src/mocks/fixtures/courses.ts) (adds `endedCourse`, from 2025, outside the public list)
-      - [get-course.ts](../web/src/mocks/handlers/courses/get-course.ts)
-      - `tests/browser/courses/buy-panel.spec.ts` (new)
-    - *Needs*: 8c, 8d
-    - *Settled*:
-      - Wireframe note 14.
-      - Style guide §7 Badge and §8 ended course.
-    - *Done when*:
-      - `check:changed` and the browser suite pass.
-      - The journey in *Step 8* is walked.
-- [ ] **9. Course times in the visitor's words.** The panel shows the course's own time, the visitor's only when it differs, the length, and the status line.
+  - [x] **8e.** A visitor who opens an ended course sees the Ended pill, its date, "This course has ended." and "See current courses →", with no price, fields or button.
+- [ ] **9. Course times in the visitor's words.** The panel shows the course's own time, the visitor's only when it differs, the length, and the status line. **Next**
 - [ ] **10. Phone buy bar.** A slim bar keeps the button on screen once the panel scrolls away; a tap opens the fields.
 - [ ] **11. Fixes from using the page.** The owner's findings from the full walk are fixed.
 - [ ] **12. Checkout button cleanup.** A developer reads the enroll button's code in small files, and a renamed error code breaks a test instead of silently dropping "Try again".
@@ -453,30 +432,10 @@ On a phone: the same panel at full width, under the summary.
 - Size: 5 commits (8a to 8e). The overview said 3 to 4: the price format stands alone because it also changes the card, and the shared "See current courses" link needs its own mechanical commit before the ended look.
 - Risk: changing `formatPrice` changes the card.
 - Done when: journey (`dev:mock`, 400 px and desktop, keyboard only): open React Fundamentals (state 1), Mindful Breathing (2), the in-progress course (3) and the ended course by its URL (4) and see the screen drawn in the wireframe; send the free form and see the note hide; walk `notPurchasable` on the in-progress course; no page shows an enrollment count.
-- Design notes *(temporary)*:
-  - Public features don't import each other (web.md), so the page puts the checkout button inside the courses panel as its children.
-  - The page works out the course stage once and passes it to the panel, so the panel's tests need no fake clock.
-  - **Course stage** means which of upcoming, in progress or ended a course is at request time. It is a new word because "status" already means draft, published or archived.
-  - `features/courses/` gets a `buy-panel/` folder, because its root already holds 8 files and 2 folders; `start-checkout/` reaches 10 files with the note.
-  - The ended course opens by its URL in `dev:mock`, because the mock list leaves it out, as the API's list does.
-  - Admin's price summary keeps its own "$99.00" words, because it repeats what the admin typed.
-  - Flow diagram *(temporary)*:
-
-```
-Visitor opens /courses/<id>
-  Page fetches the course                          existing (7c)
-  Page reads the clock after connection()          8c
-  Course stage from start, end and now             8c
-  ├── upcoming → "Starts <date>" eyebrow           8c
-  │     price, button, note                        8b (price words 8a)
-  ├── in progress → "In progress" eyebrow          8c
-  │     price, limit line, button, note            8c / 8b
-  │     late 409 → API message above the fields    existing (3c), walked in 8c
-  └── ended → pill, date, sentence, link           8e (link 8d)
-        no button, so no request
-Visitor presses Enroll → fields open, note stays   existing (2c) / 8b
-  └── Check your email → note hides, price stays   8b
-```
+- Retro:
+  - Planned 5 commits (8a to 8e); shipped 5.
+  - Owner changes after using the page: not yet recorded.
+  - Rule friction: the Next test proxy prints "Proxy request aborted" for the course image when a browser test ends before the image loads, and every course-page spec shows it.
 
 ## Step 9. Course times in the visitor's words
 

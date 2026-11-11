@@ -231,6 +231,24 @@ export const inProgressCourse = {
   },
 } as const satisfies Course;
 
+export const endedCourse = {
+  id: "c7d1f3a9-5e28-4b60-8a14-9d2e6f0b3c57",
+  name: "Intro to Go",
+  summary: "A finished course that no longer takes enrollments",
+  description: paragraphDoc("Goroutines, channels and the standard library."),
+  enrollmentCount: 30,
+  image: { version: sampleImageVersion },
+  price: {
+    amount: 9900,
+    currency: "USD",
+  },
+  schedule: {
+    startTime: "2025-09-01T18:00:00Z",
+    endTime: "2025-09-01T20:00:00Z",
+    timeZone: "America/New_York",
+  },
+} as const satisfies Course;
+
 export const publicCourses = [
   reactCourse,
   typescriptCourse,

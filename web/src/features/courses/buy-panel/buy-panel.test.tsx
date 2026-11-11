@@ -2,8 +2,9 @@ import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { describe, expect, it } from "vitest";
 
-import { freeCourse, reactCourse } from "@/mocks/fixtures/courses";
-import { BuyPanel } from "./buy-panel";
+import type { Course } from "@/lib/types";
+import { endedCourse, freeCourse, reactCourse } from "@/mocks/fixtures/courses";
+import { BuyPanel, EndedPanel } from "./buy-panel";
 
 function renderPanel(props: Partial<Parameters<typeof BuyPanel>[0]> = {}) {
   return render(
@@ -11,8 +12,8 @@ function renderPanel(props: Partial<Parameters<typeof BuyPanel>[0]> = {}) {
       courseName={reactCourse.name}
       schedule={reactCourse.schedule}
       price="$99"
-      // An ended course adds nothing to the panel, so most tests start from it.
-      stage="ended"
+      // An upcoming course adds only its eyebrow, so most tests start from it.
+      stage="upcoming"
       {...props}
     >
       <button type="button">Enroll now</button>
@@ -111,15 +112,6 @@ describe("BuyPanel", () => {
     expect(sentence.compareDocumentPosition(button)).toBe(follows);
   });
 
-  it("keeps an ended course's panel free of eyebrow and sentence, with its button", () => {
-    renderPanel({ stage: "ended" });
-
-    expect(screen.getByRole("button", { name: "Enroll now" })).toBeVisible();
-    expect(screen.queryByText("In progress")).not.toBeInTheDocument();
-    expect(screen.queryByText(/^Starts/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/still enroll/)).not.toBeInTheDocument();
-  });
-
   it("writes the start date in the course's zone when UTC falls on another day", () => {
     renderPanel({
       stage: "upcoming",
@@ -131,5 +123,60 @@ describe("BuyPanel", () => {
     });
 
     expect(screen.getByText("Starts Oct 1, 2030")).toBeVisible();
+  });
+});
+
+describe("EndedPanel", () => {
+  function renderEndedPanel(
+    schedule: Course["schedule"] = endedCourse.schedule,
+  ) {
+    return render(
+      <EndedPanel courseName={endedCourse.name} schedule={schedule} />,
+    );
+  }
+
+  it("is a region named after the course, not an enroll prompt", () => {
+    renderEndedPanel();
+
+    expect(
+      screen.getByRole("complementary", { name: "Intro to Go" }),
+    ).toBeVisible();
+  });
+
+  it("shows the Ended pill, the start date, the sentence and a link to current courses", () => {
+    renderEndedPanel();
+
+    expect(screen.getByText("Ended")).toBeVisible();
+    expect(screen.getByText("Sep 1, 2025")).toBeVisible();
+    expect(screen.getByText("This course has ended.")).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "See current courses →" }),
+    ).toHaveAttribute("href", "/");
+  });
+
+  it("writes the start date in the course's zone when UTC falls on another day", () => {
+    renderEndedPanel({
+      startTime: "2025-09-02T02:00:00Z",
+      endTime: "2025-09-02T04:00:00Z",
+      timeZone: "America/New_York",
+    });
+
+    expect(screen.getByText("Sep 1, 2025")).toBeVisible();
+  });
+
+  it("shows no price, schedule zone or button", () => {
+    renderEndedPanel();
+
+    expect(screen.getByText("Ended")).toBeVisible();
+    expect(screen.queryByText("America/New_York")).not.toBeInTheDocument();
+    expect(screen.queryByText(/\$/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Free")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("colours the pill muted", () => {
+    renderEndedPanel();
+
+    expect(screen.getByText("Ended")).toHaveClass("bg-muted");
   });
 });
