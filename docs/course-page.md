@@ -40,7 +40,112 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **7c.** The course page shows the image above the title in a 16:9 box, resized by Next for each screen.
   - [x] **7d.** On desktop, the details and the Enroll button stay 96px from the top while the description scrolls; on a phone, they sit under the summary.
   - [x] **7e.** The description reads in the wireframe's rich-text look on the public page and in the admin editor.
-- [ ] **8. Buy panel looks.** The panel shows the price, the button with its price, the after-enroll note, and the free, in-progress and ended looks. **Next** (needs `/plan-create-implementation` first)
+- **8. Buy panel looks.** The panel shows the price, the button with its price, the after-enroll note, and the free, in-progress and ended looks.
+  - [ ] **8a.** Prices read "$99", "$49.50" and "Free" on the course page, its Enroll button and the course card. **Next**
+    - *Behaviours*:
+      - A whole amount drops its decimals ("$99"), via `Intl.NumberFormat`'s [`trailingZeroDisplay: "stripIfInteger"`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat#trailingzerodisplay).
+      - An amount with cents keeps two decimals ("$49.50", "$0.50").
+      - An amount of 0 reads "Free", on the card too.
+      - The paid button reads "Enroll for $99 →".
+      - Admin's price summary keeps "$99.00", because it repeats the admin's own typing.
+    - *New shared pieces*: none
+    - *Files*:
+      - [formatters.ts](../web/src/lib/utils/formatters.ts)
+      - `formatters.test.ts` (new, beside it)
+      - Tests that assert the new words: `course-card.test.tsx`, `course-details.test.tsx`, `tests/browser/courses/get-course.spec.ts` and `paid-enrollment.spec.ts`.
+    - *Settled*:
+      - Style guide §8 price rows.
+      - The *Prices use one formatter* Decision row.
+    - *Done when*:
+      - `check:changed` passes.
+      - The browser suite passes, run in the background.
+      - The card and the page show "$99" and "Free" in `dev:mock`.
+  - [ ] **8b.** The course page's side column becomes a flat panel with today's schedule lines, the price, a full-width Enroll button and the "After you enroll." note, and it no longer shows the enrollment count.
+    - *Behaviours*:
+      - The panel is an `aside` labelled "Enroll in <course name>".
+        - It has a `--surface-alt` fill, `rounded-lg` corners and 24px padding.
+        - It has no border and no shadow.
+      - The panel reads schedule, price, button, note, in that order (wireframe note 5).
+      - The paid note reads "You pay on Stripe's secure page. Then we email you a link to the course material. You don't need an account."
+      - The free note reads "We email you a link to the course material. You don't need an account."
+      - The note shows under the closed button and under the open form, including after an error and while sending.
+      - After "Check your email" the note hides and the price stays.
+      - The Enroll and send buttons fill the panel's width at every width.
+      - The page shows no enrollment count.
+    - *New shared pieces*: none, because the panel and the note each have one user.
+    - *Files*:
+      - `web/src/features/courses/buy-panel/buy-panel.tsx` (new, with a test)
+      - [course-details.tsx](../web/src/features/courses/course-details.tsx) (the side column holds only its children; test updated)
+      - `web/src/features/checkout/start-checkout/after-enroll-note.tsx` (new; tested through `enroll-button.test.tsx`)
+        - The `start-checkout/` folder reaches the file limit with this one.
+      - [enroll-button.tsx](../web/src/features/checkout/start-checkout/enroll-button.tsx) (the note and the full width)
+      - [page.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx) (puts the button inside the panel)
+      - `tests/browser/courses/get-course.spec.ts` (it checks for "12 enrolled" today and must check for no count)
+    - *Settled*:
+      - Wireframe notes 5, 11, 20 and 24.
+      - The rewritten *buy buttons* Decision row.
+      - The *After "Check your email"* Decision row.
+    - *Done when*:
+      - `check:changed` and the browser suite pass.
+      - You walk wireframe states 1, 2 and 5 in `dev:mock`.
+  - [ ] **8c.** An upcoming course's panel opens with "Starts Oct 1, 2030", and a course in progress reads "In progress" and "This course has started. You can still enroll." above its button.
+    - *Behaviours*:
+      - A course is upcoming before its start.
+      - It is in progress from its start until its end.
+      - It is ended from its end on, which matches the API's 409 rule `endsAt <= now`.
+      - Tests pin both edges: at exactly the start the course is in progress, and at exactly the end it is ended.
+      - The status line is an eyebrow in `--olive`.
+        - Its date is the start date in the course's own zone, written with `dateStyle: "medium"` in en-US.
+      - An ended course keeps today's look until 8e: no status line, and the button stays.
+      - The page reads the clock after Next's `connection()`, so the stage always comes from the request's own time.
+      - On the in-progress course, the `notPurchasable` scenario shows the API's message above the fields, with the typed values kept (wireframe note 14's fallback).
+    - *New shared pieces*: the course stage function, used by the page and the panel now and by 8e's ended look next.
+    - *Files*:
+      - `web/src/features/courses/buy-panel/course-stage.ts` (new, with a test)
+      - `buy-panel.tsx` (test updated)
+      - [formatters.ts](../web/src/lib/utils/formatters.ts) (adds a date-only formatter beside `dateTimeFormatter`)
+      - [page.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx)
+      - [courses.ts](../web/src/mocks/fixtures/courses.ts) (adds `inProgressCourse`, running 2020 to 2040, to the public list)
+      - Tests that count cards go from 4 to 5: `course-list.test.tsx` and `tests/browser/courses/list-courses.spec.ts`.
+    - *Settled*:
+      - The Principle that the server decides which panel shows.
+      - The Decision row on the server picking upcoming, in progress or ended.
+      - Wireframe note 13.
+    - *Done when*:
+      - `check:changed` and the browser suite pass.
+      - You walk states 1 and 3 in `dev:mock`, plus `notPurchasable` on the in-progress course.
+  - [ ] **8d.** The three "See current courses →" links share one component. *(mechanical)*
+    - *Behaviours*:
+      - Nothing changes for visitors; the 404 page and the checkout return page keep their link.
+      - Each caller sets its own margin.
+    - *New shared pieces*: the "See current courses" link, used by the 404 message, the checkout return page and 8e's ended panel.
+    - *Files*:
+      - `web/src/components/see-current-courses-link.tsx` (new)
+      - [not-found-message.tsx](../web/src/components/not-found-message.tsx)
+      - [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx)
+    - *Done when*: `check:changed` passes with an unchanged test count.
+  - [ ] **8e.** A visitor who opens an ended course sees the Ended pill, its date, "This course has ended." and "See current courses →", with no price, fields or button.
+    - *Behaviours*:
+      - The pill has a `--muted` fill and `--muted-foreground` text, in eyebrow type, with `rounded-full` corners.
+      - The date shows the start date only, in the course's zone.
+      - The page draws no Enroll button for an ended course, so no form can reach the API's 409.
+      - The ended panel is labelled with the course name rather than "Enroll in…".
+      - The mock course endpoint answers for the ended course, and the mock list leaves it out, as the API's list does.
+      - A browser test checks that the ended course page shows "Ended" and no Enroll button; it is the only check of the page's wiring.
+    - *New shared pieces*: none
+    - *Files*:
+      - `buy-panel.tsx` (test updated)
+      - [page.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx)
+      - [courses.ts](../web/src/mocks/fixtures/courses.ts) (adds `endedCourse`, from 2025, outside the public list)
+      - [get-course.ts](../web/src/mocks/handlers/courses/get-course.ts)
+      - `tests/browser/courses/buy-panel.spec.ts` (new)
+    - *Needs*: 8c, 8d
+    - *Settled*:
+      - Wireframe note 14.
+      - Style guide §7 Badge and §8 ended course.
+    - *Done when*:
+      - `check:changed` and the browser suite pass.
+      - The journey in *Step 8* is walked.
 - [ ] **9. Course times in the visitor's words.** The panel shows the course's own time, the visitor's only when it differs, the length, and the status line.
 - [ ] **10. Phone buy bar.** A slim bar keeps the button on screen once the panel scrolls away; a tap opens the fields.
 - [ ] **11. Fixes from using the page.** The owner's findings from the full walk are fixed.
@@ -148,7 +253,7 @@ Wireframe states and time variants, by the milestone that builds them:
 | While pending, the browser re-asks every 5 seconds for 60 seconds from page open | The webhook usually lands within seconds; at most 12 requests per visit | Every second (5× the requests); backoff (more code for a one-minute window); a minute kept across reloads (a timestamp in the URL) |
 | Hover colours are tokens (`--primary-hover`, `--secondary-hover`) in globals.css | The contrast spec reads every pair from the page, so the hover pairs get checked like the rest, and each colour lives in one place | Raw oklch values in button.tsx (the spec can't see them, so two places change) |
 | Headings take Playfair from `font-heading` plus a `text-h*` step on each heading; Playfair loads weight 400 only, and DM Sans loads as its variable font | A base rule on h1–h3 would turn alert titles and the description's headings serif, and render the existing bold headings in a fake bold; one heading weight keeps the download small | A base rule (one line, but every heading changes at once); Playfair variable (a bigger file for weights the guide bans) |
-| The Button primitive carries height, padding, label, radius, colours, ring and the 11rem minimum (link variant exempt); each public buy button adds full width below sm itself (step 8) (revisit after use) | Full width in the primitive would stretch admin's Remove and Cancel on a phone and break the price row | Full width in the primitive |
+| The Button primitive carries height, padding, label, radius, colours, ring and the 11rem minimum (link variant exempt); each public buy button adds full width itself, at every width (step 8) (revisit after use) | Full width in the primitive would stretch admin's Remove and Cancel on a phone and break the price row; the wireframe draws the buy buttons full width, lined up with the Name and Email boxes | Full width in the primitive; full width below sm only (a 180px button under 330px fields) |
 | ProblemAlert takes a title and detail and is the one error box; the shop error page uses it | Today two files copy one class string; this keeps shadcn files untouched | shadcn Alert with local edits (an avoidable primitive edit, and a second box beside StickyFormNotice) |
 | The §11 check is a browser spec reading root tokens with `getComputedStyle`, sharing the border spec's colour helpers | The browser resolves `var()`, one set of helpers serves both specs, and the spec checks surfaces no page shows yet | A Vitest test parsing globals.css (a second copy of the helpers and a hand-made `var()` resolver) |
 | The mock course endpoint answers with the fixture whose id is in the URL, and the mock home list shows every public fixture | Any checkout scenario then works on the free course (and later the in-progress and ended ones) with one `scenario` line | A `freeCourse` scenario plus per-scenario pairings in server.ts (about 6 lines now, one more per later walk; names multiply, and a missed pairing shows the paid course with no form) |
@@ -163,6 +268,8 @@ Wireframe states and time variants, by the milestone that builds them:
 | The public page frame is 1200px wide with 48px side padding from `md` | Style guide §4 and the wireframe; the side column gets its drawn width (revisit after use) | Today's 1152px with 24px padding (narrower side column) |
 | The course page's DOM order is summary, details and button, then description; on desktop the grid places the side column across both rows | Phone and keyboard order match what the visitor sees, and the button comes before 5,000 characters of text (revisit after use) | Description first with CSS `order` (phone tab order jumps around); two copies of the panel (two buttons) |
 | The shared description class sets headings, lists, quotes and links; only the public page sets the muted body-lg text | The admin edits in the public structure while typing in full-contrast 16px text | Muted text in the editor too (lower contrast while typing) |
+| Prices use one formatter with `trailingZeroDisplay: "stripIfInteger"`, and 0 reads "Free", on the page, the button and the card | Style guide §8 writes "$99", "$49.50" and "Free"; one rule for one fact | Page-only formatting (the card and the page would show one price two ways); hand-written trimming (Intl does it) |
+| After "Check your email" the note under the button hides and the price stays; the note sits beside the button in checkout code (revisit after use) | The note's promise has come true, and the price records what was paid | Hiding the price too, as wireframe 5 draws it (the price moves into client code, about 30 lines, and the panel shrinks as focus lands); keeping both (the note repeats the notice) |
 
 ## Step 1. Site look
 
@@ -402,31 +509,53 @@ While the image loads: an empty 16:9 box, so nothing below it moves.
 
 ```
 The buy panel after 8 (times still in today's format)
-Upcoming, paid (1)      Free (2)             In progress (3)
-+------------------+    +------------------+ +------------------------+
-| STARTS DEC 1,2026|    | STARTS DEC 1,2026| | IN PROGRESS            |
-| Dec 1, 6:00 PM – |    | Dec 1, 6:00 PM – | | Dec 1, 6:00 PM – ...   |
-|  Dec 1, 8:00 PM  |    |  Dec 1, 8:00 PM  | | $99                    |
-| $99              |    | Free             | | This course has        |
-| [Enroll for $99→]|    | [Enroll for free→]| |  started. You can     |
-| After you enroll.|    | After you enroll.| |  still enroll.         |
-| You pay on       |    | We email you a   | | [Enroll for $99 →]     |
-|  Stripe's ...    |    |  link ...        | | After you enroll. ...  |
-+------------------+    +------------------+ +------------------------+
-Ended (4)
-+------------------------------+
-| ( ENDED )                    |
-| Dec 1, 2026                  |
-| This course has ended.       |
-| See current courses →  ghost |   <- no price, no fields
-+------------------------------+
+Upcoming, paid (8a–8c)            In progress (8c)                  Ended (8e)
++---------------------------+     +---------------------------+     +---------------------------+
+| STARTS OCT 1, 2030        |     | IN PROGRESS               |     | ( ENDED )                 |
+| Oct 1, 2030, 2:00 PM –    |     | Jan 1, 2020, ... –        |     | Sep 1, 2025               |
+|   Oct 1, 2030, 4:00 PM    |     |   Dec 1, 2040, ...        |     | This course has ended.    |
+| America/New_York          |     | America/New_York          |     | See current courses →     |
+| $99                       |     | $99                       |     +---------------------------+
+| [   Enroll for $99 →    ] |     | This course has started.  |
+| After you enroll.         |     | You can still enroll.     |
+| You pay on Stripe's ...   |     | [   Enroll for $99 →    ] |
++---------------------------+     | After you enroll. ...     |
+                                  +---------------------------+
+Free: "Free" in the price row, [Enroll for free →], the note without Stripe.
+After Check your email: the notice replaces the button and the note; the price stays.
+On a phone: the same panel at full width, under the summary.
 ```
 
 - Why here: the panel exists in the layout, so its states have a place.
 - Needs: 7.
-- Size: 3 to 4 commits. Twins: `formatPrice` (used by the card), the fixtures from step 2.
+- Builds on: [course-details.tsx](../web/src/features/courses/course-details.tsx), [enroll-button.tsx](../web/src/features/checkout/start-checkout/enroll-button.tsx), [formatters.ts](../web/src/lib/utils/formatters.ts), [not-found-message.tsx](../web/src/components/not-found-message.tsx), [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx), the fixtures from step 2, wireframe states 1 to 5 and notes 5, 11 to 14, 20 and 24, style guide §7 and §8.
+- Size: 5 commits (8a to 8e). The overview said 3 to 4: the price format stands alone because it also changes the card, and the shared "See current courses" link needs its own mechanical commit before the ended look.
 - Risk: changing `formatPrice` changes the card.
-- Done when: journey: walk wireframe states 1, 2, 3 and 4 in `dev:mock` and see the screen drawn in the wireframe; the page shows no enrollment count.
+- Done when: journey (`dev:mock`, 400 px and desktop, keyboard only): open React Fundamentals (state 1), Mindful Breathing (2), the in-progress course (3) and the ended course by its URL (4) and see the screen drawn in the wireframe; send the free form and see the note hide; walk `notPurchasable` on the in-progress course; no page shows an enrollment count.
+- Design notes *(temporary)*:
+  - Public features don't import each other (web.md), so the page puts the checkout button inside the courses panel as its children.
+  - The page works out the course stage once and passes it to the panel, so the panel's tests need no fake clock.
+  - **Course stage** means which of upcoming, in progress or ended a course is at request time. It is a new word because "status" already means draft, published or archived.
+  - `features/courses/` gets a `buy-panel/` folder, because its root already holds 8 files and 2 folders; `start-checkout/` reaches 10 files with the note.
+  - The ended course opens by its URL in `dev:mock`, because the mock list leaves it out, as the API's list does.
+  - Admin's price summary keeps its own "$99.00" words, because it repeats what the admin typed.
+  - Flow diagram *(temporary)*:
+
+```
+Visitor opens /courses/<id>
+  Page fetches the course                          existing (7c)
+  Page reads the clock after connection()          8c
+  Course stage from start, end and now             8c
+  ├── upcoming → "Starts <date>" eyebrow           8c
+  │     price, button, note                        8b (price words 8a)
+  ├── in progress → "In progress" eyebrow          8c
+  │     price, limit line, button, note            8c / 8b
+  │     late 409 → API message above the fields    existing (3c), walked in 8c
+  └── ended → pill, date, sentence, link           8e (link 8d)
+        no button, so no request
+Visitor presses Enroll → fields open, note stays   existing (2c) / 8b
+  └── Check your email → note hides, price stays   8b
+```
 
 ## Step 9. Course times in the visitor's words
 
@@ -448,7 +577,7 @@ Several days: Dec 1 – 3, 2026 / Tue, Dec 1, 6:00 PM EST – Thu, Dec 3, ... / 
 
 - Why here: the panel exists (8), so the lines have a place.
 - Needs: 8.
-- Size: 4 to 5 commits (locale from the request; course line and range on the server; visitor line; status line; shared length formatter). Twins: [course-schedule.tsx](../web/src/features/courses/course-schedule.tsx), [format-course-length.ts](../web/src/features/admin-courses/schedule/summary/format-course-length.ts), `temporal-polyfill`.
+- Size: 4 to 5 commits (locale from the request; course line and range on the server; visitor line; relative status words, since 8c builds the fixed ones; shared length formatter). Twins: [course-schedule.tsx](../web/src/features/courses/course-schedule.tsx), [format-course-length.ts](../web/src/features/admin-courses/schedule/summary/format-course-length.ts), `temporal-polyfill`.
 - Freshness: reading `Accept-Language` makes the course page render on every request. It already does (it reads `params` and sets no `revalidate`), so caching does not change; the home page stays regenerated each minute.
 - Status words: the server renders "Starts Dec 1, 2026"; after load the browser may swap only those words to "Starts in 4 days" (within 14 days), and the panel keeps its shape.
 - Risk: Node's and Chrome's ICU format differently, so a server string the browser re-formats would mismatch.
