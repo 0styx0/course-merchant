@@ -47,24 +47,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **8d.** The 404 message and the checkout return page share one "See current courses →" link.
   - [x] **8e.** A visitor who opens an ended course sees the Ended pill, its date, "This course has ended." and "See current courses →", with no price, fields or button.
 - **9. Course times in the visitor's words.** The panel shows the course's own time, the visitor's only when it differs, the length, and the status line.
-  - [ ] **9a.** A visitor reads the panel's start date in their browser's language ("Starts 1 Oct 2030" for en-GB). **Next**
-    - *Behaviours*:
-      - The locale comes from `Accept-Language`: highest q first; ties keep header order.
-      - The reader drops `*`, `q=0`, tags `Intl.getCanonicalLocales` refuses, and `-u-` extensions (`th-TH-u-ca-buddhist` would print year 2573).
-      - A missing, empty or all-bad header gives `en-US`.
-      - The upcoming eyebrow and the ended date use that locale, still in the course's zone.
-    - *New shared pieces*: the request-locale reader (9c and 9d use its locale).
-    - *Files*:
-      - `web/src/lib/locale/request-locale.ts` (new folder, + test)
-      - [formatters.ts](../web/src/lib/utils/formatters.ts) (`dateOnlyFormatter` takes a locale)
-      - [page.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx) (reads `headers()`)
-      - [buy-panel.tsx](../web/src/features/courses/buy-panel/buy-panel.tsx) (+ test)
-      - `web/tests/browser/courses/course-time.spec.ts` (new; one en-GB request)
-    - *Settled*: the Decision row "The locale comes from `Accept-Language`…".
-    - *Done when*:
-      - the parser unit tests pass
-      - the en-GB browser case passes
-  - [ ] **9b.** The course-length wording and the moment-to-wall-clock conversion move from admin to shared code. *(mechanical)*
+  - [x] **9a.** A visitor reads the panel's start date in their browser's language ("Starts 1 Oct 2030" for en-GB).
+  - [ ] **9b.** The course-length wording and the moment-to-wall-clock conversion move from admin to shared code. *(mechanical)* **Next**
     - *New shared pieces*: `web/src/lib/time/` with `format-course-length.ts` and `wall-clock-time.ts` (+ their tests); admin and the panel use both.
     - *Files*:
       - the two files and their tests move; every importer updates (grep `wall-clock-time` and `format-course-length`)

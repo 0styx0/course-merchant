@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { ProblemAlert } from "@/components/problem-alert";
@@ -15,6 +16,7 @@ import {
 } from "@/features/courses/courses.api";
 import type { Course } from "@/lib/types";
 import { formatPrice } from "@/lib/utils/formatters";
+import { readRequestLocale } from "@/lib/locale/request-locale";
 import { isFreePrice } from "@/lib/utils/is-free-price";
 
 type CoursePageProps = {
@@ -58,8 +60,10 @@ export default async function CoursePage({ params }: CoursePageProps) {
     return <ProblemAlert problem={result.error} />;
   }
 
-  // The stage depends on the current time, so the page renders per request.
+  // The stage depends on the current time and the date's locale on the
+  // request's headers, so the page renders per request.
   await connection();
+  const locale = readRequestLocale((await headers()).get("accept-language"));
   const course = result.data;
 
   return (
@@ -67,6 +71,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
       <CourseBuyPanel
         course={course}
         stage={getCourseStage(course.schedule, new Date())}
+        locale={locale}
       />
     </CourseDetails>
   );
@@ -75,11 +80,18 @@ export default async function CoursePage({ params }: CoursePageProps) {
 type CourseBuyPanelProps = {
   course: Course;
   stage: CourseStage;
+  locale: string;
 };
 
-function CourseBuyPanel({ course, stage }: CourseBuyPanelProps) {
+function CourseBuyPanel({ course, stage, locale }: CourseBuyPanelProps) {
   if (stage === "ended") {
-    return <EndedPanel courseName={course.name} schedule={course.schedule} />;
+    return (
+      <EndedPanel
+        courseName={course.name}
+        schedule={course.schedule}
+        locale={locale}
+      />
+    );
   }
 
   const formattedPrice = formatPrice(
@@ -95,6 +107,7 @@ function CourseBuyPanel({ course, stage }: CourseBuyPanelProps) {
       courseName={course.name}
       schedule={course.schedule}
       price={formattedPrice}
+      locale={locale}
       stage={stage}
     >
       <EnrollButton courseId={course.id} priceLabel={priceLabel} />

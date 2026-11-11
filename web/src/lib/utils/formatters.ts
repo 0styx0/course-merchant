@@ -18,8 +18,8 @@ export function dateTimeFormatter(timeZone: string) {
   });
 }
 
-export function dateOnlyFormatter(timeZone: string) {
-  return new Intl.DateTimeFormat("en-US", {
+export function dateOnlyFormatter(timeZone: string, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
     timeZone: timeZone,
   });

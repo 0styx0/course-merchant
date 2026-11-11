@@ -12,6 +12,7 @@ function renderPanel(props: Partial<Parameters<typeof BuyPanel>[0]> = {}) {
       courseName={reactCourse.name}
       schedule={reactCourse.schedule}
       price="$99"
+      locale="en-US"
       // An upcoming course adds only its eyebrow, so most tests start from it.
       stage="upcoming"
       {...props}
@@ -124,14 +125,38 @@ describe("BuyPanel", () => {
 
     expect(screen.getByText("Starts Oct 1, 2030")).toBeVisible();
   });
+
+  it("writes the start date in the visitor's locale", () => {
+    renderPanel({ locale: "en-GB" });
+
+    expect(screen.getByText("Starts 1 Oct 2030")).toBeVisible();
+  });
+
+  it("keeps the course's zone for the start date in another locale", () => {
+    renderPanel({
+      locale: "en-GB",
+      schedule: {
+        startTime: "2030-10-02T02:00:00Z",
+        endTime: "2030-10-02T04:00:00Z",
+        timeZone: "America/New_York",
+      },
+    });
+
+    expect(screen.getByText("Starts 1 Oct 2030")).toBeVisible();
+  });
 });
 
 describe("EndedPanel", () => {
   function renderEndedPanel(
     schedule: Course["schedule"] = endedCourse.schedule,
+    locale = "en-US",
   ) {
     return render(
-      <EndedPanel courseName={endedCourse.name} schedule={schedule} />,
+      <EndedPanel
+        courseName={endedCourse.name}
+        schedule={schedule}
+        locale={locale}
+      />,
     );
   }
 
@@ -162,6 +187,20 @@ describe("EndedPanel", () => {
     });
 
     expect(screen.getByText("Sep 1, 2025")).toBeVisible();
+  });
+
+  it("writes the start date in the visitor's locale", () => {
+    // October, because newer ICU data writes en-GB September as "Sept".
+    renderEndedPanel(
+      {
+        startTime: "2025-10-01T14:00:00Z",
+        endTime: "2025-10-01T16:00:00Z",
+        timeZone: "America/New_York",
+      },
+      "en-GB",
+    );
+
+    expect(screen.getByText("1 Oct 2025")).toBeVisible();
   });
 
   it("shows no price, schedule zone or button", () => {
