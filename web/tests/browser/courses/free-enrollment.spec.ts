@@ -1,4 +1,5 @@
 import { courseByIdSuccess } from "@/mocks/handlers/courses/get-course";
+import { courseImageSuccess } from "@/mocks/handlers/courses/get-course-image";
 import { startCheckoutHandlers } from "@/mocks/handlers/checkout/start-checkout";
 import { freeCourse } from "@/mocks/fixtures/courses";
 import msw from "next/experimental/testmode/playwright/msw.js";
@@ -9,7 +10,7 @@ const OPEN_BUTTON_NAME = "Enroll for free";
 
 test.use({
   mswHandlers: [
-    [courseByIdSuccess, startCheckoutHandlers.checkEmail],
+    [courseByIdSuccess, courseImageSuccess, startCheckoutHandlers.checkEmail],
     { scope: "test" },
   ],
 });

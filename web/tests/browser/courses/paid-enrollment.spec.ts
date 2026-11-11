@@ -1,5 +1,7 @@
 import { courseByIdSuccess } from "@/mocks/handlers/courses/get-course";
+import { courseImageSuccess } from "@/mocks/handlers/courses/get-course-image";
 import { startCheckoutHandlers } from "@/mocks/handlers/checkout/start-checkout";
+import { getCheckoutStatusHandlers } from "@/mocks/handlers/checkout/get-checkout-status";
 import { reactCourse } from "@/mocks/fixtures/courses";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
@@ -9,7 +11,12 @@ const OPEN_BUTTON_NAME = "Enroll for $99";
 
 test.use({
   mswHandlers: [
-    [courseByIdSuccess, startCheckoutHandlers.checkEmail],
+    [
+      courseByIdSuccess,
+      courseImageSuccess,
+      startCheckoutHandlers.checkEmail,
+      getCheckoutStatusHandlers.success,
+    ],
     { scope: "test" },
   ],
 });

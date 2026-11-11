@@ -1,11 +1,12 @@
 import { courseByIdSuccess } from "@/mocks/handlers/courses/get-course";
+import { courseImageSuccess } from "@/mocks/handlers/courses/get-course-image";
 import { endedCourse } from "@/mocks/fixtures/courses";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
 const { test, expect } = msw;
 
 test.use({
-  mswHandlers: [[courseByIdSuccess], { scope: "test" }],
+  mswHandlers: [[courseByIdSuccess, courseImageSuccess], { scope: "test" }],
 });
 
 // Unit tests render the panels by hand; only a real request shows that the

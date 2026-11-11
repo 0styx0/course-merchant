@@ -4,6 +4,7 @@ import {
   courseByIdNotFound,
   courseByIdInvalidId,
 } from "@/mocks/handlers/courses/get-course";
+import { courseImageSuccess } from "@/mocks/handlers/courses/get-course-image";
 import { SITE_NAME } from "@/lib/site-config/site-name";
 import {
   inProgressCourse,
@@ -15,7 +16,7 @@ import msw from "next/experimental/testmode/playwright/msw.js";
 const { test, expect } = msw;
 
 test.use({
-  mswHandlers: [[courseByIdSuccess], { scope: "test" }],
+  mswHandlers: [[courseByIdSuccess, courseImageSuccess], { scope: "test" }],
 });
 
 test("displays course details", async ({ page }) => {

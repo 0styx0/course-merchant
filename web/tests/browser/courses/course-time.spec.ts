@@ -1,4 +1,5 @@
 import { courseByIdSuccess } from "@/mocks/handlers/courses/get-course";
+import { courseImageSuccess } from "@/mocks/handlers/courses/get-course-image";
 import { reactCourse } from "@/mocks/fixtures/courses";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
@@ -6,7 +7,7 @@ const { test, expect } = msw;
 
 test.use({
   locale: "en-GB",
-  mswHandlers: [[courseByIdSuccess], { scope: "test" }],
+  mswHandlers: [[courseByIdSuccess, courseImageSuccess], { scope: "test" }],
 });
 
 // Unit tests pass the locale to the panel by hand; only a real request shows
