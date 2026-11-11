@@ -1,4 +1,4 @@
-import { wallClockToUtc } from "../schedule/wall-clock-time";
+import { wallClockToUtc } from "@/lib/time/wall-clock-time";
 
 export type FormIssue = { path: (string | number)[]; message: string };
 

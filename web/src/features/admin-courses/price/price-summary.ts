@@ -1,3 +1,5 @@
+import { toUtcMs } from "@/lib/time/wall-clock-time";
+
 import {
   amountProblem,
   type CourseFormValues,
@@ -8,7 +10,6 @@ import {
 } from "../validation/price-row-issues";
 import { normalizeDollars } from "./dollar-amount";
 import { formatMoment } from "../schedule/summary/format-moment";
-import { toUtcMs } from "../schedule/wall-clock-time";
 
 /** "$79.50", "$99.00" or "Free": the typed amount, with a comma read as the decimal mark. */
 export function formatDollars(typed: string): string {

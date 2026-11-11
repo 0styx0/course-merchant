@@ -1,7 +1,8 @@
+import { formatCourseLength } from "@/lib/time/format-course-length";
+import { toUtcMs } from "@/lib/time/wall-clock-time";
+
 import type { CourseFormValues } from "../../validation/course-form-schema";
-import { formatCourseLength } from "./format-course-length";
 import { formatMoment } from "./format-moment";
-import { toUtcMs } from "../wall-clock-time";
 
 type Schedule = CourseFormValues["schedule"];
 

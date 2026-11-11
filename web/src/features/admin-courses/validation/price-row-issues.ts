@@ -1,5 +1,6 @@
+import { utcToWallClock, wallClockToUtc } from "@/lib/time/wall-clock-time";
+
 import { toCents } from "../price/dollar-amount";
-import { utcToWallClock, wallClockToUtc } from "../schedule/wall-clock-time";
 import { MIN_PRICE_LEAD_MS } from "./course-form-limits";
 import {
   issueAt,

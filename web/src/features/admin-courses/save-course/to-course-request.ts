@@ -1,4 +1,5 @@
 import { toCourseDescription } from "@/features/course-description/description-document";
+import { wallClockToUtc } from "@/lib/time/wall-clock-time";
 import type { CreateCourseRequest, CreateCourseStatus } from "@/lib/types";
 
 import {
@@ -7,7 +8,6 @@ import {
 } from "../validation/course-form-limits";
 import type { CheckedCourseFormValues } from "../validation/course-form-schema";
 import { toCents } from "../price/dollar-amount";
-import { wallClockToUtc } from "../schedule/wall-clock-time";
 
 type Schedule = CheckedCourseFormValues["schedule"];
 type Price = CheckedCourseFormValues["prices"][number];

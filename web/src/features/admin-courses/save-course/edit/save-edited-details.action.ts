@@ -3,8 +3,8 @@
 import { refresh } from "next/cache";
 
 import { toCourseDescription } from "@/features/course-description/description-document";
+import { wallClockToUtc } from "@/lib/time/wall-clock-time";
 
-import { wallClockToUtc } from "../../schedule/wall-clock-time";
 import {
   makeEditCourseFormSchema,
   type EditCourseFormValues,

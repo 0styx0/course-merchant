@@ -48,15 +48,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **8e.** A visitor who opens an ended course sees the Ended pill, its date, "This course has ended." and "See current courses →", with no price, fields or button.
 - **9. Course times in the visitor's words.** The panel shows the course's own time, the visitor's only when it differs, the length, and the status line.
   - [x] **9a.** A visitor reads the panel's start date in their browser's language ("Starts 1 Oct 2030" for en-GB).
-  - [ ] **9b.** The course-length wording and the moment-to-wall-clock conversion move from admin to shared code. *(mechanical)* **Next**
-    - *New shared pieces*: `web/src/lib/time/` with `format-course-length.ts` and `wall-clock-time.ts` (+ their tests); admin and the panel use both.
-    - *Files*:
-      - the two files and their tests move; every importer updates (grep `wall-clock-time` and `format-course-length`)
-    - *Settled*: the Decision row "Admin's course-length formatter moves to shared code".
-    - *Done when*:
-      - the test count stays the same
-      - the type check passes
-  - [ ] **9c.** The panel shows when the course runs as one line in its own zone and the visitor's locale, and how long it lasts.
+  - [x] **9b.** A developer finds the course-length wording and the moment-to-wall-clock conversion in shared code that admin and the public page both use.
+  - [ ] **9c.** The panel shows when the course runs as one line in its own zone and the visitor's locale, and how long it lasts. **Next**
     - *Behaviours*:
       - A single day reads "Tue, Oct 1, 2:00 – 4:00 PM EDT" (en-US), "Tue 1 Oct, 14:00–16:00 GMT-4" (en-GB) and the de-DE "Uhr" form.
       - A course past midnight that lasts under 24 hours stays one line with both days.
@@ -531,7 +524,7 @@ Several days: Dec 1 – 3, 2026 / Tue, Dec 1, 6:00 PM EST – Thu, Dec 3, ... / 
 
 - Why here: the panel exists (8), so the lines have a place.
 - Needs: 8.
-- Size: 5 commits (9a to 9e: locale from the request; a mechanical move of the length and wall-clock helpers; course line and length; visitor line; relative status words). Twins: [course-schedule.tsx](../web/src/features/courses/course-schedule.tsx), [format-course-length.ts](../web/src/features/admin-courses/schedule/summary/format-course-length.ts), `temporal-polyfill`.
+- Size: 5 commits (9a to 9e: locale from the request; a mechanical move of the length and wall-clock helpers; course line and length; visitor line; relative status words). Twins: [course-schedule.tsx](../web/src/features/courses/course-schedule.tsx), [format-course-length.ts](../web/src/lib/time/format-course-length.ts), `temporal-polyfill`.
 - Freshness: reading `Accept-Language` makes the course page render on every request. It already does (it reads `params` and sets no `revalidate`), so caching does not change; the home page stays regenerated each minute.
 - Status words: the server renders "Starts Dec 1, 2026"; after load the browser may swap only those words to "Starts in 4 days" (within 14 days), and the panel keeps its shape.
 - Risk: Node's and Chrome's ICU format differently, so a server string the browser re-formats would mismatch.

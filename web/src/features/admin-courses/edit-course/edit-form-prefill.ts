@@ -1,5 +1,5 @@
 import { toDollarText } from "../price/dollar-amount";
-import { utcToWallClock } from "../schedule/wall-clock-time";
+import { utcToWallClock } from "@/lib/time/wall-clock-time";
 import type { AdminCourse } from "@/lib/types";
 
 import type {

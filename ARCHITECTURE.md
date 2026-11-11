@@ -70,6 +70,7 @@ Stripe is the record of money: the app stores only what it needs to decide who h
 | [features/checkout/](web/src/features/checkout/) | Starting a checkout from the course page ([start-checkout/](web/src/features/checkout/start-checkout/)), the shared "check your email" box ([check-email-notice/](web/src/features/checkout/check-email-notice/)), the status call behind the page Stripe returns the buyer to ([success-page/](web/src/features/checkout/success-page/)), and the form's fields and checks ([form/](web/src/features/checkout/form/)). |
 | [components/](web/src/components/) | Pieces used app-wide, such as `ProblemAlert`; `ui/` holds the shadcn primitives (CLI output only; see [docs/web.md](docs/web.md)). |
 | [lib/api/](web/src/lib/api/) | The typed API client (server-only; each call times out after 10 s) and the mapper that turns answers into a `Result`. |
+| [lib/time/](web/src/lib/time/) | Course-length wording and the conversion between a moment and a zone's wall-clock time, used by admin and the public course page. |
 | [mocks/](web/src/mocks/) | MSW handlers, one file per endpoint named after its operationId, each with named scenarios (`success`, `notFound`, `error`, …). |
 
 ## Layers inside the API
