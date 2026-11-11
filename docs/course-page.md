@@ -46,7 +46,92 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **8c.** An upcoming course's panel opens with "Starts Oct 1, 2030", and a course in progress reads "In progress" and "This course has started. You can still enroll." above its button.
   - [x] **8d.** The 404 message and the checkout return page share one "See current courses →" link.
   - [x] **8e.** A visitor who opens an ended course sees the Ended pill, its date, "This course has ended." and "See current courses →", with no price, fields or button.
-- [ ] **9. Course times in the visitor's words.** The panel shows the course's own time, the visitor's only when it differs, the length, and the status line. **Next**
+- **9. Course times in the visitor's words.** The panel shows the course's own time, the visitor's only when it differs, the length, and the status line.
+  - [ ] **9a.** A visitor reads the panel's start date in their browser's language ("Starts 1 Oct 2030" for en-GB). **Next**
+    - *Behaviours*:
+      - The locale comes from `Accept-Language`: highest q first; ties keep header order.
+      - The reader drops `*`, `q=0`, tags `Intl.getCanonicalLocales` refuses, and `-u-` extensions (`th-TH-u-ca-buddhist` would print year 2573).
+      - A missing, empty or all-bad header gives `en-US`.
+      - The upcoming eyebrow and the ended date use that locale, still in the course's zone.
+    - *New shared pieces*: the request-locale reader (9c and 9d use its locale).
+    - *Files*:
+      - `web/src/lib/locale/request-locale.ts` (new folder, + test)
+      - [formatters.ts](../web/src/lib/utils/formatters.ts) (`dateOnlyFormatter` takes a locale)
+      - [page.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx) (reads `headers()`)
+      - [buy-panel.tsx](../web/src/features/courses/buy-panel/buy-panel.tsx) (+ test)
+      - `web/tests/browser/courses/course-time.spec.ts` (new; one en-GB request)
+    - *Settled*: the Decision row "The locale comes from `Accept-Language`…".
+    - *Done when*:
+      - the parser unit tests pass
+      - the en-GB browser case passes
+  - [ ] **9b.** The course-length wording and the moment-to-wall-clock conversion move from admin to shared code. *(mechanical)*
+    - *New shared pieces*: `web/src/lib/time/` with `format-course-length.ts` and `wall-clock-time.ts` (+ their tests); admin and the panel use both.
+    - *Files*:
+      - the two files and their tests move; every importer updates (grep `wall-clock-time` and `format-course-length`)
+    - *Settled*: the Decision row "Admin's course-length formatter moves to shared code".
+    - *Done when*:
+      - the test count stays the same
+      - the type check passes
+  - [ ] **9c.** The panel shows when the course runs as one line in its own zone and the visitor's locale, and how long it lasts.
+    - *Behaviours*:
+      - A single day reads "Tue, Oct 1, 2:00 – 4:00 PM EDT" (en-US), "Tue 1 Oct, 14:00–16:00 GMT-4" (en-GB) and the de-DE "Uhr" form.
+      - A course past midnight that lasts under 24 hours stays one line with both days.
+      - A course of 24 hours or more shows "Dec 1 – 3, 2026" above the first start and last end with weekdays.
+      - The length line reads "2 hours", "1 hour 30 minutes" or "2 days 2 hours".
+      - The ended panel keeps its date and adds the length.
+      - The line sits in one `<time dateTime={startTime}>`.
+    - *New shared pieces*: none.
+    - *Files*:
+      - `web/src/features/courses/course-time/course-time-lines.ts` (new folder, + test)
+      - [buy-panel.tsx](../web/src/features/courses/buy-panel/buy-panel.tsx) (+ test; drops `CourseSchedule`, which the card keeps)
+      - [get-course.spec.ts](../web/tests/browser/courses/get-course.spec.ts) ("displays course details" checks the one `<time>`, not "America/New_York" and the end's `<time>`)
+    - *Needs*: 9a, 9b.
+    - *Settled*:
+      - the Decision rows on one `formatRange` in one `<time>`, `Intl.DateTimeFormat` writing every string and the shared length
+      - the "24 hours or more" row
+    - *Done when*: unit tests reproduce variants a, e and f and a course past midnight
+  - [ ] **9d.** A visitor whose UTC offset differs reads the course in their own time, after the page loads.
+    - *Behaviours*:
+      - The same offset at the start instant (New York, Toronto) shows no line.
+      - A different offset with the same dates shows "(3:00 – 5:00 PM PST your time)".
+      - A visitor start or end date that differs from the course's start date adds dates (variants c and d).
+      - A DST day where only one zone has switched compares offsets at the start instant.
+      - A zone Temporal can't use shows no line.
+      - The server render and hydration show no line, and no hydration warning appears.
+      - An ended course shows no visitor line.
+    - *New shared pieces*: a hook that gives the visitor's zone only after hydration (`useSyncExternalStore`, empty server snapshot); 9d and 9e use it.
+    - *Files*:
+      - `course-time/visitor-time.ts` (+ test; reuses `utcToWallClock`)
+      - `course-time/visitor-time-line.tsx` (client, + test)
+      - `course-time/use-visitor-time-zone.ts` (+ test)
+      - [buy-panel.tsx](../web/src/features/courses/buy-panel/buy-panel.tsx)
+      - `course-time.spec.ts` (Tokyo, variant c, with the hydration check)
+    - *Needs*: 9a, 9c.
+    - *Settled*: the Decision rows on the server/browser split, Temporal for offsets, the visitor-line date rule and the hook.
+    - *Done when*:
+      - unit tests cover every behaviour
+      - the Tokyo browser case passes
+  - [ ] **9e.** A visitor within 14 days of the start reads "Starts today", "Starts tomorrow" or "Starts in 4 days", in their own calendar days.
+    - *Behaviours*:
+      - 0, 1 and 2 to 14 days give the three forms; 15 days or more keeps the server's words.
+      - A browser clock past the start, or an unusable zone, keeps the server's words.
+      - An 11 PM visitor with a 1 AM start reads "Starts tomorrow".
+      - In progress and ended keep their words.
+      - The `dev:mock` scenario `startsSoon` serves a course 4 days from now.
+    - *New shared pieces*: none (9d's hook).
+    - *Files*:
+      - `course-time/start-words.tsx` (client, + test)
+      - [buy-panel.tsx](../web/src/features/courses/buy-panel/buy-panel.tsx)
+      - [get-course.ts](../web/src/mocks/handlers/courses/get-course.ts) (`startsSoon`)
+      - `course-time.spec.ts` (one `page.clock` case)
+    - *Needs*: 9d.
+    - *Settled*:
+      - the Principle "The server decides which panel shows"
+      - the Decision rows on fixture times and the status words
+    - *Done when*:
+      - unit tests pass
+      - the clock case passes
+      - journey J3 and the `startsSoon` walk work
 - [ ] **10. Phone buy bar.** A slim bar keeps the button on screen once the panel scrolls away; a tap opens the fields.
 - [ ] **11. Fixes from using the page.** The owner's findings from the full walk are fixed.
 - [ ] **12. Checkout button cleanup.** A developer reads the enroll button's code in small files, and a renamed error code breaks a test instead of silently dropping "Try again".
@@ -170,6 +255,11 @@ Wireframe states and time variants, by the milestone that builds them:
 | The shared description class sets headings, lists, quotes and links; only the public page sets the muted body-lg text | The admin edits in the public structure while typing in full-contrast 16px text | Muted text in the editor too (lower contrast while typing) |
 | Prices use one formatter with `trailingZeroDisplay: "stripIfInteger"`, and 0 reads "Free", on the page, the button and the card | Style guide §8 writes "$99", "$49.50" and "Free"; one rule for one fact | Page-only formatting (the card and the page would show one price two ways); hand-written trimming (Intl does it) |
 | After "Check your email" the note under the button hides and the price stays; the note sits beside the button in checkout code (revisit after use) | The note's promise has come true, and the price records what was paid | Hiding the price too, as wireframe 5 draws it (the price moves into client code, about 30 lines, and the panel shrinks as focus lands); keeping both (the note repeats the notice) |
+| A course lasting 24 hours or more shows its date range above its first start and last end; a shorter one past midnight stays one line (revisit after use) | Note 9's look for long courses, and an overnight class still reads as one sitting | Any course ending on a later date (a 2-hour class past midnight reads "Dec 1 – 2") |
+| The visitor line adds dates when the visitor's start or end date differs from the course's start date | Variants b, c and d follow from one rule; time-only `formatRange` across midnight prints numeric dates | Always dates (repeats the course line's date) |
+| Status words are `Intl.RelativeTimeFormat("en", { numeric: "auto" })` after "Starts ", within 14 of the visitor's calendar days | Intl writes "today", "tomorrow" and "in 4 days"; fixed English matches the English sentence | The visitor's locale ("Starts in 4 Tagen"); hand-written words (more code) |
+| Visitor-only values come from a `useSyncExternalStore` hook whose server snapshot is empty | Hydration matches the server, then React re-renders with the zone; the `react-hooks` lint allows it | `useEffect` plus `setState` (a lint error); `suppressHydrationWarning` (hides real mismatches) |
+| Browser tests check one case each for Accept-Language, the visitor zone and the browser clock; unit tests carry variants a to g | `.claude/rules/browser-tests.md`; Node's ICU is the server's | One browser test per variant (about 9 slow tests) |
 
 ## Step 1. Site look
 
@@ -457,11 +547,36 @@ Several days: Dec 1 – 3, 2026 / Tue, Dec 1, 6:00 PM EST – Thu, Dec 3, ... / 
 
 - Why here: the panel exists (8), so the lines have a place.
 - Needs: 8.
-- Size: 4 to 5 commits (locale from the request; course line and range on the server; visitor line; relative status words, since 8c builds the fixed ones; shared length formatter). Twins: [course-schedule.tsx](../web/src/features/courses/course-schedule.tsx), [format-course-length.ts](../web/src/features/admin-courses/schedule/summary/format-course-length.ts), `temporal-polyfill`.
+- Size: 5 commits (9a to 9e: locale from the request; a mechanical move of the length and wall-clock helpers; course line and length; visitor line; relative status words). Twins: [course-schedule.tsx](../web/src/features/courses/course-schedule.tsx), [format-course-length.ts](../web/src/features/admin-courses/schedule/summary/format-course-length.ts), `temporal-polyfill`.
 - Freshness: reading `Accept-Language` makes the course page render on every request. It already does (it reads `params` and sets no `revalidate`), so caching does not change; the home page stays regenerated each minute.
 - Status words: the server renders "Starts Dec 1, 2026"; after load the browser may swap only those words to "Starts in 4 days" (within 14 days), and the panel keeps its shape.
 - Risk: Node's and Chrome's ICU format differently, so a server string the browser re-formats would mismatch.
-- Done when: browser tests reproduce variants a to g, a DST day and a course past midnight with no hydration warning; journey J3.
+- Done when: unit tests reproduce variants a to g, a DST day and a course past midnight; three browser cases (Accept-Language, visitor zone, browser clock) show no hydration warning; journey J3.
+- Flow *(temporary)*:
+
+```
+Visitor opens /courses/:id
+├── server reads Accept-Language → locale, or en-US                  9a
+├── server picks the stage from its clock                             existing (8c)
+│   ├── ended → pill, date (locale), length, ghost link                9a, 9c
+│   └── upcoming / in progress
+│       ├── eyebrow "Starts Oct 1, 2030" (locale) / "In progress"     9a / existing
+│       ├── course line, one or two lines                              9c
+│       ├── length line                                                9c
+│       └── price, note, button                                        existing (8b)
+└── browser hydrates (same HTML)
+    ├── zone unusable → nothing changes                                9d, 9e
+    ├── same offset at start → no line                                 9d
+    ├── different offset → "(… your time)", dates when dates differ    9d
+    └── upcoming, 0–14 visitor days ahead → words swap; else stay      9e
+```
+
+- Design notes *(temporary)*:
+  - Server strings render once; client parts get ISO times, the course zone and the locale, and never re-format a server string.
+  - `formatRange` puts U+202F before AM/PM and U+2009 around the dash; tests assert those characters.
+  - `formatRange` with time-only options across midnight prints numeric dates (Node 26), so the visitor line adds dates by the Decision row's rule.
+  - The `react-hooks` lint (v7, via `eslint-config-next`) flags `setState` in an effect and impure calls in render; the hook avoids both. 9e's outline settles where "now" is read.
+  - Re-measure: `ls web/src/features/courses/course-time | wc -l` (9 files planned).
 
 ## Step 10. Phone buy bar
 
