@@ -1,6 +1,7 @@
 import type { Course } from "@/lib/types";
 import { formatPrice } from "@/lib/utils/formatters";
 import { CourseDescription } from "./description/course-description";
+import { CourseImage } from "./course-image";
 import { CourseSchedule } from "./course-schedule";
 
 type CourseDetailsProps = {
@@ -13,6 +14,7 @@ export function CourseDetails({ course }: CourseDetailsProps) {
   return (
     <article className="mt-6">
       <header>
+        <CourseImage courseId={course.id} imageVersion={course.image.version} />
         <h1 className="font-heading text-h2 md:text-h1">{course.name}</h1>
         <p className="mt-2 text-muted-foreground">{course.summary}</p>
       </header>

@@ -111,3 +111,21 @@ test("shows a 404 page for an invalid course ID", async ({ page, msw }) => {
     page.getByRole("heading", { level: 1, name: "Course not found" }),
   ).toBeVisible();
 });
+
+test("shows the course image in a 16:9 box served by Next's resizer", async ({
+  page,
+}) => {
+  await page.goto(`/courses/${reactCourse.id}`);
+
+  const image = page.locator("article img");
+  await expect(image).toBeVisible();
+  const box = await image.boundingBox();
+
+  expect(box!.width / box!.height).toBeCloseTo(16 / 9, 1);
+  await expect(image).toHaveAttribute(
+    "src",
+    new RegExp(
+      `^/_next/image\\?url=${encodeURIComponent(`/courses/${reactCourse.id}/image/${reactCourse.image.version}`)}&`,
+    ),
+  );
+});

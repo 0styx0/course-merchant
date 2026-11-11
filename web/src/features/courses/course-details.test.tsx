@@ -45,6 +45,14 @@ describe("CourseDetails", () => {
     expect(screen.getByText("12 enrolled")).toBeVisible();
   });
 
+  it("shows the course image before the title", () => {
+    const { container } = render(<CourseDetails course={course} />);
+
+    const [image, title] = container.querySelectorAll("img, h1");
+    expect(image.tagName).toBe("IMG");
+    expect(title).toBe(screen.getByRole("heading", { level: 1 }));
+  });
+
   it("displays zero enrollment and formats other currencies", () => {
     render(
       <CourseDetails

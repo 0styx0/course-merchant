@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { CourseImage } from "@/features/courses/courses.api";
+import type { CourseImageFile } from "@/features/courses/courses.api";
 import { getCourseImage } from "@/features/courses/courses.api";
 import type { ProblemDetails, Result } from "@/lib/types";
 
@@ -10,12 +10,12 @@ type CourseImageRouteContext = {
 
 const courseIdSchema = z.uuid();
 // A version is the image's update time in milliseconds: digits with no leading zero.
-const positiveIntegerPattern = /^[1-9]\d*$/;
+const imageVersionPattern = /^[1-9]\d*$/;
 
 function isImageAddressValid(courseId: string, version: string): boolean {
   return (
     courseIdSchema.safeParse(courseId).success &&
-    positiveIntegerPattern.test(version)
+    imageVersionPattern.test(version)
   );
 }
 
@@ -26,7 +26,7 @@ function isImageMissingProblem(problem: ProblemDetails): boolean {
 }
 
 function imageResponseFromResult(
-  result: Result<CourseImage, ProblemDetails>,
+  result: Result<CourseImageFile, ProblemDetails>,
 ): Response {
   if (result.state === "success") {
     const headers = new Headers({ "Content-Type": "image/webp" });

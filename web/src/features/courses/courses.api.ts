@@ -42,7 +42,10 @@ export const getCourse = cache(
     ),
 );
 
-export type CourseImage = { bytes: ArrayBuffer; cacheControl: string | null };
+export type CourseImageFile = {
+  bytes: ArrayBuffer;
+  cacheControl: string | null;
+};
 
 /**
  * `toResult` drops the headers, so this reads the API's `Cache-Control` from
@@ -51,7 +54,7 @@ export type CourseImage = { bytes: ArrayBuffer; cacheControl: string | null };
 export async function getCourseImage(
   courseId: string,
   version: string,
-): Promise<Result<CourseImage, ProblemDetails>> {
+): Promise<Result<CourseImageFile, ProblemDetails>> {
   const answer = await api.GET("/courses/{courseId}/image/{version}", {
     params: { path: { courseId, version } },
     parseAs: "arrayBuffer",

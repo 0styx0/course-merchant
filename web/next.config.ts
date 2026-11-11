@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
     // one image upload: the API's 5 MB limit plus multipart framing
     serverActions: { bodySizeLimit: "6mb" },
   },
+  images: {
+    // Next resizes only our own course image route, with no query string;
+    // keep the pathname in step with shopCourseImagePath
+    localPatterns: [{ pathname: "/courses/*/image/*", search: "" }],
+    qualities: [75],
+  },
   turbopack: {
     root: path.resolve(import.meta.dirname, ".."),
   },

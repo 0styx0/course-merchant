@@ -37,22 +37,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - **7. Course page layout.** The image, title and description sit beside a sticky panel on desktop, stacked on a phone.
   - [x] **7a.** The mock handlers sit in topic folders (admin-courses, courses, checkout), so the next handler fits.
   - [x] **7b.** A visitor who opens a course's image address sees its image; nothing shows on the page until 7c.
-  - [ ] **7c.** The course page shows the image above the title, resized by Next for each screen. **Next**
-    - *Behaviours*:
-      - Shows the image 16:9, with `alt=""`, square corners, `preload`, and `sizes` for columns 1–7 on desktop and full width on a phone.
-      - Keeps the 16:9 box while the image loads.
-      - Next resizes only addresses that match `/courses/*/image/*` with no query string.
-    - *New shared pieces*: none.
-    - *Files*:
-      - `web/src/features/courses/course-image.tsx` (new)
-      - [course-details.tsx](../web/src/features/courses/course-details.tsx)
-      - [next.config.ts](../web/next.config.ts) (`images.localPatterns`, `qualities: [75]`)
-      - [get-course.spec.ts](../web/tests/browser/courses/get-course.spec.ts)
-    - *Settled*: the rows on the course image, `alt=""`, Next's resizer and the image's browser check.
-    - *Done when*:
-      - The browser spec sees a 16:9 box whose address points at the resizer with our image route.
-      - The owner walks `dev:mock` and sees the image load.
-  - [ ] **7d.** On desktop, the details and the Enroll button stay 96px from the top while the description scrolls; on a phone, they sit under the summary.
+  - [x] **7c.** The course page shows the image above the title in a 16:9 box, resized by Next for each screen.
+  - [ ] **7d.** On desktop, the details and the Enroll button stay 96px from the top while the description scrolls; on a phone, they sit under the summary. **Next**
     - *Behaviours*:
       - Desktop: columns 1–7 hold the image, title, summary and description; columns 9–12 hold the sticky details and button.
       - Phone order: image, title, summary, details and button, description.
