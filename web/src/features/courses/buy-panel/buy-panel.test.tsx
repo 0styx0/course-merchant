@@ -33,31 +33,62 @@ describe("BuyPanel", () => {
     ).toBeVisible();
   });
 
-  it("shows the schedule, the price and the buy button", () => {
+  it("shows the course's time line, its length, the price and the buy button", () => {
     renderPanel();
 
-    expect(screen.getByText("Oct 1, 2030, 2:00 PM")).toHaveAttribute(
-      "datetime",
-      "2030-10-01T18:00:00Z",
-    );
-    expect(screen.getByText("Oct 1, 2030, 4:00 PM")).toHaveAttribute(
-      "datetime",
-      "2030-10-01T20:00:00Z",
-    );
-    expect(screen.getByText("America/New_York")).toBeVisible();
+    expect(
+      // Testing Library's text matching turns the range's thin spaces into plain ones.
+      screen.getByText("Tue, Oct 1, 2:00 – 4:00 PM EDT"),
+    ).toBeVisible();
+    expect(screen.getByText("2 hours")).toBeVisible();
     expect(screen.getByText("$99")).toBeVisible();
     expect(screen.getByRole("button", { name: "Enroll now" })).toBeVisible();
   });
 
-  it("reads schedule, price, then the button", () => {
+  it("puts the course's time line in one time element with the start time", () => {
+    const { container } = renderPanel();
+
+    const timeElements = container.querySelectorAll("time");
+    expect(timeElements).toHaveLength(1);
+    expect(timeElements[0]).toHaveAttribute("datetime", "2030-10-01T18:00:00Z");
+    expect(timeElements[0]).toHaveTextContent("Tue, Oct 1, 2:00 – 4:00 PM EDT");
+    expect(screen.queryByText("America/New_York")).not.toBeInTheDocument();
+  });
+
+  it("writes the time line in the visitor's locale", () => {
+    renderPanel({ locale: "en-GB" });
+
+    expect(screen.getByText("Tue 1 Oct, 14:00–16:00 GMT-4")).toBeVisible();
+  });
+
+  it("shows a long course's date range, its start and end, and its length", () => {
+    renderPanel({
+      schedule: {
+        startTime: "2026-12-01T23:00:00Z",
+        endTime: "2026-12-04T01:00:00Z",
+        timeZone: "America/New_York",
+      },
+    });
+
+    expect(screen.getByText("Dec 1 – 3, 2026")).toHaveAttribute(
+      "datetime",
+      "2026-12-01T23:00:00Z",
+    );
+    expect(
+      screen.getByText("Tue, Dec 1, 6:00 PM EST – Thu, Dec 3, 8:00 PM EST"),
+    ).toBeVisible();
+    expect(screen.getByText("2 days 2 hours")).toBeVisible();
+  });
+
+  it("reads time line, price, then the button", () => {
     renderPanel();
 
-    const schedule = screen.getByText("America/New_York");
+    const timeLine = screen.getByText("Tue, Oct 1, 2:00 – 4:00 PM EDT");
     const price = screen.getByText("$99");
     const button = screen.getByRole("button", { name: "Enroll now" });
     const follows = Node.DOCUMENT_POSITION_FOLLOWING;
 
-    expect(schedule.compareDocumentPosition(price)).toBe(follows);
+    expect(timeLine.compareDocumentPosition(price)).toBe(follows);
     expect(price.compareDocumentPosition(button)).toBe(follows);
   });
 
@@ -201,6 +232,12 @@ describe("EndedPanel", () => {
     );
 
     expect(screen.getByText("1 Oct 2025")).toBeVisible();
+  });
+
+  it("shows the course's length under the date", () => {
+    renderEndedPanel();
+
+    expect(screen.getByText("2 hours")).toBeVisible();
   });
 
   it("shows no price, schedule zone or button", () => {

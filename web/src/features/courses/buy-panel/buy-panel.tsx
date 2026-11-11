@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { SeeCurrentCoursesLink } from "@/components/see-current-courses-link";
-import { CourseSchedule } from "../course-schedule";
+import { makeCourseTimeLines } from "../course-time/course-time-lines";
 import type { Course } from "@/lib/types";
 import { dateOnlyFormatter } from "@/lib/utils/formatters";
 import type { CourseStage } from "./course-stage";
@@ -35,13 +35,37 @@ export function BuyPanel({
   return (
     <aside aria-label={`Enroll in ${courseName}`} className={PANEL_CLASS}>
       <StageEyebrow stage={stage} schedule={schedule} locale={locale} />
-      <CourseSchedule schedule={schedule} />
+      <CourseTime schedule={schedule} locale={locale} />
       <p className="mt-4 font-semibold">{price}</p>
       {stage === "in-progress" && (
         <p className="mt-4">This course has started. You can still enroll.</p>
       )}
       {children}
     </aside>
+  );
+}
+
+type CourseTimeProps = {
+  schedule: Course["schedule"];
+  locale: string;
+};
+
+/** When the course runs in its own zone, then how long it lasts. */
+function CourseTime({ schedule, locale }: CourseTimeProps) {
+  const { timeOrDateRangeLine, firstStartToLastEndLine, lengthLine } =
+    makeCourseTimeLines(schedule, locale);
+  return (
+    <div>
+      <p className="font-medium">
+        <time dateTime={schedule.startTime}>{timeOrDateRangeLine}</time>
+      </p>
+      {firstStartToLastEndLine && (
+        <p className="mt-1 text-sm text-muted-foreground">
+          {firstStartToLastEndLine}
+        </p>
+      )}
+      <p className="mt-1 text-sm text-muted-foreground">{lengthLine}</p>
+    </div>
   );
 }
 
@@ -75,6 +99,9 @@ export function EndedPanel({ courseName, schedule, locale }: EndedPanelProps) {
         Ended
       </span>
       <p className="mt-3">{formatStartDate(schedule, locale)}</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {makeCourseTimeLines(schedule, locale).lengthLine}
+      </p>
       <p className="mt-4">This course has ended.</p>
       <SeeCurrentCoursesLink className="mt-4" />
     </aside>

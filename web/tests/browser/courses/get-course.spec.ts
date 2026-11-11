@@ -51,22 +51,12 @@ test("displays course details", async ({ page }) => {
   await expect(page.getByText(/enrolled/)).toHaveCount(0);
   await expect(buyPanel).toBeVisible();
   await expect(page.getByText(/You pay on Stripe/)).toBeVisible();
-  await expect(
-    page.getByText("America/New_York", { exact: true }),
-  ).toBeVisible();
 
-  const startTime = page.locator(
+  const courseTime = buyPanel.locator(
     `time[datetime="${reactCourse.schedule.startTime}"]`,
   );
-  const endTime = page.locator(
-    `time[datetime="${reactCourse.schedule.endTime}"]`,
-  );
-
-  await expect(startTime).toBeVisible();
-  await expect(startTime).not.toBeEmpty();
-
-  await expect(endTime).toBeVisible();
-  await expect(endTime).not.toBeEmpty();
+  // Unit tests carry the wording; the browser only needs the one <time>.
+  await expect(courseTime).toBeVisible();
 });
 
 test("displays the course whose id is in the URL", async ({ page }) => {

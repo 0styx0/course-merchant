@@ -49,25 +49,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - **9. Course times in the visitor's words.** The panel shows the course's own time, the visitor's only when it differs, the length, and the status line.
   - [x] **9a.** A visitor reads the panel's start date in their browser's language ("Starts 1 Oct 2030" for en-GB).
   - [x] **9b.** A developer finds the course-length wording and the moment-to-wall-clock conversion in shared code that admin and the public page both use.
-  - [ ] **9c.** The panel shows when the course runs as one line in its own zone and the visitor's locale, and how long it lasts. **Next**
-    - *Behaviours*:
-      - A single day reads "Tue, Oct 1, 2:00 – 4:00 PM EDT" (en-US), "Tue 1 Oct, 14:00–16:00 GMT-4" (en-GB) and the de-DE "Uhr" form.
-      - A course past midnight that lasts under 24 hours stays one line with both days.
-      - A course of 24 hours or more shows "Dec 1 – 3, 2026" above the first start and last end with weekdays.
-      - The length line reads "2 hours", "1 hour 30 minutes" or "2 days 2 hours".
-      - The ended panel keeps its date and adds the length.
-      - The line sits in one `<time dateTime={startTime}>`.
-    - *New shared pieces*: none.
-    - *Files*:
-      - `web/src/features/courses/course-time/course-time-lines.ts` (new folder, + test)
-      - [buy-panel.tsx](../web/src/features/courses/buy-panel/buy-panel.tsx) (+ test; drops `CourseSchedule`, which the card keeps)
-      - [get-course.spec.ts](../web/tests/browser/courses/get-course.spec.ts) ("displays course details" checks the one `<time>`, not "America/New_York" and the end's `<time>`)
-    - *Needs*: 9a, 9b.
-    - *Settled*:
-      - the Decision rows on one `formatRange` in one `<time>`, `Intl.DateTimeFormat` writing every string and the shared length
-      - the "24 hours or more" row
-    - *Done when*: unit tests reproduce variants a, e and f and a course past midnight
-  - [ ] **9d.** A visitor whose UTC offset differs reads the course in their own time, after the page loads.
+  - [x] **9c.** The panel shows when the course runs as one line in its own zone and the visitor's locale, and how long it lasts; a course of 24 hours or more shows its date range above its first start and last end.
+  - [ ] **9d.** A visitor whose UTC offset differs reads the course in their own time, after the page loads. **Next**
     - *Behaviours*:
       - The same offset at the start instant (New York, Toronto) shows no line.
       - A different offset with the same dates shows "(3:00 – 5:00 PM PST your time)".
@@ -550,7 +533,7 @@ Visitor opens /courses/:id
 
 - Design notes *(temporary)*:
   - Server strings render once; client parts get ISO times, the course zone and the locale, and never re-format a server string.
-  - `formatRange` puts U+202F before AM/PM and U+2009 around the dash; tests assert those characters.
+  - `formatRange` puts U+2009 around the dash and, on Node 26, a plain space before AM/PM; tests assert those characters.
   - `formatRange` with time-only options across midnight prints numeric dates (Node 26), so the visitor line adds dates by the Decision row's rule.
   - The `react-hooks` lint (v7, via `eslint-config-next`) flags `setState` in an effect and impure calls in render; the hook avoids both. 9e's outline settles where "now" is read.
   - Re-measure: `ls web/src/features/courses/course-time | wc -l` (9 files planned).
