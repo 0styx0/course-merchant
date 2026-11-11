@@ -41,26 +41,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **7d.** On desktop, the details and the Enroll button stay 96px from the top while the description scrolls; on a phone, they sit under the summary.
   - [x] **7e.** The description reads in the wireframe's rich-text look on the public page and in the admin editor.
 - **8. Buy panel looks.** The panel shows the price, the button with its price, the after-enroll note, and the free, in-progress and ended looks.
-  - [ ] **8a.** Prices read "$99", "$49.50" and "Free" on the course page, its Enroll button and the course card. **Next**
-    - *Behaviours*:
-      - A whole amount drops its decimals ("$99"), via `Intl.NumberFormat`'s [`trailingZeroDisplay: "stripIfInteger"`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat#trailingzerodisplay).
-      - An amount with cents keeps two decimals ("$49.50", "$0.50").
-      - An amount of 0 reads "Free", on the card too.
-      - The paid button reads "Enroll for $99 →".
-      - Admin's price summary keeps "$99.00", because it repeats the admin's own typing.
-    - *New shared pieces*: none
-    - *Files*:
-      - [formatters.ts](../web/src/lib/utils/formatters.ts)
-      - `formatters.test.ts` (new, beside it)
-      - Tests that assert the new words: `course-card.test.tsx`, `course-details.test.tsx`, `tests/browser/courses/get-course.spec.ts` and `paid-enrollment.spec.ts`.
-    - *Settled*:
-      - Style guide §8 price rows.
-      - The *Prices use one formatter* Decision row.
-    - *Done when*:
-      - `check:changed` passes.
-      - The browser suite passes, run in the background.
-      - The card and the page show "$99" and "Free" in `dev:mock`.
-  - [ ] **8b.** The course page's side column becomes a flat panel with today's schedule lines, the price, a full-width Enroll button and the "After you enroll." note, and it no longer shows the enrollment count.
+  - [x] **8a.** Prices read "$99", "$49.50" and "Free" on the course page, its Enroll button and the course card.
+  - [ ] **8b.** The course page's side column becomes a flat panel with today's schedule lines, the price, a full-width Enroll button and the "After you enroll." note, and it no longer shows the enrollment count. **Next**
     - *Behaviours*:
       - The panel is an `aside` labelled "Enroll in <course name>".
         - It has a `--surface-alt` fill, `rounded-lg` corners and 24px padding.

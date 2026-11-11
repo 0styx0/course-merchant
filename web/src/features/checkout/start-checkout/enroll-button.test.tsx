@@ -449,14 +449,12 @@ describe("EnrollButton", () => {
   });
 
   describe("on a paid course", () => {
-    const priceLabel = "$99.00";
+    const priceLabel = "$99";
 
     async function openPaidFields() {
       const user = userEvent.setup();
       render(<EnrollButton courseId={courseId} priceLabel={priceLabel} />);
-      await user.click(
-        screen.getByRole("button", { name: "Enroll for $99.00" }),
-      );
+      await user.click(screen.getByRole("button", { name: "Enroll for $99" }));
       return user;
     }
 
@@ -471,7 +469,7 @@ describe("EnrollButton", () => {
     it("starts as a closed button with the price", () => {
       render(<EnrollButton courseId={courseId} priceLabel={priceLabel} />);
 
-      const button = screen.getByRole("button", { name: "Enroll for $99.00" });
+      const button = screen.getByRole("button", { name: "Enroll for $99" });
       expect(button).toHaveAttribute("aria-expanded", "false");
       expect(
         screen.queryByRole("button", { name: "Enroll for free" }),

@@ -5,6 +5,8 @@ import msw from "next/experimental/testmode/playwright/msw.js";
 
 const { test, expect } = msw;
 
+const OPEN_BUTTON_NAME = "Enroll for free";
+
 test.use({
   mswHandlers: [
     [courseByIdSuccess, startCheckoutHandlers.checkEmail],
@@ -19,7 +21,7 @@ test("a visitor enrolls in a free course with the keyboard only", async ({
   msw.use(startCheckoutHandlers.slow);
   await page.goto(`/courses/${freeCourse.id}`);
 
-  const openButton = page.getByRole("button", { name: "Enroll for free" });
+  const openButton = page.getByRole("button", { name: OPEN_BUTTON_NAME });
   await expect(openButton).toHaveAttribute("aria-expanded", "false");
   await openButton.focus();
   await page.keyboard.press("Enter");
@@ -50,7 +52,7 @@ test("a problem shows above the fields and keeps what the visitor typed", async 
   msw.use(startCheckoutHandlers.notPurchasable);
   await page.goto(`/courses/${freeCourse.id}`);
 
-  await page.getByRole("button", { name: "Enroll for free" }).click();
+  await page.getByRole("button", { name: OPEN_BUTTON_NAME }).click();
   await page.getByLabel("Name").fill("Ami Cohen");
   await page.getByLabel("Email").fill("ami@example.com");
   await page.getByRole("button", { name: "Email me the link" }).click();
@@ -68,12 +70,12 @@ test("a problem shows above the fields and keeps what the visitor typed", async 
 
 test("a reload shows the closed button again", async ({ page }) => {
   await page.goto(`/courses/${freeCourse.id}`);
-  await page.getByRole("button", { name: "Enroll for free" }).click();
+  await page.getByRole("button", { name: OPEN_BUTTON_NAME }).click();
 
   await page.reload();
 
   await expect(
-    page.getByRole("button", { name: "Enroll for free" }),
+    page.getByRole("button", { name: OPEN_BUTTON_NAME }),
   ).toHaveAttribute("aria-expanded", "false");
   await expect(page.getByLabel("Name")).toHaveCount(0);
 });

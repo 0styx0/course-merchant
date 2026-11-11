@@ -1,7 +1,12 @@
+import { isFreePrice } from "./is-free-price";
+
+/** "$99", "$49.50" or "Free" from an amount in cents: whole amounts drop their decimals, and 0 reads "Free". */
 export function formatPrice(amount: number, currency: string) {
+  if (isFreePrice(amount)) return "Free";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
+    trailingZeroDisplay: "stripIfInteger",
   }).format(amount / 100);
 }
 

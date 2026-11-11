@@ -5,6 +5,8 @@ import msw from "next/experimental/testmode/playwright/msw.js";
 
 const { test, expect } = msw;
 
+const OPEN_BUTTON_NAME = "Enroll for $99";
+
 test.use({
   mswHandlers: [
     [courseByIdSuccess, startCheckoutHandlers.checkEmail],
@@ -19,7 +21,7 @@ test("a visitor on a paid course continues to the payment page", async ({
   msw.use(startCheckoutHandlers.redirect);
   await page.goto(`/courses/${reactCourse.id}`);
 
-  await page.getByRole("button", { name: "Enroll for $99.00" }).click();
+  await page.getByRole("button", { name: OPEN_BUTTON_NAME }).click();
   await page.getByLabel("Name").fill("Ami Cohen");
   await page.getByLabel("Email").fill("ami@example.com");
   await page.getByRole("button", { name: "Continue to payment" }).click();
@@ -37,7 +39,7 @@ test("when the API answers check_email on a paid course, the notice replaces the
 }) => {
   await page.goto(`/courses/${reactCourse.id}`);
 
-  await page.getByRole("button", { name: "Enroll for $99.00" }).click();
+  await page.getByRole("button", { name: OPEN_BUTTON_NAME }).click();
   await page.getByLabel("Name").fill("Ami Cohen");
   await page.getByLabel("Email").fill("ami@example.com");
   await page.getByRole("button", { name: "Continue to payment" }).click();
@@ -53,7 +55,7 @@ test("pressing Back from the payment page loads a fresh page with the closed but
 }) => {
   msw.use(startCheckoutHandlers.redirect);
   await page.goto(`/courses/${reactCourse.id}`);
-  await page.getByRole("button", { name: "Enroll for $99.00" }).click();
+  await page.getByRole("button", { name: OPEN_BUTTON_NAME }).click();
   await page.getByLabel("Name").fill("Ami Cohen");
   await page.getByLabel("Email").fill("ami@example.com");
   await page.getByRole("button", { name: "Continue to payment" }).click();
@@ -62,7 +64,7 @@ test("pressing Back from the payment page loads a fresh page with the closed but
   await page.goBack();
 
   await expect(
-    page.getByRole("button", { name: "Enroll for $99.00" }),
+    page.getByRole("button", { name: OPEN_BUTTON_NAME }),
   ).toHaveAttribute("aria-expanded", "false");
 });
 
@@ -73,7 +75,7 @@ test("when Stripe is down, the visitor sees the API's words, keeps their typing 
   msw.use(startCheckoutHandlers.paymentProviderDown);
   await page.goto(`/courses/${reactCourse.id}`);
 
-  await page.getByRole("button", { name: "Enroll for $99.00" }).click();
+  await page.getByRole("button", { name: OPEN_BUTTON_NAME }).click();
   await page.getByLabel("Name").fill("Ami Cohen");
   await page.getByLabel("Email").fill("ami@example.com");
   await page.getByRole("button", { name: "Continue to payment" }).click();

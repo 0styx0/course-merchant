@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { describe, expect, it } from "vitest";
 
-import { reactCourse } from "@/mocks/fixtures/courses";
+import { freeCourse, reactCourse } from "@/mocks/fixtures/courses";
 import { CourseDetails } from "./course-details";
 
 const course = reactCourse;
@@ -30,7 +30,7 @@ describe("CourseDetails", () => {
       "https://react.dev",
     );
 
-    expect(screen.getByText("$99.00")).toBeVisible();
+    expect(screen.getByText("$99")).toBeVisible();
 
     expect(screen.getByText("Oct 1, 2030, 2:00 PM")).toHaveAttribute(
       "datetime",
@@ -98,5 +98,11 @@ describe("CourseDetails", () => {
     expect(screen.getByText(course.summary)).toHaveClass(
       "text-muted-foreground",
     );
+  });
+
+  it("shows Free for a course that costs nothing", () => {
+    render(<CourseDetails course={freeCourse}>{buyBlock}</CourseDetails>);
+
+    expect(screen.getByText("Free")).toBeVisible();
   });
 });

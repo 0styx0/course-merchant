@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { CourseCard } from "./course-card";
-import { reactCourse } from "@/mocks/fixtures/courses";
+import { freeCourse, reactCourse } from "@/mocks/fixtures/courses";
 
 const course = reactCourse;
 
@@ -20,7 +20,7 @@ describe("CourseCard", () => {
     expect(screen.getByText(course.summary)).toBeInTheDocument();
     expect(screen.queryByText("What you will build")).not.toBeInTheDocument();
 
-    expect(screen.getByText("$99.00")).toBeInTheDocument();
+    expect(screen.getByText("$99")).toBeInTheDocument();
 
     expect(screen.getByText("Oct 1, 2030, 2:00 PM")).toHaveAttribute(
       "datetime",
@@ -85,5 +85,11 @@ describe("CourseCard", () => {
     );
 
     expect(screen.getByText("€125.50")).toBeInTheDocument();
+  });
+
+  it("shows Free for a course that costs nothing", () => {
+    render(<CourseCard course={freeCourse} />);
+
+    expect(screen.getByText("Free")).toBeInTheDocument();
   });
 });

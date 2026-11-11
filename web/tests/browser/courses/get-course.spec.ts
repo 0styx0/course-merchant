@@ -40,7 +40,7 @@ test("displays course details", async ({ page }) => {
     "https://react.dev",
   );
 
-  await expect(page.getByText("$99.00", { exact: true })).toBeVisible();
+  await expect(page.getByText("$99", { exact: true })).toBeVisible();
   await expect(page.getByText("12 enrolled", { exact: true })).toBeVisible();
   await expect(
     page.getByText("America/New_York", { exact: true }),

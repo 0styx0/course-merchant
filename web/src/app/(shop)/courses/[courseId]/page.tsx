@@ -8,6 +8,7 @@ import {
   type GetCourseResult,
 } from "@/features/courses/courses.api";
 import { formatPrice } from "@/lib/utils/formatters";
+import { isFreePrice } from "@/lib/utils/is-free-price";
 
 type CoursePageProps = {
   params: Promise<{ courseId: string }>;
@@ -51,10 +52,9 @@ export default async function CoursePage({ params }: CoursePageProps) {
   }
 
   const course = result.data;
-  const priceLabel =
-    course.price.amount === 0
-      ? undefined
-      : formatPrice(course.price.amount, course.price.currency);
+  const priceLabel = isFreePrice(course.price.amount)
+    ? undefined
+    : formatPrice(course.price.amount, course.price.currency);
 
   return (
     <CourseDetails course={course}>
