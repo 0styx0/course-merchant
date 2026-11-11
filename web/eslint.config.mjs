@@ -159,6 +159,14 @@ const eslintConfig = defineConfig([
           message:
             "getByText matches substrings. Pass { exact: true }, use a regex, or use getByRole.",
         },
+        // A bare div or span says nothing a user sees, so a markup change
+        // (a new wrapper, a dropped <dl>) breaks the test that finds its target through it.
+        {
+          selector:
+            "CallExpression[callee.property.name='locator'] > Literal.arguments:first-child[value=/^(div|span)$/]",
+          message:
+            "locator('div') and locator('span') match markup, not what a user sees. Use getByRole, getByLabel or getByText with { exact: true }.",
+        },
       ],
     },
   },

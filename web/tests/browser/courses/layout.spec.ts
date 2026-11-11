@@ -22,11 +22,7 @@ test("keeps the details column 96px from the top while the description scrolls",
   await expect(enrollButton).toBeVisible();
   await page.mouse.wheel(0, 600);
 
-  const sideColumn = page
-    .locator("div")
-    .filter({ has: enrollButton })
-    .filter({ has: page.locator("dl") })
-    .last();
+  const sideColumn = page.getByRole("complementary");
   await expect
     .poll(async () => (await sideColumn.boundingBox())?.y)
     .toBe(stickyTopPx);
@@ -45,7 +41,7 @@ test("stacks image, title, summary, details and description on a phone", async (
   const summary = await topOf(
     page.getByText(longCourse.summary, { exact: true }),
   );
-  const details = await topOf(page.getByText("Price", { exact: true }));
+  const details = await topOf(page.getByRole("complementary"));
   const button = await topOf(page.getByRole("button", { name: /^Enroll/ }));
   const description = await topOf(
     page.getByRole("heading", { level: 2, name: "Why this course exists" }),
