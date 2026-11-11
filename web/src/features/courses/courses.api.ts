@@ -41,3 +41,31 @@ export const getCourse = cache(
       }),
     ),
 );
+
+export type CourseImage = { bytes: ArrayBuffer; cacheControl: string | null };
+
+/**
+ * `toResult` drops the headers, so this reads the API's `Cache-Control` from
+ * the response before handing the answer to it.
+ */
+export async function getCourseImage(
+  courseId: string,
+  version: string,
+): Promise<Result<CourseImage, ProblemDetails>> {
+  const answer = await api.GET("/courses/{courseId}/image/{version}", {
+    params: { path: { courseId, version } },
+    parseAs: "arrayBuffer",
+  });
+  const result = toResult(answer);
+
+  if (result.state === "failure") {
+    return result;
+  }
+  return {
+    state: "success",
+    data: {
+      bytes: result.data,
+      cacheControl: answer.response.headers.get("Cache-Control"),
+    },
+  };
+}

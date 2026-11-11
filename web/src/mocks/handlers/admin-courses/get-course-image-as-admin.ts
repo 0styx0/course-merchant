@@ -1,6 +1,6 @@
 import type { operations } from "@/lib/api/generated";
 import { http, HttpResponse } from "msw";
-import { storedCourseImageBytes } from "../../fixtures/served-course-image";
+import { mockCourseImageBytes } from "../../fixtures/mock-course-image";
 import { MOCK_API_BASE_URL } from "../../mock-api";
 import { problemResponse } from "../../problem-response";
 
@@ -13,7 +13,7 @@ type InternalServerErrorResponse =
 export const courseImageAsAdminUrl = `${MOCK_API_BASE_URL}/v1/admin/courses/:courseId/image`;
 
 export const courseImageAsAdminSuccess = http.get(courseImageAsAdminUrl, () => {
-  return new HttpResponse(storedCourseImageBytes, {
+  return new HttpResponse(mockCourseImageBytes, {
     headers: {
       "Content-Type": "image/webp",
       "Cache-Control": "private, no-cache",

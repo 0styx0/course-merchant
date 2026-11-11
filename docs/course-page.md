@@ -36,27 +36,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **6d.** On a phone, a Menu button opens a full-height sheet with Courses; Escape, the close button or a link closes it, and focus returns to Menu.
 - **7. Course page layout.** The image, title and description sit beside a sticky panel on desktop, stacked on a phone.
   - [x] **7a.** The mock handlers sit in topic folders (admin-courses, courses, checkout), so the next handler fits.
-  - [ ] **7b.** A visitor who opens a course's image address sees its image. Nothing shows on the page until 7c. **Next**
-    - *Behaviours*:
-      - Answers 200 with `image/webp`, which the route sets itself, plus the API's `Cache-Control`.
-      - Answers 200 with no `Cache-Control` when the API sends none; the route still serves the image.
-      - Answers 404 without calling the API for an id that isn't a UUID.
-      - Answers 404 without calling the API for a version that isn't digits (`"1a"`, `""`, `"0"` and `"007"` each get a case).
-      - Answers 404 when the API says 404 `COURSE_NOT_FOUND`.
-      - Answers 404 when the API says 400 `INVALID_COURSE_ID`.
-      - Throws, so Next answers 500, for any other API problem (a 500, or a 404 or 400 with another code), because the API's problem body makes `toResult` return a failure.
-      - Throws when the API can't be reached.
-    - *New shared pieces*: the public image mock handler (`success`, `notFound`, `error`), which 7c and 7d walk with; it reuses `storedCourseImageBytes` from `web/src/mocks/fixtures/`.
-    - *Files*:
-      - `web/src/app/(shop)/courses/[courseId]/image/[version]/route.ts` (new, with its test)
-      - [courses.api.ts](../web/src/features/courses/courses.api.ts) (an image wrapper, `parseAs: "arrayBuffer"`; its success holds the bytes and the API's `Cache-Control`, because `toResult` drops the headers)
-      - `web/src/mocks/handlers/courses/get-course-image.ts` (new)
-      - [server.ts](../web/src/mocks/server.ts) (registers the handler)
-    - *Copy reason*: the route and wrapper repeat the admin image route's shape (the `arrayBuffer` parse, the UUID check). They differ by checking the version, passing `Cache-Control` through, throwing on other failures, and answering 404 where admin answers 502; a shared helper would need three parameters.
-    - *Needs*: 7a.
-    - *Settled*: courses.md *Course images → Showing it*.
-    - *Done when*: the route and wrapper unit tests pass; 7c uses the route next.
-  - [ ] **7c.** The course page shows the image above the title, resized by Next for each screen.
+  - [x] **7b.** A visitor who opens a course's image address sees its image; nothing shows on the page until 7c.
+  - [ ] **7c.** The course page shows the image above the title, resized by Next for each screen. **Next**
     - *Behaviours*:
       - Shows the image 16:9, with `alt=""`, square corners, `preload`, and `sizes` for columns 1–7 on desktop and full width on a phone.
       - Keeps the 16:9 box while the image loads.

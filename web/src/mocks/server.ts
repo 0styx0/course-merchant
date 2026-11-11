@@ -1,6 +1,7 @@
 import type { RequestHandler } from "msw";
 import { setupServer } from "msw/node";
 import { listCoursesHandlers } from "./handlers/courses/list-courses";
+import { getCourseImageHandlers } from "./handlers/courses/get-course-image";
 import { getCourseHandlers } from "./handlers/courses/get-course";
 import {
   createCourseHandlers,
@@ -64,6 +65,7 @@ function scenarioHandler(
 if (
   !(scenario in listCoursesHandlers) &&
   !(scenario in getCourseHandlers) &&
+  !(scenario in getCourseImageHandlers) &&
   !(scenario in createCourseScenarios) &&
   !(scenario in getCourseAsAdminScenarios) &&
   !(scenario in updateCourseScenarios) &&
@@ -80,6 +82,7 @@ if (
 export const server = setupServer(
   scenarioHandler(listCoursesHandlers),
   scenarioHandler(getCourseHandlers),
+  scenarioHandler(getCourseImageHandlers),
   scenarioHandler(createCourseScenarios),
   scenarioHandler(getCourseAsAdminScenarios),
   scenarioHandler(updateCourseScenarios),
