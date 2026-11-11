@@ -19,7 +19,7 @@ Used by `/next-commit` (outline and hand-off) and `/plan-create-implementation` 
   - the message shown,
   - the state kept (form values, draft id, leave warning),
   - whether a request was sent.
-- Add two bullet lists after the block: *What the commit adds* and *What it reuses*.
+- Add one bullet list after the block: *What the commit adds*. The outline's *What* section lists the reused pieces.
 
 ## In the plan (milestone)
 

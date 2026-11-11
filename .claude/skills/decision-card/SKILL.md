@@ -18,8 +18,7 @@ Read [../_shared/chat-rules.md](../_shared/chat-rules.md). This skill is the exc
 
 - Offer 2 to 4 options, mutually exclusive, for **one** question per set.
 - Put the recommended option first. Its name ends in `(Recommended)`, and it carries the single most important reason.
-- Define each specialized term the first time it appears (CLAUDE.md *Plain language*).
-- Link the docs of every library you mention.
+- Follow CLAUDE.md *Writing* (it covers specialized terms) and chat-rules.md (it covers library links).
 
 ## 2. Card shape
 
@@ -38,6 +37,7 @@ Write each option in exactly this shape, as bullets:
 ## 3. Length
 
 - Open the set with one line that states the question.
+- With 3 or more options, follow it with a comparison table: one row per option, 2 to 4 attribute columns, a few words per cell.
 - Keep each option within about 120 words, code snippets excluded.
 
 ## 4. Ask the pick
