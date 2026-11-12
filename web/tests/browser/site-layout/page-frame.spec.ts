@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
-import { longCourse } from "@/mocks/fixtures/courses";
+import { longTextCourse } from "@/mocks/fixtures/courses";
 import { courseByIdSuccess } from "@/mocks/handlers/courses/get-course";
 import { courseImageSuccess } from "@/mocks/handlers/courses/get-course-image";
 
@@ -12,7 +12,7 @@ test.use({
 });
 
 async function measureFrames(page: Page) {
-  await page.goto(`/courses/${longCourse.id}`);
+  await page.goto(`/courses/${longTextCourse.id}`);
   const main = page.getByRole("main");
   await expect(main).toBeVisible();
 

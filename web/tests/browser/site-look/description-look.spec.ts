@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
-import { longCourse } from "@/mocks/fixtures/courses";
+import { longTextCourse } from "@/mocks/fixtures/courses";
 import { getCourseAsAdminHandlers } from "@/mocks/handlers/admin-courses/get-course-as-admin";
 import { courseByIdSuccess } from "@/mocks/handlers/courses/get-course";
 import { courseImageSuccess } from "@/mocks/handlers/courses/get-course-image";
@@ -46,7 +46,7 @@ test("the public description is muted 18px text and the editor's is foreground 1
   page,
   msw,
 }) => {
-  await page.goto(`/courses/${longCourse.id}`);
+  await page.goto(`/courses/${longTextCourse.id}`);
   const publicDescription = page.locator(".description-content");
   const publicParagraph = publicDescription.locator("p").first();
   const publicH2 = publicDescription.getByRole("heading", { level: 2 }).first();

@@ -3,6 +3,7 @@ import { delay, http, HttpResponse } from "msw";
 import { MOCK_API_BASE_URL } from "../../mock-api";
 import {
   endedCourse,
+  endedLongCourse,
   publicCourses,
   reactCourse,
 } from "../../fixtures/courses";
@@ -27,6 +28,7 @@ function respondWithCourse(courseId: string | readonly string[]) {
   const course: GetCourseResponse | undefined = [
     ...publicCourses,
     endedCourse,
+    endedLongCourse,
   ].find((publicCourse) => publicCourse.id === courseId);
 
   return course ? HttpResponse.json(course) : respondCourseNotFound(courseId);

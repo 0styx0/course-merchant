@@ -1,12 +1,12 @@
 import type { Course } from "@/lib/types";
 import { dateTimeFormatter } from "@/lib/utils/formatters";
 
-type CourseScheduleProps = {
+type CourseCardScheduleProps = {
   schedule: Course["schedule"];
 };
 
 /** Start and end times in the course's own time zone, and the zone's name. */
-export function CourseSchedule({ schedule }: CourseScheduleProps) {
+export function CourseCardSchedule({ schedule }: CourseCardScheduleProps) {
   const scheduleTimeFormatter = dateTimeFormatter(schedule.timeZone);
 
   return (

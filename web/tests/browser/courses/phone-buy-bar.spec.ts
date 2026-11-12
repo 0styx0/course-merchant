@@ -1,6 +1,6 @@
 import msw from "next/experimental/testmode/playwright/msw.js";
 
-import { longCourse } from "@/mocks/fixtures/courses";
+import { longTextCourse } from "@/mocks/fixtures/courses";
 import { courseByIdSuccess } from "@/mocks/handlers/courses/get-course";
 import { courseImageSuccess } from "@/mocks/handlers/courses/get-course-image";
 
@@ -18,7 +18,7 @@ test("shows the bar once the button scrolls away, hides it back at the top, open
 }) => {
   const bar = page.locator("[data-phone-buy-bar]");
   await page.setViewportSize({ width: 400, height: 800 });
-  await page.goto(`/courses/${longCourse.id}`);
+  await page.goto(`/courses/${longTextCourse.id}`);
   await expect(
     page.getByRole("button", { name: ENROLL_BUTTONS }),
   ).toBeVisible();
@@ -43,7 +43,7 @@ test("keeps the footer's Contact link above the bar at the bottom of a phone pag
   page,
 }) => {
   await page.setViewportSize({ width: 400, height: 800 });
-  await page.goto(`/courses/${longCourse.id}`);
+  await page.goto(`/courses/${longTextCourse.id}`);
   await expect(
     page.getByRole("button", { name: ENROLL_BUTTONS }),
   ).toBeVisible();
@@ -74,7 +74,7 @@ test("lands the Name box fully below the header after the bar is tapped deep in 
   page,
 }) => {
   await page.setViewportSize({ width: 400, height: 800 });
-  await page.goto(`/courses/${longCourse.id}`);
+  await page.goto(`/courses/${longTextCourse.id}`);
   await expect(
     page.getByRole("button", { name: ENROLL_BUTTONS }),
   ).toBeVisible();

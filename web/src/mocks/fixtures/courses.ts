@@ -195,7 +195,7 @@ export const freeCourse = {
   },
 } as const satisfies Course;
 
-export const longCourse = {
+export const longTextCourse = {
   id: "5e9b3c70-8a14-4d2f-a6c3-0b1d2e3f4a85",
   name: "Supercalifragilisticexpialidocious Contemplative Practice for Absolutely Everyone",
   summary: "A slow, patient introduction to sitting still",
@@ -249,10 +249,21 @@ export const endedCourse = {
   },
 } as const satisfies Course;
 
+export const endedLongCourse = {
+  ...endedCourse,
+  id: "e3b5d7f9-2a14-4c86-b0d2-6f8a1c3e5b79",
+  name: "Decade of Go",
+  schedule: {
+    startTime: "2015-12-31T17:00:00Z",
+    endTime: "2025-11-30T17:00:00Z",
+    timeZone: "America/New_York",
+  },
+} as const satisfies Course;
+
 export const publicCourses = [
   reactCourse,
   typescriptCourse,
   freeCourse,
-  longCourse,
+  longTextCourse,
   inProgressCourse,
 ];

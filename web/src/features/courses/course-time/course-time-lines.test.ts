@@ -13,6 +13,8 @@ function makeLinesWithPlainSpaces(
     timeOrDateRangeLine: lines.timeOrDateRangeLine.replace(/\s/g, " "),
     firstStartToLastEndLine: lines.firstStartToLastEndLine?.replace(/\s/g, " "),
     lengthLine: lines.lengthLine,
+    endedDateLine: lines.endedDateLine.replace(/\s/g, " "),
+    shouldShowVisitorTimeLine: lines.shouldShowVisitorTimeLine,
   };
 }
 
@@ -130,5 +132,54 @@ describe("makeCourseTimeLines length line", () => {
     );
 
     expect(lines.lengthLine).toBe("2 days 2 hours");
+  });
+});
+
+describe("makeCourseTimeLines for a course of 28 days or more", () => {
+  const exactly28Days = newYorkSchedule(
+    "2026-12-01T15:00:00Z",
+    "2026-12-29T15:00:00Z",
+  );
+
+  it("shows only the date range at exactly 28 days", () => {
+    const lines = makeLinesWithPlainSpaces(exactly28Days, "en-US");
+
+    expect(lines.timeOrDateRangeLine).toBe("Dec 1 – 29, 2026");
+    expect(lines.firstStartToLastEndLine).toBeUndefined();
+    expect(lines.lengthLine).toBeUndefined();
+    expect(lines.shouldShowVisitorTimeLine).toBe(false);
+    expect(lines.endedDateLine).toBe("Dec 1 – 29, 2026");
+  });
+
+  it("writes years apart in the date range of a decades-long course", () => {
+    const lines = makeLinesWithPlainSpaces(
+      newYorkSchedule("2019-12-31T17:00:00Z", "2040-11-30T17:00:00Z"),
+      "en-US",
+    );
+
+    expect(lines.timeOrDateRangeLine).toBe("Dec 31, 2019 – Nov 30, 2040");
+  });
+
+  it("keeps all three lines at 27 days 23 hours", () => {
+    const schedule = newYorkSchedule(
+      "2026-12-01T15:00:00Z",
+      "2026-12-29T14:00:00Z",
+    );
+    const lines = makeLinesWithPlainSpaces(schedule, "en-US");
+
+    expect(lines.timeOrDateRangeLine).toBe("Dec 1 – 29, 2026");
+    expect(lines.firstStartToLastEndLine).toBe(
+      "Tue, Dec 1, 10:00 AM EST – Tue, Dec 29, 9:00 AM EST",
+    );
+    expect(lines.lengthLine).toBe("27 days 23 hours");
+    expect(lines.shouldShowVisitorTimeLine).toBe(true);
+    expect(lines.endedDateLine).toBe("Dec 1, 2026");
+  });
+
+  it("shows the start date and the visitor's line for a course under 24 hours", () => {
+    const lines = makeLinesWithPlainSpaces(twoHoursOnOctober1, "en-US");
+
+    expect(lines.shouldShowVisitorTimeLine).toBe(true);
+    expect(lines.endedDateLine).toBe("Oct 1, 2030");
   });
 });

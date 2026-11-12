@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Course } from "@/lib/types";
 import { formatPrice } from "@/lib/utils/formatters";
-import { CourseSchedule } from "../course-schedule";
+import { CourseCardSchedule } from "../course-card-schedule";
 import { shopCoursePath } from "../shop-course-path";
 
 export function CourseCard({ course }: { course: Course }) {
@@ -23,7 +23,7 @@ export function CourseCard({ course }: { course: Course }) {
       </p>
 
       <div className="mt-4 text-sm text-muted-foreground">
-        <CourseSchedule schedule={course.schedule} />
+        <CourseCardSchedule schedule={course.schedule} />
       </div>
 
       <p className="mt-4 text-sm text-muted-foreground">

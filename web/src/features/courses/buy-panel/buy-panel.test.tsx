@@ -3,7 +3,12 @@ import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Course } from "@/lib/types";
-import { endedCourse, freeCourse, reactCourse } from "@/mocks/fixtures/courses";
+import {
+  endedCourse,
+  endedLongCourse,
+  freeCourse,
+  reactCourse,
+} from "@/mocks/fixtures/courses";
 import { BuyPanel, EndedPanel } from "./buy-panel";
 
 // The shared test setup freezes the clock in 2026, so reactCourse (2030) is more than 14 days away and reads "Starts <date>".
@@ -104,7 +109,7 @@ describe("BuyPanel", () => {
     expect(screen.getByText("Tue 1 Oct, 14:00–16:00 GMT-4")).toBeVisible();
   });
 
-  it("shows a long course's date range, its start and end, and its length", () => {
+  it("shows a course of a few days as its date range, its start and end, and its length", () => {
     renderPanel({
       schedule: {
         startTime: "2026-12-01T23:00:00Z",
@@ -121,6 +126,28 @@ describe("BuyPanel", () => {
       screen.getByText("Tue, Dec 1, 6:00 PM EST – Thu, Dec 3, 8:00 PM EST"),
     ).toBeVisible();
     expect(screen.getByText("2 days 2 hours")).toBeVisible();
+  });
+
+  it("shows a course of 28 days or more as its date range only, even for a visitor in another zone", () => {
+    vi.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions").mockReturnValue({
+      timeZone: "Asia/Tokyo",
+    } as Intl.ResolvedDateTimeFormatOptions);
+
+    renderPanel({
+      schedule: {
+        startTime: "2019-12-31T17:00:00Z",
+        endTime: "2040-11-30T17:00:00Z",
+        timeZone: "America/New_York",
+      },
+    });
+
+    expect(screen.getByText("Dec 31, 2019 – Nov 30, 2040")).toHaveAttribute(
+      "datetime",
+      "2019-12-31T17:00:00Z",
+    );
+    expect(screen.queryByText(/your time/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/days/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/EST|EDT/)).not.toBeInTheDocument();
   });
 
   it("reads time line, price, then the button", () => {
@@ -281,6 +308,13 @@ describe("EndedPanel", () => {
     renderEndedPanel();
 
     expect(screen.getByText("2 hours")).toBeVisible();
+  });
+
+  it("shows an ended course of 28 days or more as its date range with no length", () => {
+    renderEndedPanel(endedLongCourse.schedule);
+
+    expect(screen.getByText("Dec 31, 2015 – Nov 30, 2025")).toBeVisible();
+    expect(screen.queryByText(/days/)).not.toBeInTheDocument();
   });
 
   it("shows no price, schedule zone or button", () => {

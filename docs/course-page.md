@@ -58,22 +58,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **11. Walk the whole page.** The owner walked J1–J3 on desktop and recorded each finding; steps 12 to 14 fix them.
 - **12. Page looks from the walk.** The gaps, link alignment, nav weight, tab names and long-course times match what the walk asked for.
   - [x] **12a.** A visitor sees a ghost link lined up with the text and a bolder Courses link, and a timed-out or refunded buyer's tab names that state.
-  - [ ] **12b.** A visitor reads a course of 28 days or more as one date range ("Dec 31, 2019 – Nov 30, 2040"), with no weekday line, length or own-time line. **Next**
-    - *Behaviours*:
-      - A course of exactly 28 days of elapsed time counts as long; one of 27 days 23 hours keeps its three lines.
-      - A course from 24 hours to under 28 days, or under 24 hours, keeps today's lines.
-      - A visitor in another zone sees no own-time line on a long course, and the panel keeps its shape after load.
-      - An ended long course shows its date range in place of its start date, with no length.
-    - *New shared pieces*: `isLongCourse`, exported from course-time-lines.ts and read by buy-panel.tsx to hide the own-time line; `lengthLine` becomes optional so the ended panel drops the length by itself.
-    - *Files*:
-      - [course-time-lines.ts](../web/src/features/courses/course-time/course-time-lines.ts)
-      - [buy-panel.tsx](../web/src/features/courses/buy-panel/buy-panel.tsx) (+ tests)
-      - [courses.ts](../web/src/mocks/fixtures/courses.ts) (an ended long-course fixture)
-      - `course-time/` adds no file (it sits at the folder limit; step 9's *Re-measure* counts it).
-    - *Needs*: 12a (shares `courses.ts`).
-    - *Settled*: the 28-day Decision row and the amended 24-hour row.
-    - *Done when*: unit tests cover the boundary; then walk J1 at 400 px and desktop, keyboard only (including Name's landing on a real phone), J3, the in-progress course, and the expired and refunded tabs. Any new finding gets fixed in 12b.
-- [ ] **13. Corrected fields clear their message.** A visitor who fixes Name or Email sees its message go at once, and a developer reads the enroll button in small files, so a renamed retry code breaks a test.
+  - [x] **12b.** A visitor reads a course of 28 days or more as one date range ("Dec 31, 2019 – Nov 30, 2040"), with no weekday line, length or own-time line.
+- [ ] **13. Corrected fields clear their message.** A visitor who fixes Name or Email sees its message go at once, and a developer reads the enroll button in small files, so a renamed retry code breaks a test. **Next**
 - [ ] **14. A way back from a failed checkout.** A timed-out buyer sees "Try again" linking to the course, and a refunded buyer sees a plain link back to the course.
 
 Every UI milestone's *Done when* also includes: keyboard only (Enter, Escape, Tab), one mock scenario per state it builds, and the owner's findings fixed in its last commit.
@@ -495,7 +481,7 @@ Several days: Dec 1 – 3, 2026 / Tue, Dec 1, 6:00 PM EST – Thu, Dec 3, ... / 
 
 - Why here: the panel exists (8), so the lines have a place.
 - Needs: 8.
-- Size: 5 commits (9a to 9e: locale from the request; a mechanical move of the length and wall-clock helpers; course line and length; visitor line; relative status words). Twins: [course-schedule.tsx](../web/src/features/courses/course-schedule.tsx), [format-course-length.ts](../web/src/lib/time/format-course-length.ts), `temporal-polyfill`.
+- Size: 5 commits (9a to 9e: locale from the request; a mechanical move of the length and wall-clock helpers; course line and length; visitor line; relative status words). Twins: [course-card-schedule.tsx](../web/src/features/courses/course-card-schedule.tsx), [format-course-length.ts](../web/src/lib/time/format-course-length.ts), `temporal-polyfill`.
 - Freshness: reading `Accept-Language` makes the course page render on every request. It already does (it reads `params` and sets no `revalidate`), so caching does not change; the home page stays regenerated each minute.
 - Status words: the server renders "Starts Dec 1, 2026"; after load the browser may swap only those words to "Starts in 4 days" (within 14 days), and the panel keeps its shape.
 - Risk: Node's and Chrome's ICU format differently, so a server string the browser re-formats would mismatch.
@@ -575,28 +561,16 @@ No bar at the top, even when the button sits below the fold.
 - Size: 2 commits (the overview said 2 to 5: the small fixes share one bundle, and the long-course rule needs its own tests and fixture). The wider gaps and the visible mock image already shipped in b103062f8.
 - Risk: the ghost link's alignment change touches the 404 page, the ended panel and the return page; the long-course rule changes what an ended long course shows.
 - Done when: 12b's walk.
-- Design notes *(temporary)*:
-  - The 28 days count elapsed time like the 24-hour rule beside it, so a DST day never moves a course across the line.
-  - Flow:
-
-```
-/courses/:id panel
-├── under 24 h → time line, own-time line, length             existing
-├── 24 h – under 28 d → range, weekday line, own-time, length existing
-├── 28 d or more → date range only                             12b
-└── ended → start date + length; long → date range only       existing / 12b
-/checkout/success tab
-├── no id / 404 → "Checkout not found"                         existing
-├── 500, pending, succeeded → "Thank you"                      existing
-├── expired → "Checkout timed out"                             12a
-└── refunded → "Payment refunded"                              12a
-```
+- Retro:
+  - Planned 2 commits (12a, 12b); shipped 2.
+  - Owner changes after using the page: not yet recorded.
+  - Rule friction: none recorded.
 
 ## Step 13. Corrected fields clear their message
 
 - Why here: the enroll form is stable after 12, and the cleanup splits a file the fix would otherwise grow.
 - Needs: 12.
-- Size: 3 commits (the shared retry code; the split of the enroll button into a new topic folder, because `form/` and `start-checkout/` sit at the folder limit; the clearing). Commit lines come when this step is **Next**.
+- Size: 3 commits (the shared retry code; the split of the enroll button into a new topic folder, because `form/` and `start-checkout/` sit at the folder limit; the clearing). This step has no commit lines yet: `/next-commit` runs `/plan-create-implementation` to write them.
 - Risk: the Back-from-Stripe fix (4b) lives in the enroll button, so the split must keep its tests green. An API message on a value that already passes the browser check must clear only once the value changes, not on render.
 - Done when: renaming the retry code fails a test, `check:changed` passes with an unchanged test count apart from the new clearing cases, and journey: type a bad email, see its message, fix it and see the message go at once.
 - Settled *(temporary)*: the admin forms clear a message through react-hook-form (`mode: "onTouched"`), which checkout's `useActionState` can't reach; checkout keeps a hand-written clear (about 20 lines) because moving it onto react-hook-form would rewrite sending, the kept values and the Back fix. Add a Decision row when the step's first commit ships.

@@ -1,6 +1,6 @@
 import msw from "next/experimental/testmode/playwright/msw.js";
 
-import { longCourse } from "@/mocks/fixtures/courses";
+import { longTextCourse } from "@/mocks/fixtures/courses";
 import { courseByIdSuccess } from "@/mocks/handlers/courses/get-course";
 import { courseImageSuccess } from "@/mocks/handlers/courses/get-course-image";
 
@@ -16,7 +16,7 @@ test("keeps the details column 96px from the top while the description scrolls",
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto(`/courses/${longCourse.id}`);
+  await page.goto(`/courses/${longTextCourse.id}`);
 
   const enrollButton = page.getByRole("button", { name: /^Enroll/ });
   await expect(enrollButton).toBeVisible();
@@ -32,14 +32,14 @@ test("stacks image, title, summary, details and description on a phone", async (
   page,
 }) => {
   await page.setViewportSize({ width: 400, height: 800 });
-  await page.goto(`/courses/${longCourse.id}`);
+  await page.goto(`/courses/${longTextCourse.id}`);
 
   const topOf = async (locator: ReturnType<typeof page.locator>) =>
     (await locator.boundingBox())!.y;
   const image = await topOf(page.locator("article img"));
   const title = await topOf(page.getByRole("heading", { level: 1 }));
   const summary = await topOf(
-    page.getByText(longCourse.summary, { exact: true }),
+    page.getByText(longTextCourse.summary, { exact: true }),
   );
   const details = await topOf(page.getByRole("complementary"));
   const button = await topOf(page.getByRole("button", { name: /^Enroll/ }));
@@ -61,7 +61,7 @@ test("wraps a long title without horizontal scroll at 320px", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 800 });
-  await page.goto(`/courses/${longCourse.id}`);
+  await page.goto(`/courses/${longTextCourse.id}`);
 
   const title = page.getByRole("heading", { level: 1 });
   await expect(title).toBeVisible();
