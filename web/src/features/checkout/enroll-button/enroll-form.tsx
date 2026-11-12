@@ -15,6 +15,7 @@ import { CustomerDetailFields } from "../form/customer-detail-fields";
 import { readCheckoutCustomer } from "../form/read-checkout-customer";
 import { useFocusFirstInvalidField } from "../form/use-focus-first-invalid-field";
 import { usePageRestoredFromCache } from "./use-page-restored-from-cache";
+import { useRecheckedFieldErrors } from "./use-rechecked-field-errors";
 import { SendButton } from "./send-button";
 import type { EnrollWords } from "./enroll-words";
 import {
@@ -43,6 +44,16 @@ function chooseFieldErrors(
   return state.state === "failure" ? state.fieldErrors : NO_FIELD_ERRORS;
 }
 
+/** Focuses the first wrong box after a send, then keeps the shown messages current as the visitor edits. */
+function useFieldErrorsAfterSend(
+  formRef: RefObject<HTMLFormElement | null>,
+  errorsAtSend: FormFieldError[],
+) {
+  // Focus follows the list from the send, so editing one box never moves it.
+  useFocusFirstInvalidField(formRef, errorsAtSend);
+  return useRecheckedFieldErrors(errorsAtSend);
+}
+
 /** On a cache restore, hands the caller the values typed in the form. */
 function useReportTypedCustomerOnRestore(
   formRef: RefObject<HTMLFormElement | null>,
@@ -69,8 +80,11 @@ export function EnrollForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [browserErrors, setBrowserErrors] =
     useState<FormFieldError[]>(NO_FIELD_ERRORS);
-  const fieldErrors = chooseFieldErrors(browserErrors, state);
-  useFocusFirstInvalidField(formRef, fieldErrors);
+  const errorsAtSend = chooseFieldErrors(browserErrors, state);
+  const { shownErrors, recheckEditedBox } = useFieldErrorsAfterSend(
+    formRef,
+    errorsAtSend,
+  );
   useReportTypedCustomerOnRestore(formRef, onRestoredFromCache);
 
   function checkTypedDetailsBeforeSending(event: FormEvent<HTMLFormElement>) {
@@ -98,13 +112,14 @@ export function EnrollForm({
         noValidate
         action={sendAction}
         onSubmit={checkTypedDetailsBeforeSending}
+        onInput={recheckEditedBox}
         className="mt-6 space-y-4"
       >
         {state.state === "failure" && <ProblemAlert problem={state.problem} />}
         <CustomerDetailFields
           customer={state.state === "failure" ? state.customer : startCustomer}
           // Sending again clears the old messages.
-          fieldErrors={isPending ? NO_FIELD_ERRORS : fieldErrors}
+          fieldErrors={isPending ? NO_FIELD_ERRORS : shownErrors}
           isPending={isPending}
         />
         <SendButton

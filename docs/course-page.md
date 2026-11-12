@@ -61,24 +61,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **12b.** A visitor reads a course of 28 days or more as one date range ("Dec 31, 2019 – Nov 30, 2040"), with no weekday line, length or own-time line.
 - **13. Corrected fields clear their message.** A visitor who fixes Name or Email sees its message update as they type and go once the value passes, and a developer reads the enroll button in small files with the web's retry code in one place.
   - [x] **13a.** A developer finds the enroll button in its own folder, split into small files by job. *(mechanical)*
-  - [ ] **13b.** A visitor who fixes Name or Email sees its message update as they type and go once the value passes. **Next**
-    - *Behaviours*:
-      - Email's browser message goes once the address passes, and no request goes out.
-      - Emptying Name again after its message went brings back "Enter your name.".
-      - An API message on a value the browser check passes stays after the render and goes at that box's first change.
-      - After an API message goes, a value the browser check refuses shows the browser's message.
-      - Fixing Email leaves Name's message in place, and focus stays in Email.
-      - A box that had no message stays quiet while the visitor types a wrong value, until the next send.
-      - The next send checks both boxes again from scratch.
-      - The error box above the fields stays until the next send.
-    - *New shared pieces*: none (the hook serves only the enroll form)
-    - *Files*:
-      - enroll-button/use-rechecked-field-errors.ts and its test (new; the folder reaches the file limit, so the hook goes here, not in `form/`)
-      - enroll-button/enroll-form.tsx
-      - enroll-button/enroll-button.test.tsx
-    - *Settled*: the first two Decision rows added by step 13's plan pass.
-    - *Done when*: `check:changed` passes, and the journey in *Done when* below works.
-  - [ ] **13c.** A developer finds the web's "can't reach the server" problem in one file, and the enroll tests say what the visitor typed and what the restore did.
+  - [x] **13b.** A visitor who fixes Name or Email sees its message update as they type and go once the value passes.
+  - [ ] **13c.** A developer finds the web's "can't reach the server" problem in one file, and the enroll tests say what the visitor typed and what the restore did. **Next**
     - *Behaviours*:
       - A paid form reads "Try again" after the unreachable problem, and both tests import its code.
       - The API's two retry codes stay as literals in the test, so dropping one from the rule fails it.

@@ -69,6 +69,24 @@ test("a problem shows above the fields and keeps what the visitor typed", async 
   await expect(page.getByLabel("Email")).toHaveValue("ami@example.com");
 });
 
+// A unit test can't show a real keyboard in a real browser re-checking on each keystroke.
+test("a visitor finishes a half-typed email and its message goes", async ({
+  page,
+}) => {
+  await page.goto(`/courses/${freeCourse.id}`);
+  await page.getByRole("button", { name: OPEN_BUTTON_NAME }).click();
+  await page.getByLabel("Name").fill("Ami Cohen");
+  await page.getByLabel("Email").fill("ami@");
+  await page.getByRole("button", { name: "Email me the link" }).click();
+
+  const emailField = page.getByLabel("Email");
+  await expect(emailField).toHaveAccessibleDescription(/looks incomplete/);
+
+  await emailField.pressSequentially("example.com");
+
+  await expect(emailField).not.toHaveAccessibleDescription(/looks incomplete/);
+});
+
 test("a reload shows the closed button again", async ({ page }) => {
   await page.goto(`/courses/${freeCourse.id}`);
   await page.getByRole("button", { name: OPEN_BUTTON_NAME }).click();

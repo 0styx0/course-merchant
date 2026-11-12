@@ -510,6 +510,95 @@ describe("EnrollButton", () => {
     });
   });
 
+  describe("when the visitor fixes a message", () => {
+    const SEND_BUTTON = { name: "Email me the link" };
+
+    async function typeThenSend(
+      user: ReturnType<typeof userEvent.setup>,
+      name: string,
+      email: string,
+    ) {
+      if (name) await user.type(screen.getByLabelText("Name"), name);
+      if (email) await user.type(screen.getByLabelText("Email"), email);
+      await user.click(screen.getByRole("button", SEND_BUTTON));
+    }
+
+    it("drops Email's browser message once the address passes and sends nothing", async () => {
+      const user = await openFields();
+      await typeThenSend(user, "Ami Cohen", "ami@");
+      await screen.findByText(EMAIL_MESSAGE);
+
+      await user.type(screen.getByLabelText("Email"), "example.com");
+
+      expect(screen.queryByText(EMAIL_MESSAGE)).not.toBeInTheDocument();
+      expect(screen.getByLabelText("Email")).toBeValid();
+      expect(sendAction).not.toHaveBeenCalled();
+    });
+
+    it("leaves Name's message in place and focus in Email while Email is fixed", async () => {
+      const user = await openFields();
+      await typeThenSend(user, "", "ami@");
+      await screen.findByText(EMAIL_MESSAGE);
+      await user.click(screen.getByLabelText("Email"));
+
+      await user.type(screen.getByLabelText("Email"), "example.com");
+
+      expect(screen.queryByText(EMAIL_MESSAGE)).not.toBeInTheDocument();
+      expect(screen.getByText(NAME_MESSAGE)).toBeVisible();
+      expect(screen.getByLabelText("Email")).toHaveFocus();
+    });
+
+    it("shows an API message again after the next send, though the visitor edited that box", async () => {
+      const apiMessage = "The API refuses this address.";
+      // Each send answers with a list of its own, as the real action does.
+      sendAction.mockImplementation(async () =>
+        makeFieldFailure([{ path: "customer.email", message: apiMessage }], {
+          name: "Ami Cohen",
+          email: "ami@example.com",
+        }),
+      );
+      const user = await openFields();
+      await submitTypedDetails(user);
+      await screen.findByText(apiMessage);
+      await user.type(screen.getByLabelText("Email"), "m");
+      expect(screen.queryByText(apiMessage)).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", SEND_BUTTON));
+
+      expect(await screen.findByText(apiMessage)).toBeVisible();
+    });
+
+    it("checks both boxes again from scratch on the next send", async () => {
+      const user = await openFields();
+      await typeThenSend(user, "", "ami@");
+      await screen.findByText(EMAIL_MESSAGE);
+      await user.type(screen.getByLabelText("Email"), "example.com");
+      expect(screen.queryByText(EMAIL_MESSAGE)).not.toBeInTheDocument();
+      await user.click(screen.getByRole("button", SEND_BUTTON));
+
+      expect(await screen.findByText(NAME_MESSAGE)).toBeVisible();
+      expect(screen.queryByText(EMAIL_MESSAGE)).not.toBeInTheDocument();
+      expect(sendAction).not.toHaveBeenCalled();
+    });
+
+    it("keeps the error box above the fields until the next send", async () => {
+      sendAction.mockResolvedValueOnce(
+        makeFieldFailure([emailError], {
+          name: "Ami Cohen",
+          email: "ami@",
+        }),
+      );
+      const user = await openFields();
+      await submitTypedDetails(user);
+      await screen.findByText(EMAIL_MESSAGE);
+
+      await user.type(screen.getByLabelText("Email"), "example.com");
+
+      expect(screen.queryByText(EMAIL_MESSAGE)).not.toBeInTheDocument();
+      expect(screen.getByRole("alert")).toHaveTextContent("Validation failed");
+    });
+  });
+
   describe("phone buy bar", () => {
     it("shows no bar on first render", () => {
       render(<EnrollButton courseId={courseId} />);
