@@ -6,6 +6,7 @@ import {
   startCheckoutAction,
   type StartCheckoutFormState,
 } from "../start-checkout/start-checkout.action";
+import { UNREACHABLE_PROBLEM } from "../start-checkout/unreachable-problem";
 import { EnrollButton } from "./enroll-button";
 import {
   CHECKOUT_EMAIL_TOO_LONG_MESSAGE,
@@ -19,9 +20,12 @@ vi.mock("../start-checkout/start-checkout.action", () => ({
 const sendAction = vi.mocked(startCheckoutAction);
 const courseId = "11111111-1111-4111-8111-111111111111";
 
+// The visitor types these two values, and the fake answers hand them back.
+const TYPED_CUSTOMER = { name: "Ami Cohen", email: "ami@example.com" };
+
 const sent: StartCheckoutFormState = {
   state: "success",
-  customer: { email: "ami@example.com" },
+  customer: { email: TYPED_CUSTOMER.email },
 };
 
 const refused: StartCheckoutFormState = {
@@ -31,7 +35,7 @@ const refused: StartCheckoutFormState = {
     detail: "This course has ended and can no longer be bought.",
     code: "COURSE_NOT_PURCHASABLE",
   },
-  customer: { name: "Ami Cohen", email: "ami@example.com" },
+  customer: TYPED_CUSTOMER,
   fieldErrors: [],
 };
 
@@ -43,7 +47,7 @@ const validationProblem = {
 
 function makeFieldFailure(
   fieldErrors: { path: string; message: string }[],
-  customer = { name: "Ami Cohen", email: "ami@" },
+  customer = TYPED_CUSTOMER,
 ): StartCheckoutFormState {
   return {
     state: "failure",
@@ -97,8 +101,8 @@ async function openFields() {
 }
 
 async function submitTypedDetails(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByLabelText("Name"), "Ami Cohen");
-  await user.type(screen.getByLabelText("Email"), "ami@example.com");
+  await user.type(screen.getByLabelText("Name"), TYPED_CUSTOMER.name);
+  await user.type(screen.getByLabelText("Email"), TYPED_CUSTOMER.email);
   await user.click(screen.getByRole("button", { name: "Email me the link" }));
 }
 
@@ -336,7 +340,9 @@ describe("EnrollButton", () => {
   });
 
   it("keeps the typed values beside a field message", async () => {
-    sendAction.mockResolvedValue(makeFieldFailure([emailError]));
+    sendAction.mockResolvedValue(
+      makeFieldFailure([emailError], { ...TYPED_CUSTOMER, email: "ami@" }),
+    );
     const user = await openFields();
 
     await submitTypedDetails(user);
@@ -360,10 +366,7 @@ describe("EnrollButton", () => {
 
   it("hides the old messages while the next send runs", async () => {
     sendAction.mockResolvedValueOnce(
-      makeFieldFailure([emailError], {
-        name: "Ami Cohen",
-        email: "ami@example.com",
-      }),
+      makeFieldFailure([emailError], TYPED_CUSTOMER),
     );
     const user = await openFields();
     await submitTypedDetails(user);
@@ -438,10 +441,7 @@ describe("EnrollButton", () => {
 
     it("shows the browser's message instead of the API's earlier one", async () => {
       sendAction.mockResolvedValueOnce(
-        makeFieldFailure([nameError], {
-          name: "Ami Cohen",
-          email: "ami@example.com",
-        }),
+        makeFieldFailure([nameError], TYPED_CUSTOMER),
       );
       const user = await openFields();
       await submitTypedDetails(user);
@@ -552,10 +552,10 @@ describe("EnrollButton", () => {
       const apiMessage = "The API refuses this address.";
       // Each send answers with a list of its own, as the real action does.
       sendAction.mockImplementation(async () =>
-        makeFieldFailure([{ path: "customer.email", message: apiMessage }], {
-          name: "Ami Cohen",
-          email: "ami@example.com",
-        }),
+        makeFieldFailure(
+          [{ path: "customer.email", message: apiMessage }],
+          TYPED_CUSTOMER,
+        ),
       );
       const user = await openFields();
       await submitTypedDetails(user);
@@ -642,8 +642,8 @@ describe("EnrollButton", () => {
     }
 
     async function sendPaidDetails(user: ReturnType<typeof userEvent.setup>) {
-      await user.type(screen.getByLabelText("Name"), "Ami Cohen");
-      await user.type(screen.getByLabelText("Email"), "ami@example.com");
+      await user.type(screen.getByLabelText("Name"), TYPED_CUSTOMER.name);
+      await user.type(screen.getByLabelText("Email"), TYPED_CUSTOMER.email);
       await user.click(
         screen.getByRole("button", { name: "Continue to payment" }),
       );
@@ -758,13 +758,11 @@ describe("EnrollButton", () => {
     });
 
     describe("after a failure a retry can fix", () => {
-      const typedCustomer = { name: "Ami Cohen", email: "ami@example.com" };
-
       function makeFailureWithCode(code: string): StartCheckoutFormState {
         return {
           state: "failure",
           problem: { title: "Trouble", detail: "Something broke.", code },
-          customer: typedCustomer,
+          customer: TYPED_CUSTOMER,
           fieldErrors: [],
         };
       }
@@ -772,7 +770,7 @@ describe("EnrollButton", () => {
       it.each([
         "PAYMENT_PROVIDER_UNAVAILABLE",
         "INTERNAL_SERVER_ERROR",
-        "API_UNREACHABLE",
+        UNREACHABLE_PROBLEM.code,
       ])(
         "reads Try again after %s and keeps the typed values",
         async (code) => {
@@ -791,6 +789,22 @@ describe("EnrollButton", () => {
           expect(screen.getByLabelText("Email")).toHaveValue("ami@example.com");
         },
       );
+
+      it("shows the unreachable problem's title above the fields", async () => {
+        sendAction.mockResolvedValue({
+          state: "failure",
+          problem: UNREACHABLE_PROBLEM,
+          customer: TYPED_CUSTOMER,
+          fieldErrors: [],
+        });
+        const user = await openPaidFields();
+
+        await sendPaidDetails(user);
+
+        expect(await screen.findByRole("alert")).toHaveTextContent(
+          "Can't reach the server",
+        );
+      });
 
       it("keeps Continue to payment after a missing course", async () => {
         sendAction.mockResolvedValue(makeFailureWithCode("COURSE_NOT_FOUND"));
@@ -903,6 +917,34 @@ describe("EnrollButton", () => {
         restorePage(true);
 
         expect(screen.getByRole("status")).toBeInTheDocument();
+      });
+
+      it("restores a failed send as an editable form", async () => {
+        sendAction.mockResolvedValue(refused);
+        const user = await openPaidFields();
+        await sendPaidDetails(user);
+        await screen.findByRole("alert");
+
+        restorePage(true);
+
+        expect(screen.getByLabelText("Name")).toHaveValue(TYPED_CUSTOMER.name);
+        expect(screen.getByLabelText("Email")).toHaveValue(
+          TYPED_CUSTOMER.email,
+        );
+        expect(screen.getByLabelText("Email")).not.toHaveAttribute("readonly");
+        expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      });
+
+      it("restores a successful send as its notice", async () => {
+        sendAction.mockResolvedValue(sent);
+        const user = await openPaidFields();
+        await sendPaidDetails(user);
+        await screen.findByRole("status");
+
+        restorePage(true);
+
+        expect(screen.getByRole("status")).toBeInTheDocument();
+        expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
       });
 
       it("keeps Opening payment… for a normal page show", async () => {

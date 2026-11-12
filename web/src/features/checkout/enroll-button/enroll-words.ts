@@ -1,3 +1,5 @@
+import { UNREACHABLE_PROBLEM } from "../start-checkout/unreachable-problem";
+
 export type EnrollWords = {
   open: string;
   send: string;
@@ -25,7 +27,7 @@ export function makeEnrollWords(priceLabel: string | undefined): EnrollWords {
 const RETRYABLE_PROBLEM_CODES = new Set([
   "PAYMENT_PROVIDER_UNAVAILABLE",
   "INTERNAL_SERVER_ERROR",
-  "API_UNREACHABLE",
+  UNREACHABLE_PROBLEM.code,
 ]);
 
 export function isRetryableProblemCode(

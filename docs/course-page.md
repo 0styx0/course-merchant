@@ -62,21 +62,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - **13. Corrected fields clear their message.** A visitor who fixes Name or Email sees its message update as they type and go once the value passes, and a developer reads the enroll button in small files with the web's retry code in one place.
   - [x] **13a.** A developer finds the enroll button in its own folder, split into small files by job. *(mechanical)*
   - [x] **13b.** A visitor who fixes Name or Email sees its message update as they type and go once the value passes.
-  - [ ] **13c.** A developer finds the web's "can't reach the server" problem in one file, and the enroll tests say what the visitor typed and what the restore did. **Next**
-    - *Behaviours*:
-      - A paid form reads "Try again" after the unreachable problem, and both tests import its code.
-      - The API's two retry codes stay as literals in the test, so dropping one from the rule fails it.
-      - `submitTypedDetails` types the email the default fake customer holds.
-      - One test restores the page after a failed send and after a successful one, and compares the two.
-    - *New shared pieces*: the unreachable problem. The action makes it, and the button and two tests read its code.
-    - *Files*:
-      - start-checkout/unreachable-problem.ts (new; a `"use server"` file may export only async functions, so it cannot live in the action)
-      - start-checkout/start-checkout.action.ts
-      - start-checkout/start-checkout.action.test.ts
-      - enroll-button/enroll-words.ts
-      - enroll-button/enroll-button.test.tsx
-    - *Done when*: grep finds the code's text only in its new file.
-- [ ] **14. A way back from a failed checkout.** A timed-out buyer sees "Try again" linking to the course, and a refunded buyer sees a plain link back to the course.
+  - [x] **13c.** A developer finds the web's "can't reach the server" problem in one file, and the enroll tests say what the visitor typed and what the restore did.
+- [ ] **14. A way back from a failed checkout.** A timed-out buyer sees "Try again" linking to the course, and a refunded buyer sees a plain link back to the course. **Next**
 
 Every UI milestone's *Done when* also includes: keyboard only (Enter, Escape, Tab), one mock scenario per state it builds, and the owner's findings fixed in its last commit.
 
@@ -620,14 +607,17 @@ No bar at the top, even when the button sits below the fold.
   - The hook stores only the re-checked messages, keyed by box, and works out what shows from the send-time list.
   - When a message goes, the boxes below move up one line, as they do in admin.
   - The retry code needs its own file because Next refuses any export but an async function from a `"use server"` file. The API's two retry codes stay strings, because the contract types `code` as a string.
-- Findings *(temporary)*, from the newcomer-reader, each placed in a commit above: the retry-code constant is 13c, the file split is 13a, the restore test and the typed-email test are 13c.
+- Retro:
+  - Planned 3 commits (13a, 13b, 13c); shipped 3.
+  - Owner changes after using the page: not yet recorded.
+  - Rule friction: none recorded.
 
 ## Step 14. A way back from a failed checkout
 
 - Why here: it changes the API contract and needs the payments checks, so it waits until the page's looks and the enroll form are settled.
 - Needs: 12.
 - Builds on: the return page's [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx), `getCheckoutStatus` in the OpenAPI contract, [refunds.md](payments/refunds.md).
-- Size: 2 to 3 commits (the contract and API answer carry the course; the web link; maybe the mock scenarios), set when this step is **Next**.
+- Size: 2 to 3 commits (the contract and API answer carry the course; the web link; maybe the mock scenarios), to be split by `/plan-create-implementation` now that this step is **Next**.
 - Risk: the status answer holds only `status`, so it needs a `courseId`; the payments failure table and `/security-review` apply, because the answer is public.
 - Can wait: the wording of the refunded link.
 - Done when: journey: under `checkoutExpired`, see "Try again" link to the course; under `checkoutRefunded`, see a plain link back to the course with no "Try again".

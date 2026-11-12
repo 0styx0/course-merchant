@@ -14,6 +14,7 @@ import {
   startCheckoutAction,
   type StartCheckoutFormState,
 } from "./start-checkout.action";
+import { UNREACHABLE_PROBLEM } from "./unreachable-problem";
 
 // Its default export throws outside a React Server Component build
 vi.mock("server-only", () => ({}));
@@ -135,11 +136,7 @@ describe("startCheckoutAction", () => {
   describe("when the call throws", () => {
     const unreachableState = {
       state: "failure",
-      problem: {
-        title: "Can't reach the server",
-        detail: "Your details are still here. Try again in a moment.",
-        code: "API_UNREACHABLE",
-      },
+      problem: UNREACHABLE_PROBLEM,
       customer: { name: "Ada Lovelace", email: "ada@example.com" },
       fieldErrors: [],
     };
@@ -169,12 +166,27 @@ describe("startCheckoutAction", () => {
       ).resolves.toEqual(unreachableState);
     });
 
-    it("logs the thrown error", async () => {
+    it("returns the same problem when the API answers with a plain-text error", async () => {
+      server.use(
+        http.post(
+          startCheckoutUrl,
+          () => new HttpResponse("Bad gateway", { status: 502 }),
+        ),
+      );
+
+      await expect(
+        startCheckoutAction(courseId, emptyState, typedForm()),
+      ).resolves.toEqual(unreachableState);
+    });
+
+    it("logs the thrown network error", async () => {
       server.use(startCheckoutUnreachable);
 
       await startCheckoutAction(courseId, emptyState, typedForm());
 
-      expect(console.error).toHaveBeenCalledExactlyOnceWith(expect.any(Error));
+      expect(console.error).toHaveBeenCalledExactlyOnceWith(
+        expect.any(TypeError),
+      );
     });
   });
 });
