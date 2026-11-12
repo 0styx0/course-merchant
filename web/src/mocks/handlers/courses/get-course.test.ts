@@ -1,12 +1,15 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 
+import { reactCourse } from "../../fixtures/courses";
 import { MOCK_API_BASE_URL } from "../../mock-api";
 import { server } from "../../server";
 import { getCourseHandlers } from "./get-course";
 
 const courseUrl = (courseId: string) =>
   `${MOCK_API_BASE_URL}/v1/courses/${courseId}`;
+
+const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
 
 const unknownCourseId = "00000000-0000-4000-8000-000000000000";
 
@@ -53,5 +56,30 @@ describe("success scenario", () => {
     expect(await response.json()).toMatchObject({
       code: "COURSE_NOT_FOUND",
     });
+  });
+});
+
+describe("startsSoon scenario", () => {
+  it("serves the React course starting 4 days from now, with its usual length and zone", async () => {
+    server.use(getCourseHandlers.startsSoon);
+    const requestedAt = Date.now();
+
+    const response = await fetch(courseUrl(reactCourse.id));
+
+    const { schedule, ...course } = await response.json();
+    expect(course).toMatchObject({
+      id: reactCourse.id,
+      name: reactCourse.name,
+      price: reactCourse.price,
+    });
+    expect(Date.parse(schedule.startTime) - requestedAt).toBeCloseTo(
+      4 * DAY_IN_MILLISECONDS,
+      -4,
+    );
+    expect(Date.parse(schedule.endTime) - Date.parse(schedule.startTime)).toBe(
+      Date.parse(reactCourse.schedule.endTime) -
+        Date.parse(reactCourse.schedule.startTime),
+    );
+    expect(schedule.timeZone).toBe(reactCourse.schedule.timeZone);
   });
 });

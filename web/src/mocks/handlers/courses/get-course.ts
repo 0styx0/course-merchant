@@ -1,7 +1,11 @@
 import type { operations } from "@/lib/api/generated";
 import { delay, http, HttpResponse } from "msw";
 import { MOCK_API_BASE_URL } from "../../mock-api";
-import { endedCourse, publicCourses } from "../../fixtures/courses";
+import {
+  endedCourse,
+  publicCourses,
+  reactCourse,
+} from "../../fixtures/courses";
 import { problemResponse } from "../../problem-response";
 
 type GetCourseResponse =
@@ -71,10 +75,31 @@ const courseByIdSlow = http.get(courseByIdUrl, async ({ params }) => {
   return respondWithCourse(params.courseId);
 });
 
+const FOUR_DAYS_IN_MILLISECONDS = 4 * 24 * 60 * 60 * 1000;
+
+// The only handler with times relative to now, so `dev:mock` can walk "Starts in 4 days" (set `scenario = "startsSoon"` in `src/mocks/server.ts`).
+const courseByIdStartsSoon = http.get(courseByIdUrl, () => {
+  const startTime = Date.now() + FOUR_DAYS_IN_MILLISECONDS;
+  const courseLength =
+    Date.parse(reactCourse.schedule.endTime) -
+    Date.parse(reactCourse.schedule.startTime);
+  const course: GetCourseResponse = {
+    ...reactCourse,
+    schedule: {
+      ...reactCourse.schedule,
+      startTime: new Date(startTime).toISOString(),
+      endTime: new Date(startTime + courseLength).toISOString(),
+    },
+  };
+
+  return HttpResponse.json(course);
+});
+
 export const getCourseHandlers = {
   success: courseByIdSuccess,
   notFound: courseByIdNotFound,
   invalidId: courseByIdInvalidId,
   error: courseByIdError,
   slow: courseByIdSlow,
+  startsSoon: courseByIdStartsSoon,
 };

@@ -1,11 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Course } from "@/lib/types";
 import { endedCourse, freeCourse, reactCourse } from "@/mocks/fixtures/courses";
 import { BuyPanel, EndedPanel } from "./buy-panel";
 
+// The shared test setup freezes the clock in 2026, so reactCourse (2030) is more than 14 days away and reads "Starts <date>".
 function renderPanel(props: Partial<Parameters<typeof BuyPanel>[0]> = {}) {
   return render(
     <BuyPanel
@@ -35,6 +36,34 @@ describe("BuyPanel", () => {
     renderPanel();
 
     expect(screen.getByText(/Wed, Oct 2.*GMT\+9 your time/)).toBeVisible();
+  });
+
+  describe("the day before the start, in the visitor's zone", () => {
+    beforeEach(() => {
+      vi.setSystemTime(new Date("2030-09-30T16:00:00Z"));
+      vi.spyOn(
+        Intl.DateTimeFormat.prototype,
+        "resolvedOptions",
+      ).mockReturnValue({
+        timeZone: "America/New_York",
+      } as Intl.ResolvedDateTimeFormatOptions);
+    });
+
+    it("reads 'Starts tomorrow' and still shows the course's date", () => {
+      renderPanel();
+
+      expect(screen.getByText("Starts tomorrow")).toBeVisible();
+      expect(screen.getByText("Tue, Oct 1, 2:00 – 4:00 PM EDT")).toBeVisible();
+    });
+
+    it("keeps the date range of a course lasting days under 'Starts tomorrow'", () => {
+      renderPanel({
+        schedule: { ...reactCourse.schedule, endTime: "2030-10-03T18:00:00Z" },
+      });
+
+      expect(screen.getByText("Starts tomorrow")).toBeVisible();
+      expect(screen.getByText(/Oct 1.*3, 2030/)).toBeVisible();
+    });
   });
 
   it("is a region named after the course", () => {

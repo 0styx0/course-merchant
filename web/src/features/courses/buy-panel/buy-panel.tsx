@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { SeeCurrentCoursesLink } from "@/components/see-current-courses-link";
 import { makeCourseTimeLines } from "../course-time/course-time-lines";
+import { StartWords } from "../course-time/start-words";
 import { VisitorTimeLine } from "../course-time/visitor-time-line";
 import type { Course } from "@/lib/types";
 import { dateOnlyFormatter } from "@/lib/utils/formatters";
@@ -77,13 +78,20 @@ type StageEyebrowProps = {
   locale: string;
 };
 
-/** "Starts <date>" before the start and "In progress" after it. */
+/** "Starts <date>" (or "Starts in 4 days" once the page loads) before the start and "In progress" after it. */
 function StageEyebrow({ stage, schedule, locale }: StageEyebrowProps) {
-  const label =
-    stage === "upcoming"
-      ? `Starts ${formatStartDate(schedule, locale)}`
-      : "In progress";
-  return <p className="mb-2 text-eyebrow uppercase text-olive">{label}</p>;
+  return (
+    <p className="mb-2 text-eyebrow uppercase text-olive">
+      {stage === "upcoming" ? (
+        <StartWords
+          schedule={schedule}
+          serverWords={`Starts ${formatStartDate(schedule, locale)}`}
+        />
+      ) : (
+        "In progress"
+      )}
+    </p>
+  );
 }
 
 type EndedPanelProps = {

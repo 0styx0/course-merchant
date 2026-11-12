@@ -51,28 +51,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **9b.** A developer finds the course-length wording and the moment-to-wall-clock conversion in shared code that admin and the public page both use.
   - [x] **9c.** The panel shows when the course runs as one line in its own zone and the visitor's locale, and how long it lasts; a course of 24 hours or more shows its date range above its first start and last end.
   - [x] **9d.** A visitor whose UTC offset differs reads the course in their own time, after the page loads.
-  - [ ] **9e.** A visitor within 14 days of the start reads "Starts today", "Starts tomorrow" or "Starts in 4 days", in their own calendar days. **Next**
-    - *Behaviours*:
-      - 0, 1 and 2 to 14 days give the three forms; 15 days or more keeps the server's words.
-      - A browser clock past the start, or an unusable zone, keeps the server's words.
-      - An 11 PM visitor with a 1 AM start reads "Starts tomorrow".
-      - In progress and ended keep their words.
-      - The `dev:mock` scenario `startsSoon` serves a course 4 days from now.
-    - *New shared pieces*: none (9d's hook).
-    - *Files*:
-      - `course-time/start-words.tsx` (client, + test)
-      - [buy-panel.tsx](../web/src/features/courses/buy-panel/buy-panel.tsx)
-      - [get-course.ts](../web/src/mocks/handlers/courses/get-course.ts) (`startsSoon`)
-      - `course-time.spec.ts` (one `page.clock` case)
-    - *Needs*: 9d.
-    - *Settled*:
-      - the Principle "The server decides which panel shows"
-      - the Decision rows on fixture times and the status words
-    - *Done when*:
-      - unit tests pass
-      - the clock case passes
-      - journey J3 and the `startsSoon` walk work
-- [ ] **10. Phone buy bar.** A slim bar keeps the button on screen once the panel scrolls away; a tap opens the fields.
+  - [x] **9e.** A visitor within 14 days of the start reads "Starts today", "Starts tomorrow" or "Starts in 4 days", in their own calendar days, and `dev:mock`'s `startsSoon` scenario serves a course 4 days out.
+- [ ] **10. Phone buy bar.** A slim bar keeps the button on screen once the panel scrolls away; a tap opens the fields. **Next** Split into commits with /plan-create-implementation
 - [ ] **11. Fixes from using the page.** The owner's findings from the full walk are fixed.
 - [ ] **12. Checkout button cleanup.** A developer reads the enroll button's code in small files, and a renamed error code breaks a test instead of silently dropping "Try again".
 
@@ -516,7 +496,7 @@ Visitor opens /courses/:id
   - `formatRange` puts U+2009 around the dash and, on Node 26, a plain space before AM/PM; tests assert those characters.
   - `formatRange` with time-only options across midnight prints numeric dates (Node 26), so the visitor line adds dates by the Decision row's rule.
   - The `react-hooks` lint (v7, via `eslint-config-next`) flags `setState` in an effect and impure calls in render; the hook avoids both. 9e's outline settles where "now" is read.
-  - Re-measure: `ls web/src/features/courses/course-time | wc -l` (9 files planned).
+  - Re-measure: `ls web/src/features/courses/course-time | wc -l` (10 files after 9e, the folder's limit).
 
 ## Step 10. Phone buy bar
 
