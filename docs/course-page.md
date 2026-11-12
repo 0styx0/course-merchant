@@ -54,19 +54,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **9e.** A visitor within 14 days of the start reads "Starts today", "Starts tomorrow" or "Starts in 4 days", in their own calendar days, and `dev:mock`'s `startsSoon` scenario serves a course 4 days out.
 - **10. Phone buy bar.** A slim bar keeps the button on screen once the panel scrolls away; a tap opens the fields.
   - [x] **10a.** A phone visitor who scrolls past the Enroll button sees a bar with the same label at the bottom of the screen; a tap opens the fields, and the bar never covers the footer.
-  - [ ] **10b.** A phone visitor who taps the bar deep in the description lands with Name fully below the header, ready to type. **Next**
-    - *Behaviours*:
-      - After a tap at the bottom of a long description, Name has focus and its box sits fully below the 56 px header (browser).
-    - *New shared pieces*: none
-    - *Files*:
-      - [checkout-text-field.tsx](../web/src/features/checkout/form/checkout-text-field.tsx) (`scroll-mt-20`: the 56 px header plus a 24 px gap, on every checkout box)
-      - `web/tests/browser/courses/phone-buy-bar.spec.ts` (one test)
-      - `docs/course-page.md` (ticks, retro, owner's findings)
-    - *Done when*:
-      - The browser spec passes.
-      - J1 is walked at 400 px and desktop, keyboard only.
-      - The owner's findings are fixed.
-- [ ] **11. Fixes from using the page.** The owner's findings from the full walk are fixed.
+  - [x] **10b.** A browser test pins that a phone visitor who taps the bar deep in the description lands with Name fully below the header; Chromium already did, so the planned `scroll-mt-20` class stayed unwritten.
+- [ ] **11. Fixes from using the page.** The owner's findings from the full walk are fixed. **Next** Walk J1 at 400 px and desktop, keyboard only, and record each finding here; that walk also checks Name's landing on a real phone.
 - [ ] **12. Checkout button cleanup.** A developer reads the enroll button's code in small files, and a renamed error code breaks a test instead of silently dropping "Try again".
 
 Every UI milestone's *Done when* also includes: keyboard only (Enter, Escape, Tab), one mock scenario per state it builds, and the owner's findings fixed in its last commit.
@@ -537,28 +526,10 @@ No bar at the top, even when the button sits below the fold.
 - Size: 2 commits (the bar; the landing below the header). The overview said 2 to 3.
 - Risk: a focused field hidden under the header or the bar.
 - Done when: journey J1 at 400 px; the bar never shows beside the inline button, and the last paragraph and the footer stay clear of it.
-- Flow *(temporary)*:
-
-```
-Phone visitor opens a course
-├── ended → no button, no bar                                  existing (8e)
-└── live, fields closed
-    ├── button in view, or still below the screen → no bar           10a
-    ├── button hidden above the header's edge → bar at the bottom    10a
-    │   ├── page bottom → footer clear of the bar                    10a
-    │   └── tap → fields open, bar gone, focus on Name               10a
-    │       └── Name lands fully below the header                    10b
-    └── md and up → never a bar                                      10a
-fields open, failed send, Check your email → no bar                   10a
-```
-
-- Design notes *(temporary)*:
-  - The button, the bar and the watcher share one component that unmounts when the fields open, so the observer stops with it.
-  - The watcher measures the header's real bottom edge (found by a `data-site-header` marker) and measures again when the header resizes, so no pixel copy of `h-14` exists.
-  - Safe area: no `env(safe-area-inset-bottom)`; it reads 0 without `viewport-fit=cover`, which this site doesn't set.
-  - Tab order: the bar sits right after the inline button in the DOM; a keyboard visitor focused on that button sees no bar.
-  - Twin: admin's `SaveBar` look (`border-t bg-background py-3`); the behaviour differs (fixed, not sticky). Admin's `clearOfStickyBoxes` stays private: its 13rem fits admin's top box.
-  - Can wait (10a outline): whether the bar button carries `aria-expanded={false}` like the inline one.
+- Retro:
+  - Planned 2 commits (10a, 10b); shipped 2.
+  - Owner changes after using the page: not yet recorded.
+  - Rule friction: the planned `scroll-mt-20` class had no failing test, because Chromium already lands Name below the header, so 10b shipped as a test only.
 
 ## Step 11. Fixes from using the page
 

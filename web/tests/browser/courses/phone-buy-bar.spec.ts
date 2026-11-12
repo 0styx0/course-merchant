@@ -68,3 +68,36 @@ test("keeps the footer's Contact link above the bar at the bottom of a phone pag
     })
     .toBe(true);
 });
+
+// jsdom can't show layout or scrolling: it never scrolls or measures, so only a real browser shows the focused Name box land below the sticky header.
+test("lands the Name box fully below the header after the bar is tapped deep in a long page", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 400, height: 800 });
+  await page.goto(`/courses/${longCourse.id}`);
+  await expect(
+    page.getByRole("button", { name: ENROLL_BUTTONS }),
+  ).toBeVisible();
+  await page.mouse.wheel(0, 3000);
+
+  const bar = page.locator("[data-phone-buy-bar]");
+  await bar.getByRole("button", { name: ENROLL_BUTTONS }).click();
+
+  const name = page.getByLabel("Name");
+  await expect(name).toBeFocused();
+  const header = page.locator("[data-site-header]");
+  await expect
+    .poll(async () => {
+      const [nameBox, headerBox] = await Promise.all([
+        name.boundingBox(),
+        header.boundingBox(),
+      ]);
+      expect(nameBox).not.toBeNull();
+      expect(headerBox).not.toBeNull();
+      if (!nameBox || !headerBox) return false;
+      // A header pinned at the top makes the comparison below mean something.
+      return headerBox.y === 0 && nameBox.y >= headerBox.y + headerBox.height;
+    })
+    .toBe(true);
+  await expect(name).toBeInViewport({ ratio: 1 });
+});
