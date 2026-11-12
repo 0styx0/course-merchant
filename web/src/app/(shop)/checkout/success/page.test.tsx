@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { reactCourse } from "@/mocks/fixtures/courses";
 import { getCheckoutStatusHandlers } from "@/mocks/handlers/checkout/get-checkout-status";
 import { server } from "@/mocks/server";
 import CheckoutSuccessPage, { generateMetadata } from "./page";
@@ -107,14 +108,25 @@ describe("CheckoutSuccessPage", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "We're confirming your payment.",
     );
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
   it.each([
-    ["checkoutExpired", "Checkout timed out.", "charged you nothing"],
-    ["checkoutRefunded", "Payment refunded.", "We've refunded this payment."],
+    [
+      "checkoutExpired",
+      "Checkout timed out.",
+      "charged you nothing",
+      "Try again →",
+    ],
+    [
+      "checkoutRefunded",
+      "Payment refunded.",
+      "We've refunded this payment.",
+      "Back to the course →",
+    ],
   ] as const)(
-    "shows the words and a link to the courses for the %s status",
-    async (scenario, heading, sentence) => {
+    "shows the words and a link to the course for the %s status",
+    async (scenario, heading, sentence, linkName) => {
       server.use(getCheckoutStatusHandlers[scenario]);
 
       await renderPage("cs_test_1");
@@ -124,9 +136,10 @@ describe("CheckoutSuccessPage", () => {
       ).toBeInTheDocument();
       expect(screen.getAllByRole("status")).toHaveLength(1);
       expect(screen.getByRole("status")).toHaveTextContent(sentence);
-      expect(
-        screen.getByRole("link", { name: "See current courses →" }),
-      ).toHaveAttribute("href", "/");
+      expect(screen.getByRole("link", { name: linkName })).toHaveAttribute(
+        "href",
+        `/courses/${reactCourse.id}`,
+      );
     },
   );
 

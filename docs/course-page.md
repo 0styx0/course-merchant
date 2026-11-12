@@ -65,23 +65,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **13c.** A developer finds the web's "can't reach the server" problem in one file, and the enroll tests say what the visitor typed and what the restore did.
 - **14. A way back from a failed checkout.** A timed-out buyer sees "Try again" linking to the course, and a refunded buyer sees a plain link back to the course.
   - [x] **14a.** The return page's status answer names the course the checkout was for.
-  - [ ] **14b.** A timed-out buyer sees "Try again →" leading back to the course, and a refunded buyer sees "Back to the course →". **Next**
-    - *Behaviours*:
-      - Expired: h1 "Checkout timed out.", the sentence, then a primary-styled link "Try again →" to `/courses/{courseId}`; no "See current courses →".
-      - Refunded: h1 "Payment refunded.", the sentence, then a ghost link "Back to the course →" to `/courses/{courseId}`, lined up with the text like today's ghost link; no "Try again" and no "See current courses →".
-      - Succeeded and pending show no course link (unchanged).
-      - The link sits outside the live region, so each state still holds exactly one `status` region.
-      - A pending page that turns expired or refunded on a re-check shows the new link (the server re-renders with the fresh answer).
-    - *New shared pieces*: a ghost arrow link in `web/src/components/` taking `href` and label, carrying the `-ml-6` alignment; `SeeCurrentCoursesLink` renders it, so the two ghost links share one alignment rule.
-    - *Files*:
-      - [see-current-courses-link.tsx](../web/src/components/see-current-courses-link.tsx) (renders the shared ghost link)
-      - a new ghost-link file in `web/src/components/` (8 files today, so 9)
-      - [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx) (takes `courseId`; the ended words pick their link; uses `shopCoursePath`)
-      - [page.tsx](../web/src/app/%28shop%29/checkout/success/page.tsx) (passes `result.data.courseId`)
-      - tests: `checkout-status-message.test.tsx`, `page.test.tsx`, `see-current-courses-link.test.tsx` (keeps link and label checks; its `-ml-6` checks move to the ghost link's test), `web/tests/browser/courses/checkout-return.spec.ts` (the expired and refunded tests assert the course link)
-    - *Needs*: 14a.
-    - *Settled*: the Decision rows on the refunded and timed-out links and on the shared ghost link.
-    - *Done when*: `yarn --cwd web check:changed` passes, the browser suite passes, `/security-review` run, and the step's journey is walked.
+  - [x] **14b.** A timed-out buyer sees "Try again →" leading back to the course, and a refunded buyer sees "Back to the course →".
 
 Every UI milestone's *Done when* also includes: keyboard only (Enter, Escape, Tab), one mock scenario per state it builds, and the owner's findings fixed in its last commit.
 
@@ -640,49 +624,10 @@ No bar at the top, even when the button sits below the fold.
 - Size: 2 commits (the overview said 2 to 3: `checkoutExpired` and `checkoutRefunded` mock scenarios already exist, so a third commit has no work). 14a spans `api/` and `web/` because the pre-commit hook regenerates both type files when the contract changes.
 - Risk: the answer is public, so it holds only `status` and `courseId`; the payments failure table and `/security-review` apply.
 - Done when: journey (`dev:mock`, 400 px and desktop, keyboard only): under `checkoutExpired`, see "Try again →" open the course page; under `checkoutRefunded`, see "Back to the course →" with no "Try again" and no "See current courses →"; under `success` and `checkoutPending`, see no course link.
-- Sketch *(temporary)*:
-
-  ```
-  /checkout/success after 14 (shop layout)
-  Expired                                Refunded
-  Checkout timed out.       (h1)         Payment refunded.         (h1)
-  This checkout ended before payment,    We've refunded this payment. It can take
-  so we charged you nothing.             a few days to appear on your statement.
-  [ Try again → ]          (primary)     Back to the course →      (ghost)
-
-  Succeeded, pending, not found, API 500: as after step 5.
-  ```
-
-- Flow *(temporary)*:
-
-  ```
-  Buyer lands on /checkout/success?checkoutId=…           existing (5b)
-  └── page asks GET /checkout-sessions/{id}                existing (5b)
-      ├── 404 ── not-found page                            existing (5b)
-      ├── 500 / unreachable ── error box / error page      existing (5b)
-      └── 200 { status, courseId }                         14a
-          ├── succeeded ── Thank you + Check your email     existing (5b)
-          ├── pending ── confirming line, re-checks         existing (5d)
-          ├── expired ── "Try again →" to the course        14b
-          └── refunded ── "Back to the course →"            14b
-              └── click ── course page (form, Ended, or 404) existing
-  ```
-
-- Design notes *(temporary)*:
-  - The course id comes from the payment's price row (`Payment → CoursePrice.courseId`), which every payment has; no schema change.
-  - The answer skips a visibility check: the course page handles hidden and ended courses, and its 404 offers "See current courses →".
-  - The link targets the course page, not a new checkout: the buyer re-enters name and email, and the API's existing rules (already owns, ended) apply.
-  - The status query's `coursePrice` include repeats `findPaymentForFulfillment`'s; it is one line of the ORM's query builder, so no helper.
-  - Failure table:
-
-    | Actor | Abuse or failure | What the system does | Test that pins it |
-    |---|---|---|---|
-    | Anyone | Guesses checkout ids | 404, same as today; Stripe ids are long and random | existing e2e 404 |
-    | Holder of a link | Learns more than the course | Answer holds only status and course id | 14a e2e exact body |
-    | Buyer | Course hidden after checkout | Link opens the course 404 with "See current courses →" | existing course 404 tests |
-    | Buyer | Already bought in another tab, clicks Try again | Course page; checkout answers Check your email | existing checkout tests |
-    | Buyer | Reloads or re-checks (pending) | Same id each time; read-only | 14a unit (every status) |
-    | API | Down or 500 | Error page / error box (row 49) | existing 5b tests |
+- Retro:
+  - Planned 2 commits (14a, 14b); shipped 2.
+  - Owner changes after using the page: not yet recorded.
+  - Rule friction: none recorded.
 
 ## Open questions
 

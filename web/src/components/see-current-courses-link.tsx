@@ -1,19 +1,9 @@
-import { cn } from "cn";
-import Link from "next/link";
-
-import { buttonVariants } from "@/components/ui/button";
+import { GhostArrowLink } from "@/components/ghost-arrow-link";
 
 export function SeeCurrentCoursesLink({ className }: { className?: string }) {
   return (
-    // The ghost button's px-6 indents the label; -ml-6 cancels it.
-    <Link
-      href="/"
-      className={buttonVariants({
-        variant: "ghost",
-        className: cn("-ml-6 justify-start", className),
-      })}
-    >
+    <GhostArrowLink href="/" className={className}>
       See current courses →
-    </Link>
+    </GhostArrowLink>
   );
 }

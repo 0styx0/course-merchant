@@ -3,6 +3,7 @@ import {
   getCheckoutStatusHandlers,
 } from "@/mocks/handlers/checkout/get-checkout-status";
 import { http, HttpResponse } from "msw";
+import { reactCourse } from "@/mocks/fixtures/courses";
 import { SITE_NAME } from "@/lib/site-config/site-name";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
@@ -53,9 +54,10 @@ test("a buyer whose checkout timed out reads that nothing was charged", async ({
   await expect(page.getByRole("status")).toContainText(
     "This checkout ended before payment, so we charged you nothing.",
   );
-  await expect(
-    page.getByRole("link", { name: "See current courses →" }),
-  ).toHaveAttribute("href", "/");
+  await expect(page.getByRole("link", { name: "Try again →" })).toHaveAttribute(
+    "href",
+    `/courses/${reactCourse.id}`,
+  );
 });
 
 test("a buyer whose payment was refunded reads that it was refunded", async ({
@@ -73,8 +75,8 @@ test("a buyer whose payment was refunded reads that it was refunded", async ({
     "We've refunded this payment.",
   );
   await expect(
-    page.getByRole("link", { name: "See current courses →" }),
-  ).toHaveAttribute("href", "/");
+    page.getByRole("link", { name: "Back to the course →" }),
+  ).toHaveAttribute("href", `/courses/${reactCourse.id}`);
 });
 
 test("a checkout the API does not know shows the not-found page", async ({

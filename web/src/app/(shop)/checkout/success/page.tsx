@@ -74,7 +74,12 @@ async function CheckoutReturn({ checkoutId }: { checkoutId: string }) {
     return <ProblemAlert problem={result.error} />;
   }
 
-  return <CheckoutStatusMessage status={result.data.status} />;
+  return (
+    <CheckoutStatusMessage
+      status={result.data.status}
+      courseId={result.data.courseId}
+    />
+  );
 }
 
 export default async function CheckoutSuccessPage({
