@@ -41,16 +41,45 @@ describe("CheckoutSuccessPage", () => {
     });
   });
 
+  it.each([
+    ["checkoutPending", "Thank you"],
+    ["checkoutExpired", "Checkout timed out"],
+    ["checkoutRefunded", "Payment refunded"],
+  ] as const)(
+    "shows the tab title of the %s outcome",
+    async (scenario, title) => {
+      server.use(getCheckoutStatusHandlers[scenario]);
+
+      expect(await readMetadata("cs_test_1")).toEqual({
+        title,
+        robots: { index: false },
+      });
+    },
+  );
+
+  it("keeps the thanks in the tab when the API answers 500", async () => {
+    server.use(getCheckoutStatusHandlers.checkoutServerError);
+
+    expect(await readMetadata("cs_test_1")).toEqual({
+      title: "Thank you",
+      robots: { index: false },
+    });
+  });
+
   it("names the tab Checkout not found when the API answers 404", async () => {
     server.use(getCheckoutStatusHandlers.checkoutNotFound);
 
-    expect((await readMetadata("cs_test_unknown")).title).toBe(
-      "Checkout not found",
-    );
+    expect(await readMetadata("cs_test_unknown")).toEqual({
+      title: "Checkout not found",
+      robots: { index: false },
+    });
   });
 
   it("names the tab Checkout not found when the link has no checkout id", async () => {
-    expect((await readMetadata(undefined)).title).toBe("Checkout not found");
+    expect(await readMetadata(undefined)).toEqual({
+      title: "Checkout not found",
+      robots: { index: false },
+    });
   });
 
   it("thanks the buyer and names no address when the payment succeeded", async () => {
@@ -66,12 +95,25 @@ describe("CheckoutSuccessPage", () => {
     );
   });
 
+  it("shows the pending words without a link back to the courses", async () => {
+    server.use(getCheckoutStatusHandlers.checkoutPending);
+
+    await renderPage("cs_test_1");
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Thank you." }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "We're confirming your payment.",
+    );
+  });
+
   it.each([
-    ["checkoutPending", "Thank you.", "We're confirming your payment."],
     ["checkoutExpired", "Checkout timed out.", "charged you nothing"],
     ["checkoutRefunded", "Payment refunded.", "We've refunded this payment."],
   ] as const)(
-    "shows the words for the %s status",
+    "shows the words and a link to the courses for the %s status",
     async (scenario, heading, sentence) => {
       server.use(getCheckoutStatusHandlers[scenario]);
 
@@ -82,6 +124,9 @@ describe("CheckoutSuccessPage", () => {
       ).toBeInTheDocument();
       expect(screen.getAllByRole("status")).toHaveLength(1);
       expect(screen.getByRole("status")).toHaveTextContent(sentence);
+      expect(
+        screen.getByRole("link", { name: "See current courses →" }),
+      ).toHaveAttribute("href", "/");
     },
   );
 

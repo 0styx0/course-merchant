@@ -21,7 +21,10 @@ export function SiteHeader() {
         >
           {SITE_NAME}
         </Link>
-        <Link href="/" className="hidden min-h-11 items-center md:flex">
+        <Link
+          href="/"
+          className="hidden min-h-11 items-center text-meta font-medium md:flex"
+        >
           Courses
         </Link>
         <div className="md:hidden">

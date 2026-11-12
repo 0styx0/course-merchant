@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { ProblemAlert } from "@/components/problem-alert";
 import { CheckoutStatusMessage } from "@/features/checkout/success-page/checkout-status-message";
+import { getCheckoutStatusTitle } from "@/features/checkout/success-page/checkout-status-title";
 import {
   getCheckoutStatus,
   type GetCheckoutStatusResult,
@@ -41,11 +42,17 @@ async function readTabTitle(checkoutId: string | undefined): Promise<string> {
     return "Checkout not found";
   }
   const result = await getCheckoutStatus(checkoutId);
-  return isCheckoutNotFound(result) ? "Checkout not found" : "Thank you";
+  if (isCheckoutNotFound(result)) {
+    return "Checkout not found";
+  }
+  // The page itself shows the API's failure, so its tab keeps the thanks.
+  return result.state === "success"
+    ? getCheckoutStatusTitle(result.data.status)
+    : "Thank you";
 }
 
 // A not-found page's own metadata never reaches the tab, so the page names the
-// tab for both outcomes.
+// tab for every outcome.
 export async function generateMetadata({
   searchParams,
 }: CheckoutSuccessPageProps): Promise<Metadata> {

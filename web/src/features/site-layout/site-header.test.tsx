@@ -62,4 +62,12 @@ describe("SiteHeader", () => {
       expect(link).toHaveClass("min-h-11");
     }
   });
+
+  it("sets the Courses link in meta size with the font-medium class", () => {
+    render(<SiteHeader />);
+
+    expect(
+      within(screen.getByRole("banner")).getByRole("link", { name: "Courses" }),
+    ).toHaveClass("text-meta", "font-medium");
+  });
 });

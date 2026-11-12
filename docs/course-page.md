@@ -57,22 +57,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **10b.** A browser test pins that a phone visitor who taps the bar deep in the description lands with Name fully below the header; Chromium already did, so the planned `scroll-mt-20` class stayed unwritten.
 - [x] **11. Walk the whole page.** The owner walked J1–J3 on desktop and recorded each finding; steps 12 to 14 fix them.
 - **12. Page looks from the walk.** The gaps, link alignment, nav weight, tab names and long-course times match what the walk asked for.
-  - [ ] **12a.** A visitor sees a ghost link lined up with the text and a bolder Courses link, and a timed-out or refunded buyer's tab names that state. **Next**
-    - *Behaviours*:
-      - An expired checkout's tab reads "Checkout timed out", and a refunded one reads "Payment refunded".
-      - A pending or succeeded checkout's tab still reads "Thank you", and so does an API 500; a missing id or a 404 still reads "Checkout not found".
-      - The return page's h1 keeps its words ("Checkout timed out.") and comes from the same words as the tab.
-      - "See current courses →" lines its label up with the text above it, on the ended panel, the 404 page and the return page.
-      - The header's Courses link uses `text-meta` at weight 500 (style guide §7).
-    - *New shared pieces*: one map from checkout status to its title, so the h1 and the tab never disagree.
-    - *Files*:
-      - [see-current-courses-link.tsx](../web/src/components/see-current-courses-link.tsx)
-      - [site-header.tsx](../web/src/features/site-layout/site-header.tsx)
-      - [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx)
-      - [the return page](../web/src/app/%28shop%29/checkout/success/page.tsx)
-    - *Settled*: the Decision row on the header's Courses link.
-    - *Done when*: `check:changed` passes; CSS gets at most one sample check.
-  - [ ] **12b.** A visitor reads a course of 28 days or more as one date range ("Dec 31, 2019 – Nov 30, 2040"), with no weekday line, length or own-time line.
+  - [x] **12a.** A visitor sees a ghost link lined up with the text and a bolder Courses link, and a timed-out or refunded buyer's tab names that state.
+  - [ ] **12b.** A visitor reads a course of 28 days or more as one date range ("Dec 31, 2019 – Nov 30, 2040"), with no weekday line, length or own-time line. **Next**
     - *Behaviours*:
       - A course of exactly 28 days of elapsed time counts as long; one of 27 days 23 hours keeps its three lines.
       - A course from 24 hours to under 28 days, or under 24 hours, keeps today's lines.
