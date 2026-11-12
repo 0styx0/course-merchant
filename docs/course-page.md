@@ -55,8 +55,40 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - **10. Phone buy bar.** A slim bar keeps the button on screen once the panel scrolls away; a tap opens the fields.
   - [x] **10a.** A phone visitor who scrolls past the Enroll button sees a bar with the same label at the bottom of the screen; a tap opens the fields, and the bar never covers the footer.
   - [x] **10b.** A browser test pins that a phone visitor who taps the bar deep in the description lands with Name fully below the header; Chromium already did, so the planned `scroll-mt-20` class stayed unwritten.
-- [ ] **11. Fixes from using the page.** The owner's findings from the full walk are fixed. **Next** Walk J1 at 400 px and desktop, keyboard only, and record each finding here; that walk also checks Name's landing on a real phone.
-- [ ] **12. Checkout button cleanup.** A developer reads the enroll button's code in small files, and a renamed error code breaks a test instead of silently dropping "Try again".
+- [x] **11. Walk the whole page.** The owner walked J1–J3 on desktop and recorded each finding; steps 12 to 14 fix them.
+- **12. Page looks from the walk.** The gaps, link alignment, nav weight, tab names and long-course times match what the walk asked for.
+  - [ ] **12a.** A visitor sees a ghost link lined up with the text and a bolder Courses link, and a timed-out or refunded buyer's tab names that state. **Next**
+    - *Behaviours*:
+      - An expired checkout's tab reads "Checkout timed out", and a refunded one reads "Payment refunded".
+      - A pending or succeeded checkout's tab still reads "Thank you", and so does an API 500; a missing id or a 404 still reads "Checkout not found".
+      - The return page's h1 keeps its words ("Checkout timed out.") and comes from the same words as the tab.
+      - "See current courses →" lines its label up with the text above it, on the ended panel, the 404 page and the return page.
+      - The header's Courses link uses `text-meta` at weight 500 (style guide §7).
+    - *New shared pieces*: one map from checkout status to its title, so the h1 and the tab never disagree.
+    - *Files*:
+      - [see-current-courses-link.tsx](../web/src/components/see-current-courses-link.tsx)
+      - [site-header.tsx](../web/src/features/site-layout/site-header.tsx)
+      - [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx)
+      - [the return page](../web/src/app/%28shop%29/checkout/success/page.tsx)
+    - *Settled*: the Decision row on the header's Courses link.
+    - *Done when*: `check:changed` passes; CSS gets at most one sample check.
+  - [ ] **12b.** A visitor reads a course of 28 days or more as one date range ("Dec 31, 2019 – Nov 30, 2040"), with no weekday line, length or own-time line.
+    - *Behaviours*:
+      - A course of exactly 28 days of elapsed time counts as long; one of 27 days 23 hours keeps its three lines.
+      - A course from 24 hours to under 28 days, or under 24 hours, keeps today's lines.
+      - A visitor in another zone sees no own-time line on a long course, and the panel keeps its shape after load.
+      - An ended long course shows its date range in place of its start date, with no length.
+    - *New shared pieces*: `isLongCourse`, exported from course-time-lines.ts and read by buy-panel.tsx to hide the own-time line; `lengthLine` becomes optional so the ended panel drops the length by itself.
+    - *Files*:
+      - [course-time-lines.ts](../web/src/features/courses/course-time/course-time-lines.ts)
+      - [buy-panel.tsx](../web/src/features/courses/buy-panel/buy-panel.tsx) (+ tests)
+      - [courses.ts](../web/src/mocks/fixtures/courses.ts) (an ended long-course fixture)
+      - `course-time/` adds no file (it sits at the folder limit; step 9's *Re-measure* counts it).
+    - *Needs*: 12a (shares `courses.ts`).
+    - *Settled*: the 28-day Decision row and the amended 24-hour row.
+    - *Done when*: unit tests cover the boundary; then walk J1 at 400 px and desktop, keyboard only (including Name's landing on a real phone), J3, the in-progress course, and the expired and refunded tabs. Any new finding gets fixed in 12b.
+- [ ] **13. Corrected fields clear their message.** A visitor who fixes Name or Email sees its message go at once, and a developer reads the enroll button in small files, so a renamed retry code breaks a test.
+- [ ] **14. A way back from a failed checkout.** A timed-out buyer sees "Try again" linking to the course, and a refunded buyer sees a plain link back to the course.
 
 Every UI milestone's *Done when* also includes: keyboard only (Enter, Escape, Tab), one mock scenario per state it builds, and the owner's findings fixed in its last commit.
 
@@ -177,7 +209,7 @@ Wireframe states and time variants, by the milestone that builds them:
 | The shared description class sets headings, lists, quotes and links; only the public page sets the muted body-lg text | The admin edits in the public structure while typing in full-contrast 16px text | Muted text in the editor too (lower contrast while typing) |
 | Prices use one formatter with `trailingZeroDisplay: "stripIfInteger"`, and 0 reads "Free", on the page, the button and the card | Style guide §8 writes "$99", "$49.50" and "Free"; one rule for one fact | Page-only formatting (the card and the page would show one price two ways); hand-written trimming (Intl does it) |
 | After "Check your email" the note under the button hides and the price stays; the note sits beside the button in checkout code (revisit after use) | The note's promise has come true, and the price records what was paid | Hiding the price too, as wireframe 5 draws it (the price moves into client code, about 30 lines, and the panel shrinks as focus lands); keeping both (the note repeats the notice) |
-| A course lasting 24 hours or more shows its date range above its first start and last end; a shorter one past midnight stays one line (revisit after use) | Note 9's look for long courses, and an overnight class still reads as one sitting | Any course ending on a later date (a 2-hour class past midnight reads "Dec 1 – 2") |
+| A course lasting 24 hours to under 28 days shows its date range above its first start and last end; a shorter one past midnight stays one line (revisit after use) | Note 9's look for long courses, and an overnight class still reads as one sitting | Any course ending on a later date (a 2-hour class past midnight reads "Dec 1 – 2") |
 | The visitor line adds dates when the visitor's start or end date differs from the course's start date | Variants b, c and d follow from one rule; time-only `formatRange` across midnight prints numeric dates | Always dates (repeats the course line's date) |
 | Status words are `Intl.RelativeTimeFormat("en", { numeric: "auto" })` after "Starts ", within 14 of the visitor's calendar days | Intl writes "today", "tomorrow" and "in 4 days"; fixed English matches the English sentence | The visitor's locale ("Starts in 4 Tagen"); hand-written words (more code) |
 | Visitor-only values come from a `useSyncExternalStore` hook whose server snapshot is empty | Hydration matches the server, then React re-renders with the zone; the `react-hooks` lint allows it | `useEffect` plus `setState` (a lint error); `suppressHydrationWarning` (hides real mismatches) |
@@ -185,6 +217,11 @@ Wireframe states and time variants, by the milestone that builds them:
 | The phone bar is a fixed bar the closed Enroll button renders below `md`; while it shows, a `body:has()` rule adds bottom padding (revisit after use) | Owner choice: the fields' open state stays in one component, and the bar never covers the footer's Contact link | A sticky bar after the description like admin's Save bar: natural tab order and no padding rule, but a context provider and the open state moved out of the button (about 40 lines plus a provider in every enroll test) |
 | The bar shows only once the inline button has gone under the header, and hides while the fields are open and after Check your email (revisit after use) | The wireframe draws no bar at the top of the page, and note 21 allows one buy button on screen; a visitor with open fields already has them | Whenever the button is off screen (a bar at the top of a short phone, about 2 fewer lines); a bar that returns to open fields (needs the form's send state outside the form, about 30 lines) |
 | The bar's padding leaves out the safe-area inset (revisit after use) | `env(safe-area-inset-bottom)` reads 0 unless the page sets `viewport-fit=cover` ([WebKit](https://webkit.org/blog/7929/designing-websites-for-iphone-x/)) | The wireframe default plus `viewport-fit=cover` (every page then pads its own notch insets; a sitewide change) |
+| A course lasting 28 days or more shows only its date range, live or ended: no weekday line, length or visitor line (revisit after use) | "7640 days" and a wrapping weekday line are noise, and the range says when it runs | A month range from one year up ("Dec 2019 – Nov 2040"; extreme courses only, about 8 lines); keeping the format (no code, but the walk keeps the odd fixture) |
+| The course title keeps `break-words` | The class already breaks an over-wide word at the edge, and real titles rarely hold one; the page never scrolls sideways | `hyphens: auto` (breaks at a syllable with a hyphen, one class, but ordinary long words at a line end hyphenate too); `overflow-wrap: anywhere` (breaks at the same spot on this h1) |
+| No image placeholder; `dev:mock` serves a visible 1600×900 image | The API refuses to publish a course without an image ([courses.md](courses.md) item 3), so only the old 1×1 mock left the box looking empty | A placeholder drawing (about 15 lines for a state real courses can't reach) |
+| The header's Courses link uses `text-meta` at weight 500 | Style guide §7 sets nav links in meta size and weight 500, and body weight made the link read as plain text | Leaving it at body weight (the walk found it weak) |
+| A refunded checkout links back to its course without "Try again", and a timed-out one gets "Try again" (step 14) | A double buyer keeps access after a refund, so "Try again" would charge them twice | "Try again" for both |
 
 ## Step 1. Site look
 
@@ -531,36 +568,72 @@ No bar at the top, even when the button sits below the fold.
   - Owner changes after using the page: not yet recorded.
   - Rule friction: the planned `scroll-mt-20` class had no failing test, because Chromium already lands Name below the header, so 10b shipped as a test only.
 
-## Step 11. Fixes from using the page
+## Step 11. Walk the whole page
 
 - Why here: the owner's findings from walking everything.
 - Needs: 10.
-- Findings *(temporary)*: from a desktop walk in Chrome; the 400 px phone layout and the bottom bar were not walked.
-  - Name and Email keep their red error after the visitor types a valid value, until the next send. Fix: clear each field's message once its value passes the browser check.
-  - A checkout that timed out or was refunded links only to "See current courses →". Fix: link back to the course with a "Try again" button; the tab title also reads "Thank you" on those states.
-  - A course with no image leaves an empty block, and the ended course's title floats far below the panel. Fix: close the gap or show a placeholder.
-  - A long word in the title breaks mid-word ("…dociou / s"). Fix: `overflow-wrap: anywhere`.
-  - The in-progress panel wraps its time range onto two small grey lines and shows "7840 days". Fix: one short range ("Dec 2019 – Nov 3040").
-  - Small looks: the "See current courses →" ghost link has a left indent that misaligns it with the text above, the "Courses" nav link weighs the same as body text, and the timed-out page's tab title reads "Thank you". Fix: align the link, add weight to the nav link, name each state's tab.
-  - Spacing: the title, summary and first description heading sit tight together. Fix: wider gaps between image, title, summary and description.
-- Size: 2 to 5 commits, set after the walk.
-- Done when: J1 to J3 walked again.
+- Findings *(temporary)*: from a desktop walk in Chrome; the 400 px phone layout and the bottom bar were not walked, so 12b's *Done when* walks them. Each finding and where it is fixed:
+  - Name and Email keep their red error after the visitor types a valid value, until the next send → step 13.
+  - A checkout that timed out or was refunded links only to "See current courses →" → step 14; the tab title reading "Thank you" on those states → 12a.
+  - A course with no image leaves an empty block, and the ended course's title floats far below the panel → no change: only the old 1×1 mock image looked empty, and b103062f8 replaced it (Decision row).
+  - A long word in the title breaks mid-word ("…dociou / s") → no change: `break-words` already makes that break (Decision row).
+  - The in-progress panel wraps its time range onto two small grey lines and shows "7840 days" → 12b.
+  - The "See current courses →" ghost link has a left indent that misaligns it with the text above → 12a. The "Courses" nav link weighs the same as body text → 12a.
+  - The title, summary and first description heading sit tight together → done in b103062f8 (wider gaps, and a visible mock image).
 
-## Step 12. Checkout button cleanup
+## Step 12. Page looks from the walk
 
-- Why here: the newcomer-reader found two weaknesses in code that predates the 5a regroup; they wait until the page is done so the cleanup touches stable code.
+- Why here: the findings are small, UI-only and unrelated to payments, so they ship before the checkout work; 12b's walk also covers the phone layout step 11 skipped.
 - Needs: 11.
-- Findings *(temporary)*:
+- Builds on: [course-details.tsx](../web/src/features/courses/course-details.tsx), [see-current-courses-link.tsx](../web/src/components/see-current-courses-link.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx), [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx), [course-time-lines.ts](../web/src/features/courses/course-time/course-time-lines.ts), [buy-panel.tsx](../web/src/features/courses/buy-panel/buy-panel.tsx), style guide §7, and the Decision rows on the course line, the header and the return page.
+- Size: 2 commits (the overview said 2 to 5: the small fixes share one bundle, and the long-course rule needs its own tests and fixture). The wider gaps and the visible mock image already shipped in b103062f8.
+- Risk: the ghost link's alignment change touches the 404 page, the ended panel and the return page; the long-course rule changes what an ended long course shows.
+- Done when: 12b's walk.
+- Design notes *(temporary)*:
+  - The 28 days count elapsed time like the 24-hour rule beside it, so a DST day never moves a course across the line.
+  - Flow:
+
+```
+/courses/:id panel
+├── under 24 h → time line, own-time line, length             existing
+├── 24 h – under 28 d → range, weekday line, own-time, length existing
+├── 28 d or more → date range only                             12b
+└── ended → start date + length; long → date range only       existing / 12b
+/checkout/success tab
+├── no id / 404 → "Checkout not found"                         existing
+├── 500, pending, succeeded → "Thank you"                      existing
+├── expired → "Checkout timed out"                             12a
+└── refunded → "Payment refunded"                              12a
+```
+
+## Step 13. Corrected fields clear their message
+
+- Why here: the enroll form is stable after 12, and the cleanup splits a file the fix would otherwise grow.
+- Needs: 12.
+- Size: 3 commits (the shared retry code; the split of the enroll button into a new topic folder, because `form/` and `start-checkout/` sit at the folder limit; the clearing). Commit lines come when this step is **Next**.
+- Risk: the Back-from-Stripe fix (4b) lives in the enroll button, so the split must keep its tests green. An API message on a value that already passes the browser check must clear only once the value changes, not on render.
+- Done when: renaming the retry code fails a test, `check:changed` passes with an unchanged test count apart from the new clearing cases, and journey: type a bad email, see its message, fix it and see the message go at once.
+- Settled *(temporary)*: the admin forms clear a message through react-hook-form (`mode: "onTouched"`), which checkout's `useActionState` can't reach; checkout keeps a hand-written clear (about 20 lines) because moving it onto react-hook-form would rewrite sending, the kept values and the Back fix. Add a Decision row when the step's first commit ships.
+- Findings *(temporary)*, from the newcomer-reader (code that predates the 5a regroup):
   - The retryable error codes ("Try again") are plain strings in `enroll-button.tsx`, and the action invents `API_UNREACHABLE` separately. The test repeats the literals. Fix: one exported constant for the code the web app makes itself, imported in all three places.
   - `enroll-button.tsx` runs 246 lines and holds `EnrollForm`, `SendButton`, `FocusedCheckEmailNotice` and the label and retry rules. Fix: move the form and the label rules into their own files, and the focused notice into `check-email-notice/`.
   - The Back-button test "keeps the check-email notice when the page restores after a send" never shows the restore handler ran, because the right outcome is that nothing happens. Fix: restore after a failed send and after a successful one, and compare the two.
   - The test "keeps the typed values beside a field message" types `ami@example.com` while the fake action returns `ami@`, so a reader cannot tell which email the visitor typed. Fix: `submitTypedDetails` types the address the default fake customer holds.
-- Size: 2 commits (the shared code; the split), plus the two test fixes in whichever commit touches `enroll-button.test.tsx`.
-- Done when: renaming the code fails a test, and `check:changed` passes with an unchanged test count.
+  - Both test fixes go in whichever commit touches `enroll-button.test.tsx`.
+
+## Step 14. A way back from a failed checkout
+
+- Why here: it changes the API contract and needs the payments checks, so it waits until the page's looks and the enroll form are settled.
+- Needs: 12.
+- Builds on: the return page's [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx), `getCheckoutStatus` in the OpenAPI contract, [refunds.md](payments/refunds.md).
+- Size: 2 to 3 commits (the contract and API answer carry the course; the web link; maybe the mock scenarios), set when this step is **Next**.
+- Risk: the status answer holds only `status`, so it needs a `courseId`; the payments failure table and `/security-review` apply, because the answer is public.
+- Can wait: the wording of the refunded link.
+- Done when: journey: under `checkoutExpired`, see "Try again" link to the course; under `checkoutRefunded`, see a plain link back to the course with no "Try again".
 
 ## Open questions
 
-- 11, revisit after use: the one-line shift when the visitor's time line appears after the page loads.
+- 12b, walk: the one-line shift when the visitor's time line appears after the page loads (moved from 11).
 
 ## Out of scope
 
