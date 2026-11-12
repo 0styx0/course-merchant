@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { ProblemAlert } from "@/components/problem-alert";
-import { EnrollButton } from "@/features/checkout/start-checkout/enroll-button";
+import { EnrollButton } from "@/features/checkout/enroll-button/enroll-button";
 import { BuyPanel, EndedPanel } from "@/features/courses/buy-panel/buy-panel";
 import {
   getCourseStage,

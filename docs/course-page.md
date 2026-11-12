@@ -60,22 +60,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **12a.** A visitor sees a ghost link lined up with the text and a bolder Courses link, and a timed-out or refunded buyer's tab names that state.
   - [x] **12b.** A visitor reads a course of 28 days or more as one date range ("Dec 31, 2019 – Nov 30, 2040"), with no weekday line, length or own-time line.
 - **13. Corrected fields clear their message.** A visitor who fixes Name or Email sees its message update as they type and go once the value passes, and a developer reads the enroll button in small files with the web's retry code in one place.
-  - [ ] **13a.** A developer finds the enroll button in its own folder, split into small files by job. *(mechanical)* **Next**
-    - *Behaviours*: none change, and the moved tests pass with an unchanged count.
-    - *New shared pieces*: none
-    - *Files*:
-      - new `web/src/features/checkout/enroll-button/` folder:
-        - enroll-button.tsx (open or closed, and the restart after a cache restore)
-        - enroll-form.tsx (the form and the restore report)
-        - send-button.tsx (the label and spinner)
-        - enroll-words.ts (the words for each price, and the retry rule)
-        - after-enroll-note.tsx, use-page-restored-from-cache.ts and its test (moved from `start-checkout/`)
-        - enroll-button.test.tsx (moved from `start-checkout/`)
-      - check-email-notice/focused-check-email-notice.tsx
-      - start-checkout/ keeps the action and the API call with their tests
-      - [page.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx) (import path)
-    - *Done when*: the coverage check pins every moved logic line, and `check:changed` passes with an unchanged test count.
-  - [ ] **13b.** A visitor who fixes Name or Email sees its message update as they type and go once the value passes.
+  - [x] **13a.** A developer finds the enroll button in its own folder, split into small files by job. *(mechanical)*
+  - [ ] **13b.** A visitor who fixes Name or Email sees its message update as they type and go once the value passes. **Next**
     - *Behaviours*:
       - Email's browser message goes once the address passes, and no request goes out.
       - Emptying Name again after its message went brings back "Enter your name.".
@@ -500,7 +486,7 @@ On a phone: the same panel at full width, under the summary.
 
 - Why here: the panel exists in the layout, so its states have a place.
 - Needs: 7.
-- Builds on: [course-details.tsx](../web/src/features/courses/course-details.tsx), [enroll-button.tsx](../web/src/features/checkout/start-checkout/enroll-button.tsx), [formatters.ts](../web/src/lib/utils/formatters.ts), [not-found-message.tsx](../web/src/components/not-found-message.tsx), [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx), the fixtures from step 2, wireframe states 1 to 5 and notes 5, 11 to 14, 20 and 24, style guide §7 and §8.
+- Builds on: [course-details.tsx](../web/src/features/courses/course-details.tsx), [enroll-button.tsx](../web/src/features/checkout/enroll-button/enroll-button.tsx), [formatters.ts](../web/src/lib/utils/formatters.ts), [not-found-message.tsx](../web/src/components/not-found-message.tsx), [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx), the fixtures from step 2, wireframe states 1 to 5 and notes 5, 11 to 14, 20 and 24, style guide §7 and §8.
 - Size: 5 commits (8a to 8e). The overview said 3 to 4: the price format stands alone because it also changes the card, and the shared "See current courses" link needs its own mechanical commit before the ended look.
 - Risk: changing `formatPrice` changes the card.
 - Done when: journey (`dev:mock`, 400 px and desktop, keyboard only): open React Fundamentals (state 1), Mindful Breathing (2), the in-progress course (3) and the ended course by its URL (4) and see the screen drawn in the wireframe; send the free form and see the note hide; walk `notPurchasable` on the in-progress course; no page shows an enrollment count.
@@ -579,7 +565,7 @@ No bar at the top, even when the button sits below the fold.
 
 - Why here: the bar repeats the button the panel (8) already holds.
 - Needs: 8.
-- Builds on: [enroll-button.tsx](../web/src/features/checkout/start-checkout/enroll-button.tsx), [course-details.tsx](../web/src/features/courses/course-details.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx) (the header the bar's watcher measures), admin's `SaveBar` in [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (the look), wireframe note 21, the Decision rows on the phone bar and the one primary button Principle.
+- Builds on: [enroll-button.tsx](../web/src/features/checkout/enroll-button/enroll-button.tsx), [course-details.tsx](../web/src/features/courses/course-details.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx) (the header the bar's watcher measures), admin's `SaveBar` in [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (the look), wireframe note 21, the Decision rows on the phone bar and the one primary button Principle.
 - Size: 2 commits (the bar; the landing below the header). The overview said 2 to 3.
 - Risk: a focused field hidden under the header or the bar.
 - Done when: journey J1 at 400 px; the bar never shows beside the inline button, and the last paragraph and the footer stay clear of it.
@@ -618,7 +604,7 @@ No bar at the top, even when the button sits below the fold.
 
 - Why here: the enroll form is stable after 12, and the cleanup splits a file the fix would otherwise grow.
 - Needs: 12.
-- Builds on: [enroll-button.tsx](../web/src/features/checkout/start-checkout/enroll-button.tsx), [start-checkout.action.ts](../web/src/features/checkout/start-checkout/start-checkout.action.ts), the `form/` folder's `findCheckoutCustomerErrors`, `readCheckoutCustomer` and `useFocusFirstInvalidField`, and admin's react-hook-form `mode: "onTouched"` as the behaviour to match.
+- Builds on: [enroll-button.tsx](../web/src/features/checkout/enroll-button/enroll-button.tsx), [start-checkout.action.ts](../web/src/features/checkout/start-checkout/start-checkout.action.ts), the `form/` folder's `findCheckoutCustomerErrors`, `readCheckoutCustomer` and `useFocusFirstInvalidField`, and admin's react-hook-form `mode: "onTouched"` as the behaviour to match.
 - Size: 3 commits (the overview said 3: the split goes first so the clearing lands in a small file, and the clearing goes before the retry code so the visitor sees the fix in the second commit).
 - Risk: the Back-from-Stripe fix (4b) lives in the enroll button, so the split must keep its tests green. An API message on a value that already passes the browser check must clear only once the value changes, not on render.
 - Done when: grep finds the retry code's text only in its own file, `check:changed` passes with an unchanged test count apart from the new clearing cases, and journey in `dev:mock`: on the free course, type `ami@`, send, see the message, finish the address and see it go; under `emailInvalid`, send a valid address, see the API's message, edit the box and see it go. At 400 px and keyboard only.

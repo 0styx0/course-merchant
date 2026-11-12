@@ -5,14 +5,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   startCheckoutAction,
   type StartCheckoutFormState,
-} from "./start-checkout.action";
+} from "../start-checkout/start-checkout.action";
 import { EnrollButton } from "./enroll-button";
 import {
   CHECKOUT_EMAIL_TOO_LONG_MESSAGE,
   CHECKOUT_NAME_TOO_LONG_MESSAGE,
 } from "../form/checkout-messages";
 
-vi.mock("./start-checkout.action", () => ({ startCheckoutAction: vi.fn() }));
+vi.mock("../start-checkout/start-checkout.action", () => ({
+  startCheckoutAction: vi.fn(),
+}));
 
 const sendAction = vi.mocked(startCheckoutAction);
 const courseId = "11111111-1111-4111-8111-111111111111";
@@ -110,7 +112,7 @@ describe("EnrollButton", () => {
     sendAction.mockReset();
   });
 
-  it("a free form keeps Email me the link after a 503", async () => {
+  it("a free form keeps Email me the link after a payment-provider failure", async () => {
     sendAction.mockResolvedValue({
       ...refused,
       problem: { ...refused.problem, code: "PAYMENT_PROVIDER_UNAVAILABLE" },

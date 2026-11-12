@@ -1,119 +1,26 @@
-"use client";
-
-import { LoaderCircle } from "lucide-react";
 import {
   useActionState,
   type FormEvent,
   type RefObject,
-  useEffect,
   useRef,
   useState,
 } from "react";
 import { ProblemAlert } from "@/components/problem-alert";
-import { Button } from "@/components/ui/button";
 import type { FormFieldError } from "@/lib/api/form-errors";
 import type { CheckoutCustomer } from "@/lib/types";
 import { AfterEnrollNote } from "./after-enroll-note";
-import { ClosedEnrollButton } from "../closed-enroll-button/closed-enroll-button";
-import { CheckEmailNotice } from "../check-email-notice/check-email-notice";
+import { FocusedCheckEmailNotice } from "../check-email-notice/focused-check-email-notice";
 import { findCheckoutCustomerErrors } from "../form/checkout-customer.schema";
 import { CustomerDetailFields } from "../form/customer-detail-fields";
 import { readCheckoutCustomer } from "../form/read-checkout-customer";
 import { useFocusFirstInvalidField } from "../form/use-focus-first-invalid-field";
 import { usePageRestoredFromCache } from "./use-page-restored-from-cache";
+import { SendButton } from "./send-button";
+import type { EnrollWords } from "./enroll-words";
 import {
   startCheckoutAction,
   type StartCheckoutFormState,
-} from "./start-checkout.action";
-
-type EnrollButtonProps = {
-  courseId: string;
-  /** The formatted price of a paid course; absent for a free course. */
-  priceLabel?: string;
-};
-
-type EnrollWords = {
-  open: string;
-  send: string;
-  sending: string;
-  /** The send label after a failure a second press can fix; absent for a free course. */
-  retry?: string;
-};
-
-function makeEnrollWords(priceLabel: string | undefined): EnrollWords {
-  if (priceLabel === undefined) {
-    return {
-      open: "Enroll for free",
-      send: "Email me the link",
-      sending: "Sending…",
-    };
-  }
-  return {
-    open: `Enroll for ${priceLabel}`,
-    send: "Continue to payment",
-    sending: "Opening payment…",
-    retry: "Try again",
-  };
-}
-
-const RETRYABLE_PROBLEM_CODES = new Set([
-  "PAYMENT_PROVIDER_UNAVAILABLE",
-  "INTERNAL_SERVER_ERROR",
-  "API_UNREACHABLE",
-]);
-
-function isRetryableProblemCode(problemCode: string | undefined): boolean {
-  return problemCode !== undefined && RETRYABLE_PROBLEM_CODES.has(problemCode);
-}
-
-function chooseSendLabel(
-  words: EnrollWords,
-  failedProblemCode: string | undefined,
-): string {
-  if (words.retry && isRetryableProblemCode(failedProblemCode)) {
-    return words.retry;
-  }
-  return words.send;
-}
-
-const EMPTY_FORM_STATE: StartCheckoutFormState = { state: "empty" };
-const NO_FIELD_ERRORS: FormFieldError[] = [];
-
-/** Shows one button; pressing it opens the name and email fields in place. */
-export function EnrollButton({ courseId, priceLabel }: EnrollButtonProps) {
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  // A new key remounts the form, which drops React's frozen pending send.
-  const [restartCount, setRestartCount] = useState(0);
-  const [typedCustomer, setTypedCustomer] = useState<CheckoutCustomer>();
-  const words = makeEnrollWords(priceLabel);
-  const isPaid = priceLabel !== undefined;
-
-  function restartWithCustomer(customer: CheckoutCustomer) {
-    setTypedCustomer(customer);
-    setRestartCount((count) => count + 1);
-  }
-
-  if (isFormOpen) {
-    return (
-      <EnrollForm
-        key={restartCount}
-        courseId={courseId}
-        words={words}
-        isPaid={isPaid}
-        startCustomer={typedCustomer}
-        onRestoredFromCache={restartWithCustomer}
-      />
-    );
-  }
-
-  return (
-    <ClosedEnrollButton
-      label={words.open}
-      onOpen={() => setIsFormOpen(true)}
-      note={<AfterEnrollNote isPaid={isPaid} />}
-    />
-  );
-}
+} from "../start-checkout/start-checkout.action";
 
 type EnrollFormProps = {
   courseId: string;
@@ -123,6 +30,9 @@ type EnrollFormProps = {
   startCustomer: CheckoutCustomer | undefined;
   onRestoredFromCache: (typedCustomer: CheckoutCustomer) => void;
 };
+
+const EMPTY_FORM_STATE: StartCheckoutFormState = { state: "empty" };
+const NO_FIELD_ERRORS: FormFieldError[] = [];
 
 /** The browser's messages win over the API's, because they show at once. */
 function chooseFieldErrors(
@@ -145,7 +55,7 @@ function useReportTypedCustomerOnRestore(
   });
 }
 
-function EnrollForm({
+export function EnrollForm({
   courseId,
   words,
   isPaid,
@@ -207,46 +117,5 @@ function EnrollForm({
       </form>
       <AfterEnrollNote isPaid={isPaid} />
     </>
-  );
-}
-
-function FocusedCheckEmailNotice({ email }: { email: string }) {
-  const noticeRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    noticeRef.current?.focus();
-  }, []);
-
-  return (
-    <div className="mt-6">
-      <CheckEmailNotice ref={noticeRef} email={email} />
-    </div>
-  );
-}
-
-function SendButton({
-  words,
-  failedProblemCode,
-  isPending,
-}: {
-  words: EnrollWords;
-  failedProblemCode: string | undefined;
-  isPending: boolean;
-}) {
-  // Not disabled: a disabled button drops the keyboard focus.
-  return (
-    <Button type="submit" aria-busy={isPending} className="w-full">
-      {isPending ? (
-        <>
-          <LoaderCircle aria-hidden="true" className="animate-spin" />
-          {words.sending}
-        </>
-      ) : (
-        <>
-          {chooseSendLabel(words, failedProblemCode)}{" "}
-          <span aria-hidden="true">→</span>
-        </>
-      )}
-    </Button>
   );
 }
