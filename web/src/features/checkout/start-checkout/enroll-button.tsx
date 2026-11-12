@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import type { FormFieldError } from "@/lib/api/form-errors";
 import type { CheckoutCustomer } from "@/lib/types";
 import { AfterEnrollNote } from "./after-enroll-note";
+import { ClosedEnrollButton } from "../closed-enroll-button/closed-enroll-button";
 import { CheckEmailNotice } from "../check-email-notice/check-email-notice";
 import { findCheckoutCustomerErrors } from "../form/checkout-customer.schema";
 import { CustomerDetailFields } from "../form/customer-detail-fields";
@@ -106,17 +107,11 @@ export function EnrollButton({ courseId, priceLabel }: EnrollButtonProps) {
   }
 
   return (
-    <>
-      <Button
-        type="button"
-        aria-expanded={false}
-        className="mt-6 w-full"
-        onClick={() => setIsFormOpen(true)}
-      >
-        {words.open} <span aria-hidden="true">→</span>
-      </Button>
-      <AfterEnrollNote isPaid={isPaid} />
-    </>
+    <ClosedEnrollButton
+      label={words.open}
+      onOpen={() => setIsFormOpen(true)}
+      note={<AfterEnrollNote isPaid={isPaid} />}
+    />
   );
 }
 

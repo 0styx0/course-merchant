@@ -12,7 +12,7 @@ Deviations from the plan line: none
 Passed: lint, type check, unit, integration, e2e
 `feat(scope): subject`
 
-Files changed (table) · Flow as built · Ran it · Tests · Reviews · Retro · Rename grep · /clear reminder
+Files changed (table) · Parts as built · Flow as built · Ran it · Tests · Reviews · Retro · Rename grep · /clear reminder
 ```
 
 ## The top four
@@ -33,6 +33,7 @@ Write these after the top four, in this order.
   - Link each file at the line where its first changed function starts, as `[file.ts](path/file.ts#L42)`. Use the first modified line when the file has no function (a doc or YAML).
   - Show the file name only as link text. Put `(new)` after the link in the file cell.
   - For moves, add the same per-folder BEFORE/AFTER diagrams as in the outline.
+- **Parts as built** ([../_shared/parts-diagram.md](../_shared/parts-diagram.md)), for commits that add or change code. Mark each part that differs from the outline `CHANGED`, with the reason the *Deviations* line gives.
 - **Flow as built** ([../_shared/flow-diagram.md](../_shared/flow-diagram.md)), for commits with logic. Mark each step that differs from the outline `CHANGED`, with the reason the *Deviations* line gives.
 - **Ran it:** for API commits, `Ran it: <what you did and saw>`. For UI commits, `Ran it: <the states walked in Chrome, what you saw>` and the GIF file name.
 - **Tests:** three parts.

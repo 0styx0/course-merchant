@@ -508,6 +508,38 @@ describe("EnrollButton", () => {
     });
   });
 
+  describe("phone buy bar", () => {
+    it("shows no bar on first render", () => {
+      render(<EnrollButton courseId={courseId} />);
+
+      expect(screen.getAllByRole("button", { name: /^Enroll/ })).toHaveLength(
+        1,
+      );
+    });
+
+    it("shows no bar after a failed send", async () => {
+      sendAction.mockResolvedValue(refused);
+      const user = await openFields();
+
+      await submitTypedDetails(user);
+
+      await screen.findByRole("alert");
+      expect(
+        screen.queryByRole("button", { name: /^Enroll/ }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("shows no bar after Check your email", async () => {
+      sendAction.mockResolvedValue(sent);
+      const user = await openFields();
+
+      await submitTypedDetails(user);
+
+      await screen.findByRole("status");
+      expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    });
+  });
+
   describe("on a paid course", () => {
     const priceLabel = "$99";
 

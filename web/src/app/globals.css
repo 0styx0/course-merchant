@@ -92,6 +92,7 @@
 }
 
 :root {
+  --phone-buy-bar-height: 4.5rem;
   --background: oklch(0.977 0.011 95);
   --foreground: oklch(0.153 0.006 107.1);
   --card: oklch(1 0 0);
@@ -174,6 +175,10 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Room under the page so the fixed phone buy bar never covers the footer. */
+  body:has([data-phone-buy-bar]) {
+    @apply pb-(--phone-buy-bar-height) md:pb-0;
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {

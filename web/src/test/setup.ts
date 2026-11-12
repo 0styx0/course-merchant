@@ -2,9 +2,12 @@ import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 import { server } from "../mocks/server";
 import { FROZEN_NOW } from "./frozen-now";
 import { spyTemporalNowOnDate } from "./spy-temporal-now-on-date";
+import { installInertObservers } from "./stub-observers";
 
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
+
+installInertObservers();
 
 beforeAll(() => {
   server.listen({

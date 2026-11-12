@@ -9,7 +9,7 @@ Used in the *Outline* section of [SKILL.md](SKILL.md). Follow CLAUDE.md *Writing
 Today: …
 After this commit: …
 Why this way: …
-What (table of files, file count) · Flow · Trade-offs · Questions · Tests · Doc update   <- full outline only
+What (table of files, file count) · Parts · Flow · Trade-offs · Questions · Tests · Doc update   <- full outline only
 Preflight: size … | coverage … | siblings read … | library API …
 ```
 
@@ -49,7 +49,7 @@ A plan-conformant commit may contain logic.
 
 Give a **short outline** of about 5 lines after the opening.
 - It has the files (with the per-folder BEFORE/AFTER diagram for moves), the check that proves nothing changed (type check, test count before and after), the doc tick, the file count and the *Preflight* line.
-- For a plan-conformant commit with logic, add the flow diagram ([../_shared/flow-diagram.md](../_shared/flow-diagram.md)) and the test table.
+- For a plan-conformant commit with logic, add the parts diagram ([../_shared/parts-diagram.md](../_shared/parts-diagram.md)), the flow diagram ([../_shared/flow-diagram.md](../_shared/flow-diagram.md)) and the test table.
 - Leave out *Terms*, *Trade-offs*, *Questions* and *Tests* unless one applies. Define a new term in the bullet where it first appears.
 - Switch to the full outline, and wait, when the commit has any of these: new logic that is not plan-conformant, a changed lint rule, a new decision row, a question for the owner, code the tests don't pin.
 - Stop and give the full outline when a commit labelled mechanical or plan-conformant turns out to change behaviour or design while you work. The hand-off lists any deviation.
@@ -69,6 +69,7 @@ After the opening, write these sections in order:
 - **Differences from *New shared pieces*:** compare the commit line's *New shared pieces* with what this commit reuses and copies beside a sibling (create and edit, two pages).
   - A copy needs a reason it cannot be shared.
   - A shared piece the line does not list goes under *Questions*.
+- **Parts:** for a commit that adds or changes code, the diagram in [../_shared/parts-diagram.md](../_shared/parts-diagram.md), so the owner sees what each part does before any code exists.
 - **Flow:** for a commit with logic, the diagram in [../_shared/flow-diagram.md](../_shared/flow-diagram.md), so the owner approves the behaviour and not only the files.
 - **Trade-offs:** only strong contenders, one bullet each: what the option would give, what it would cost, why you did not pick it. When no alternative is strong, write "none worth listing" and add no weak one.
 - **Questions:** any design or behaviour change the doc has not decided, each with your recommendation.

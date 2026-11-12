@@ -53,38 +53,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **9d.** A visitor whose UTC offset differs reads the course in their own time, after the page loads.
   - [x] **9e.** A visitor within 14 days of the start reads "Starts today", "Starts tomorrow" or "Starts in 4 days", in their own calendar days, and `dev:mock`'s `startsSoon` scenario serves a course 4 days out.
 - **10. Phone buy bar.** A slim bar keeps the button on screen once the panel scrolls away; a tap opens the fields.
-  - [ ] **10a.** A phone visitor who scrolls past the Enroll button sees a bar with the same label at the bottom of the screen; a tap opens the fields, and the bar never covers the footer. **Next**
-    - *Behaviours*:
-      - No bar on first load, so server and browser HTML match.
-      - The bar shows once the inline button is fully hidden above the header's bottom edge (under the 56 px header counts as gone).
-      - No bar while the inline button is in view or still below the screen (short phone, top of page).
-      - The bar hides again when the visitor scrolls back to the button.
-      - The bar reads the button's label ("Enroll for $99 →", "Enroll for free →"), also on an in-progress course.
-      - A tap opens the fields in place with focus on Name, and the bar disappears.
-      - No bar while the fields are open, after a failed send, or after Check your email.
-      - An ended course has no button, so no bar.
-      - At 1280 px the bar never shows (browser, one sample).
-      - At 400 px scrolled to the bottom, the footer's Contact link sits above the bar (browser).
-    - *New shared pieces*:
-      - A fake IntersectionObserver installed for every Vitest run, because jsdom has none and every Enroll button now uses one.
-        - With no report from a test there is no bar, so today's enroll tests pass unchanged.
-    - *Files*:
-      - [closed-enroll-button.tsx](../web/src/features/checkout/closed-enroll-button/closed-enroll-button.tsx) (new: inline button and bar, taking the label, `onOpen` and the note as props so the folder imports nothing from `start-checkout/`)
-      - `web/src/features/checkout/closed-enroll-button/phone-buy-bar.tsx` (new: fixed bottom, `md:hidden`, `--background`, 1px `--border` top, 12px padding)
-      - `web/src/features/checkout/closed-enroll-button/use-scrolled-past-top.ts` (new: IntersectionObserver, top margin −56 px for the header)
-      - [enroll-button.tsx](../web/src/features/checkout/start-checkout/enroll-button.tsx) (renders the closed button)
-      - [globals.css](../web/src/app/globals.css) (below `md`, body bottom padding while the bar shows)
-      - [setup.ts](../web/src/test/setup.ts) plus a helper beside it (the fake observer)
-      - `web/tests/browser/courses/phone-buy-bar.spec.ts` (new)
-      - Folder counts: `closed-enroll-button/` 6 with tests, `start-checkout/` stays 9, `src/test/` 8.
-    - *Settled*:
-      - The decision rows on the phone bar's placement and when it shows.
-      - Principle "One primary button on screen".
-      - Wireframe note 21.
-    - *Done when*:
-      - `check:changed` and the browser spec pass.
-      - `dev:mock` at 400 px shows the bar after the panel and none at the top.
-  - [ ] **10b.** A phone visitor who taps the bar deep in the description lands with Name fully below the header, ready to type.
+  - [x] **10a.** A phone visitor who scrolls past the Enroll button sees a bar with the same label at the bottom of the screen; a tap opens the fields, and the bar never covers the footer.
+  - [ ] **10b.** A phone visitor who taps the bar deep in the description lands with Name fully below the header, ready to type. **Next**
     - *Behaviours*:
       - After a tap at the bottom of a long description, Name has focus and its box sits fully below the 56 px header (browser).
     - *New shared pieces*: none
@@ -563,7 +533,7 @@ No bar at the top, even when the button sits below the fold.
 
 - Why here: the bar repeats the button the panel (8) already holds.
 - Needs: 8.
-- Builds on: [enroll-button.tsx](../web/src/features/checkout/start-checkout/enroll-button.tsx), [course-details.tsx](../web/src/features/courses/course-details.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx) (the 56px phone height the bar's top margin measures from), admin's `SaveBar` in [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (the look), wireframe note 21, the Decision rows on the phone bar and the one primary button Principle.
+- Builds on: [enroll-button.tsx](../web/src/features/checkout/start-checkout/enroll-button.tsx), [course-details.tsx](../web/src/features/courses/course-details.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx) (the header the bar's watcher measures), admin's `SaveBar` in [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (the look), wireframe note 21, the Decision rows on the phone bar and the one primary button Principle.
 - Size: 2 commits (the bar; the landing below the header). The overview said 2 to 3.
 - Risk: a focused field hidden under the header or the bar.
 - Done when: journey J1 at 400 px; the bar never shows beside the inline button, and the last paragraph and the footer stay clear of it.
@@ -584,7 +554,7 @@ fields open, failed send, Check your email → no bar                   10a
 
 - Design notes *(temporary)*:
   - The button, the bar and the watcher share one component that unmounts when the fields open, so the observer stops with it.
-  - The −56 px margin matches the phone header's `h-14`; a comment says so, like `md:top-24` in course-details.tsx.
+  - The watcher measures the header's real bottom edge (found by a `data-site-header` marker) and measures again when the header resizes, so no pixel copy of `h-14` exists.
   - Safe area: no `env(safe-area-inset-bottom)`; it reads 0 without `viewport-fit=cover`, which this site doesn't set.
   - Tab order: the bar sits right after the inline button in the DOM; a keyboard visitor focused on that button sees no bar.
   - Twin: admin's `SaveBar` look (`border-t bg-background py-3`); the behaviour differs (fixed, not sticky). Admin's `clearOfStickyBoxes` stays private: its 13rem fits admin's top box.

@@ -7,7 +7,10 @@ import { PhoneMenu } from "./phone-menu";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-10 h-14 md:h-18 bg-background">
+    <header
+      data-site-header
+      className="sticky top-0 z-10 h-14 md:h-18 bg-background"
+    >
       <nav
         aria-label="Main"
         className={`${pageFrameClasses} flex h-full items-center justify-between`}
