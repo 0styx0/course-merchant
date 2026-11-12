@@ -59,7 +59,53 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - **12. Page looks from the walk.** The gaps, link alignment, nav weight, tab names and long-course times match what the walk asked for.
   - [x] **12a.** A visitor sees a ghost link lined up with the text and a bolder Courses link, and a timed-out or refunded buyer's tab names that state.
   - [x] **12b.** A visitor reads a course of 28 days or more as one date range ("Dec 31, 2019 – Nov 30, 2040"), with no weekday line, length or own-time line.
-- [ ] **13. Corrected fields clear their message.** A visitor who fixes Name or Email sees its message go at once, and a developer reads the enroll button in small files, so a renamed retry code breaks a test. **Next**
+- **13. Corrected fields clear their message.** A visitor who fixes Name or Email sees its message update as they type and go once the value passes, and a developer reads the enroll button in small files with the web's retry code in one place.
+  - [ ] **13a.** A developer finds the enroll button in its own folder, split into small files by job. *(mechanical)* **Next**
+    - *Behaviours*: none change, and the moved tests pass with an unchanged count.
+    - *New shared pieces*: none
+    - *Files*:
+      - new `web/src/features/checkout/enroll-button/` folder:
+        - enroll-button.tsx (open or closed, and the restart after a cache restore)
+        - enroll-form.tsx (the form and the restore report)
+        - send-button.tsx (the label and spinner)
+        - enroll-words.ts (the words for each price, and the retry rule)
+        - after-enroll-note.tsx, use-page-restored-from-cache.ts and its test (moved from `start-checkout/`)
+        - enroll-button.test.tsx (moved from `start-checkout/`)
+      - check-email-notice/focused-check-email-notice.tsx
+      - start-checkout/ keeps the action and the API call with their tests
+      - [page.tsx](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx) (import path)
+    - *Done when*: the coverage check pins every moved logic line, and `check:changed` passes with an unchanged test count.
+  - [ ] **13b.** A visitor who fixes Name or Email sees its message update as they type and go once the value passes.
+    - *Behaviours*:
+      - Email's browser message goes once the address passes, and no request goes out.
+      - Emptying Name again after its message went brings back "Enter your name.".
+      - An API message on a value the browser check passes stays after the render and goes at that box's first change.
+      - After an API message goes, a value the browser check refuses shows the browser's message.
+      - Fixing Email leaves Name's message in place, and focus stays in Email.
+      - A box that had no message stays quiet while the visitor types a wrong value, until the next send.
+      - The next send checks both boxes again from scratch.
+      - The error box above the fields stays until the next send.
+    - *New shared pieces*: none (the hook serves only the enroll form)
+    - *Files*:
+      - enroll-button/use-rechecked-field-errors.ts and its test (new; the folder reaches the file limit, so the hook goes here, not in `form/`)
+      - enroll-button/enroll-form.tsx
+      - enroll-button/enroll-button.test.tsx
+    - *Settled*: the first two Decision rows added by step 13's plan pass.
+    - *Done when*: `check:changed` passes, and the journey in *Done when* below works.
+  - [ ] **13c.** A developer finds the web's "can't reach the server" problem in one file, and the enroll tests say what the visitor typed and what the restore did.
+    - *Behaviours*:
+      - A paid form reads "Try again" after the unreachable problem, and both tests import its code.
+      - The API's two retry codes stay as literals in the test, so dropping one from the rule fails it.
+      - `submitTypedDetails` types the email the default fake customer holds.
+      - One test restores the page after a failed send and after a successful one, and compares the two.
+    - *New shared pieces*: the unreachable problem. The action makes it, and the button and two tests read its code.
+    - *Files*:
+      - start-checkout/unreachable-problem.ts (new; a `"use server"` file may export only async functions, so it cannot live in the action)
+      - start-checkout/start-checkout.action.ts
+      - start-checkout/start-checkout.action.test.ts
+      - enroll-button/enroll-words.ts
+      - enroll-button/enroll-button.test.tsx
+    - *Done when*: grep finds the code's text only in its new file.
 - [ ] **14. A way back from a failed checkout.** A timed-out buyer sees "Try again" linking to the course, and a refunded buyer sees a plain link back to the course.
 
 Every UI milestone's *Done when* also includes: keyboard only (Enter, Escape, Tab), one mock scenario per state it builds, and the owner's findings fixed in its last commit.
@@ -194,6 +240,8 @@ Wireframe states and time variants, by the milestone that builds them:
 | No image placeholder; `dev:mock` serves a visible 1600×900 image | The API refuses to publish a course without an image ([courses.md](courses.md) item 3), so only the old 1×1 mock left the box looking empty | A placeholder drawing (about 15 lines for a state real courses can't reach) |
 | The header's Courses link uses `text-meta` at weight 500 | Style guide §7 sets nav links in meta size and weight 500, and body weight made the link read as plain text | Leaving it at body weight (the walk found it weak) |
 | A refunded checkout links back to its course without "Try again", and a timed-out one gets "Try again" (step 14) | A double buyer keeps access after a refund, so "Try again" would charge them twice | "Try again" for both |
+| A Name or Email message re-checks as the visitor types in its box: it changes, or goes once the value passes; an API message goes at the box's first change; a box without a message stays quiet until the next send (revisit after use) | Admin's react-hook-form (`onTouched`) behaves the same; checkout's `useActionState` can't use react-hook-form, so a small hook does it | Hiding on the first keystroke (about 5 fewer lines, but "ami@e" shows no message); re-checking on blur (the old message shows while Enter sends); moving checkout onto react-hook-form (rewrites sending, the kept values and the Back fix) |
+| The error box above the fields stays until the next send (revisit after use) | It repeats the API's answer (Principle: the API's words show unchanged), and a field edit fixes no Stripe or ended-course failure | Hiding it once every field message goes (about 3 lines, but the visitor loses the API's words before sending) |
 
 ## Step 1. Site look
 
@@ -570,16 +618,39 @@ No bar at the top, even when the button sits below the fold.
 
 - Why here: the enroll form is stable after 12, and the cleanup splits a file the fix would otherwise grow.
 - Needs: 12.
-- Size: 3 commits (the shared retry code; the split of the enroll button into a new topic folder, because `form/` and `start-checkout/` sit at the folder limit; the clearing). This step has no commit lines yet: `/next-commit` runs `/plan-create-implementation` to write them.
+- Builds on: [enroll-button.tsx](../web/src/features/checkout/start-checkout/enroll-button.tsx), [start-checkout.action.ts](../web/src/features/checkout/start-checkout/start-checkout.action.ts), the `form/` folder's `findCheckoutCustomerErrors`, `readCheckoutCustomer` and `useFocusFirstInvalidField`, and admin's react-hook-form `mode: "onTouched"` as the behaviour to match.
+- Size: 3 commits (the overview said 3: the split goes first so the clearing lands in a small file, and the clearing goes before the retry code so the visitor sees the fix in the second commit).
 - Risk: the Back-from-Stripe fix (4b) lives in the enroll button, so the split must keep its tests green. An API message on a value that already passes the browser check must clear only once the value changes, not on render.
-- Done when: renaming the retry code fails a test, `check:changed` passes with an unchanged test count apart from the new clearing cases, and journey: type a bad email, see its message, fix it and see the message go at once.
-- Settled *(temporary)*: the admin forms clear a message through react-hook-form (`mode: "onTouched"`), which checkout's `useActionState` can't reach; checkout keeps a hand-written clear (about 20 lines) because moving it onto react-hook-form would rewrite sending, the kept values and the Back fix. Add a Decision row when the step's first commit ships.
-- Findings *(temporary)*, from the newcomer-reader (code that predates the 5a regroup):
-  - The retryable error codes ("Try again") are plain strings in `enroll-button.tsx`, and the action invents `API_UNREACHABLE` separately. The test repeats the literals. Fix: one exported constant for the code the web app makes itself, imported in all three places.
-  - `enroll-button.tsx` runs 246 lines and holds `EnrollForm`, `SendButton`, `FocusedCheckEmailNotice` and the label and retry rules. Fix: move the form and the label rules into their own files, and the focused notice into `check-email-notice/`.
-  - The Back-button test "keeps the check-email notice when the page restores after a send" never shows the restore handler ran, because the right outcome is that nothing happens. Fix: restore after a failed send and after a successful one, and compare the two.
-  - The test "keeps the typed values beside a field message" types `ami@example.com` while the fake action returns `ami@`, so a reader cannot tell which email the visitor typed. Fix: `submitTypedDetails` types the address the default fake customer holds.
-  - Both test fixes go in whichever commit touches `enroll-button.test.tsx`.
+- Done when: grep finds the retry code's text only in its own file, `check:changed` passes with an unchanged test count apart from the new clearing cases, and journey in `dev:mock`: on the free course, type `ami@`, send, see the message, finish the address and see it go; under `emailInvalid`, send a valid address, see the API's message, edit the box and see it go. At 400 px and keyboard only.
+- Sketch *(temporary)*:
+
+  ```
+  After a send:              Typing "ami@exa…":        Address passes:
+  Name  [Ami Cohen    ]      Name  [Ami Cohen    ]     Name  [Ami Cohen    ]
+  Email [ami@         ]red   Email [ami@exa      ]red  Email [ami@example.com]
+   That email address...      That email address...    We send the course link…
+  [Email me the link →]      [Email me the link →]     [Email me the link →]
+  ```
+
+- Flow *(temporary)*:
+
+  ```
+  Visitor sends; a message shows under a box        existing (3c, 3e)
+  └── Visitor types in a box
+      ├── no message at the send ── stays quiet        13b
+      └── had a message ── re-check that box           13b
+          ├── browser check refuses ── its message     13b
+          └── passes ── the message goes                13b
+  Visitor sends again ── re-checks reset, full check   existing (3e), reset 13b
+  ```
+
+- Design notes *(temporary)*:
+  - `useFocusFirstInvalidField` keeps the send-time list. Fed the re-checked list, it would move focus to Name on every keystroke in Email.
+  - The re-check reuses `findCheckoutCustomerErrors` and `readCheckoutCustomer` on the whole form, then reads the edited box's path. It needs no second schema.
+  - The hook stores only the re-checked messages, keyed by box, and works out what shows from the send-time list.
+  - When a message goes, the boxes below move up one line, as they do in admin.
+  - The retry code needs its own file because Next refuses any export but an async function from a `"use server"` file. The API's two retry codes stay strings, because the contract types `code` as a string.
+- Findings *(temporary)*, from the newcomer-reader, each placed in a commit above: the retry-code constant is 13c, the file split is 13a, the restore test and the typed-email test are 13c.
 
 ## Step 14. A way back from a failed checkout
 
