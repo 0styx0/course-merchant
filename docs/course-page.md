@@ -52,7 +52,50 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **9c.** The panel shows when the course runs as one line in its own zone and the visitor's locale, and how long it lasts; a course of 24 hours or more shows its date range above its first start and last end.
   - [x] **9d.** A visitor whose UTC offset differs reads the course in their own time, after the page loads.
   - [x] **9e.** A visitor within 14 days of the start reads "Starts today", "Starts tomorrow" or "Starts in 4 days", in their own calendar days, and `dev:mock`'s `startsSoon` scenario serves a course 4 days out.
-- [ ] **10. Phone buy bar.** A slim bar keeps the button on screen once the panel scrolls away; a tap opens the fields. **Next** Split into commits with /plan-create-implementation
+- **10. Phone buy bar.** A slim bar keeps the button on screen once the panel scrolls away; a tap opens the fields.
+  - [ ] **10a.** A phone visitor who scrolls past the Enroll button sees a bar with the same label at the bottom of the screen; a tap opens the fields, and the bar never covers the footer. **Next**
+    - *Behaviours*:
+      - No bar on first load, so server and browser HTML match.
+      - The bar shows once the inline button is fully hidden above the header's bottom edge (under the 56 px header counts as gone).
+      - No bar while the inline button is in view or still below the screen (short phone, top of page).
+      - The bar hides again when the visitor scrolls back to the button.
+      - The bar reads the button's label ("Enroll for $99 →", "Enroll for free →"), also on an in-progress course.
+      - A tap opens the fields in place with focus on Name, and the bar disappears.
+      - No bar while the fields are open, after a failed send, or after Check your email.
+      - An ended course has no button, so no bar.
+      - At 1280 px the bar never shows (browser, one sample).
+      - At 400 px scrolled to the bottom, the footer's Contact link sits above the bar (browser).
+    - *New shared pieces*:
+      - A fake IntersectionObserver installed for every Vitest run, because jsdom has none and every Enroll button now uses one.
+        - With no report from a test there is no bar, so today's enroll tests pass unchanged.
+    - *Files*:
+      - [closed-enroll-button.tsx](../web/src/features/checkout/closed-enroll-button/closed-enroll-button.tsx) (new: inline button and bar, taking the label, `onOpen` and the note as props so the folder imports nothing from `start-checkout/`)
+      - `web/src/features/checkout/closed-enroll-button/phone-buy-bar.tsx` (new: fixed bottom, `md:hidden`, `--background`, 1px `--border` top, 12px padding)
+      - `web/src/features/checkout/closed-enroll-button/use-scrolled-past-top.ts` (new: IntersectionObserver, top margin −56 px for the header)
+      - [enroll-button.tsx](../web/src/features/checkout/start-checkout/enroll-button.tsx) (renders the closed button)
+      - [globals.css](../web/src/app/globals.css) (below `md`, body bottom padding while the bar shows)
+      - [setup.ts](../web/src/test/setup.ts) plus a helper beside it (the fake observer)
+      - `web/tests/browser/courses/phone-buy-bar.spec.ts` (new)
+      - Folder counts: `closed-enroll-button/` 6 with tests, `start-checkout/` stays 9, `src/test/` 8.
+    - *Settled*:
+      - The decision rows on the phone bar's placement and when it shows.
+      - Principle "One primary button on screen".
+      - Wireframe note 21.
+    - *Done when*:
+      - `check:changed` and the browser spec pass.
+      - `dev:mock` at 400 px shows the bar after the panel and none at the top.
+  - [ ] **10b.** A phone visitor who taps the bar deep in the description lands with Name fully below the header, ready to type.
+    - *Behaviours*:
+      - After a tap at the bottom of a long description, Name has focus and its box sits fully below the 56 px header (browser).
+    - *New shared pieces*: none
+    - *Files*:
+      - [checkout-text-field.tsx](../web/src/features/checkout/form/checkout-text-field.tsx) (`scroll-mt-20`: the 56 px header plus a 24 px gap, on every checkout box)
+      - `web/tests/browser/courses/phone-buy-bar.spec.ts` (one test)
+      - `docs/course-page.md` (ticks, retro, owner's findings)
+    - *Done when*:
+      - The browser spec passes.
+      - J1 is walked at 400 px and desktop, keyboard only.
+      - The owner's findings are fixed.
 - [ ] **11. Fixes from using the page.** The owner's findings from the full walk are fixed.
 - [ ] **12. Checkout button cleanup.** A developer reads the enroll button's code in small files, and a renamed error code breaks a test instead of silently dropping "Try again".
 
@@ -180,6 +223,9 @@ Wireframe states and time variants, by the milestone that builds them:
 | Status words are `Intl.RelativeTimeFormat("en", { numeric: "auto" })` after "Starts ", within 14 of the visitor's calendar days | Intl writes "today", "tomorrow" and "in 4 days"; fixed English matches the English sentence | The visitor's locale ("Starts in 4 Tagen"); hand-written words (more code) |
 | Visitor-only values come from a `useSyncExternalStore` hook whose server snapshot is empty | Hydration matches the server, then React re-renders with the zone; the `react-hooks` lint allows it | `useEffect` plus `setState` (a lint error); `suppressHydrationWarning` (hides real mismatches) |
 | Browser tests check one case each for Accept-Language, the visitor zone and the browser clock; unit tests carry variants a to g | `.claude/rules/browser-tests.md`; Node's ICU is the server's | One browser test per variant (about 9 slow tests) |
+| The phone bar is a fixed bar the closed Enroll button renders below `md`; while it shows, a `body:has()` rule adds bottom padding (revisit after use) | Owner choice: the fields' open state stays in one component, and the bar never covers the footer's Contact link | A sticky bar after the description like admin's Save bar: natural tab order and no padding rule, but a context provider and the open state moved out of the button (about 40 lines plus a provider in every enroll test) |
+| The bar shows only once the inline button has gone under the header, and hides while the fields are open and after Check your email (revisit after use) | The wireframe draws no bar at the top of the page, and note 21 allows one buy button on screen; a visitor with open fields already has them | Whenever the button is off screen (a bar at the top of a short phone, about 2 fewer lines); a bar that returns to open fields (needs the form's send state outside the form, about 30 lines) |
+| The bar's padding leaves out the safe-area inset (revisit after use) | `env(safe-area-inset-bottom)` reads 0 unless the page sets `viewport-fit=cover` ([WebKit](https://webkit.org/blog/7929/designing-websites-for-iphone-x/)) | The wireframe default plus `viewport-fit=cover` (every page then pads its own notch insets; a sitewide change) |
 
 ## Step 1. Site look
 
@@ -502,25 +548,47 @@ Visitor opens /courses/:id
 
 ```
 Phone after 10
-Top of page              Scrolled into description    After tapping the bar
+Top of page              Scrolled past the panel      After tapping the bar
 +------------------+     +------------------+         +------------------+
 | header        ☰  |     | header        ☰  |         | header        ☰  |
-| [ image ]        |     | ...Before you    |         | $99              |
-| h1, summary      |     |    start.        |         | Name [_______]   | <- focus,
-| +--------------+ |     | 1. Install ...   |         | Email [______]   |    clear of
-| | panel        | |     | > Small apps ... |         | [Continue to     |    the header
-| | [Enroll $99→]| |     |                  |         |  payment →]      |
-| +--------------+ |     |------------------|         |                  |
-| description...   |     |[Enroll for $99 →]| <- bar  | (bar hidden)     |
+| [ image ]        |     | ...Before you    |         | Name [_______]   | <- focus,
+| h1, summary      |     |    start.        |         | Email [______]   |    below the
+| +--------------+ |     | 1. Install ...   |         | [Continue to     |    header
+| | panel        | |     |                  |         |  payment →]      |
+| | [Enroll $99→]| |     |------------------|         | After you enroll |
+| +--------------+ |     |[Enroll for $99 →]| <- bar  | (no bar)         |
 +------------------+     +------------------+         +------------------+
-(no bar: the panel is in view)
+No bar at the top, even when the button sits below the fold.
 ```
 
 - Why here: the bar repeats the button the panel (8) already holds.
 - Needs: 8.
-- Size: 2 to 3 commits.
+- Builds on: [enroll-button.tsx](../web/src/features/checkout/start-checkout/enroll-button.tsx), [course-details.tsx](../web/src/features/courses/course-details.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx) (the 56px phone height the bar's top margin measures from), admin's `SaveBar` in [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (the look), wireframe note 21, the Decision rows on the phone bar and the one primary button Principle.
+- Size: 2 commits (the bar; the landing below the header). The overview said 2 to 3.
 - Risk: a focused field hidden under the header or the bar.
-- Done when: journey J1 at 400 px; the bar never shows beside the inline button, and the last paragraph stays clear of it.
+- Done when: journey J1 at 400 px; the bar never shows beside the inline button, and the last paragraph and the footer stay clear of it.
+- Flow *(temporary)*:
+
+```
+Phone visitor opens a course
+├── ended → no button, no bar                                  existing (8e)
+└── live, fields closed
+    ├── button in view, or still below the screen → no bar           10a
+    ├── button hidden above the header's edge → bar at the bottom    10a
+    │   ├── page bottom → footer clear of the bar                    10a
+    │   └── tap → fields open, bar gone, focus on Name               10a
+    │       └── Name lands fully below the header                    10b
+    └── md and up → never a bar                                      10a
+fields open, failed send, Check your email → no bar                   10a
+```
+
+- Design notes *(temporary)*:
+  - The button, the bar and the watcher share one component that unmounts when the fields open, so the observer stops with it.
+  - The −56 px margin matches the phone header's `h-14`; a comment says so, like `md:top-24` in course-details.tsx.
+  - Safe area: no `env(safe-area-inset-bottom)`; it reads 0 without `viewport-fit=cover`, which this site doesn't set.
+  - Tab order: the bar sits right after the inline button in the DOM; a keyboard visitor focused on that button sees no bar.
+  - Twin: admin's `SaveBar` look (`border-t bg-background py-3`); the behaviour differs (fixed, not sticky). Admin's `clearOfStickyBoxes` stays private: its 13rem fits admin's top box.
+  - Can wait (10a outline): whether the bar button carries `aria-expanded={false}` like the inline one.
 
 ## Step 11. Fixes from using the page
 
