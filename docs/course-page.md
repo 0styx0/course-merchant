@@ -63,7 +63,42 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **13a.** A developer finds the enroll button in its own folder, split into small files by job. *(mechanical)*
   - [x] **13b.** A visitor who fixes Name or Email sees its message update as they type and go once the value passes.
   - [x] **13c.** A developer finds the web's "can't reach the server" problem in one file, and the enroll tests say what the visitor typed and what the restore did.
-- [ ] **14. A way back from a failed checkout.** A timed-out buyer sees "Try again" linking to the course, and a refunded buyer sees a plain link back to the course. **Next**
+- **14. A way back from a failed checkout.** A timed-out buyer sees "Try again" linking to the course, and a refunded buyer sees a plain link back to the course.
+  - [ ] **14a.** The return page's status answer names the course the checkout was for. **Next**
+    - *Behaviours*:
+      - `GET /v1/checkout-sessions/{checkoutId}` answers `{ status, courseId }` for every status (pending, succeeded, expired, refunded).
+      - The answer holds only those two fields: no email, name, price or customer.
+      - It gives the course id even when the course has since gone hidden or ended; the course page then shows its own not-found or Ended panel.
+      - An unknown checkout id still answers 404 `CHECKOUT_NOT_FOUND`, "No checkout exists with ID cs_test_unknown."
+      - The web mock's status handlers answer with `reactCourse.id`, so every `dev:mock` and test scenario carries a real fixture course.
+    - *New shared pieces*: `courseId` on the `CheckoutStatus` schema (the API and the web page both read it), reusing `#/components/schemas/CourseId`.
+    - *Files*:
+      - [openapi-v1.yaml](../api/openapi/openapi-v1.yaml) (`CheckoutStatus` gains required `courseId`; example updated)
+      - [payments.repository.ts](../api/src/payments/payments.repository.ts) (the status query also reads `coursePrice.courseId`, copying `findPaymentForFulfillment`'s include; renamed for what it returns; its return type sits beside `FulfillmentPayment`)
+      - [checkout.service.ts](../api/src/checkout/checkout.service.ts) (`getCheckoutStatus` returns both)
+      - [get-checkout-status.ts](../web/src/mocks/handlers/checkout/get-checkout-status.ts) (`makeStatusHandler` adds `reactCourse.id`)
+      - generated: `api/src/generated/api.d.ts`, `web/src/lib/api/generated.ts`
+      - tests: the payments repository integration spec, `checkout.service.wired-and-status.spec.ts`, `checkout.service.spec.ts` (uses the renamed query), e2e `checkout.status.spec.ts` (exact body match)
+    - *Settled*: Decision row on the status answer's `courseId`.
+    - *Deviations to state at hand-off*: touches `api/` and `web/` because the pre-commit hook regenerates both type files when the contract changes, and the web mock's `satisfies` check fails without a course id; splitting would leave a red commit.
+    - *Done when*: `yarn --cwd api check:changed` and `yarn --cwd web check:changed` pass; `/security-review` run.
+  - [ ] **14b.** A timed-out buyer sees "Try again →" leading back to the course, and a refunded buyer sees "Back to the course →".
+    - *Behaviours*:
+      - Expired: h1 "Checkout timed out.", the sentence, then a primary-styled link "Try again →" to `/courses/{courseId}`; no "See current courses →".
+      - Refunded: h1 "Payment refunded.", the sentence, then a ghost link "Back to the course →" to `/courses/{courseId}`, lined up with the text like today's ghost link; no "Try again" and no "See current courses →".
+      - Succeeded and pending show no course link (unchanged).
+      - The link sits outside the live region, so each state still holds exactly one `status` region.
+      - A pending page that turns expired or refunded on a re-check shows the new link (the server re-renders with the fresh answer).
+    - *New shared pieces*: a ghost arrow link in `web/src/components/` taking `href` and label, carrying the `-ml-6` alignment; `SeeCurrentCoursesLink` renders it, so the two ghost links share one alignment rule.
+    - *Files*:
+      - [see-current-courses-link.tsx](../web/src/components/see-current-courses-link.tsx) (renders the shared ghost link)
+      - a new ghost-link file in `web/src/components/` (8 files today, so 9)
+      - [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx) (takes `courseId`; the ended words pick their link; uses `shopCoursePath`)
+      - [page.tsx](../web/src/app/%28shop%29/checkout/success/page.tsx) (passes `result.data.courseId`)
+      - tests: `checkout-status-message.test.tsx`, `page.test.tsx`, `see-current-courses-link.test.tsx` (keeps link and label checks; its `-ml-6` checks move to the ghost link's test), `web/tests/browser/courses/checkout-return.spec.ts` (the expired and refunded tests assert the course link)
+    - *Needs*: 14a.
+    - *Settled*: the Decision rows on the refunded and timed-out links and on the shared ghost link.
+    - *Done when*: `yarn --cwd web check:changed` passes, the browser suite passes, `/security-review` run, and the step's journey is walked.
 
 Every UI milestone's *Done when* also includes: keyboard only (Enter, Escape, Tab), one mock scenario per state it builds, and the owner's findings fixed in its last commit.
 
@@ -196,7 +231,9 @@ Wireframe states and time variants, by the milestone that builds them:
 | The course title keeps `break-words` | The class already breaks an over-wide word at the edge, and real titles rarely hold one; the page never scrolls sideways | `hyphens: auto` (breaks at a syllable with a hyphen, one class, but ordinary long words at a line end hyphenate too); `overflow-wrap: anywhere` (breaks at the same spot on this h1) |
 | No image placeholder; `dev:mock` serves a visible 1600×900 image | The API refuses to publish a course without an image ([courses.md](courses.md) item 3), so only the old 1×1 mock left the box looking empty | A placeholder drawing (about 15 lines for a state real courses can't reach) |
 | The header's Courses link uses `text-meta` at weight 500 | Style guide §7 sets nav links in meta size and weight 500, and body weight made the link read as plain text | Leaving it at body weight (the walk found it weak) |
-| A refunded checkout links back to its course without "Try again", and a timed-out one gets "Try again" (step 14) | A double buyer keeps access after a refund, so "Try again" would charge them twice | "Try again" for both |
+| A timed-out checkout shows a primary "Try again →" to its course, and a refunded one a ghost "Back to the course →"; neither shows "See current courses →" (step 14, revisit after use) | A double buyer keeps access after a refund, so "Try again" would charge them twice; one way forward per state, and the header's Courses link covers browsing | "Try again" for both; both links in each state (two calls to action under a short message); "See current courses →" kept only for timed out |
+| The checkout status answer carries a required `courseId` on every status, read from the payment's price row, with no visibility check (step 14) | The return page needs the course for its link; one flat shape for every status; the course page already handles hidden and ended courses | `courseId` only on expired and refunded (a `oneOf` per status: about 45 lines against about 25, plus type narrowing, for no visitor gain); `courseId` in Stripe's return URL (the page trusts an editable value, old links show no way back); the web keeping the pair in a cookie or server memory (fails across devices and restarts); hiding the id for hidden courses (an extra query; the course 404 already shows the way out) |
+| One ghost arrow link component carries the `-ml-6` alignment; "See current courses →" and "Back to the course →" both use it (step 14) | Two ghost links that must line up with the text change together | A second copy of the class string in checkout code |
 | A Name or Email message re-checks as the visitor types in its box: it changes, or goes once the value passes; an API message goes at the box's first change; a box without a message stays quiet until the next send (revisit after use) | Admin's react-hook-form (`onTouched`) behaves the same; checkout's `useActionState` can't use react-hook-form, so a small hook does it | Hiding on the first keystroke (about 5 fewer lines, but "ami@e" shows no message); re-checking on blur (the old message shows while Enter sends); moving checkout onto react-hook-form (rewrites sending, the kept values and the Back fix) |
 | The error box above the fields stays until the next send (revisit after use) | It repeats the API's answer (Principle: the API's words show unchanged), and a field edit fixes no Stripe or ended-course failure | Hiding it once every field message goes (about 3 lines, but the visitor loses the API's words before sending) |
 
@@ -617,10 +654,52 @@ No bar at the top, even when the button sits below the fold.
 - Why here: it changes the API contract and needs the payments checks, so it waits until the page's looks and the enroll form are settled.
 - Needs: 12.
 - Builds on: the return page's [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx), `getCheckoutStatus` in the OpenAPI contract, [refunds.md](payments/refunds.md).
-- Size: 2 to 3 commits (the contract and API answer carry the course; the web link; maybe the mock scenarios), to be split by `/plan-create-implementation` now that this step is **Next**.
-- Risk: the status answer holds only `status`, so it needs a `courseId`; the payments failure table and `/security-review` apply, because the answer is public.
-- Can wait: the wording of the refunded link.
-- Done when: journey: under `checkoutExpired`, see "Try again" link to the course; under `checkoutRefunded`, see a plain link back to the course with no "Try again".
+- Size: 2 commits (the overview said 2 to 3: `checkoutExpired` and `checkoutRefunded` mock scenarios already exist, so a third commit has no work). 14a spans `api/` and `web/` because the pre-commit hook regenerates both type files when the contract changes.
+- Risk: the answer is public, so it holds only `status` and `courseId`; the payments failure table and `/security-review` apply.
+- Done when: journey (`dev:mock`, 400 px and desktop, keyboard only): under `checkoutExpired`, see "Try again →" open the course page; under `checkoutRefunded`, see "Back to the course →" with no "Try again" and no "See current courses →"; under `success` and `checkoutPending`, see no course link.
+- Sketch *(temporary)*:
+
+  ```
+  /checkout/success after 14 (shop layout)
+  Expired                                Refunded
+  Checkout timed out.       (h1)         Payment refunded.         (h1)
+  This checkout ended before payment,    We've refunded this payment. It can take
+  so we charged you nothing.             a few days to appear on your statement.
+  [ Try again → ]          (primary)     Back to the course →      (ghost)
+
+  Succeeded, pending, not found, API 500: as after step 5.
+  ```
+
+- Flow *(temporary)*:
+
+  ```
+  Buyer lands on /checkout/success?checkoutId=…           existing (5b)
+  └── page asks GET /checkout-sessions/{id}                existing (5b)
+      ├── 404 ── not-found page                            existing (5b)
+      ├── 500 / unreachable ── error box / error page      existing (5b)
+      └── 200 { status, courseId }                         14a
+          ├── succeeded ── Thank you + Check your email     existing (5b)
+          ├── pending ── confirming line, re-checks         existing (5d)
+          ├── expired ── "Try again →" to the course        14b
+          └── refunded ── "Back to the course →"            14b
+              └── click ── course page (form, Ended, or 404) existing
+  ```
+
+- Design notes *(temporary)*:
+  - The course id comes from the payment's price row (`Payment → CoursePrice.courseId`), which every payment has; no schema change.
+  - The answer skips a visibility check: the course page handles hidden and ended courses, and its 404 offers "See current courses →".
+  - The link targets the course page, not a new checkout: the buyer re-enters name and email, and the API's existing rules (already owns, ended) apply.
+  - The status query's `coursePrice` include repeats `findPaymentForFulfillment`'s; it is one line of the ORM's query builder, so no helper.
+  - Failure table:
+
+    | Actor | Abuse or failure | What the system does | Test that pins it |
+    |---|---|---|---|
+    | Anyone | Guesses checkout ids | 404, same as today; Stripe ids are long and random | existing e2e 404 |
+    | Holder of a link | Learns more than the course | Answer holds only status and course id | 14a e2e exact body |
+    | Buyer | Course hidden after checkout | Link opens the course 404 with "See current courses →" | existing course 404 tests |
+    | Buyer | Already bought in another tab, clicks Try again | Course page; checkout answers Check your email | existing checkout tests |
+    | Buyer | Reloads or re-checks (pending) | Same id each time; read-only | 14a unit (every status) |
+    | API | Down or 500 | Error page / error box (row 49) | existing 5b tests |
 
 ## Open questions
 
