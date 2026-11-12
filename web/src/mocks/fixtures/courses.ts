@@ -136,7 +136,7 @@ const longDescription = {
 // The image version is a cache-busting stamp (milliseconds since 1970) the
 // page adds to the image URL; its value matters to no test and has no link
 // to the course dates.
-const sampleImageVersion = "1790856000000";
+const sampleImageVersion = "1790856000001";
 
 /** Sample courses shared by the MSW handlers, Vitest and the browser tests. */
 export const reactCourse = {

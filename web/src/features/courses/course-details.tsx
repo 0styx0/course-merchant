@@ -18,17 +18,17 @@ export function CourseDetails({ course, children }: CourseDetailsProps) {
     <article className="mt-6 md:grid md:grid-cols-12 md:gap-x-8">
       <header className="md:col-span-7 md:col-start-1 md:row-start-1">
         <CourseImage courseId={course.id} imageVersion={course.image.version} />
-        <h1 className="break-words font-heading text-h2 md:text-h1">
+        <h1 className="mt-6 break-words font-heading text-h2 md:text-h1">
           {course.name}
         </h1>
-        <p className="mt-2 text-muted-foreground">{course.summary}</p>
+        <p className="mt-4 text-muted-foreground">{course.summary}</p>
       </header>
 
       <div className="self-start md:sticky md:top-24 md:col-span-4 md:col-start-9 md:row-span-2 md:row-start-1">
         {children}
       </div>
 
-      <div className="min-w-0 md:col-span-7 md:col-start-1 md:row-start-2">
+      <div className="mt-10 min-w-0 md:col-span-7 md:col-start-1 md:row-start-2">
         <CourseDescription description={course.description} />
       </div>
     </article>

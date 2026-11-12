@@ -3,6 +3,7 @@ import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
 import { draftedAdminCourse } from "@/mocks/fixtures/admin-courses";
+import { mockCourseImageBytes } from "@/mocks/fixtures/mock-course-image";
 import {
   courseImageAsAdminError,
   courseImageAsAdminNotFound,
@@ -35,11 +36,10 @@ describe("GET /admin/courses/[courseId]/image", () => {
     expect(response.headers.get("Content-Type")).toBe("image/webp");
     expect(response.headers.get("Cache-Control")).toBe("private, no-cache");
     const bytes = new Uint8Array(await response.arrayBuffer());
-    expect(bytes).toHaveLength(34);
-    // "RIFF", the file size, then "WEBP"
-    expect([...bytes.slice(0, 12)]).toEqual([
-      0x52, 0x49, 0x46, 0x46, 0x1a, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50,
-    ]);
+    expect(bytes).toEqual(mockCourseImageBytes);
+    // "RIFF" at the start, "WEBP" at byte 8
+    expect([...bytes.slice(0, 4)]).toEqual([0x52, 0x49, 0x46, 0x46]);
+    expect([...bytes.slice(8, 12)]).toEqual([0x57, 0x45, 0x42, 0x50]);
   });
 
   it("answers 404 for an id that isn't a UUID, without calling the API", async () => {

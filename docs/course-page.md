@@ -535,6 +535,14 @@ No bar at the top, even when the button sits below the fold.
 
 - Why here: the owner's findings from walking everything.
 - Needs: 10.
+- Findings *(temporary)*: from a desktop walk in Chrome; the 400 px phone layout and the bottom bar were not walked.
+  - Name and Email keep their red error after the visitor types a valid value, until the next send. Fix: clear each field's message once its value passes the browser check.
+  - A checkout that timed out or was refunded links only to "See current courses →". Fix: link back to the course with a "Try again" button; the tab title also reads "Thank you" on those states.
+  - A course with no image leaves an empty block, and the ended course's title floats far below the panel. Fix: close the gap or show a placeholder.
+  - A long word in the title breaks mid-word ("…dociou / s"). Fix: `overflow-wrap: anywhere`.
+  - The in-progress panel wraps its time range onto two small grey lines and shows "7840 days". Fix: one short range ("Dec 2019 – Nov 3040").
+  - Small looks: the "See current courses →" ghost link has a left indent that misaligns it with the text above, the "Courses" nav link weighs the same as body text, and the timed-out page's tab title reads "Thank you". Fix: align the link, add weight to the nav link, name each state's tab.
+  - Spacing: the title, summary and first description heading sit tight together. Fix: wider gaps between image, title, summary and description.
 - Size: 2 to 5 commits, set after the walk.
 - Done when: J1 to J3 walked again.
 
