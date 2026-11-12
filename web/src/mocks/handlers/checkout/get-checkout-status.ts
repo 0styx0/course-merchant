@@ -1,6 +1,7 @@
 import type { operations } from "@/lib/api/generated";
 import { http, HttpResponse } from "msw";
 import { MOCK_API_BASE_URL } from "../../mock-api";
+import { reactCourse } from "../../fixtures/courses";
 import { problemResponse } from "../../problem-response";
 
 type CheckoutStatusResponse =
@@ -16,7 +17,10 @@ export const checkoutStatusUrl = `${MOCK_API_BASE_URL}/v1/checkout-sessions/:che
 
 function makeStatusHandler(status: CheckoutStatusResponse["status"]) {
   return http.get(checkoutStatusUrl, () => {
-    const body = { status } satisfies CheckoutStatusResponse;
+    const body = {
+      status,
+      courseId: reactCourse.id,
+    } satisfies CheckoutStatusResponse;
 
     return HttpResponse.json(body);
   });

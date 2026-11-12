@@ -5,6 +5,7 @@ import {
   checkoutStatusUrl,
   getCheckoutStatusHandlers,
 } from "@/mocks/handlers/checkout/get-checkout-status";
+import { reactCourse } from "@/mocks/fixtures/courses";
 import { server } from "@/mocks/server";
 import { problemResponse } from "@/mocks/problem-response";
 import type { ProblemDetails } from "@/lib/types";
@@ -25,7 +26,10 @@ describe("getCheckoutStatus", () => {
     server.use(
       http.get(checkoutStatusUrl, ({ request }) => {
         askedPath = new URL(request.url).pathname;
-        return HttpResponse.json({ status: "succeeded" });
+        return HttpResponse.json({
+          status: "succeeded",
+          courseId: reactCourse.id,
+        });
       }),
     );
 
@@ -34,12 +38,12 @@ describe("getCheckoutStatus", () => {
     expect(askedPath).toBe("/v1/checkout-sessions/cs_test_a1b2c3");
   });
 
-  it("returns success with the status", async () => {
+  it("returns success with the status and course id", async () => {
     server.use(getCheckoutStatusHandlers.checkoutPending);
 
     await expect(getCheckoutStatus("cs_test_1")).resolves.toEqual({
       state: "success",
-      data: { status: "pending" },
+      data: { status: "pending", courseId: reactCourse.id },
     });
   });
 
@@ -70,7 +74,10 @@ describe("getCheckoutStatus", () => {
     server.use(
       http.get(checkoutStatusUrl, async () => {
         await delay(500);
-        return HttpResponse.json({ status: "succeeded" });
+        return HttpResponse.json({
+          status: "succeeded",
+          courseId: reactCourse.id,
+        });
       }),
     );
 

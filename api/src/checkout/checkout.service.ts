@@ -66,23 +66,25 @@ export class CheckoutService {
   }
 
   /**
-   * How a paid checkout ended, for the page the buyer returns to. Read from
-   * our own records, so it only reports what Stripe has confirmed to us.
+   * How a paid checkout ended and which course it was for, for the page the
+   * buyer returns to. Read from our own records, so it only reports what
+   * Stripe has confirmed to us.
    */
   async getCheckoutStatus(checkoutId: string): Promise<CheckoutStatusResponse> {
-    const status = await this.paymentsRepository.findPaymentStatusByCheckoutId(
-      this.prisma.db,
-      "stripe",
-      checkoutId,
-    );
+    const checkout =
+      await this.paymentsRepository.findCheckoutStatusByCheckoutId(
+        this.prisma.db,
+        "stripe",
+        checkoutId,
+      );
 
-    if (!status) {
+    if (!checkout) {
       throw new ApiException(ErrorCodeCheckout.CHECKOUT_NOT_FOUND, {
         detail: `No checkout exists with ID ${checkoutId}.`,
       });
     }
 
-    return { status };
+    return { status: checkout.status, courseId: checkout.courseId };
   }
 
   /**

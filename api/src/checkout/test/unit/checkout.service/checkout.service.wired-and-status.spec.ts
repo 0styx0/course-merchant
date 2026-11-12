@@ -14,6 +14,7 @@ import {
   type MockMethods,
 } from "@/test/test-helpers.js";
 import {
+  COURSE_ID,
   CUSTOMER_ID,
   PAYMENT_ID,
   GRANTED_ENROLLMENT_ID,
@@ -22,6 +23,9 @@ import {
   makeCourse,
   suspendedAt,
 } from "@/checkout/test/unit/checkout.service/checkout.service.fixtures.js";
+
+// differs from the fixture course so the test shows the answer comes from the lookup
+const PURCHASED_COURSE_ID = "8b0e1f5c-0000-4000-8000-000000000099";
 
 describe("CheckoutService", () => {
   let checkoutRepository: MockMethods<
@@ -32,7 +36,7 @@ describe("CheckoutService", () => {
     PaymentsRepository,
     | "createPendingPayment"
     | "saveProviderCheckoutId"
-    | "findPaymentStatusByCheckoutId"
+    | "findCheckoutStatusByCheckoutId"
   >;
 
   beforeEach(() => {
@@ -51,9 +55,9 @@ describe("CheckoutService", () => {
       saveProviderCheckoutId: vi
         .fn<PaymentsRepository["saveProviderCheckoutId"]>()
         .mockResolvedValue(undefined),
-      findPaymentStatusByCheckoutId: vi
-        .fn<PaymentsRepository["findPaymentStatusByCheckoutId"]>()
-        .mockResolvedValue("pending"),
+      findCheckoutStatusByCheckoutId: vi
+        .fn<PaymentsRepository["findCheckoutStatusByCheckoutId"]>()
+        .mockResolvedValue({ status: "pending", courseId: COURSE_ID }),
     };
   });
 
@@ -199,26 +203,32 @@ describe("CheckoutService", () => {
     it.each(["pending", "succeeded", "expired", "refunded"] as const)(
       "reports a %s payment",
       async (status) => {
-        paymentsRepository.findPaymentStatusByCheckoutId.mockResolvedValue(
+        paymentsRepository.findCheckoutStatusByCheckoutId.mockResolvedValue({
           status,
-        );
+          courseId: PURCHASED_COURSE_ID,
+        });
 
         await expect(service.getCheckoutStatus("cs_test_123")).resolves.toEqual(
-          { status },
+          { status, courseId: PURCHASED_COURSE_ID },
         );
       },
     );
 
     it("looks the payment up by its Stripe session id", async () => {
+      paymentsRepository.findCheckoutStatusByCheckoutId.mockResolvedValue({
+        status: "pending",
+        courseId: PURCHASED_COURSE_ID,
+      });
+
       await service.getCheckoutStatus("cs_test_123");
 
       expect(
-        paymentsRepository.findPaymentStatusByCheckoutId,
+        paymentsRepository.findCheckoutStatusByCheckoutId,
       ).toHaveBeenCalledExactlyOnceWith(fake.db, "stripe", "cs_test_123");
     });
 
     it("returns 404 CHECKOUT_NOT_FOUND for an unknown session", async () => {
-      paymentsRepository.findPaymentStatusByCheckoutId.mockResolvedValue(null);
+      paymentsRepository.findCheckoutStatusByCheckoutId.mockResolvedValue(null);
 
       await expect(
         service.getCheckoutStatus("cs_test_unknown"),

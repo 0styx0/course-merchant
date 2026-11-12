@@ -64,25 +64,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **13b.** A visitor who fixes Name or Email sees its message update as they type and go once the value passes.
   - [x] **13c.** A developer finds the web's "can't reach the server" problem in one file, and the enroll tests say what the visitor typed and what the restore did.
 - **14. A way back from a failed checkout.** A timed-out buyer sees "Try again" linking to the course, and a refunded buyer sees a plain link back to the course.
-  - [ ] **14a.** The return page's status answer names the course the checkout was for. **Next**
-    - *Behaviours*:
-      - `GET /v1/checkout-sessions/{checkoutId}` answers `{ status, courseId }` for every status (pending, succeeded, expired, refunded).
-      - The answer holds only those two fields: no email, name, price or customer.
-      - It gives the course id even when the course has since gone hidden or ended; the course page then shows its own not-found or Ended panel.
-      - An unknown checkout id still answers 404 `CHECKOUT_NOT_FOUND`, "No checkout exists with ID cs_test_unknown."
-      - The web mock's status handlers answer with `reactCourse.id`, so every `dev:mock` and test scenario carries a real fixture course.
-    - *New shared pieces*: `courseId` on the `CheckoutStatus` schema (the API and the web page both read it), reusing `#/components/schemas/CourseId`.
-    - *Files*:
-      - [openapi-v1.yaml](../api/openapi/openapi-v1.yaml) (`CheckoutStatus` gains required `courseId`; example updated)
-      - [payments.repository.ts](../api/src/payments/payments.repository.ts) (the status query also reads `coursePrice.courseId`, copying `findPaymentForFulfillment`'s include; renamed for what it returns; its return type sits beside `FulfillmentPayment`)
-      - [checkout.service.ts](../api/src/checkout/checkout.service.ts) (`getCheckoutStatus` returns both)
-      - [get-checkout-status.ts](../web/src/mocks/handlers/checkout/get-checkout-status.ts) (`makeStatusHandler` adds `reactCourse.id`)
-      - generated: `api/src/generated/api.d.ts`, `web/src/lib/api/generated.ts`
-      - tests: the payments repository integration spec, `checkout.service.wired-and-status.spec.ts`, `checkout.service.spec.ts` (uses the renamed query), e2e `checkout.status.spec.ts` (exact body match)
-    - *Settled*: Decision row on the status answer's `courseId`.
-    - *Deviations to state at hand-off*: touches `api/` and `web/` because the pre-commit hook regenerates both type files when the contract changes, and the web mock's `satisfies` check fails without a course id; splitting would leave a red commit.
-    - *Done when*: `yarn --cwd api check:changed` and `yarn --cwd web check:changed` pass; `/security-review` run.
-  - [ ] **14b.** A timed-out buyer sees "Try again →" leading back to the course, and a refunded buyer sees "Back to the course →".
+  - [x] **14a.** The return page's status answer names the course the checkout was for.
+  - [ ] **14b.** A timed-out buyer sees "Try again →" leading back to the course, and a refunded buyer sees "Back to the course →". **Next**
     - *Behaviours*:
       - Expired: h1 "Checkout timed out.", the sentence, then a primary-styled link "Try again →" to `/courses/{courseId}`; no "See current courses →".
       - Refunded: h1 "Payment refunded.", the sentence, then a ghost link "Back to the course →" to `/courses/{courseId}`, lined up with the text like today's ghost link; no "Try again" and no "See current courses →".

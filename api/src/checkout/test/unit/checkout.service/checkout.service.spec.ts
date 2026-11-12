@@ -31,7 +31,7 @@ describe("CheckoutService", () => {
     PaymentsRepository,
     | "createPendingPayment"
     | "saveProviderCheckoutId"
-    | "findPaymentStatusByCheckoutId"
+    | "findCheckoutStatusByCheckoutId"
   >;
 
   beforeEach(() => {
@@ -50,9 +50,9 @@ describe("CheckoutService", () => {
       saveProviderCheckoutId: vi
         .fn<PaymentsRepository["saveProviderCheckoutId"]>()
         .mockResolvedValue(undefined),
-      findPaymentStatusByCheckoutId: vi
-        .fn<PaymentsRepository["findPaymentStatusByCheckoutId"]>()
-        .mockResolvedValue("pending"),
+      findCheckoutStatusByCheckoutId: vi
+        .fn<PaymentsRepository["findCheckoutStatusByCheckoutId"]>()
+        .mockResolvedValue({ status: "pending", courseId: COURSE_ID }),
     };
   });
 

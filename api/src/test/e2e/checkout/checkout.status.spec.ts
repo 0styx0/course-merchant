@@ -4,7 +4,11 @@ import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { db } from "@/prisma/db.js";
-import { createPricedCourse } from "@/test/course-fixtures.js";
+import {
+  createCustomer,
+  createPendingPayment,
+  createPricedCourse,
+} from "@/test/course-fixtures.js";
 import { createE2eApp, httpServer } from "../e2e-helpers.js";
 import { useStripeMock } from "../stripe-mock.js";
 
@@ -21,7 +25,10 @@ describe("GET /v1/checkout-sessions/:checkoutId (e2e)", () => {
 
   // starts a paid checkout and returns the Stripe session id the buyer
   // would come back with
-  async function startPaidCheckout(): Promise<string> {
+  async function startPaidCheckout(): Promise<{
+    checkoutId: string;
+    courseId: string;
+  }> {
     const now = Temporal.Now.instant();
     const { course } = await createPricedCourse(
       { startsAt: now.add({ hours: 24 }), endsAt: now.add({ hours: 26 }) },
@@ -38,7 +45,7 @@ describe("GET /v1/checkout-sessions/:checkoutId (e2e)", () => {
 
     const [payment] = await db.orm.public.Payment.all();
 
-    return payment.providerCheckoutId!;
+    return { checkoutId: payment.providerCheckoutId!, courseId: course.id };
   }
 
   function getStatus(checkoutId: string) {
@@ -46,15 +53,15 @@ describe("GET /v1/checkout-sessions/:checkoutId (e2e)", () => {
   }
 
   it("reports pending until Stripe confirms the payment", async () => {
-    const checkoutId = await startPaidCheckout();
+    const { checkoutId, courseId } = await startPaidCheckout();
 
     const response = await getStatus(checkoutId).expect(200);
 
-    expect(response.body).toEqual({ status: "pending" });
+    expect(response.body).toEqual({ status: "pending", courseId });
   });
 
   it("reports the payment's current status", async () => {
-    const checkoutId = await startPaidCheckout();
+    const { checkoutId, courseId } = await startPaidCheckout();
 
     // what the step 3 webhook will do once Stripe confirms the payment
     await db.orm.public.Payment.where((payment) =>
@@ -63,7 +70,23 @@ describe("GET /v1/checkout-sessions/:checkoutId (e2e)", () => {
 
     const response = await getStatus(checkoutId).expect(200);
 
-    expect(response.body).toEqual({ status: "succeeded" });
+    expect(response.body).toEqual({ status: "succeeded", courseId });
+  });
+
+  it("names the course even after it stopped being public", async () => {
+    const { course, price } = await createPricedCourse({ status: "archived" });
+    const customer = await createCustomer({});
+    await createPendingPayment({
+      customerId: customer.id,
+      coursePriceId: price.id,
+      amount: price.amount,
+      currency: price.currency,
+      providerCheckoutId: "cs_test_archived",
+    });
+
+    const response = await getStatus("cs_test_archived").expect(200);
+
+    expect(response.body).toEqual({ status: "pending", courseId: course.id });
   });
 
   it("returns 404 for an unknown checkout", async () => {

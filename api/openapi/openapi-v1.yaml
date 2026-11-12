@@ -774,6 +774,7 @@ paths:
                 pending:
                   value:
                     status: pending
+                    courseId: 123e4567-e89b-12d3-a456-426614174000
         "404":
           $ref: "#/components/responses/CheckoutNotFound"
         "500":
@@ -1196,6 +1197,7 @@ components:
       type: object
       required:
         - status
+        - courseId
       properties:
         status:
           type: string
@@ -1207,6 +1209,12 @@ components:
           description: >
             `expired` means the buyer didn't pay before the checkout timed out.
             `refunded` means the payment was later fully refunded.
+        courseId:
+          allOf:
+            - $ref: "#/components/schemas/CourseId"
+          description: >
+            The course this checkout was for, given even when the course is
+            no longer public.
 
     CourseId:
       type: string

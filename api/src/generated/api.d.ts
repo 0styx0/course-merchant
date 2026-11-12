@@ -376,6 +376,8 @@ export interface components {
              * @enum {string}
              */
             status: "pending" | "succeeded" | "expired" | "refunded";
+            /** @description The course this checkout was for, given even when the course is no longer public. */
+            courseId: components["schemas"]["CourseId"];
         };
         /**
          * Format: uuid

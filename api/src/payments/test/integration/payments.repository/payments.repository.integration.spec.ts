@@ -113,22 +113,28 @@ describe("PaymentsRepository (integration)", () => {
       });
     });
 
-    it("finds a payment's status by the provider's checkout id", async () => {
+    it("finds a payment's status and course by the provider's checkout id", async () => {
       const pending = await repository.createPendingPayment(
         db,
         pendingPaymentInput(),
       );
       await repository.saveProviderCheckoutId(db, pending.id, "cs_test_123");
+      const otherCourse = await createPricedCourse();
+      await createPendingPayment({
+        ...paymentFields(),
+        coursePriceId: otherCourse.price.id,
+        providerCheckoutId: "cs_test_other_course",
+      });
 
       expect(
-        await repository.findPaymentStatusByCheckoutId(
+        await repository.findCheckoutStatusByCheckoutId(
           db,
           "stripe",
           "cs_test_123",
         ),
-      ).toBe("pending");
+      ).toEqual({ status: "pending", courseId });
       expect(
-        await repository.findPaymentStatusByCheckoutId(
+        await repository.findCheckoutStatusByCheckoutId(
           db,
           "stripe",
           "cs_test_other",

@@ -7,7 +7,7 @@ import type { DbScope } from "types.js";
 
 export type PaymentProvider = Models.public_Payment["provider"];
 
-export type PaymentStatus = Models.public_Payment["status"];
+type PaymentStatus = Models.public_Payment["status"];
 
 export type PendingPayment = {
   id: string;
@@ -30,6 +30,12 @@ export type FulfillmentPayment = {
     id: string;
     email: string;
   };
+};
+
+/** How a checkout ended, and the course it was for. */
+export type CheckoutStatusPayment = {
+  status: PaymentStatus;
+  courseId: string;
 };
 
 /** A paid payment that no enrollment points to, so it is owed a refund. */
@@ -93,19 +99,28 @@ export class PaymentsRepository {
     ).update({ providerCheckoutId });
   }
 
-  async findPaymentStatusByCheckoutId(
+  async findCheckoutStatusByCheckoutId(
     scope: DbScope,
     provider: PaymentProvider,
     providerCheckoutId: string,
-  ): Promise<PaymentStatus | null> {
-    const payment = await scope.orm.public.Payment.where((candidate) =>
-      and(
-        candidate.provider.eq(provider),
-        candidate.providerCheckoutId.eq(providerCheckoutId),
-      ),
-    ).first();
+  ): Promise<CheckoutStatusPayment | null> {
+    const payment = await scope.orm.public.Payment.select("status")
+      .include("coursePrice", (coursePrice) => coursePrice.select("courseId"))
+      .where((candidate) =>
+        and(
+          candidate.provider.eq(provider),
+          candidate.providerCheckoutId.eq(providerCheckoutId),
+        ),
+      )
+      .first();
 
-    return payment?.status ?? null;
+    if (!payment) {
+      return null;
+    }
+
+    // always present: the foreign key is required, but the ORM types every
+    // to-one include as nullable
+    return { status: payment.status, courseId: payment.coursePrice!.courseId };
   }
 
   async recordProcessedEvent(
