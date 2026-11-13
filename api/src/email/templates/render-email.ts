@@ -4,7 +4,6 @@ import {
   accessGranted,
   accessSuspended,
   alreadyOwned,
-  disputeAlert,
   type EmailViews,
 } from "./email-templates.js";
 import { renderHtml } from "./render-html.js";
@@ -22,8 +21,6 @@ function contentFor(email: EmailToRender): EmailContent {
       return alreadyOwned(email.view);
     case "access_suspended":
       return accessSuspended(email.view);
-    case "dispute_alert":
-      return disputeAlert(email.view);
   }
 }
 

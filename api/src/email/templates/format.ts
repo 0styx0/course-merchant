@@ -16,14 +16,3 @@ export function formatCourseTime(
     timeZoneName: "short",
   }).format(new Date(instant.epochMilliseconds));
 }
-
-/** Formats an amount in the currency's smallest unit, e.g. 1999 → "$19.99". */
-export function formatMoney(amount: number, currency: string): string {
-  const formatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  });
-  const { maximumFractionDigits } = formatter.resolvedOptions();
-
-  return formatter.format(amount / 10 ** (maximumFractionDigits ?? 2));
-}

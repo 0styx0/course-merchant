@@ -45,23 +45,12 @@ Keep these files current **in the same commit as the work**. Tick off status her
   - MSW handlers.
 
   Write the Given/When/Then specs first, in the step text here.
-- [ ] **7. Refunds and disputes by hand, API side** (see [refunds.md](payments/refunds.md)). The students list, its Un-enroll button and the "Refund owed" mark are web work, planned in the admin course view area of [courses.md](courses.md).
+- [x] **7. Refunds and disputes by hand, API side** (see [refunds.md](payments/refunds.md)). The students list, its Un-enroll button and the "Refund owed" mark are web work, planned in the admin course view area of [courses.md](courses.md).
   - [x] **7a.** The admin course answers say which students are owed a refund, so a refund that Stripe keeps refusing shows up without reading logs.
   - [x] **7b.** The API can un-enroll a student in one transaction: it revokes the enrollment and records the payment as refunded. Nothing calls this yet; 7d does.
   - [x] **7c.** Course ids and customer ids in URLs are checked by one shared rule, so 7d reuses it for customer ids.
   - [x] **7d.** The admin can un-enroll a student through the API, and a repeat call changes nothing.
-  - [ ] **7e.** The unused dispute alert email is gone from the code and the database. *(mechanical)* **Next**
-    - *New shared pieces*: none.
-    - *Files*:
-      - `api/src/prisma/contract.prisma`, plus a planned migration
-      - `api/src/email/outbox/email-payloads.ts`
-      - `api/src/email/outbox/email-outbox.repository.ts`
-      - `api/src/email/outbox/email-views.repository.ts`
-      - `api/src/email/email-composer.ts`
-      - `api/src/email/templates/email-templates.ts`
-      - `api/src/email/templates/render-email.ts`
-      - the 5 specs that use the kind
-    - *Done when*: `grep -rn dispute_alert api/src` finds only old migrations.
+  - [x] **7e.** The dispute alert email is gone from the code and the database.
 - [ ] **8. Estimated payout on the admin price field.** Planned later, with the Stripe fee formula settled first. Its line in [courses.md](courses.md) points here.
 - [ ] **Launch:** see the checklist at the end.
 
@@ -121,37 +110,7 @@ Flows and decisions, one file per subarea. Read the one that matches the task:
 - Needs: steps 5 and 6.
 - Builds on: [payments.repository.ts](../api/src/payments/payments.repository.ts) `findOrphanPayments` and `markPaymentRefunded`, [enrollments.repository.ts](../api/src/enrollments/enrollments.repository.ts), [refunds.md](payments/refunds.md).
 - Done when: `GET /v1/admin/courses/{courseId}` shows `refundStatus: "owed"` for a student with an orphan payment, and `POST …/revocation` sets `revokedAt` and moves the payment to `refunded`.
-
-Design notes *(temporary)*:
-
-- The new `admin-enrollments` module owns un-enroll. It sits outside `EnrollmentsModule`, which would otherwise import Payments and close a cycle.
-- `refundStatus` runs one query per answer: the orphan payments for the listed course ids, matched to each enrollment by (course, customer).
-- Un-enroll addresses an enrollment by customer id, because `AdminEnrollment` has no id and (course, customer) is unique.
-
-Flow *(temporary)*:
-
-```
-Admin GET/list course                                    existing
-└── each enrollment: refundStatus = "owed" if buyer has
-    an orphan payment here, else "not_owed"              7a
-Admin POST …/revocation                                  7d
-├── bad course id → 400 INVALID_COURSE_ID                existing (7c)
-├── bad customer id → 400 INVALID_CUSTOMER_ID            7d
-├── no session → 401                                     existing
-└── transaction                                          7b
-    ├── no enrollment → 404 ENROLLMENT_NOT_FOUND         7b/7d
-    ├── already revoked → 204, nothing changes           7b
-    └── revokedAt = db now
-        ├── free → 204                                   7b
-        └── payment → refunded (markPaymentRefunded) 204 7b
-```
-
-Failures *(temporary)*:
-
-| Actor | Failure | System does | Test |
-|---|---|---|---|
-| Admin | double-click | 204, nothing changes | 7b, 7d |
-| Admin | un-enroll races a rebuy | guarded writes; rare, accepted | none |
-| Admin | un-enroll without a Stripe refund | recorded as refunded | web confirm text |
-| DB | second write fails | both writes roll back | 7b |
-| Stripe | refund keeps failing | `refundStatus` stays `owed` | 7a |
+- Retro:
+  - Planned 5 commits (7a to 7e); shipped 5.
+  - Owner changes after using the page: not yet recorded, because the web page is separate work.
+  - Rule friction: none recorded.

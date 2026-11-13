@@ -96,10 +96,6 @@
               {
                 "name": "ACCESS_SUSPENDED",
                 "value": "access_suspended"
-              },
-              {
-                "name": "DISPUTE_ALERT",
-                "value": "dispute_alert"
               }
             ]
           },
@@ -1959,8 +1955,8 @@
             "EmailOutbox": {
               "checks": [
                 {
-                  "expression": "\"kind\" IN ('access_granted', 'already_owned', 'access_suspended', 'dispute_alert')",
-                  "name": "EmailOutbox_kind_check_cba6a3d8",
+                  "expression": "\"kind\" IN ('access_granted', 'already_owned', 'access_suspended')",
+                  "name": "EmailOutbox_kind_check_1434f8a5",
                   "prefix": "EmailOutbox_kind_check"
                 },
                 {
@@ -2527,8 +2523,7 @@
               "values": [
                 "access_granted",
                 "already_owned",
-                "access_suspended",
-                "dispute_alert"
+                "access_suspended"
               ]
             },
             "EmailStatus": {
@@ -2560,7 +2555,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "dc546a9c053e82915b459b15a23f3b6d8d69a91850e3fcd0d4f3650e73859266"
+    "storageHash": "1be191f6347c615efed1e699530d2f009196f7a0a3245f4221efd0af618768d6"
   },
   "execution": {
     "executionHash": "d1495c3b8e6815988349bf06c895fb0f22c7519bee94768d674ace149b2df27b",

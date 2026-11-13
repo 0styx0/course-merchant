@@ -17,7 +17,7 @@ class EmailSourceMissingError extends Error {
 
 /**
  * Turns a queued email into the subject, text and HTML to send. The payload
- * holds only ids, so this loads the current course, customer or payment first.
+ * holds only ids, so this loads the current course first.
  */
 @Injectable()
 export class EmailComposer {
@@ -42,8 +42,6 @@ export class EmailComposer {
         return this.alreadyOwned(parsePayload(email.kind, email.payload));
       case "access_suspended":
         return this.accessSuspended(parsePayload(email.kind, email.payload));
-      case "dispute_alert":
-        return this.disputeAlert(parsePayload(email.kind, email.payload));
     }
   }
 
@@ -77,30 +75,6 @@ export class EmailComposer {
     return this.render({
       kind: "access_suspended",
       view: { course, wasRefundIssued: payload.refundIssued },
-    });
-  }
-
-  private async disputeAlert(
-    payload: EmailPayloads["dispute_alert"],
-  ): Promise<RenderedEmail> {
-    const disputed = await this.views.findDisputedPayment(
-      this.prisma.db,
-      payload.paymentId,
-    );
-
-    if (!disputed) {
-      throw new EmailSourceMissingError("disputed payment");
-    }
-
-    const course = await this.course(disputed.courseId);
-
-    return this.render({
-      kind: "dispute_alert",
-      view: {
-        payment: disputed.payment,
-        course,
-        customer: disputed.customer,
-      },
     });
   }
 

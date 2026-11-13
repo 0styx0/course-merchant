@@ -16,7 +16,6 @@ enum EmailKind {
   ACCESS_GRANTED = "access_granted"
   ALREADY_OWNED = "already_owned"
   ACCESS_SUSPENDED = "access_suspended"
-  DISPUTE_ALERT = "dispute_alert"
 }
 
 enum EmailStatus {
@@ -197,7 +196,7 @@ model EmailOutbox {
 }
 
 // links an email to the enrollment it's about, so the admin view can find an
-// enrollment's emails. Owner alerts (dispute_alert) have no enrollment
+// enrollment's emails
 model EnrollmentEmail {
   emailId      Uuid        @id
   enrollmentId Uuid

@@ -1,7 +1,7 @@
 import type { Temporal } from "@js-temporal/polyfill";
 
 import type { EmailContent } from "./email-content.js";
-import { formatCourseTime, formatMoney } from "./format.js";
+import { formatCourseTime } from "./format.js";
 
 type CourseView = {
   title: string;
@@ -18,11 +18,6 @@ export type EmailViews = {
   access_suspended: {
     course: Pick<CourseView, "title">;
     wasRefundIssued: boolean;
-  };
-  dispute_alert: {
-    payment: { id: string; amount: number; currency: string };
-    course: Pick<CourseView, "title">;
-    customer: { email: string };
   };
 };
 
@@ -76,20 +71,6 @@ export function accessSuspended(
       `Hello, thanks for your patience. Your access to ${view.course.title} is currently suspended, so we can't send you the course link.`,
       ...(view.wasRefundIssued ? [SUSPENDED_CHARGE_REFUNDED] : []),
       "If you think this is a mistake, reply to this email and we'll look into it.",
-    ],
-  };
-}
-
-export function disputeAlert(view: EmailViews["dispute_alert"]): EmailContent {
-  const amount = formatMoney(view.payment.amount, view.payment.currency);
-
-  return {
-    subject: `Payment dispute: ${view.course.title}`,
-    heading: "A payment was disputed",
-    paragraphs: [
-      `${view.customer.email} disputed a payment of ${amount} for ${view.course.title}. Their access is suspended until the dispute is resolved.`,
-      `Payment id: ${view.payment.id}`,
-      "Respond to the dispute in the Stripe Dashboard before its deadline.",
     ],
   };
 }

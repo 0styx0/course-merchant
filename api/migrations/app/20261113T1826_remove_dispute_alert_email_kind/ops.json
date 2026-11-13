@@ -1,0 +1,122 @@
+[
+  {
+    "id": "data_migration.delete-dispute-alert-emails",
+    "label": "Data transform: delete-dispute-alert-emails",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check delete-dispute-alert-emails has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"EmailOutbox\" WHERE \"kind\" = $1 LIMIT 1) AS ok",
+        "params": [
+          "dispute_alert"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run delete-dispute-alert-emails",
+        "sql": "DELETE FROM \"public\".\"EmailOutbox\" WHERE \"kind\" = $1",
+        "params": [
+          "dispute_alert"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify delete-dispute-alert-emails resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"EmailOutbox\" WHERE \"kind\" = $1 LIMIT 1) AS ok",
+        "params": [
+          "dispute_alert"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropCheckConstraint.EmailOutbox.EmailOutbox_kind_check_cba6a3d8",
+    "label": "Drop check constraint \"EmailOutbox_kind_check_cba6a3d8\" on \"EmailOutbox\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "EmailOutbox_kind_check_cba6a3d8",
+        "table": "EmailOutbox"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"EmailOutbox_kind_check_cba6a3d8\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "EmailOutbox_kind_check_cba6a3d8",
+          "public",
+          "\"public\".\"EmailOutbox\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"EmailOutbox_kind_check_cba6a3d8\"",
+        "sql": "ALTER TABLE \"public\".\"EmailOutbox\" DROP CONSTRAINT \"EmailOutbox_kind_check_cba6a3d8\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"EmailOutbox_kind_check_cba6a3d8\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "EmailOutbox_kind_check_cba6a3d8",
+          "public",
+          "\"public\".\"EmailOutbox\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.EmailOutbox.EmailOutbox_kind_check_1434f8a5",
+    "label": "Add check constraint \"EmailOutbox_kind_check_1434f8a5\" on \"EmailOutbox\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "EmailOutbox_kind_check_1434f8a5",
+        "table": "EmailOutbox"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"EmailOutbox_kind_check_1434f8a5\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "EmailOutbox_kind_check_1434f8a5",
+          "public",
+          "\"public\".\"EmailOutbox\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"EmailOutbox_kind_check_1434f8a5\"",
+        "sql": "ALTER TABLE \"public\".\"EmailOutbox\" ADD CONSTRAINT \"EmailOutbox_kind_check_1434f8a5\" CHECK (\"kind\" IN ('access_granted', 'already_owned', 'access_suspended'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify check constraint \"EmailOutbox_kind_check_1434f8a5\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4)) AS \"result\"",
+        "params": [
+          "EmailOutbox_kind_check_1434f8a5",
+          "public",
+          "\"public\".\"EmailOutbox\"",
+          "c"
+        ]
+      }
+    ]
+  }
+]

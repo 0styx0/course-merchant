@@ -16,15 +16,12 @@ describe("parsePayload", () => {
     expect(
       parsePayload("access_suspended", { ...ids, refundIssued: true }),
     ).toEqual({ ...ids, refundIssued: true });
-    expect(parsePayload("dispute_alert", { paymentId: "p1" })).toEqual({
-      paymentId: "p1",
-    });
   });
 
   it("ignores extra keys, so a newer row still reads", () => {
-    expect(
-      parsePayload("dispute_alert", { paymentId: "p1", note: "x" }),
-    ).toEqual({ paymentId: "p1" });
+    const ids = { courseId: "c1", customerId: "u1" };
+
+    expect(parsePayload("access_granted", { ...ids, note: "x" })).toEqual(ids);
   });
 
   it("names the missing and mistyped fields", () => {
@@ -39,8 +36,8 @@ describe("parsePayload", () => {
   });
 
   it("rejects a payload that isn't an object", () => {
-    expect(() => parsePayload("dispute_alert", null)).toThrow(
-      "dispute_alert payload is invalid ((root))",
+    expect(() => parsePayload("access_granted", null)).toThrow(
+      "access_granted payload is invalid ((root))",
     );
   });
 });

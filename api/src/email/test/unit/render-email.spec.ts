@@ -21,15 +21,11 @@ const emails: EmailToRender[] = [
     view: { course, wasRefundIssued: false },
   },
   { kind: "access_suspended", view: { course, wasRefundIssued: false } },
-  {
-    kind: "dispute_alert",
-    view: {
-      payment: { id: "pay_1", amount: 1999, currency: "USD" },
-      course,
-      customer: { email: "ann@example.com" },
-    },
-  },
 ];
+
+function emailOfKind(kind: EmailToRender["kind"]): EmailToRender {
+  return emails.find((candidate) => candidate.kind === kind)!;
+}
 
 describe("renderEmail", () => {
   it.each(emails)("renders $kind with a subject, text and html", (email) => {
@@ -51,8 +47,7 @@ describe("renderEmail", () => {
   it.each(["access_granted", "already_owned"] as const)(
     "puts the %s link in both parts",
     (kind) => {
-      const email = emails.find((candidate) => candidate.kind === kind)!;
-      const { text, html } = renderEmail(email, "Course Shop");
+      const { text, html } = renderEmail(emailOfKind(kind), "Course Shop");
 
       expect(text).toContain(course.contentUrl);
       expect(html).toContain(
@@ -62,7 +57,10 @@ describe("renderEmail", () => {
   );
 
   it("never includes the link in the suspended email", () => {
-    const { text, html } = renderEmail(emails[2], "Course Shop");
+    const { text, html } = renderEmail(
+      emailOfKind("access_suspended"),
+      "Course Shop",
+    );
 
     expect(text).not.toContain("drive.example.com");
     expect(html).not.toContain("drive.example.com");
@@ -71,14 +69,14 @@ describe("renderEmail", () => {
   it.each(["access_granted", "already_owned", "access_suspended"] as const)(
     "opens the %s email with a greeting",
     (kind) => {
-      const email = emails.find((candidate) => candidate.kind === kind)!;
-
-      expect(renderEmail(email, "Course Shop").text).toMatch(/Hello/);
+      expect(renderEmail(emailOfKind(kind), "Course Shop").text).toMatch(
+        /Hello/,
+      );
     },
   );
 
   it("writes the schedule in the course's time zone", () => {
-    const { text } = renderEmail(emails[0], "Course Shop");
+    const { text } = renderEmail(emailOfKind("access_granted"), "Course Shop");
 
     expect(text).toContain("6:00 PM EST");
   });
@@ -91,7 +89,10 @@ describe("renderEmail", () => {
       },
       "Course Shop",
     );
-    const withoutRefund = renderEmail(emails[1], "Course Shop");
+    const withoutRefund = renderEmail(
+      emailOfKind("already_owned"),
+      "Course Shop",
+    );
 
     expect(withRefund.text).toContain("refunded");
     expect(withoutRefund.text).not.toContain("refunded");
@@ -102,13 +103,12 @@ describe("renderEmail", () => {
       { kind: "access_suspended", view: { course, wasRefundIssued: true } },
       "Course Shop",
     );
-    const withoutRefund = renderEmail(emails[2], "Course Shop");
+    const withoutRefund = renderEmail(
+      emailOfKind("access_suspended"),
+      "Course Shop",
+    );
 
     expect(withRefund.text).toContain("refunded");
     expect(withoutRefund.text).not.toContain("refunded");
-  });
-
-  it("formats the disputed amount in the payment's currency", () => {
-    expect(renderEmail(emails[3], "Course Shop").text).toContain("$19.99");
   });
 });

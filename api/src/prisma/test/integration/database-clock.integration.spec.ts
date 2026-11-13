@@ -9,9 +9,12 @@ describe("DatabaseClock (integration)", () => {
 
   it("reads a time no earlier than a row Postgres stamped before it", async () => {
     const queued = await db.orm.public.EmailOutbox.create({
-      kind: "dispute_alert",
-      recipient: "owner@example.com",
-      payload: { paymentId: crypto.randomUUID() },
+      kind: "access_granted",
+      recipient: "ada@example.com",
+      payload: {
+        courseId: crypto.randomUUID(),
+        customerId: crypto.randomUUID(),
+      },
       attempts: 0,
     });
 

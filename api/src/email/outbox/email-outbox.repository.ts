@@ -15,23 +15,14 @@ export type EmailKind = Models.public_EmailOutbox["kind"];
 // without the link to its enrollment, which only the admin view reads
 export type OutboxEmail = Omit<Models.public_EmailOutbox, "enrollmentLink">;
 
-// the owner's alert is about a payment, so it has no enrollment
-type EnrollmentEmailKind = Exclude<EmailKind, "dispute_alert">;
-
-export type QueuedEmail =
-  | {
-      [Kind in EnrollmentEmailKind]: {
-        kind: Kind;
-        recipient: string;
-        payload: EmailPayloads[Kind];
-        enrollmentId: string;
-      };
-    }[EnrollmentEmailKind]
-  | {
-      kind: "dispute_alert";
-      recipient: string;
-      payload: EmailPayloads["dispute_alert"];
-    };
+export type QueuedEmail = {
+  [Kind in EmailKind]: {
+    kind: Kind;
+    recipient: string;
+    payload: EmailPayloads[Kind];
+    enrollmentId: string;
+  };
+}[EmailKind];
 
 @Injectable()
 export class EmailOutboxRepository {
@@ -48,12 +39,10 @@ export class EmailOutboxRepository {
       attempts: 0,
     });
 
-    if (email.kind !== "dispute_alert") {
-      await scope.orm.public.EnrollmentEmail.create({
-        emailId: queued.id,
-        enrollmentId: email.enrollmentId,
-      });
-    }
+    await scope.orm.public.EnrollmentEmail.create({
+      emailId: queued.id,
+      enrollmentId: email.enrollmentId,
+    });
   }
 
   /** How many emails have been queued for `recipient` since `since`. */

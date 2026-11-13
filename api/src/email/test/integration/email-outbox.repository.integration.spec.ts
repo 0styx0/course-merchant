@@ -79,17 +79,6 @@ describe("EmailOutboxRepository (integration)", () => {
       });
     });
 
-    it("links the owner's dispute alert to no enrollment", async () => {
-      await repository.enqueue(db, {
-        kind: "dispute_alert",
-        recipient: "owner@example.com",
-        payload: { paymentId: crypto.randomUUID() },
-      });
-
-      expect(await db.orm.public.EmailOutbox.all()).toHaveLength(1);
-      expect(await db.orm.public.EnrollmentEmail.all()).toEqual([]);
-    });
-
     it("discards the email and its link when the caller's transaction rolls back", async () => {
       const email = await enrolledAccessEmail("ada@example.com");
 

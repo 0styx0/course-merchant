@@ -23,7 +23,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'dc546a9c053e82915b459b15a23f3b6d8d69a91850e3fcd0d4f3650e73859266'>;
+  StorageHashBase<'1be191f6347c615efed1e699530d2f009196f7a0a3245f4221efd0af618768d6'>;
 export type ExecutionHash =
   ExecutionHashBase<'d1495c3b8e6815988349bf06c895fb0f22c7519bee94768d674ace149b2df27b'>;
 export type ProfileHash =
@@ -249,9 +249,8 @@ type FieldTypeOverrides = {
       };
       readonly EmailOutbox: {
         readonly kind: {
-          readonly output:
-            'access_granted' | 'already_owned' | 'access_suspended' | 'dispute_alert';
-          readonly input: 'access_granted' | 'already_owned' | 'access_suspended' | 'dispute_alert';
+          readonly output: 'access_granted' | 'already_owned' | 'access_suspended';
+          readonly input: 'access_granted' | 'already_owned' | 'access_suspended';
         };
         readonly status: {
           readonly output: 'pending' | 'sent' | 'failed';
@@ -295,8 +294,8 @@ type ColumnTypeOverrides = {
     };
     readonly EmailOutbox: {
       readonly kind: {
-        readonly output: 'access_granted' | 'already_owned' | 'access_suspended' | 'dispute_alert';
-        readonly input: 'access_granted' | 'already_owned' | 'access_suspended' | 'dispute_alert';
+        readonly output: 'access_granted' | 'already_owned' | 'access_suspended';
+        readonly input: 'access_granted' | 'already_owned' | 'access_suspended';
       };
       readonly status: {
         readonly output: 'pending' | 'sent' | 'failed';
@@ -1322,12 +1321,7 @@ type ContractBase = Omit<
             };
             readonly EmailKind: {
               readonly kind: 'valueSet';
-              readonly values: readonly [
-                'access_granted',
-                'already_owned',
-                'access_suspended',
-                'dispute_alert',
-              ];
+              readonly values: readonly ['access_granted', 'already_owned', 'access_suspended'];
             };
             readonly EmailStatus: {
               readonly kind: 'valueSet';
@@ -2279,7 +2273,6 @@ type ContractBase = Omit<
               { readonly name: 'ACCESS_GRANTED'; readonly value: 'access_granted' },
               { readonly name: 'ALREADY_OWNED'; readonly value: 'already_owned' },
               { readonly name: 'ACCESS_SUSPENDED'; readonly value: 'access_suspended' },
-              { readonly name: 'DISPUTE_ALERT'; readonly value: 'dispute_alert' },
             ];
           };
           readonly EmailStatus: {
@@ -2315,7 +2308,6 @@ type ContractBase = Omit<
             { readonly name: 'ACCESS_GRANTED'; readonly value: 'access_granted' },
             { readonly name: 'ALREADY_OWNED'; readonly value: 'already_owned' },
             { readonly name: 'ACCESS_SUSPENDED'; readonly value: 'access_suspended' },
-            { readonly name: 'DISPUTE_ALERT'; readonly value: 'dispute_alert' },
           ];
           readonly EmailStatus: readonly [
             { readonly name: 'PENDING'; readonly value: 'pending' },

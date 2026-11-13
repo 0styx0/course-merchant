@@ -16,7 +16,6 @@ const payloadSchemas = {
     customerId: z.string(),
     refundIssued: z.boolean(),
   }),
-  dispute_alert: z.object({ paymentId: z.string() }),
 };
 
 export type EmailPayloads = {
