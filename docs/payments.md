@@ -48,14 +48,8 @@ Keep these files current **in the same commit as the work**. Tick off status her
 - [ ] **7. Refunds and disputes by hand, API side** (see [refunds.md](payments/refunds.md)). The students list, its Un-enroll button and the "Refund owed" mark are web work, planned in the admin course view area of [courses.md](courses.md).
   - [x] **7a.** The admin course answers say which students are owed a refund, so a refund that Stripe keeps refusing shows up without reading logs.
   - [x] **7b.** The API can un-enroll a student in one transaction: it revokes the enrollment and records the payment as refunded. Nothing calls this yet; 7d does.
-  - [ ] **7c.** Course ids and customer ids in URLs are checked by one shared rule. *(mechanical)* **Next**
-    - *Coverage check*: a unit test for `ParseCourseIdPipe` landed first, pinning today's accepted and rejected ids so the move changes nothing.
-    - *New shared pieces*: a uuid pipe that takes the error code, because 7d needs a second id check.
-    - *Files*:
-      - `ParseCourseIdPipe` moves to `api/src/common/validation/`.
-      - Its 3 calling controllers change.
-    - *Done when*: the existing unit and e2e tests pass unchanged, and the e2e tests that pin the 400 `INVALID_COURSE_ID` pass (coverage check first).
-  - [ ] **7d.** The admin can un-enroll a student through the API.
+  - [x] **7c.** Course ids and customer ids in URLs are checked by one shared rule, so 7d reuses it for customer ids.
+  - [ ] **7d.** The admin can un-enroll a student through the API. **Next**
     - *Behaviours*:
       - `POST /v1/admin/courses/{courseId}/enrollments/{customerId}/revocation` returns 204.
       - A repeat call returns 204 and changes nothing.

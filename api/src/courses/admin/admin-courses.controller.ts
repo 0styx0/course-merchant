@@ -15,7 +15,7 @@ import type {
   ListCoursesAdminResponse,
   UpdateCourseRequest,
 } from "types.js";
-import { ParseCourseIdPipe } from "../pipes/parse-course-id.pipe.js";
+import { parseCourseIdPipe } from "../validation/parse-course-id-pipe.js";
 import { AdminCoursesService } from "./admin-courses.service.js";
 import { ZodValidationPipe } from "@/common/validation/zod-validation.pipe.js";
 import {
@@ -40,7 +40,7 @@ export class AdminCoursesController {
 
   @Get(":courseId")
   findByIdAdmin(
-    @Param("courseId", ParseCourseIdPipe) courseId: string,
+    @Param("courseId", parseCourseIdPipe) courseId: string,
   ): Promise<GetCourseAdminResponse> {
     return this.adminCoursesService.findByIdAdmin(courseId);
   }
@@ -60,7 +60,7 @@ export class AdminCoursesController {
 
   @Put(":courseId")
   updateCourse(
-    @Param("courseId", ParseCourseIdPipe) courseId: string,
+    @Param("courseId", parseCourseIdPipe) courseId: string,
     @Body(new ZodValidationPipe(updateCourseRequestSchema))
     request: UpdateCourseRequest,
   ): Promise<GetCourseAdminResponse> {

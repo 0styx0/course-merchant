@@ -57,11 +57,11 @@ Write these after the top four, in this order.
 
 Files table row:
 
-`| [parse-course-id.pipe.spec.ts](api/src/courses/test/unit/parse-course-id.pipe.spec.ts#L20) (new) | 12 tests: accepted ids, rejected ids |`
+`| [parse-guid.pipe.spec.ts](api/src/common/test/unit/parse-guid.pipe.spec.ts#L20) (new) | 12 tests: accepted ids, rejected ids |`
 
 Coverage map row:
 
-`| Reject a bad id | – | [throws](api/src/courses/test/unit/parse-course-id.pipe.spec.ts#L40) INVALID_COURSE_ID naming the value | [empty](api/src/courses/test/unit/parse-course-id.pipe.spec.ts#L40) string; too long; braces |`
+`| Reject a bad id | – | [throws](api/src/common/test/unit/parse-guid.pipe.spec.ts#L40) INVALID_COURSE_ID naming the value | [empty](api/src/common/test/unit/parse-guid.pipe.spec.ts#L40) string; too long; braces |`
 
 ## Check before sending
 

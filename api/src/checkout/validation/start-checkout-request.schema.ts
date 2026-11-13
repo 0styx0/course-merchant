@@ -12,7 +12,7 @@ const checkoutCustomerSchema = z.strictObject({
 });
 
 export const startCheckoutRequestSchema = z.strictObject({
-  // any 8-4-4-4-12 hex id, matching what ParseCourseIdPipe accepts
+  // any 8-4-4-4-12 hex id, matching what ParseGuidPipe accepts
   courseId: z.guid(),
   customer: checkoutCustomerSchema,
 });

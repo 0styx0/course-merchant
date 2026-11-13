@@ -10,7 +10,7 @@ import type { Response } from "express";
 import { GetCourseResponse, ListCoursesResponse } from "types.js";
 import { Public } from "@/auth/public.decorator.js";
 import { CoursesService } from "./courses.service.js";
-import { ParseCourseIdPipe } from "./pipes/parse-course-id.pipe.js";
+import { parseCourseIdPipe } from "./validation/parse-course-id-pipe.js";
 
 @Public()
 @Controller({
@@ -30,14 +30,14 @@ export class CoursesController {
 
   @Get(":courseId")
   findById(
-    @Param("courseId", ParseCourseIdPipe) courseId: string,
+    @Param("courseId", parseCourseIdPipe) courseId: string,
   ): Promise<GetCourseResponse> {
     return this.coursesService.findById(courseId);
   }
 
   @Get(":courseId/image/:version")
   async findImage(
-    @Param("courseId", ParseCourseIdPipe) courseId: string,
+    @Param("courseId", parseCourseIdPipe) courseId: string,
     @Param("version") version: string,
     @Res({ passthrough: true }) response: Response,
   ): Promise<StreamableFile> {
