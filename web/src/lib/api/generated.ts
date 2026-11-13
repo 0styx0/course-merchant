@@ -231,6 +231,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/courses/{courseId}/enrollments/{customerId}/revocation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Un-enroll a student
+         * @description Removes a customer's access to a course and records their payment as refunded. Requires an administrator.
+         *
+         *     The server never contacts Stripe: the administrator refunds the money in the Stripe dashboard first, and this call records it. A customer who never paid (a free course) loses access with no payment to record. Repeating the call for an already un-enrolled customer returns 204 and changes nothing.
+         */
+        post: operations["revokeEnrollment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/checkout-sessions": {
         parameters: {
             query?: never;
@@ -385,6 +407,12 @@ export interface components {
          * @example 123e4567-e89b-12d3-a456-426614174000
          */
         CourseId: string;
+        /**
+         * Format: uuid
+         * @description Identifier of the customer.
+         * @example 7c9e6679-7425-40de-944b-e07fc1f90ae7
+         */
+        CustomerId: string;
         /**
          * Format: uuid
          * @description Identifier of an entry in a course's price schedule.
@@ -548,7 +576,7 @@ export interface components {
         AdminEnrollment: {
             /**
              * Format: date-time
-             * @description When a full refund removed access, in UTC. Cleared if the customer buys the course again.
+             * @description When an administrator's un-enroll (after a refund made in Stripe) removed access, in UTC. Cleared if the customer buys the course again.
              */
             revokedAt: string | null;
             /**
@@ -567,8 +595,7 @@ export interface components {
              */
             refundStatus: "not_owed" | "owed";
             customer: {
-                /** Format: uuid */
-                id: string;
+                id: components["schemas"]["CustomerId"];
                 name: string;
                 /** Format: email */
                 email: string;
@@ -736,6 +763,15 @@ export interface components {
                 "application/problem+json": components["schemas"]["ProblemDetails"];
             };
         };
+        /** @description No enrollment exists for the customer in the course: the course, the customer or the enrollment is unknown. */
+        EnrollmentNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
         /** @description Course not found, archived, or does not have a currently active price (including a course whose prices all take effect in the future). For `getCourseImage`, also returned when `version` is not the version of the course's current image. */
         CourseNotFound: {
             headers: {
@@ -808,6 +844,8 @@ export interface components {
         CheckoutId: string;
         /** @description Public identifier of the course. */
         CourseId: components["schemas"]["CourseId"];
+        /** @description Identifier of the customer. */
+        CustomerId: components["schemas"]["CustomerId"];
         /** @description The `image.version` of the course's current image. */
         CourseImageVersion: components["schemas"]["CourseImageVersion"];
     };
@@ -1142,6 +1180,41 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["AdminCourseNotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    revokeEnrollment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public identifier of the course. */
+                courseId: components["parameters"]["CourseId"];
+                /** @description Identifier of the customer. */
+                customerId: components["parameters"]["CustomerId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The customer is un-enrolled. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The course identifier (`INVALID_COURSE_ID`) or the customer identifier (`INVALID_CUSTOMER_ID`) is malformed. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["EnrollmentNotFound"];
             500: components["responses"]["InternalServerError"];
         };
     };

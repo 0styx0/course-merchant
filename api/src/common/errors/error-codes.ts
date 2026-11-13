@@ -10,6 +10,11 @@ export enum ErrorCodeCourse {
   COURSE_IMAGE_NOT_FOUND = "COURSE_IMAGE_NOT_FOUND",
 }
 
+export enum ErrorCodeEnrollment {
+  ENROLLMENT_NOT_FOUND = "ENROLLMENT_NOT_FOUND",
+  INVALID_CUSTOMER_ID = "INVALID_CUSTOMER_ID",
+}
+
 export enum ErrorCodeValidation {
   VALIDATION_FAILED = "VALIDATION_FAILED",
 }
@@ -51,6 +56,7 @@ export enum FieldErrorCode {
 
 export const ErrorCode = {
   ...ErrorCodeCourse,
+  ...ErrorCodeEnrollment,
   ...ErrorCodeGeneric,
   ...ErrorCodeValidation,
   ...ErrorCodeCheckout,
@@ -60,6 +66,7 @@ export const ErrorCode = {
 
 export type ErrorCode =
   | ErrorCodeCourse
+  | ErrorCodeEnrollment
   | ErrorCodeGeneric
   | ErrorCodeValidation
   | ErrorCodeCheckout
@@ -83,6 +90,14 @@ export const ERROR_DEFINITIONS = {
   [ErrorCode.INVALID_COURSE_ID]: {
     status: HttpStatus.BAD_REQUEST,
     title: "Invalid course ID",
+  },
+  [ErrorCode.ENROLLMENT_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    title: "Enrollment not found",
+  },
+  [ErrorCode.INVALID_CUSTOMER_ID]: {
+    status: HttpStatus.BAD_REQUEST,
+    title: "Invalid customer ID",
   },
   [ErrorCode.INTERNAL_SERVER_ERROR]: {
     status: HttpStatus.INTERNAL_SERVER_ERROR,

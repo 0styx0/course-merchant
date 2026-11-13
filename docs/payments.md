@@ -49,25 +49,8 @@ Keep these files current **in the same commit as the work**. Tick off status her
   - [x] **7a.** The admin course answers say which students are owed a refund, so a refund that Stripe keeps refusing shows up without reading logs.
   - [x] **7b.** The API can un-enroll a student in one transaction: it revokes the enrollment and records the payment as refunded. Nothing calls this yet; 7d does.
   - [x] **7c.** Course ids and customer ids in URLs are checked by one shared rule, so 7d reuses it for customer ids.
-  - [ ] **7d.** The admin can un-enroll a student through the API. **Next**
-    - *Behaviours*:
-      - `POST /v1/admin/courses/{courseId}/enrollments/{customerId}/revocation` returns 204.
-      - A repeat call returns 204 and changes nothing.
-      - An unknown course, customer or enrollment returns 404 `ENROLLMENT_NOT_FOUND`.
-      - A malformed course id returns 400 `INVALID_COURSE_ID`.
-      - A malformed customer id returns 400 `INVALID_CUSTOMER_ID`.
-      - A call without an admin session returns 401, and the route-coverage test lists the route.
-      - The contract's `revokedAt` description names the un-enroll.
-    - *New shared pieces*: the `ENROLLMENT_NOT_FOUND` and `INVALID_CUSTOMER_ID` codes, because the web will word them.
-    - *Files*:
-      - `api/openapi/openapi-v1.yaml`
-      - `api/src/common/errors/error-codes.ts`
-      - `api/src/admin-enrollments/admin-enrollments.controller.ts` (new)
-      - `api/src/admin-enrollments/admin-enrollments.module.ts` (new; imports Prisma, Enrollments and Payments, as Checkout does)
-      - `api/src/app.module.ts`
-    - *Needs*: 7b and 7c.
-    - *Done when*: the controller unit tests pass, and the e2e tests cover 204, the repeat, 404, both 400s and 401.
-  - [ ] **7e.** The unused dispute alert email is gone from the code and the database. *(mechanical)*
+  - [x] **7d.** The admin can un-enroll a student through the API, and a repeat call changes nothing.
+  - [ ] **7e.** The unused dispute alert email is gone from the code and the database. *(mechanical)* **Next**
     - *New shared pieces*: none.
     - *Files*:
       - `api/src/prisma/contract.prisma`, plus a planned migration

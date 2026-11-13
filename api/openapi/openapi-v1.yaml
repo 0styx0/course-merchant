@@ -671,6 +671,56 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /admin/courses/{courseId}/enrollments/{customerId}/revocation:
+    post:
+      tags:
+        - Admin
+      operationId: revokeEnrollment
+      summary: Un-enroll a student
+      description: >
+        Removes a customer's access to a course and records their payment as
+        refunded. Requires an administrator.
+
+
+        The server never contacts Stripe: the administrator refunds the money
+        in the Stripe dashboard first, and this call records it. A customer
+        who never paid (a free course) loses access with no payment to
+        record. Repeating the call for an already un-enrolled customer
+        returns 204 and changes nothing.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CourseId"
+        - $ref: "#/components/parameters/CustomerId"
+      responses:
+        "204":
+          description: The customer is un-enrolled.
+        "400":
+          description: >
+            The course identifier (`INVALID_COURSE_ID`) or the customer
+            identifier (`INVALID_CUSTOMER_ID`) is malformed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              examples:
+                invalidCourseId:
+                  value:
+                    title: Invalid course ID
+                    detail: "'not-a-uuid' is not a valid course identifier."
+                    code: INVALID_COURSE_ID
+                invalidCustomerId:
+                  value:
+                    title: Invalid customer ID
+                    detail: "'not-a-uuid' is not a valid customer identifier."
+                    code: INVALID_CUSTOMER_ID
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/EnrollmentNotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   /checkout-sessions:
     post:
       tags:
@@ -877,6 +927,14 @@ components:
       schema:
         $ref: "#/components/schemas/CourseId"
 
+    CustomerId:
+      name: customerId
+      in: path
+      required: true
+      description: Identifier of the customer.
+      schema:
+        $ref: "#/components/schemas/CustomerId"
+
     CourseImageVersion:
       name: version
       in: path
@@ -991,6 +1049,21 @@ components:
                 title: Invalid course ID
                 detail: "'not-a-uuid' is not a valid course identifier."
                 code: INVALID_COURSE_ID
+
+    EnrollmentNotFound:
+      description: >
+        No enrollment exists for the customer in the course: the course, the
+        customer or the enrollment is unknown.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+          examples:
+            enrollmentNotFound:
+              value:
+                title: Enrollment not found
+                detail: No enrollment exists for customer 7c9e6679-7425-40de-944b-e07fc1f90ae7 in course 123e4567-e89b-12d3-a456-426614174000.
+                code: ENROLLMENT_NOT_FOUND
 
     CourseNotFound:
       description: >
@@ -1222,6 +1295,13 @@ components:
       description: Public identifier of the course.
       examples:
         - 123e4567-e89b-12d3-a456-426614174000
+
+    CustomerId:
+      type: string
+      format: uuid
+      description: Identifier of the customer.
+      examples:
+        - 7c9e6679-7425-40de-944b-e07fc1f90ae7
 
     PriceId:
       type: string
@@ -1609,8 +1689,9 @@ components:
             - "null"
           format: date-time
           description: >
-            When a full refund removed access, in UTC. Cleared if the customer
-            buys the course again.
+            When an administrator's un-enroll (after a refund made in Stripe)
+            removed access, in UTC. Cleared if the customer buys the course
+            again.
         suspendedAt:
           type:
             - string
@@ -1647,8 +1728,7 @@ components:
             - email
           properties:
             id:
-              type: string
-              format: uuid
+              $ref: "#/components/schemas/CustomerId"
             name:
               type: string
             email:

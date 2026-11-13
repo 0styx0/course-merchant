@@ -52,7 +52,12 @@ export class AdminEnrollmentsService {
         return "already_unenrolled";
       }
 
-      return this.revokeInsideTransaction(tx, courseId, customerId, enrollment);
+      return this.revokeEnrollmentWithRefund(
+        tx,
+        courseId,
+        customerId,
+        enrollment,
+      );
     });
   }
 
@@ -61,7 +66,7 @@ export class AdminEnrollmentsService {
    * enrollment after it was read, and then refunds nothing. A free
    * enrollment has no payment to record.
    */
-  private async revokeInsideTransaction(
+  private async revokeEnrollmentWithRefund(
     tx: DbScope & ClockScope,
     courseId: string,
     customerId: string,
