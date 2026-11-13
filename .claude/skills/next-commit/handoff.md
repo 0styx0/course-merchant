@@ -42,7 +42,7 @@ Write these after the top four, in this order.
     - Link the first added or modified test, as `[file.test.tsx](path/file.test.tsx#L42)`, and put `(new)` after the link of a new file.
     - Name each test added or modified in plain words and say whether it is new or changed.
     - Put fixtures, mocks and other test helpers in the files-changed table.
-  - The coverage map: the approved test table ([quality.md](quality.md) *Test table*) with each cell filled by `test title ([file.test.tsx](path/file.test.tsx#L42))`.
+  - The coverage map: the approved test table ([quality.md](quality.md) *Test table*) with each cell filled by the test's title, whose first word is the link to the test: `[throws](path/file.test.tsx#L42) INVALID_COURSE_ID naming the value`. Never write the file name in a cell. For an `it.each` test, link the line of the `it.each` call.
     - Keep the rows and columns of the table, so the owner compares it with the outline cell by cell.
     - Write `NOT TESTED: <reason>` in a cell with no test, so a gap shows on sight.
     - Leave a cell empty only when the outline left it empty, and repeat the outline's reason.
@@ -52,5 +52,24 @@ Write these after the top four, in this order.
 - **Retro:** only for the last commit of a milestone, as [../_shared/milestone-line.md](../_shared/milestone-line.md) defines it. Add it to the milestone's `## Step N.` section too.
 - **Rename grep:** after a rename or move, the result of grepping for the old name in file names and code.
 - **Next step:** a reminder to run `/clear` before the next commit. When the work is part of a sequence, give the next command on its own line, e.g. `/next-commit <module-name>`.
+
+## Example rows
+
+Files table row:
+
+`| [parse-course-id.pipe.spec.ts](api/src/courses/test/unit/parse-course-id.pipe.spec.ts#L20) (new) | 12 tests: accepted ids, rejected ids |`
+
+Coverage map row:
+
+`| Reject a bad id | – | [throws](api/src/courses/test/unit/parse-course-id.pipe.spec.ts#L40) INVALID_COURSE_ID naming the value | [empty](api/src/courses/test/unit/parse-course-id.pipe.spec.ts#L40) string; too long; braces |`
+
+## Check before sending
+
+Tick each item against the draft; fix the draft, then send.
+
+- The top four come first, in order.
+- Every section the skeleton lists is present, or the commit has no such part (say so).
+- Every coverage-map cell holds a linked title (first word linked, no file name) or `NOT TESTED: <reason>`, and the tests table has one row per spec file.
+- Every pass in *Reviews* either ran or appears as "not run: <reason>".
 
 Then stop. The owner makes the commit.

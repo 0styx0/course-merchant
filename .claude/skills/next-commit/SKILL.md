@@ -66,4 +66,4 @@ Use the format in [outline.md](outline.md), ending with the `Preflight:` line; s
 
 ## Hand off
 
-Follow [handoff.md](handoff.md), then stop.
+Read [handoff.md](handoff.md) again now, in full, before writing a word of the hand-off, then follow it and run its *Check before sending* list. Then stop.
