@@ -49,6 +49,7 @@ Keep these files current **in the same commit as the work**. Tick off status her
   - [x] **7a.** The admin course answers say which students are owed a refund, so a refund that Stripe keeps refusing shows up without reading logs.
   - [x] **7b.** The API can un-enroll a student in one transaction: it revokes the enrollment and records the payment as refunded. Nothing calls this yet; 7d does.
   - [ ] **7c.** Course ids and customer ids in URLs are checked by one shared rule. *(mechanical)* **Next**
+    - *Coverage check*: a unit test for `ParseCourseIdPipe` landed first, pinning today's accepted and rejected ids so the move changes nothing.
     - *New shared pieces*: a uuid pipe that takes the error code, because 7d needs a second id check.
     - *Files*:
       - `ParseCourseIdPipe` moves to `api/src/common/validation/`.
