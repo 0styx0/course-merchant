@@ -3,9 +3,14 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 // Marks the `<header>` in site-header.tsx.
 const SITE_HEADER_SELECTOR = "[data-site-header]";
 
-function makeRootMargin(header: Element | null): string | undefined {
-  if (!header) return undefined;
-  return `-${header.getBoundingClientRect().bottom}px 0px 0px 0px`;
+// Stretches the watched area far below the screen, so an element below the
+// fold counts as inside it. A jump from below the fold to above the header then
+// still crosses the area's edge and fires the observer.
+const BELOW_SCREEN_MARGIN = "100000%";
+
+function makeRootMargin(header: Element | null): string {
+  const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+  return `-${headerBottom}px 0px ${BELOW_SCREEN_MARGIN} 0px`;
 }
 
 function isAboveRootTop(entry: IntersectionObserverEntry): boolean {

@@ -547,6 +547,7 @@ No bar at the top, even when the button sits below the fold.
 - Retro:
   - Planned 2 commits (10a, 10b); shipped 2.
   - Owner changes after using the page: not yet recorded.
+  - CI found the bar staying at the top after a one-step scroll jump; fixed by stretching the watcher's area below the screen.
   - Rule friction: the planned `scroll-mt-20` class had no failing test, because Chromium already lands Name below the header, so 10b shipped as a test only.
 
 ## Step 11. Walk the whole page

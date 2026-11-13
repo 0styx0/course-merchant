@@ -3,6 +3,11 @@ import { MOCK_API_BASE_URL, MOCK_CONTACT_EMAIL } from "./src/mocks/mock-api.ts";
 
 export default defineConfig({
   testDir: "./tests/browser",
+  // CI starts a fresh `next dev`, which compiles each route on its first visit
+  // (the edit page took about 7 s), so its tests and assertions wait longer
+  // than a warm local server needs.
+  timeout: process.env.CI ? 60_000 : 30_000,
+  expect: { timeout: process.env.CI ? 15_000 : 5_000 },
   use: {
     baseURL: "http://localhost:3000",
     // CI never retries, so "on-first-retry" would record nothing there; the

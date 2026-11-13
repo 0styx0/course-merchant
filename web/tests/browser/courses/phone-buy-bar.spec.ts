@@ -8,8 +8,11 @@ const { test, expect } = msw;
 
 const ENROLL_BUTTONS = /^Enroll/;
 
+// UTC adds a "your time" line to the panel, which pushes the inline button
+// below the fold at 400 x 800 on every machine.
 test.use({
   mswHandlers: [[courseByIdSuccess, courseImageSuccess], { scope: "test" }],
+  timezoneId: "UTC",
 });
 
 // jsdom can't show scrolling or the breakpoint: it has no layout, so only a real browser shows the bar follow the page.
@@ -19,9 +22,11 @@ test("shows the bar once the button scrolls away, hides it back at the top, open
   const bar = page.locator("[data-phone-buy-bar]");
   await page.setViewportSize({ width: 400, height: 800 });
   await page.goto(`/courses/${longTextCourse.id}`);
-  await expect(
-    page.getByRole("button", { name: ENROLL_BUTTONS }),
-  ).toBeVisible();
+  const inlineButton = page.getByRole("button", { name: ENROLL_BUTTONS });
+  await expect(inlineButton).toBeVisible();
+  // The button starts below the fold, so the jump back to the top goes from
+  // "above the header" to "below the screen" in one step.
+  await expect(inlineButton).not.toBeInViewport();
   await page.mouse.wheel(0, 3000);
   await expect(bar).toBeVisible();
 
