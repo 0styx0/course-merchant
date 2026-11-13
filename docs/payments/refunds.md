@@ -8,7 +8,7 @@ Read this before working on the admin un-enroll, revoking or suspending access, 
 - The owner refunds or settles a dispute in Stripe, then un-enrolls the buyer from the admin course view. The API sets the enrollment's `revokedAt` and marks the payment `refunded`, with no Stripe check.
 - The webhook ignores `charge.refunded` and `charge.dispute.created`, so a Dashboard refund alone leaves the payment `succeeded` until the owner un-enrolls.
 - Each admin enrollment carries `refundStatus`: `owed` when the buyer has an orphan payment (defined below) for that course, otherwise `not_owed`. The admin course view shows it as "Refund owed", so a refund the sweeper can't push through shows without reading logs.
-- The admin course view is web work planned in [courses.md](../courses.md); payments step 7 builds the API half.
+- The admin course view is web work planned in [admin-course-view.md](../admin-course-view.md); payments step 7 builds the API half.
 
 **Sweeper (step 5, built).** [payment-sweeper.ts](../../api/src/payments/sweeper/payment-sweeper.ts) runs every 10 minutes on every API server, with three independent checks: refund orphan payments, recheck overdue pending payments, expire payments that never got a checkout. The rules and numbers are in the decision rows below.
 

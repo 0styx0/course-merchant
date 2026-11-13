@@ -12,7 +12,7 @@ Keep this file current **in the same commit as the work**.
 - [x] Admin authentication: every admin route requires a login (see [auth.md](auth.md)).
 - [ ] Web admin pages. The create and edit pages are built, with description toolbar and image; the edit page has no status change yet, and there is no login form or admin course list.
 - [ ] Estimated payout under the admin price field (payments step 8).
-- [ ] **Admin course view.** A page like the public course page, with a "Students" list underneath: each student's access, email status and payment, the "Refund owed" mark (`refundStatus`, payments step 7a) and an Un-enroll button (payments step 7d). Not planned yet; plan it with `/plan-create-overview` after payments 7a–7d ship.
+- [ ] **Admin course view.** A page like the public course page, with a "Students" list underneath: each student's access, email status and payment, the "Refund owed" mark (`refundStatus`, payments step 7a) and an Un-enroll button (payments step 7d). Planned in [admin-course-view.md](admin-course-view.md) (6 milestones; milestone 1 is **Next**).
 - [ ] **Course images** (design in *Course images* below):
   - [x] **1. API: check and convert an uploaded image** ([course-image.ts](../api/src/courses/images/course-image.ts)). Nothing calls it yet.
   - [x] **2a. API: store a course's image** ([course-images.repository.ts](../api/src/courses/repositories/course-images.repository.ts)). Admin course responses carry `image: { updatedAt, version } | null`, always `null` until 2b.
