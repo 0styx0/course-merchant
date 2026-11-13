@@ -22,19 +22,19 @@ test("shows the bar once the button scrolls away, hides it back at the top, open
   await expect(
     page.getByRole("button", { name: ENROLL_BUTTONS }),
   ).toBeVisible();
-  await page.mouse.wheel(0, 3000);
+  await page.evaluate(() => window.scrollTo(0, 3000));
   await expect(bar).toBeVisible();
 
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect(bar).toBeHidden();
 
-  await page.mouse.wheel(0, 3000);
+  await page.evaluate(() => window.scrollTo(0, 3000));
   await bar.getByRole("button", { name: ENROLL_BUTTONS }).click();
   await expect(page.getByLabel("Name")).toBeFocused();
   await expect(bar).toBeHidden();
 
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.mouse.wheel(0, 3000);
+  await page.evaluate(() => window.scrollTo(0, 3000));
   await expect(bar).toBeHidden();
 });
 
@@ -48,7 +48,7 @@ test("keeps the footer's Contact link above the bar at the bottom of a phone pag
     page.getByRole("button", { name: ENROLL_BUTTONS }),
   ).toBeVisible();
 
-  await page.mouse.wheel(0, 100000);
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 
   const bar = page.locator("[data-phone-buy-bar]");
   await expect(bar).toBeVisible();
@@ -78,7 +78,7 @@ test("lands the Name box fully below the header after the bar is tapped deep in 
   await expect(
     page.getByRole("button", { name: ENROLL_BUTTONS }),
   ).toBeVisible();
-  await page.mouse.wheel(0, 3000);
+  await page.evaluate(() => window.scrollTo(0, 3000));
 
   const bar = page.locator("[data-phone-buy-bar]");
   await bar.getByRole("button", { name: ENROLL_BUTTONS }).click();
