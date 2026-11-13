@@ -5,7 +5,9 @@ export default defineConfig({
   testDir: "./tests/browser",
   use: {
     baseURL: "http://localhost:3000",
-    trace: "on-first-retry",
+    // CI never retries, so "on-first-retry" would record nothing there; the
+    // CI workflow uploads these traces when a test fails.
+    trace: process.env.CI ? "retain-on-failure" : "on-first-retry",
   },
 
   projects: [

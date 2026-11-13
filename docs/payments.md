@@ -45,11 +45,80 @@ Keep these files current **in the same commit as the work**. Tick off status her
   - MSW handlers.
 
   Write the Given/When/Then specs first, in the step text here.
-- [ ] **7. Refunds, disputes and the admin's hand tools** (see [refunds.md](payments/refunds.md)):
-  - the admin un-enrolls a buyer from the course view (covers Dashboard refunds and disputes);
-  - the course view marks buyers with a refund owed;
-  - remove the `dispute_alert` email kind, its template and its composer branch;
-  - the estimated payout on the admin price field.
+- [ ] **7. Refunds and disputes by hand, API side** (see [refunds.md](payments/refunds.md)). The students list, its Un-enroll button and the "Refund owed" mark are web work, planned in the admin course view area of [courses.md](courses.md).
+  - [ ] **7a.** The admin course answers say which students are owed a refund, so a refund that Stripe keeps refusing shows up without reading logs. **Next**
+    - *Behaviours*:
+      - A student with an orphan payment in this course gets `refundStatus: "owed"`.
+      - A student whose enrollment points at their only payment gets `"not_owed"`.
+      - A free-course student gets `"not_owed"`.
+      - An orphan payment in another course of the same customer leaves this course's student at `"not_owed"`.
+      - An orphan payment the sweeper has since refunded leaves the student at `"not_owed"`.
+      - The admin list, get, create and update answers all carry the field.
+    - *New shared pieces*:
+      - `AdminEnrollment.refundStatus` (`"not_owed" | "owed"`), a contract field the admin course view will read.
+      - The orphan-payment condition inside `PaymentsRepository`, so the sweeper and this query share one definition.
+    - *Files*:
+      - `api/openapi/openapi-v1.yaml` (a required string enum, `not_owed` and `owed`)
+      - `api/src/payments/payments.repository.ts` (orphan buyers for the given course ids)
+      - `api/src/courses/admin/admin-courses.service.ts`
+      - `api/src/courses/courses.mapper.ts`
+      - `api/src/courses/courses.module.ts` (imports `PaymentsModule`; no import cycle)
+      - `web/src/mocks/fixtures/admin-courses.ts`, plus the regenerated web types (every contract commit touches these; without them the web type check fails)
+    - *Settled*: the refunds.md rows "orphan payment", "Refund owed" and `refundStatus`.
+    - *Done when*: the mapper unit tests, the repository and admin get/list integration tests, and the admin get e2e test pass.
+  - [ ] **7b.** The API can un-enroll a student in one transaction: it revokes the enrollment and records the payment as refunded. Nothing calls this yet; 7d does.
+    - *Behaviours*:
+      - An active paid enrollment gets `revokedAt` set to the database time, and its payment goes from `succeeded` to `refunded`, with `refundedAt` set.
+      - A free enrollment (no payment) gets only `revokedAt`.
+      - An enrollment that's already revoked doesn't change, keeps its first `revokedAt`, and the call reports success.
+      - A missing enrollment reports "not found".
+      - The service reads `paymentId`, then runs a guarded update on `revokedAt IS NULL AND paymentId = <read>`. A count of 0 means it was already revoked, so nothing is refunded.
+      - A payment that isn't `succeeded` stays as it is, and the revocation still saves.
+      - If the second write fails, the first one rolls back.
+    - *New shared pieces*: none.
+    - *Files*:
+      - `api/src/enrollments/enrollments.repository.ts`
+      - `api/src/admin-enrollments/admin-enrollments.service.ts` (new; reuses `markPaymentRefunded`)
+      - `api/src/prisma/contract.prisma` (comment: the admin's un-enroll sets `revokedAt`)
+    - *Settled*: the refunds.md row on un-enroll.
+    - *Done when*: the service unit tests and the repository and service integration tests pass.
+  - [ ] **7c.** Course ids and customer ids in URLs are checked by one shared rule. *(mechanical)*
+    - *New shared pieces*: a uuid pipe that takes the error code, because 7d needs a second id check.
+    - *Files*:
+      - `ParseCourseIdPipe` moves to `api/src/common/validation/`.
+      - Its 3 calling controllers change.
+    - *Done when*: the existing unit and e2e tests pass unchanged, and the e2e tests that pin the 400 `INVALID_COURSE_ID` pass (coverage check first).
+  - [ ] **7d.** The admin can un-enroll a student through the API.
+    - *Behaviours*:
+      - `POST /v1/admin/courses/{courseId}/enrollments/{customerId}/revocation` returns 204.
+      - A repeat call returns 204 and changes nothing.
+      - An unknown course, customer or enrollment returns 404 `ENROLLMENT_NOT_FOUND`.
+      - A malformed course id returns 400 `INVALID_COURSE_ID`.
+      - A malformed customer id returns 400 `INVALID_CUSTOMER_ID`.
+      - A call without an admin session returns 401, and the route-coverage test lists the route.
+      - The contract's `revokedAt` description names the un-enroll.
+    - *New shared pieces*: the `ENROLLMENT_NOT_FOUND` and `INVALID_CUSTOMER_ID` codes, because the web will word them.
+    - *Files*:
+      - `api/openapi/openapi-v1.yaml`
+      - `api/src/common/errors/error-codes.ts`
+      - `api/src/admin-enrollments/admin-enrollments.controller.ts` (new)
+      - `api/src/admin-enrollments/admin-enrollments.module.ts` (new; imports Prisma, Enrollments and Payments, as Checkout does)
+      - `api/src/app.module.ts`
+    - *Needs*: 7b and 7c.
+    - *Done when*: the controller unit tests pass, and the e2e tests cover 204, the repeat, 404, both 400s and 401.
+  - [ ] **7e.** The unused dispute alert email is gone from the code and the database. *(mechanical)*
+    - *New shared pieces*: none.
+    - *Files*:
+      - `api/src/prisma/contract.prisma`, plus a planned migration
+      - `api/src/email/outbox/email-payloads.ts`
+      - `api/src/email/outbox/email-outbox.repository.ts`
+      - `api/src/email/outbox/email-views.repository.ts`
+      - `api/src/email/email-composer.ts`
+      - `api/src/email/templates/email-templates.ts`
+      - `api/src/email/templates/render-email.ts`
+      - the 5 specs that use the kind
+    - *Done when*: `grep -rn dispute_alert api/src` finds only old migrations.
+- [ ] **8. Estimated payout on the admin price field.** Planned later, with the Stripe fee formula settled first. Its line in [courses.md](courses.md) points here.
 - [ ] **Launch:** see the checklist at the end.
 
 ## Principles
@@ -79,7 +148,7 @@ Flows and decisions, one file per subarea. Read the one that matches the task:
 
 ## Launch checklist
 
-- **The sweeper runs in production.** It's built (step 5), and every API server runs it. The admin course view's "Refund owed" mark is the alert for a refund Stripe keeps refusing (step 7), so build it before launch. Without it, a payment that should be refunded can wait indefinitely.
+- **The sweeper runs in production.** It's built (step 5), and every API server runs it. The admin course view's "Refund owed" mark is the alert for a refund Stripe keeps refusing. The API half is step 7a; the page is the admin course view area in [courses.md](courses.md). Build both before launch. Without it, a payment that should be refunded can wait indefinitely.
 - Use `?sslmode=verify-full` in `DATABASE_URL` when the database is on another machine. The API refuses to start with anything weaker than `require` (the Prisma command line, used for migrations, doesn't check, so give it the same URL).
 - Switch to live keys. Use a restricted key limited to Checkout Sessions read and write, and Refunds write.
 - Create the production webhook endpoint with API version `2026-09-30.endive` (the one pinned in `stripeClientProvider`; set it in the Dashboard, or with `api_version` when creating the endpoint through the API), subscribed to exactly the handled event types:
@@ -101,3 +170,44 @@ Flows and decisions, one file per subarea. Read the one that matches the task:
   2. Pay with test card `4242…`.
   3. Run `stripe trigger checkout.session.expired`.
   4. Pay with a declining test card and confirm nothing is granted.
+
+## Step 7. Refunds and disputes by hand, API side
+
+- Why here: the sweeper (step 5) leaves a refund it can't push through with no visible alert, and the admin has no way to end a student's access.
+- Needs: steps 5 and 6.
+- Builds on: [payments.repository.ts](../api/src/payments/payments.repository.ts) `findOrphanPayments` and `markPaymentRefunded`, [enrollments.repository.ts](../api/src/enrollments/enrollments.repository.ts), [refunds.md](payments/refunds.md).
+- Done when: `GET /v1/admin/courses/{courseId}` shows `refundStatus: "owed"` for a student with an orphan payment, and `POST …/revocation` sets `revokedAt` and moves the payment to `refunded`.
+
+Design notes *(temporary)*:
+
+- The new `admin-enrollments` module owns un-enroll. It sits outside `EnrollmentsModule`, which would otherwise import Payments and close a cycle.
+- `refundStatus` runs one query per answer: the orphan payments for the listed course ids, matched to each enrollment by (course, customer).
+- Un-enroll addresses an enrollment by customer id, because `AdminEnrollment` has no id and (course, customer) is unique.
+
+Flow *(temporary)*:
+
+```
+Admin GET/list course                                    existing
+└── each enrollment: refundStatus = "owed" if buyer has
+    an orphan payment here, else "not_owed"              7a
+Admin POST …/revocation                                  7d
+├── bad course id → 400 INVALID_COURSE_ID                existing (7c)
+├── bad customer id → 400 INVALID_CUSTOMER_ID            7d
+├── no session → 401                                     existing
+└── transaction                                          7b
+    ├── no enrollment → 404 ENROLLMENT_NOT_FOUND         7b/7d
+    ├── already revoked → 204, nothing changes           7b
+    └── revokedAt = db now
+        ├── free → 204                                   7b
+        └── payment → refunded (markPaymentRefunded) 204 7b
+```
+
+Failures *(temporary)*:
+
+| Actor | Failure | System does | Test |
+|---|---|---|---|
+| Admin | double-click | 204, nothing changes | 7b, 7d |
+| Admin | un-enroll races a rebuy | guarded writes; rare, accepted | none |
+| Admin | un-enroll without a Stripe refund | recorded as refunded | web confirm text |
+| DB | second write fails | both writes roll back | 7b |
+| Stripe | refund keeps failing | `refundStatus` stays `owed` | 7a |

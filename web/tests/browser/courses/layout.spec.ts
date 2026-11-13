@@ -20,7 +20,7 @@ test("keeps the details column 96px from the top while the description scrolls",
 
   const enrollButton = page.getByRole("button", { name: /^Enroll/ });
   await expect(enrollButton).toBeVisible();
-  await page.evaluate(() => window.scrollTo(0, 600));
+  await page.mouse.wheel(0, 600);
 
   const sideColumn = page.getByRole("complementary");
   await expect

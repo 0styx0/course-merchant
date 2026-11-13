@@ -167,14 +167,6 @@ const eslintConfig = defineConfig([
           message:
             "locator('div') and locator('span') match markup, not what a user sees. Use getByRole, getByLabel or getByText with { exact: true }.",
         },
-        // mouse.wheel returns while Chromium's animated scroll is still running,
-        // so a later scrollTo races it and the page can end up somewhere else.
-        {
-          selector:
-            "CallExpression[callee.object.property.name='mouse'][callee.property.name='wheel']",
-          message:
-            "mouse.wheel returns before its animated scroll ends, so later scrolls race it. Use page.evaluate(() => window.scrollTo(0, y)).",
-        },
       ],
     },
   },

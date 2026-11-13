@@ -149,3 +149,10 @@ jobs:
       # Headless runs need only the smaller headless shell, not full Chrome.
       - run: yarn playwright install --with-deps --only-shell chromium
       - run: yarn test:browser
+      # A trace shows each step, page load, request and console line of a failed test.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: web/test-results
+          retention-days: 7

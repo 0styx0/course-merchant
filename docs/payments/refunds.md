@@ -5,9 +5,10 @@ Read this before working on the admin un-enroll, revoking or suspending access, 
 ## Flows
 
 **Refunds and disputes (step 7):**
-- The owner refunds or settles a dispute in Stripe, then un-enrolls the buyer from the admin course view, which sets the enrollment's `revokedAt`.
-- The webhook ignores `charge.refunded` and `charge.dispute.created`, so a Dashboard refund leaves the payment `succeeded`.
-- The admin course view marks a buyer whose payment is an orphan payment (defined below) as "Refund owed", so a refund the sweeper can't push through shows without reading logs.
+- The owner refunds or settles a dispute in Stripe, then un-enrolls the buyer from the admin course view. The API sets the enrollment's `revokedAt` and marks the payment `refunded`, with no Stripe check.
+- The webhook ignores `charge.refunded` and `charge.dispute.created`, so a Dashboard refund alone leaves the payment `succeeded` until the owner un-enrolls.
+- Each admin enrollment carries `refundStatus`: `owed` when the buyer has an orphan payment (defined below) for that course, otherwise `not_owed`. The admin course view shows it as "Refund owed", so a refund the sweeper can't push through shows without reading logs.
+- The admin course view is web work planned in [courses.md](../courses.md); payments step 7 builds the API half.
 
 **Sweeper (step 5, built).** [payment-sweeper.ts](../../api/src/payments/sweeper/payment-sweeper.ts) runs every 10 minutes on every API server, with three independent checks: refund orphan payments, recheck overdue pending payments, expire payments that never got a checkout. The rules and numbers are in the decision rows below.
 
@@ -16,7 +17,10 @@ Read this before working on the admin un-enroll, revoking or suspending access, 
 | Decision | Why | Rejected |
 |---|---|---|
 | The admin un-enrolls a buyer by hand; the webhook ignores `charge.refunded` and `charge.dispute.created` | Refunds and disputes are rare, and the owner already sees them in Stripe. One admin action covers both, with no handler to build or keep correct | Automatic handlers for both events; a `charge.refunded` handler beside the manual action |
-| Un-enroll → `revokedAt`, and the buyer may buy again (the same row is reactivated) | History stays on the `Payment`, and the unique `(courseId, customerId)` key still holds | Deleting the enrollment, or inserting a second row |
+| Un-enroll sets `revokedAt` and turns a `succeeded` payment into `refunded`, with no Stripe check; the buyer may buy again (the same row is reactivated) | A rebuy points the enrollment at the new payment. A still-`succeeded` old payment would then become an orphan payment, and the sweeper would refund it again or retry a lost dispute forever. Stripe stays the record of money. History stays on the `Payment`, and the unique `(courseId, customerId)` key still holds | Leaving it `succeeded` (the rebuy refunds above); asking Stripe first (always true, but costs a call, error codes and a commit); deleting the enrollment, or inserting a second row |
+| The students list, Un-enroll and the Refund owed mark live on a new admin course view page, planned outside payments | The page mirrors the public course page with Students under it (revisit after use) | A Students section on the edit page (no new route, but it mixes the form with records) |
+| Un-enroll is `POST …/enrollments/{customerId}/revocation` → 204, and a repeat is a 204 that changes nothing | The enrollment stays visible, so `DELETE` would promise a removal. (course, customer) is unique. A double-click is harmless | `DELETE`; a 409 on repeat |
+| Each admin enrollment has `refundStatus: "not_owed" \| "owed"`, worked out from the sweeper's orphan condition | Refund owed is its own fact, independent of access, so it gets its own field. An enum leaves room for a later state (such as `refunding`) without a breaking change, and the condition keeps one definition | A `refundOwed` boolean (a third state would mean a breaking change); a `needsAttention` list of codes (untyped, and `email_failed` would repeat `emailStatus`); a list of owed payments (more contract for a rare case) |
 | Nothing sets `suspendedAt` now; fulfillment still refunds a suspended buyer's payment | The dispute handler that set it is gone. Whether to keep the column is open | Removing it without deciding |
 | The admin course view marks a buyer whose payment is an orphan payment as "Refund owed" | The owner sees a stuck refund without reading logs, and the sweeper's own query supplies the list | Reading the log line after each deploy; an email per stuck payment |
 | Course access is the emailed `contentUrl` plus a password the owner sends each paying customer. The API doesn't gate the link: `revokedAt` and `suspendedAt` are records that checkout, fulfillment and the owner act on | The link alone isn't enough to get in. An API gate would add an endpoint and a token per enrollment, and the final URL can still be copied after the first redirect | An access endpoint (`/v1/access/{token}`) that checks the enrollment, then redirects to `contentUrl` |
