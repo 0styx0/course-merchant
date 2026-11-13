@@ -9,6 +9,7 @@ import { AdminCoursesRepository } from "@/courses/repositories/admin-courses.rep
 import { CreateCourseRequest } from "types.js";
 import { toDatabasePrecision } from "@/test/test-helpers.js";
 import { descriptionDoc } from "@/test/course-fixtures.js";
+import { PaymentsRepository } from "@/payments/payments.repository.js";
 
 describe("AdminCoursesService (integration)", () => {
   let moduleRef: TestingModule;
@@ -18,7 +19,12 @@ describe("AdminCoursesService (integration)", () => {
 
   beforeAll(async () => {
     moduleRef = await Test.createTestingModule({
-      providers: [AdminCoursesService, AdminCoursesRepository, PrismaService],
+      providers: [
+        AdminCoursesService,
+        AdminCoursesRepository,
+        PaymentsRepository,
+        PrismaService,
+      ],
     }).compile();
 
     service = moduleRef.get(AdminCoursesService);

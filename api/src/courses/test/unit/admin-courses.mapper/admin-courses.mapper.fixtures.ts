@@ -4,6 +4,8 @@ import { descriptionDoc } from "@/test/course-fixtures.js";
 
 export const COURSE_ID = "crs_01HZX3";
 
+export const NO_OWED_CUSTOMER_IDS: ReadonlySet<string> = new Set();
+
 export const repositoryCourse = {
   id: COURSE_ID,
   title: "React Fundamentals",

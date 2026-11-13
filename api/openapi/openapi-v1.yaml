@@ -1601,6 +1601,7 @@ components:
         - revokedAt
         - suspendedAt
         - emailStatus
+        - refundStatus
       properties:
         revokedAt:
           type:
@@ -1628,6 +1629,16 @@ components:
             Delivery status of the latest email sent to the customer about this
             course. `failed` means every send attempt failed, and is also
             returned when no email was ever queued, so the owner can follow up.
+        refundStatus:
+          type: string
+          enum:
+            - not_owed
+            - owed
+          description: >
+            `owed` means the customer has a paid payment for this course that
+            no enrollment uses, such as a second purchase of a course they
+            already own, so the owner still has to refund it. `not_owed` means
+            no such payment is waiting.
         customer:
           type: object
           required:

@@ -6,6 +6,10 @@ import {
   ListCoursesAdminResponse,
   UpdateCourseRequest,
 } from "types.js";
+import {
+  CustomerOwedRefund,
+  PaymentsRepository,
+} from "@/payments/payments.repository.js";
 import { PrismaService } from "@/prisma/prisma.service.js";
 import { courseNotFound } from "../course-errors.js";
 import { ValidationException } from "../../common/errors/validation.exception.js";
@@ -48,6 +52,17 @@ function nextStatusOf(
   return request.status;
 }
 
+function owedCustomerIdsOf(
+  courseId: string,
+  customersOwedRefund: CustomerOwedRefund[],
+): Set<string> {
+  return new Set(
+    customersOwedRefund
+      .filter((buyer) => buyer.courseId === courseId)
+      .map((buyer) => buyer.customerId),
+  );
+}
+
 @Injectable()
 export class AdminCoursesService {
   constructor(
@@ -55,6 +70,8 @@ export class AdminCoursesService {
     private readonly prisma: PrismaService,
     @Inject(AdminCoursesRepository)
     private readonly coursesRepository: AdminCoursesRepository,
+    @Inject(PaymentsRepository)
+    private readonly paymentsRepository: PaymentsRepository,
   ) {}
 
   async createCourse(
@@ -69,7 +86,8 @@ export class AdminCoursesService {
     const course = await this.prisma.db.transaction((tx) =>
       this.coursesRepository.createCourse(tx, input),
     );
-    return toAdminCourseResponse(course);
+    // a new course has no enrollments, so nobody can be owed a refund
+    return toAdminCourseResponse(course, new Set());
   }
 
   async updateCourse(
@@ -101,7 +119,7 @@ export class AdminCoursesService {
       throw courseNotFound(courseId);
     }
 
-    return toAdminCourseResponse(course);
+    return this.toAdminResponse(course);
   }
 
   private async loadStoredOrThrow(tx: DbScope, courseId: string) {
@@ -127,7 +145,7 @@ export class AdminCoursesService {
       throw courseNotFound(courseId);
     }
 
-    return toAdminCourseResponse(course);
+    return this.toAdminResponse(course);
   }
 
   async findAllAdmin(): Promise<ListCoursesAdminResponse> {
@@ -135,8 +153,32 @@ export class AdminCoursesService {
       this.prisma.db,
     );
 
-    return {
-      courses: courses.map(toAdminCourseResponse),
-    };
+    return { courses: await this.toAdminResponses(courses) };
+  }
+
+  private async toAdminResponse(
+    course: CourseRepositoryModelAdmin,
+  ): Promise<GetCourseAdminResponse> {
+    const [response] = await this.toAdminResponses([course]);
+
+    return response;
+  }
+
+  // asks for every course's owed buyers at once, so a list costs one query
+  private async toAdminResponses(
+    courses: CourseRepositoryModelAdmin[],
+  ): Promise<GetCourseAdminResponse[]> {
+    const customersOwedRefund =
+      await this.paymentsRepository.findCustomersOwedRefund(
+        this.prisma.db,
+        courses.map((course) => course.id),
+      );
+
+    return courses.map((course) =>
+      toAdminCourseResponse(
+        course,
+        owedCustomerIdsOf(course.id, customersOwedRefund),
+      ),
+    );
   }
 }

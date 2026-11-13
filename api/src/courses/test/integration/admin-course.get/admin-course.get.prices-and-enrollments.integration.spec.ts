@@ -22,6 +22,7 @@ import {
 import { PrismaModule } from "../../../../prisma/prisma.module.js";
 import { AdminCoursesService } from "@/courses/admin/admin-courses.service.js";
 import { AdminCoursesRepository } from "@/courses/repositories/admin-courses.repository.js";
+import { PaymentsRepository } from "@/payments/payments.repository.js";
 
 const NOW = instant("2026-09-29T14:00:00Z");
 
@@ -34,7 +35,11 @@ describe("AdminCoursesService integration", () => {
   beforeAll(async () => {
     testingModule = await Test.createTestingModule({
       imports: [PrismaModule],
-      providers: [AdminCoursesService, AdminCoursesRepository],
+      providers: [
+        AdminCoursesService,
+        AdminCoursesRepository,
+        PaymentsRepository,
+      ],
     }).compile();
 
     service = testingModule.get(AdminCoursesService);
@@ -173,6 +178,7 @@ describe("AdminCoursesService integration", () => {
             revokedAt: null,
             suspendedAt: null,
             emailStatus: "sent",
+            refundStatus: "not_owed",
             customer: {
               id: ada.id,
               name: "Ada Lovelace",
@@ -189,6 +195,7 @@ describe("AdminCoursesService integration", () => {
             suspendedAt: null,
             // no email was ever queued for Grace
             emailStatus: "failed",
+            refundStatus: "not_owed",
             customer: {
               id: grace.id,
               name: "Grace Hopper",
@@ -228,6 +235,64 @@ describe("AdminCoursesService integration", () => {
       const result = await service.findByIdAdmin(course.id);
 
       expect(result.enrollments[0].emailStatus).toBe("sent");
+    });
+
+    it("marks an enrollment owed only when its customer has an orphan payment for this course", async () => {
+      const { course, price } = await createPricedCourse();
+      const otherCourse = await createPricedCourse();
+      const double = await createCustomer({ name: "Double Payer" });
+      const single = await createCustomer({ name: "Single Payer" });
+      const crossCourse = await createCustomer({ name: "Cross Course" });
+      const free = await createCustomer({ name: "Free Student" });
+
+      const paymentFor = (customerId: string, coursePriceId: string) =>
+        createPayment({
+          customerId,
+          coursePriceId,
+          amount: price.amount,
+          currency: price.currency,
+        });
+
+      const doublePaid = await paymentFor(double.id, price.id);
+      await createEnrollment({
+        courseId: course.id,
+        customerId: double.id,
+        paymentId: doublePaid.id,
+      });
+      await paymentFor(double.id, price.id);
+
+      const singlePaid = await paymentFor(single.id, price.id);
+      await createEnrollment({
+        courseId: course.id,
+        customerId: single.id,
+        paymentId: singlePaid.id,
+      });
+
+      const crossPaid = await paymentFor(crossCourse.id, price.id);
+      await createEnrollment({
+        courseId: course.id,
+        customerId: crossCourse.id,
+        paymentId: crossPaid.id,
+      });
+      await paymentFor(crossCourse.id, otherCourse.price.id);
+
+      await createEnrollment({ courseId: course.id, customerId: free.id });
+
+      const result = await service.findByIdAdmin(course.id);
+
+      expect(
+        result.enrollments.map((enrollment) => [
+          enrollment.customer.name,
+          enrollment.refundStatus,
+        ]),
+      ).toEqual(
+        expect.arrayContaining([
+          ["Double Payer", "owed"],
+          ["Single Payer", "not_owed"],
+          ["Cross Course", "not_owed"],
+          ["Free Student", "not_owed"],
+        ]),
+      );
     });
 
     it("returns 404 COURSE_NOT_FOUND when the course does not exist", async () => {

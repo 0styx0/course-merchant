@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { CoursesService } from "./courses.service.js";
+import { PaymentsModule } from "../payments/payments.module.js";
 import { PrismaModule } from "../prisma/prisma.module.js";
 import { CoursesRepository } from "./repositories/courses.repository.js";
 import { CoursesController } from "./courses.controller.js";
@@ -11,7 +12,7 @@ import { AdminCourseImagesService } from "./images/admin-course-images.service.j
 import { CourseImagesRepository } from "./repositories/course-images.repository.js";
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, PaymentsModule],
   controllers: [
     CoursesController,
     AdminCoursesController,

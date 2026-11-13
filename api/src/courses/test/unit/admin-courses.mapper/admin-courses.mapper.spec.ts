@@ -3,12 +3,15 @@ import { toAdminCourseResponse } from "@/courses/courses.mapper.js";
 import { descriptionDoc } from "@/test/course-fixtures.js";
 import {
   COURSE_ID,
+  NO_OWED_CUSTOMER_IDS,
   repositoryCourse,
 } from "@/courses/test/unit/admin-courses.mapper/admin-courses.mapper.fixtures.js";
 
 describe("toAdminCourseResponse", () => {
   it("returns the correctly mapped admin course", () => {
-    expect(toAdminCourseResponse(repositoryCourse)).toEqual({
+    expect(
+      toAdminCourseResponse(repositoryCourse, NO_OWED_CUSTOMER_IDS),
+    ).toEqual({
       id: COURSE_ID,
       name: "React Fundamentals",
       summary: "Learn the fundamentals of React",
@@ -48,6 +51,7 @@ describe("toAdminCourseResponse", () => {
           revokedAt: null,
           suspendedAt: null,
           emailStatus: "sent",
+          refundStatus: "not_owed",
           customer: {
             id: "customer_1",
             name: "Ada Lovelace",
@@ -63,6 +67,7 @@ describe("toAdminCourseResponse", () => {
           revokedAt: "2026-09-28T09:00:00Z",
           suspendedAt: null,
           emailStatus: "failed",
+          refundStatus: "not_owed",
           customer: {
             id: "customer_2",
             name: "Grace Hopper",
@@ -79,7 +84,10 @@ describe("toAdminCourseResponse", () => {
   });
 
   it("maps the course title to name and preserves its other details", () => {
-    const result = toAdminCourseResponse(repositoryCourse);
+    const result = toAdminCourseResponse(
+      repositoryCourse,
+      NO_OWED_CUSTOMER_IDS,
+    );
 
     expect(result.id).toBe(COURSE_ID);
     expect(result.name).toBe("React Fundamentals");
@@ -89,7 +97,10 @@ describe("toAdminCourseResponse", () => {
   });
 
   it("formats schedule timestamps using the course time zone", () => {
-    const result = toAdminCourseResponse(repositoryCourse);
+    const result = toAdminCourseResponse(
+      repositoryCourse,
+      NO_OWED_CUSTOMER_IDS,
+    );
 
     expect(result.schedule).toEqual({
       startTime: "2026-10-01T18:00:00Z",
@@ -99,7 +110,10 @@ describe("toAdminCourseResponse", () => {
   });
 
   it("maps the first status returned by the repository", () => {
-    const result = toAdminCourseResponse(repositoryCourse);
+    const result = toAdminCourseResponse(
+      repositoryCourse,
+      NO_OWED_CUSTOMER_IDS,
+    );
 
     expect(result.status).toEqual({
       name: "published",
@@ -108,7 +122,10 @@ describe("toAdminCourseResponse", () => {
   });
 
   it("maps every price and preserves repository order", () => {
-    const result = toAdminCourseResponse(repositoryCourse);
+    const result = toAdminCourseResponse(
+      repositoryCourse,
+      NO_OWED_CUSTOMER_IDS,
+    );
 
     expect(result.prices).toEqual([
       {

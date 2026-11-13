@@ -14,6 +14,7 @@ import {
   type MockMethods,
 } from "@/test/test-helpers.js";
 import type { UpdateCourseRequest } from "types.js";
+import { PaymentsRepository } from "@/payments/payments.repository.js";
 import { descriptionDoc } from "@/test/course-fixtures.js";
 
 const COURSE_ID = "crs_01HZX3";
@@ -88,6 +89,11 @@ describe("AdminCoursesService", () => {
     "findCourseDetailsByIdAdmin" | "updateCourse"
   >;
 
+  let paymentsRepository: MockMethods<
+    PaymentsRepository,
+    "findCustomersOwedRefund"
+  >;
+
   const { prisma, tx } = fakePrisma();
 
   beforeEach(() => {
@@ -102,9 +108,16 @@ describe("AdminCoursesService", () => {
         .mockResolvedValue(repositoryCourse),
     };
 
+    paymentsRepository = {
+      findCustomersOwedRefund: vi
+        .fn<PaymentsRepository["findCustomersOwedRefund"]>()
+        .mockResolvedValue([]),
+    };
+
     service = new AdminCoursesService(
       prisma,
       asDependency<AdminCoursesRepository>(coursesRepository),
+      asDependency<PaymentsRepository>(paymentsRepository),
     );
   });
 
@@ -115,7 +128,9 @@ describe("AdminCoursesService", () => {
         makeRequest(repositoryCourse),
       );
 
-      expect(result).toEqual(toAdminCourseResponse(repositoryCourse));
+      expect(result).toEqual(
+        toAdminCourseResponse(repositoryCourse, new Set()),
+      );
     });
 
     it("overwrites the course details", async () => {

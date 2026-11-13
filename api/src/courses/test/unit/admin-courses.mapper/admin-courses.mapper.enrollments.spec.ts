@@ -3,17 +3,24 @@ import { describe, expect, it } from "vitest";
 import { instant } from "../../../../test/test-helpers.js";
 import { toAdminCourseResponse } from "@/courses/courses.mapper.js";
 import { CourseRepositoryModelAdmin } from "@/courses/repositories/admin-courses.repository.js";
-import { repositoryCourse } from "@/courses/test/unit/admin-courses.mapper/admin-courses.mapper.fixtures.js";
+import {
+  NO_OWED_CUSTOMER_IDS,
+  repositoryCourse,
+} from "@/courses/test/unit/admin-courses.mapper/admin-courses.mapper.fixtures.js";
 
 describe("toAdminCourseResponse", () => {
   it("maps each customer's payment details to the corresponding enrollment", () => {
-    const result = toAdminCourseResponse(repositoryCourse);
+    const result = toAdminCourseResponse(
+      repositoryCourse,
+      NO_OWED_CUSTOMER_IDS,
+    );
 
     expect(result.enrollments).toEqual([
       {
         revokedAt: null,
         suspendedAt: null,
         emailStatus: "sent",
+        refundStatus: "not_owed",
         customer: {
           id: "customer_1",
           name: "Ada Lovelace",
@@ -29,6 +36,7 @@ describe("toAdminCourseResponse", () => {
         revokedAt: "2026-09-28T09:00:00Z",
         suspendedAt: null,
         emailStatus: "failed",
+        refundStatus: "not_owed",
         customer: {
           id: "customer_2",
           name: "Grace Hopper",
@@ -49,7 +57,7 @@ describe("toAdminCourseResponse", () => {
       image: { updatedAt: instant("2026-09-30T12:00:00Z") },
     } satisfies CourseRepositoryModelAdmin;
 
-    const result = toAdminCourseResponse(course);
+    const result = toAdminCourseResponse(course, NO_OWED_CUSTOMER_IDS);
 
     expect(result.image).toEqual({
       updatedAt: "2026-09-30T12:00:00Z",
@@ -63,7 +71,7 @@ describe("toAdminCourseResponse", () => {
       enrollments: [],
     } satisfies CourseRepositoryModelAdmin;
 
-    const result = toAdminCourseResponse(course);
+    const result = toAdminCourseResponse(course, NO_OWED_CUSTOMER_IDS);
 
     expect(result.enrollments).toEqual([]);
   });
@@ -86,11 +94,14 @@ describe("toAdminCourseResponse", () => {
       ],
     } satisfies CourseRepositoryModelAdmin;
 
-    expect(toAdminCourseResponse(course).enrollments).toEqual([
+    expect(
+      toAdminCourseResponse(course, NO_OWED_CUSTOMER_IDS).enrollments,
+    ).toEqual([
       {
         revokedAt: null,
         suspendedAt: "2026-09-30T08:00:00Z",
         emailStatus: "failed",
+        refundStatus: "not_owed",
         customer: {
           id: "customer_3",
           name: "Katherine Johnson",
@@ -98,6 +109,23 @@ describe("toAdminCourseResponse", () => {
         },
         payment: null,
       },
+    ]);
+  });
+
+  it("marks only the enrollments of customers owed a refund as owed", () => {
+    const result = toAdminCourseResponse(
+      repositoryCourse,
+      new Set(["customer_2"]),
+    );
+
+    expect(
+      result.enrollments.map((enrollment) => [
+        enrollment.customer.id,
+        enrollment.refundStatus,
+      ]),
+    ).toEqual([
+      ["customer_1", "not_owed"],
+      ["customer_2", "owed"],
     ]);
   });
 });

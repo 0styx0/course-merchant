@@ -123,12 +123,23 @@ function toAdminPriceResponse(price: AdminPrice) {
   };
 }
 
-function toAdminEnrollmentResponse(enrollment: AdminEnrollment) {
+function refundStatusOf(
+  enrollment: AdminEnrollment,
+  owedCustomerIds: ReadonlySet<string>,
+): "owed" | "not_owed" {
+  return owedCustomerIds.has(enrollment.customer.id) ? "owed" : "not_owed";
+}
+
+function toAdminEnrollmentResponse(
+  enrollment: AdminEnrollment,
+  owedCustomerIds: ReadonlySet<string>,
+) {
   return {
     revokedAt: formatOptionalDate(enrollment.revokedAt),
     suspendedAt: formatOptionalDate(enrollment.suspendedAt),
     // no email at all reads as failed, so the owner follows up
     emailStatus: enrollment.emails[0]?.email?.status ?? "failed",
+    refundStatus: refundStatusOf(enrollment, owedCustomerIds),
     customer: {
       id: enrollment.customer.id,
       name: enrollment.customer.name,
@@ -142,8 +153,13 @@ function toAdminEnrollmentResponse(enrollment: AdminEnrollment) {
   };
 }
 
+/**
+ * `owedCustomerIds` holds the customers owed a refund for this course, so an
+ * enrollment reads `owed` when its customer is in it.
+ */
 export function toAdminCourseResponse(
   course: CourseRepositoryModelAdmin,
+  owedCustomerIds: ReadonlySet<string>,
 ): GetCourseAdminResponse {
   return {
     id: course.id,
@@ -165,6 +181,8 @@ export function toAdminCourseResponse(
       version: imageVersion(course.image.updatedAt),
     },
     prices: course.prices.map(toAdminPriceResponse),
-    enrollments: course.enrollments.map(toAdminEnrollmentResponse),
+    enrollments: course.enrollments.map((enrollment) =>
+      toAdminEnrollmentResponse(enrollment, owedCustomerIds),
+    ),
   };
 }

@@ -46,27 +46,8 @@ Keep these files current **in the same commit as the work**. Tick off status her
 
   Write the Given/When/Then specs first, in the step text here.
 - [ ] **7. Refunds and disputes by hand, API side** (see [refunds.md](payments/refunds.md)). The students list, its Un-enroll button and the "Refund owed" mark are web work, planned in the admin course view area of [courses.md](courses.md).
-  - [ ] **7a.** The admin course answers say which students are owed a refund, so a refund that Stripe keeps refusing shows up without reading logs. **Next**
-    - *Behaviours*:
-      - A student with an orphan payment in this course gets `refundStatus: "owed"`.
-      - A student whose enrollment points at their only payment gets `"not_owed"`.
-      - A free-course student gets `"not_owed"`.
-      - An orphan payment in another course of the same customer leaves this course's student at `"not_owed"`.
-      - An orphan payment the sweeper has since refunded leaves the student at `"not_owed"`.
-      - The admin list, get, create and update answers all carry the field.
-    - *New shared pieces*:
-      - `AdminEnrollment.refundStatus` (`"not_owed" | "owed"`), a contract field the admin course view will read.
-      - The orphan-payment condition inside `PaymentsRepository`, so the sweeper and this query share one definition.
-    - *Files*:
-      - `api/openapi/openapi-v1.yaml` (a required string enum, `not_owed` and `owed`)
-      - `api/src/payments/payments.repository.ts` (orphan buyers for the given course ids)
-      - `api/src/courses/admin/admin-courses.service.ts`
-      - `api/src/courses/courses.mapper.ts`
-      - `api/src/courses/courses.module.ts` (imports `PaymentsModule`; no import cycle)
-      - `web/src/mocks/fixtures/admin-courses.ts`, plus the regenerated web types (every contract commit touches these; without them the web type check fails)
-    - *Settled*: the refunds.md rows "orphan payment", "Refund owed" and `refundStatus`.
-    - *Done when*: the mapper unit tests, the repository and admin get/list integration tests, and the admin get e2e test pass.
-  - [ ] **7b.** The API can un-enroll a student in one transaction: it revokes the enrollment and records the payment as refunded. Nothing calls this yet; 7d does.
+  - [x] **7a.** The admin course answers say which students are owed a refund, so a refund that Stripe keeps refusing shows up without reading logs.
+  - [ ] **7b.** The API can un-enroll a student in one transaction: it revokes the enrollment and records the payment as refunded. Nothing calls this yet; 7d does. **Next**
     - *Behaviours*:
       - An active paid enrollment gets `revokedAt` set to the database time, and its payment goes from `succeeded` to `refunded`, with `refundedAt` set.
       - A free enrollment (no payment) gets only `revokedAt`.
@@ -148,7 +129,7 @@ Flows and decisions, one file per subarea. Read the one that matches the task:
 
 ## Launch checklist
 
-- **The sweeper runs in production.** It's built (step 5), and every API server runs it. The admin course view's "Refund owed" mark is the alert for a refund Stripe keeps refusing. The API half is step 7a; the page is the admin course view area in [courses.md](courses.md). Build both before launch. Without it, a payment that should be refunded can wait indefinitely.
+- **The sweeper runs in production.** It's built (step 5), and every API server runs it. The admin course view's "Refund owed" mark is the alert for a refund Stripe keeps refusing. The API half is built (step 7a); the page is the admin course view area in [courses.md](courses.md). Build both before launch. Without it, a payment that should be refunded can wait indefinitely.
 - Use `?sslmode=verify-full` in `DATABASE_URL` when the database is on another machine. The API refuses to start with anything weaker than `require` (the Prisma command line, used for migrations, doesn't check, so give it the same URL).
 - Switch to live keys. Use a restricted key limited to Checkout Sessions read and write, and Refunds write.
 - Create the production webhook endpoint with API version `2026-09-30.endive` (the one pinned in `stripeClientProvider`; set it in the Dashboard, or with `api_version` when creating the endpoint through the API), subscribed to exactly the handled event types:

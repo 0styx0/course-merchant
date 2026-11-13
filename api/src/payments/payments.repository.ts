@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import type { Temporal } from "@js-temporal/polyfill";
-import { and } from "@prisma/orm-postgres/orm-client";
+import { and, type ModelAccessor } from "@prisma/orm-postgres/orm-client";
 
-import type { Models } from "@/prisma/contract.js";
+import type { Contract, Models } from "@/prisma/contract.js";
 import type { DbScope } from "types.js";
 
 export type PaymentProvider = Models.public_Payment["provider"];
@@ -46,11 +46,26 @@ export type OrphanPayment = {
   providerPaymentId: string;
 };
 
+/** A customer who paid for a course and is owed a refund for it. */
+export type CustomerOwedRefund = {
+  courseId: string;
+  customerId: string;
+};
+
 /** A pending payment the provider already has a checkout for. */
 export type StalePendingPayment = {
   id: string;
   providerCheckoutId: string;
 };
+
+/**
+ * The one definition of an orphan payment: paid, and no enrollment points to
+ * it. The sweeper and the admin refund status both read it, so they agree on
+ * which payments are owed a refund.
+ */
+function isOrphan(payment: ModelAccessor<Contract, "Payment">) {
+  return and(payment.status.eq("succeeded"), payment.enrollment.none());
+}
 
 /**
  * Records provider events and moves payments forward. Fulfillment is
@@ -238,9 +253,7 @@ export class PaymentsRepository {
       "providerPaymentId",
     )
       .include("coursePrice", (coursePrice) => coursePrice.select("courseId"))
-      .where((candidate) =>
-        and(candidate.status.eq("succeeded"), candidate.enrollment.none()),
-      )
+      .where(isOrphan)
       .orderBy((candidate) => candidate.paidAt.asc())
       .limit(limit)
       .all();
@@ -261,6 +274,43 @@ export class PaymentsRepository {
         },
       ];
     });
+  }
+
+  /**
+   * The customers owed a refund for any of the given courses, in one query:
+   * those with an orphan payment for the course. A customer with several
+   * orphan payments for one course appears once.
+   */
+  async findCustomersOwedRefund(
+    scope: DbScope,
+    courseIds: string[],
+  ): Promise<CustomerOwedRefund[]> {
+    const payments = await scope.orm.public.Payment.select("customerId")
+      .include("coursePrice", (coursePrice) => coursePrice.select("courseId"))
+      .where((candidate) =>
+        and(
+          isOrphan(candidate),
+          candidate.coursePrice.some((coursePrice) =>
+            coursePrice.courseId.in(courseIds),
+          ),
+        ),
+      )
+      .all();
+
+    // always present: the foreign key is required, but the ORM types every
+    // to-one include as nullable
+    const customersByKey = new Map(
+      payments.map((payment) => {
+        const customer = {
+          courseId: payment.coursePrice!.courseId,
+          customerId: payment.customerId,
+        };
+
+        return [`${customer.courseId}:${customer.customerId}`, customer];
+      }),
+    );
+
+    return [...customersByKey.values()];
   }
 
   /**

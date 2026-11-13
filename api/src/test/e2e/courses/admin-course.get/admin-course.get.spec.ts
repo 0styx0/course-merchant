@@ -1,4 +1,7 @@
 import {
+  createCustomer,
+  createEnrollment,
+  createPayment,
   createPricedCourse,
   updateCourseStatus,
   descriptionDoc,
@@ -89,6 +92,53 @@ describe("Admin Courses Create API (e2e)", () => {
       expect(
         Temporal.Instant.from(response.body.status.changedAt),
       ).toBeInstanceOf(Temporal.Instant);
+    });
+
+    it("marks an enrollment owed when its customer paid twice for the course", async () => {
+      const { course, price } = await createPricedCourse();
+      const ada = await createCustomer({});
+      const paymentFields = {
+        customerId: ada.id,
+        coursePriceId: price.id,
+        amount: price.amount,
+        currency: price.currency,
+      };
+      const kept = await createPayment(paymentFields);
+      await createEnrollment({
+        courseId: course.id,
+        customerId: ada.id,
+        paymentId: kept.id,
+      });
+      await createPayment(paymentFields);
+      const bob = await createCustomer({});
+      const bobPayment = await createPayment({
+        ...paymentFields,
+        customerId: bob.id,
+      });
+      await createEnrollment({
+        courseId: course.id,
+        customerId: bob.id,
+        paymentId: bobPayment.id,
+      });
+
+      const response: TypedResponse<GetCourseAdminResponse> = await request(
+        httpServer(app),
+      )
+        .get(`/v1/admin/courses/${course.id}`)
+        .set("Authorization", bearer(token))
+        .expect(200);
+
+      expect(
+        response.body.enrollments.map((item) => [
+          item.customer.id,
+          item.refundStatus,
+        ]),
+      ).toEqual(
+        expect.arrayContaining([
+          [ada.id, "owed"],
+          [bob.id, "not_owed"],
+        ]),
+      );
     });
 
     it("uses the most recent archived status, even when an older status is published", async () => {

@@ -15,6 +15,7 @@ import { createPricedCourse, descriptionDoc } from "@/test/course-fixtures.js";
 import { instant } from "@/test/test-helpers.js";
 import { AdminCoursesService } from "@/courses/admin/admin-courses.service.js";
 import { AdminCoursesRepository } from "@/courses/repositories/admin-courses.repository.js";
+import { PaymentsRepository } from "@/payments/payments.repository.js";
 
 const NOW = instant("2026-09-29T14:00:00Z");
 
@@ -25,7 +26,11 @@ describe("AdminCoursesService integration", () => {
   beforeAll(async () => {
     testingModule = await Test.createTestingModule({
       imports: [PrismaModule],
-      providers: [AdminCoursesService, AdminCoursesRepository],
+      providers: [
+        AdminCoursesService,
+        AdminCoursesRepository,
+        PaymentsRepository,
+      ],
     }).compile();
 
     service = testingModule.get(AdminCoursesService);

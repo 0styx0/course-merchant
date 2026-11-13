@@ -14,9 +14,11 @@ import {
   createCoursePrice,
   createCustomer,
   createEnrollment,
+  createPayment,
   descriptionDoc,
 } from "@/test/course-fixtures.js";
 import { UpdateCourseRequest } from "types.js";
+import { PaymentsRepository } from "@/payments/payments.repository.js";
 
 describe("AdminCoursesService (integration)", () => {
   let moduleRef: TestingModule;
@@ -26,7 +28,12 @@ describe("AdminCoursesService (integration)", () => {
 
   beforeAll(async () => {
     moduleRef = await Test.createTestingModule({
-      providers: [AdminCoursesService, AdminCoursesRepository, PrismaService],
+      providers: [
+        AdminCoursesService,
+        AdminCoursesRepository,
+        PaymentsRepository,
+        PrismaService,
+      ],
     }).compile();
 
     service = moduleRef.get(AdminCoursesService);
@@ -122,6 +129,48 @@ describe("AdminCoursesService (integration)", () => {
         description: descriptionDoc("Hooks in depth"),
         contentUrl: "https://zoom.us/j/123456789",
       });
+    });
+
+    it("answers with each enrollment's refund status", async () => {
+      const { course, pastPrice } = await createStartedCourse();
+      const ada = await createCustomer({});
+      const paymentFields = {
+        customerId: ada.id,
+        coursePriceId: pastPrice.id,
+        amount: pastPrice.amount,
+        currency: pastPrice.currency,
+      };
+      const paid = await createPayment(paymentFields);
+      await createEnrollment({
+        courseId: course.id,
+        customerId: ada.id,
+        paymentId: paid.id,
+      });
+      await createPayment(paymentFields);
+      const bob = await createCustomer({});
+      const bobPayment = await createPayment({
+        ...paymentFields,
+        customerId: bob.id,
+      });
+      await createEnrollment({
+        courseId: course.id,
+        customerId: bob.id,
+        paymentId: bobPayment.id,
+      });
+
+      const answer = await service.updateCourse(
+        course.id,
+        toRequest(await findCourse(course.id)),
+      );
+
+      expect(
+        answer.enrollments.map((item) => [item.customer.id, item.refundStatus]),
+      ).toEqual(
+        expect.arrayContaining([
+          [ada.id, "owed"],
+          [bob.id, "not_owed"],
+        ]),
+      );
     });
 
     it("changes nothing for an unchanged round-trip", async () => {

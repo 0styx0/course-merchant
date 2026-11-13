@@ -12,6 +12,7 @@ import {
   AdminCoursesRepository,
   CourseRepositoryModelAdmin,
 } from "@/courses/repositories/admin-courses.repository.js";
+import { PaymentsRepository } from "@/payments/payments.repository.js";
 import { descriptionDoc } from "@/test/course-fixtures.js";
 
 const COURSE_ID = "crs_01HZX3";
@@ -43,12 +44,31 @@ const repositoryCourse = {
   enrollments: [],
 } satisfies CourseRepositoryModelAdmin;
 
+function enrollmentsOf(customerIds: string[]) {
+  return customerIds.map((customerId) => ({
+    revokedAt: null,
+    suspendedAt: null,
+    customer: {
+      id: customerId,
+      name: customerId,
+      email: `${customerId}@example.com`,
+    },
+    emails: [],
+    payment: null,
+  }));
+}
+
 describe("AdminCoursesService", () => {
   let service: AdminCoursesService;
 
   let coursesRepository: MockMethods<
     AdminCoursesRepository,
     "findCourseDetailsByIdAdmin"
+  >;
+
+  let paymentsRepository: MockMethods<
+    PaymentsRepository,
+    "findCustomersOwedRefund"
   >;
 
   const { prisma, db } = fakePrisma();
@@ -59,9 +79,16 @@ describe("AdminCoursesService", () => {
         vi.fn<AdminCoursesRepository["findCourseDetailsByIdAdmin"]>(),
     };
 
+    paymentsRepository = {
+      findCustomersOwedRefund: vi
+        .fn<PaymentsRepository["findCustomersOwedRefund"]>()
+        .mockResolvedValue([]),
+    };
+
     service = new AdminCoursesService(
       prisma,
       asDependency<AdminCoursesRepository>(coursesRepository),
+      asDependency<PaymentsRepository>(paymentsRepository),
     );
   });
 
@@ -73,7 +100,9 @@ describe("AdminCoursesService", () => {
 
       const result = await service.findByIdAdmin(COURSE_ID);
 
-      expect(result).toEqual(toAdminCourseResponse(repositoryCourse));
+      expect(result).toEqual(
+        toAdminCourseResponse(repositoryCourse, new Set()),
+      );
     });
 
     it("passes the course ID to the repository unchanged", async () => {
@@ -86,6 +115,45 @@ describe("AdminCoursesService", () => {
       expect(
         coursesRepository.findCourseDetailsByIdAdmin,
       ).toHaveBeenCalledExactlyOnceWith(db, COURSE_ID);
+    });
+
+    it("marks the enrollments of the buyers the payments repository reports", async () => {
+      coursesRepository.findCourseDetailsByIdAdmin.mockResolvedValue({
+        ...repositoryCourse,
+        enrollments: enrollmentsOf(["ada-id", "bob-id"]),
+      });
+      paymentsRepository.findCustomersOwedRefund.mockResolvedValue([
+        { courseId: COURSE_ID, customerId: "ada-id" },
+        { courseId: "another-course", customerId: "bob-id" },
+      ]);
+
+      const result = await service.findByIdAdmin(COURSE_ID);
+
+      expect(
+        result.enrollments.map((enrollment) => enrollment.refundStatus),
+      ).toEqual(["owed", "not_owed"]);
+    });
+
+    it("propagates a payments repository error", async () => {
+      const error = new Error("Payments unavailable");
+      coursesRepository.findCourseDetailsByIdAdmin.mockResolvedValue(
+        repositoryCourse,
+      );
+      paymentsRepository.findCustomersOwedRefund.mockRejectedValue(error);
+
+      await expect(service.findByIdAdmin(COURSE_ID)).rejects.toBe(error);
+    });
+
+    it("asks for the orphan buyers of the requested course only", async () => {
+      coursesRepository.findCourseDetailsByIdAdmin.mockResolvedValue(
+        repositoryCourse,
+      );
+
+      await service.findByIdAdmin(COURSE_ID);
+
+      expect(
+        paymentsRepository.findCustomersOwedRefund,
+      ).toHaveBeenCalledExactlyOnceWith(db, [COURSE_ID]);
     });
 
     it("returns 404 COURSE_NOT_FOUND when the course does not exist", async () => {

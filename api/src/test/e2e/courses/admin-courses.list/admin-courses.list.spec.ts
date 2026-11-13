@@ -121,6 +121,7 @@ describe("Admin Courses API (e2e)", () => {
                 revokedAt: null,
                 suspendedAt: null,
                 emailStatus: "sent",
+                refundStatus: "not_owed",
                 customer: {
                   id: customer.id,
                   name: "Ada Lovelace",

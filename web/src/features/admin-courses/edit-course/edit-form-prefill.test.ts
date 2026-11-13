@@ -9,6 +9,7 @@ const enrollment = {
   revokedAt: null,
   suspendedAt: null,
   emailStatus: "sent",
+  refundStatus: "not_owed",
   customer: {
     id: "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
     name: "Ada Lovelace",

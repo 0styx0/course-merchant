@@ -22,6 +22,7 @@ import {
 import { instant } from "@/test/test-helpers.js";
 import { AdminCoursesService } from "@/courses/admin/admin-courses.service.js";
 import { AdminCoursesRepository } from "@/courses/repositories/admin-courses.repository.js";
+import { PaymentsRepository } from "@/payments/payments.repository.js";
 
 const NOW = instant("2026-09-29T14:00:00Z");
 
@@ -32,7 +33,11 @@ describe("AdminCoursesService integration", () => {
   beforeAll(async () => {
     testingModule = await Test.createTestingModule({
       imports: [PrismaModule],
-      providers: [AdminCoursesService, AdminCoursesRepository],
+      providers: [
+        AdminCoursesService,
+        AdminCoursesRepository,
+        PaymentsRepository,
+      ],
     }).compile();
 
     service = testingModule.get(AdminCoursesService);
@@ -128,6 +133,7 @@ describe("AdminCoursesService integration", () => {
             revokedAt: null,
             suspendedAt: null,
             emailStatus: "sent",
+            refundStatus: "not_owed",
             customer: {
               id: ada.id,
               name: "Ada Lovelace",
@@ -143,6 +149,7 @@ describe("AdminCoursesService integration", () => {
             revokedAt: null,
             suspendedAt: null,
             emailStatus: "pending",
+            refundStatus: "not_owed",
             customer: {
               id: grace.id,
               name: "Grace Hopper",
@@ -156,6 +163,39 @@ describe("AdminCoursesService integration", () => {
           },
         ]),
       );
+    });
+
+    it("marks owed enrollments per course, so a buyer owed for one course is not owed for another", async () => {
+      const first = await createPricedCourse();
+      const second = await createPricedCourse();
+      const ada = await createCustomer({ name: "Ada Lovelace" });
+
+      const paymentFor = (coursePrice: typeof first.price) =>
+        createPayment({
+          customerId: ada.id,
+          coursePriceId: coursePrice.id,
+          amount: coursePrice.amount,
+          currency: coursePrice.currency,
+        });
+
+      for (const { course, price } of [first, second]) {
+        const payment = await paymentFor(price);
+        await createEnrollment({
+          courseId: course.id,
+          customerId: ada.id,
+          paymentId: payment.id,
+        });
+      }
+      await paymentFor(first.price);
+
+      const result = await service.findAllAdmin();
+
+      const refundStatusOf = (courseId: string) =>
+        result.courses.find((item) => item.id === courseId)!.enrollments[0]
+          .refundStatus;
+
+      expect(refundStatusOf(first.course.id)).toBe("owed");
+      expect(refundStatusOf(second.course.id)).toBe("not_owed");
     });
 
     it("returns an empty enrollment list for a course without enrollments", async () => {

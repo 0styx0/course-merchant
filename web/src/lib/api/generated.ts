@@ -561,6 +561,11 @@ export interface components {
              * @enum {string}
              */
             emailStatus: "pending" | "sent" | "failed";
+            /**
+             * @description `owed` means the customer has a paid payment for this course that no enrollment uses, such as a second purchase of a course they already own, so the owner still has to refund it. `not_owed` means no such payment is waiting.
+             * @enum {string}
+             */
+            refundStatus: "not_owed" | "owed";
             customer: {
                 /** Format: uuid */
                 id: string;
