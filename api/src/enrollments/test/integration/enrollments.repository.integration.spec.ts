@@ -33,6 +33,7 @@ describe("EnrollmentsRepository (integration)", () => {
   function enroll(
     customerId: string,
     fields: {
+      paymentId?: string;
       revokedAt?: Temporal.Instant;
       suspendedAt?: Temporal.Instant;
     } = {},
@@ -84,7 +85,22 @@ describe("EnrollmentsRepository (integration)", () => {
 
       expect(
         await repository.findEnrollment(db, courseId, customer.id),
-      ).toEqual({ id: enrollment.id, revokedAt, suspendedAt: null });
+      ).toEqual({
+        id: enrollment.id,
+        paymentId: null,
+        revokedAt,
+        suspendedAt: null,
+      });
+    });
+
+    it("returns the payment that bought the enrollment", async () => {
+      const customer = await createCustomer({});
+      const payment = await createPaymentFor(customer.id);
+      await enroll(customer.id, { paymentId: payment.id });
+
+      expect(
+        await repository.findEnrollment(db, courseId, customer.id),
+      ).toMatchObject({ paymentId: payment.id });
     });
   });
 
@@ -241,6 +257,74 @@ describe("EnrollmentsRepository (integration)", () => {
         paymentId: payment.id,
         revokedAt: null,
       });
+    });
+  });
+
+  describe("revokeEnrollment", () => {
+    function revocation(customerId: string, paymentId: string | null) {
+      return { courseId, customerId, paymentId, now };
+    }
+
+    it("revokes an active paid enrollment", async () => {
+      const customer = await createCustomer({});
+      const payment = await createPaymentFor(customer.id);
+      await enroll(customer.id, { paymentId: payment.id });
+
+      expect(
+        await repository.revokeEnrollment(
+          db,
+          revocation(customer.id, payment.id),
+        ),
+      ).toBe(true);
+      expect(await findEnrollmentRow(customer.id)).toMatchObject({
+        revokedAt: now,
+      });
+    });
+
+    it("revokes a free enrollment whose paymentId is null", async () => {
+      const customer = await createCustomer({});
+      await enroll(customer.id);
+
+      expect(
+        await repository.revokeEnrollment(db, revocation(customer.id, null)),
+      ).toBe(true);
+      expect(await findEnrollmentRow(customer.id)).toMatchObject({
+        revokedAt: now,
+      });
+    });
+
+    it("returns false and keeps the first revokedAt when already revoked", async () => {
+      const customer = await createCustomer({});
+      const firstRevokedAt = Temporal.Instant.from("2026-10-01T00:00:00Z");
+      await enroll(customer.id, { revokedAt: firstRevokedAt });
+
+      expect(
+        await repository.revokeEnrollment(db, revocation(customer.id, null)),
+      ).toBe(false);
+      expect(await findEnrollmentRow(customer.id)).toMatchObject({
+        revokedAt: firstRevokedAt,
+      });
+    });
+
+    it("returns false when the enrollment now points at a different payment", async () => {
+      const customer = await createCustomer({});
+      const payment = await createPaymentFor(customer.id);
+      await enroll(customer.id, { paymentId: payment.id });
+
+      expect(
+        await repository.revokeEnrollment(db, revocation(customer.id, null)),
+      ).toBe(false);
+      expect(await findEnrollmentRow(customer.id)).toMatchObject({
+        revokedAt: null,
+      });
+    });
+
+    it("returns false when the customer has no enrollment", async () => {
+      const customer = await createCustomer({});
+
+      expect(
+        await repository.revokeEnrollment(db, revocation(customer.id, null)),
+      ).toBe(false);
     });
   });
 });

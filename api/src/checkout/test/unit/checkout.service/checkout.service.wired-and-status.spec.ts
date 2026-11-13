@@ -170,6 +170,7 @@ describe("CheckoutService", () => {
       );
       enrollmentsRepository.findEnrollment.mockResolvedValue({
         id: "enrollment",
+        paymentId: null,
         revokedAt: null,
         suspendedAt,
       });

@@ -150,7 +150,7 @@ model Enrollment {
   paymentId   Uuid?     @unique
 
   purchasedAt DateTime  @default(now())
-  // set by a full refund
+  // set by the admin's un-enroll
   revokedAt   DateTime?
   // set by a dispute. cleared by hand by the owner
   suspendedAt DateTime?

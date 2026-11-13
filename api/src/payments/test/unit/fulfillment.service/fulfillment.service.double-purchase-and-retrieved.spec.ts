@@ -129,6 +129,7 @@ describe("FulfillmentService", () => {
     beforeEach(() => {
       enrollmentsRepository.findEnrollment.mockResolvedValue({
         id: "enrollment-1",
+        paymentId: null,
         revokedAt: null,
         suspendedAt: null,
       });
@@ -233,6 +234,7 @@ describe("FulfillmentService", () => {
     it("refunds a double purchase after the transaction commits", async () => {
       enrollmentsRepository.findEnrollment.mockResolvedValue({
         id: "enrollment-1",
+        paymentId: null,
         revokedAt: null,
         suspendedAt: null,
       });

@@ -6,8 +6,16 @@ import type { DbScope } from "types.js";
 
 export type EnrollmentRecord = {
   id: string;
+  paymentId: string | null;
   revokedAt: Temporal.Instant | null;
   suspendedAt: Temporal.Instant | null;
+};
+
+export type EnrollmentRevocation = {
+  courseId: string;
+  customerId: string;
+  paymentId: string | null;
+  now: Temporal.Instant;
 };
 
 type EnrollmentAccess = {
@@ -18,9 +26,10 @@ type EnrollmentAccess = {
 };
 
 /**
- * Grants and reactivates enrollments, shared by checkout (free courses) and
- * fulfillment (paid ones), so the two can't drift apart. Which access an
- * enrollment gives is decided in `enrollment-access.ts`.
+ * Grants, reactivates and revokes enrollments. Checkout (free courses) and
+ * fulfillment (paid ones) share granting, so the two can't drift apart; the
+ * admin's un-enroll revokes. Which access an enrollment gives is decided in
+ * `enrollment-access.ts`.
  */
 @Injectable()
 export class EnrollmentsRepository {
@@ -29,7 +38,12 @@ export class EnrollmentsRepository {
     courseId: string,
     customerId: string,
   ): Promise<EnrollmentRecord | null> {
-    return scope.orm.public.Enrollment.select("id", "revokedAt", "suspendedAt")
+    return scope.orm.public.Enrollment.select(
+      "id",
+      "paymentId",
+      "revokedAt",
+      "suspendedAt",
+    )
       .where((enrollment) =>
         and(
           enrollment.courseId.eq(courseId),
@@ -40,7 +54,7 @@ export class EnrollmentsRepository {
   }
 
   /**
-   * Enrolls the customer, or reactivates an enrollment a refund revoked.
+   * Enrolls the customer, or reactivates an enrollment the admin's un-enroll revoked.
    * `paymentId` records the payment that bought access, or null for a free
    * course. Returns the enrollment's id when this call granted access, or
    * null when they already had access or are suspended.
@@ -56,6 +70,33 @@ export class EnrollmentsRepository {
     }
 
     return this.reactivateEnrollment(scope, access);
+  }
+
+  /**
+   * Revokes an active enrollment that `paymentId` bought (null for a free
+   * course). The guard sits in the UPDATE itself, so of two concurrent
+   * un-enrolls only one changes the row, and an enrollment a newer payment
+   * reactivated is left alone. Returns whether this call revoked it.
+   */
+  async revokeEnrollment(
+    scope: DbScope,
+    revocation: EnrollmentRevocation,
+  ): Promise<boolean> {
+    const { courseId, customerId, paymentId, now } = revocation;
+
+    const revokedEnrollments = await scope.orm.public.Enrollment.where(
+      (enrollment) =>
+        and(
+          enrollment.courseId.eq(courseId),
+          enrollment.customerId.eq(customerId),
+          enrollment.revokedAt.isNull(),
+          paymentId === null
+            ? enrollment.paymentId.isNull()
+            : enrollment.paymentId.eq(paymentId),
+        ),
+    ).updateAndCount({ revokedAt: now });
+
+    return revokedEnrollments === 1;
   }
 
   /** Returns the new enrollment's id, or null when the customer already has one. */

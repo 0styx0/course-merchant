@@ -105,6 +105,7 @@ describe("CheckoutDecisionService", () => {
     beforeEach(() => {
       enrollmentsRepository.findEnrollment.mockResolvedValue({
         id: "enrollment",
+        paymentId: null,
         revokedAt: null,
         suspendedAt: null,
       });
@@ -140,6 +141,7 @@ describe("CheckoutDecisionService", () => {
     ])("is emailed without a link when %s", async (_label, timestamps) => {
       enrollmentsRepository.findEnrollment.mockResolvedValue({
         id: "enrollment",
+        paymentId: null,
         ...timestamps,
       });
 
@@ -159,7 +161,10 @@ describe("CheckoutDecisionService", () => {
   describe("a free course", () => {
     it.each([
       ["a new buyer", null],
-      ["a refunded buyer", { id: "enrollment", revokedAt, suspendedAt: null }],
+      [
+        "a refunded buyer",
+        { id: "enrollment", paymentId: null, revokedAt, suspendedAt: null },
+      ],
     ])(
       "grants access to %s and emails the link",
       async (_label, enrollment) => {
@@ -200,7 +205,10 @@ describe("CheckoutDecisionService", () => {
 
     it.each([
       ["a new buyer", null],
-      ["a refunded buyer", { id: "enrollment", revokedAt, suspendedAt: null }],
+      [
+        "a refunded buyer",
+        { id: "enrollment", paymentId: null, revokedAt, suspendedAt: null },
+      ],
     ])(
       "records a pending payment at the current price for %s",
       async (_label, enrollment) => {

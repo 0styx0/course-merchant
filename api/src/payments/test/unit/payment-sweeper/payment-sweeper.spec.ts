@@ -111,6 +111,7 @@ describe("PaymentSweeper", () => {
     it("refunds a payment from a suspended buyer as such", async () => {
       enrollmentsRepository.findEnrollment.mockResolvedValue({
         id: "enrollment-1",
+        paymentId: null,
         revokedAt: null,
         suspendedAt: now,
       });
@@ -125,6 +126,7 @@ describe("PaymentSweeper", () => {
     it("refunds a payment whose buyer's access was revoked as a double purchase", async () => {
       enrollmentsRepository.findEnrollment.mockResolvedValue({
         id: "enrollment-1",
+        paymentId: null,
         revokedAt: now,
         suspendedAt: null,
       });

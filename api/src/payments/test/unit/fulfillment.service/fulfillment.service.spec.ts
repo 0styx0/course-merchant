@@ -190,7 +190,12 @@ describe("FulfillmentService", () => {
     { access: "none", enrollment: null },
     {
       access: "revoked",
-      enrollment: { id: "enrollment-1", revokedAt, suspendedAt: null },
+      enrollment: {
+        id: "enrollment-1",
+        paymentId: null,
+        revokedAt,
+        suspendedAt: null,
+      },
     },
   ])("with $access access", ({ enrollment }) => {
     beforeEach(() => {
@@ -230,6 +235,7 @@ describe("FulfillmentService", () => {
     beforeEach(() => {
       enrollmentsRepository.findEnrollment.mockResolvedValue({
         id: "enrollment-1",
+        paymentId: null,
         revokedAt: null,
         suspendedAt,
       });

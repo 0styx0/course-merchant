@@ -47,23 +47,8 @@ Keep these files current **in the same commit as the work**. Tick off status her
   Write the Given/When/Then specs first, in the step text here.
 - [ ] **7. Refunds and disputes by hand, API side** (see [refunds.md](payments/refunds.md)). The students list, its Un-enroll button and the "Refund owed" mark are web work, planned in the admin course view area of [courses.md](courses.md).
   - [x] **7a.** The admin course answers say which students are owed a refund, so a refund that Stripe keeps refusing shows up without reading logs.
-  - [ ] **7b.** The API can un-enroll a student in one transaction: it revokes the enrollment and records the payment as refunded. Nothing calls this yet; 7d does. **Next**
-    - *Behaviours*:
-      - An active paid enrollment gets `revokedAt` set to the database time, and its payment goes from `succeeded` to `refunded`, with `refundedAt` set.
-      - A free enrollment (no payment) gets only `revokedAt`.
-      - An enrollment that's already revoked doesn't change, keeps its first `revokedAt`, and the call reports success.
-      - A missing enrollment reports "not found".
-      - The service reads `paymentId`, then runs a guarded update on `revokedAt IS NULL AND paymentId = <read>`. A count of 0 means it was already revoked, so nothing is refunded.
-      - A payment that isn't `succeeded` stays as it is, and the revocation still saves.
-      - If the second write fails, the first one rolls back.
-    - *New shared pieces*: none.
-    - *Files*:
-      - `api/src/enrollments/enrollments.repository.ts`
-      - `api/src/admin-enrollments/admin-enrollments.service.ts` (new; reuses `markPaymentRefunded`)
-      - `api/src/prisma/contract.prisma` (comment: the admin's un-enroll sets `revokedAt`)
-    - *Settled*: the refunds.md row on un-enroll.
-    - *Done when*: the service unit tests and the repository and service integration tests pass.
-  - [ ] **7c.** Course ids and customer ids in URLs are checked by one shared rule. *(mechanical)*
+  - [x] **7b.** The API can un-enroll a student in one transaction: it revokes the enrollment and records the payment as refunded. Nothing calls this yet; 7d does.
+  - [ ] **7c.** Course ids and customer ids in URLs are checked by one shared rule. *(mechanical)* **Next**
     - *New shared pieces*: a uuid pipe that takes the error code, because 7d needs a second id check.
     - *Files*:
       - `ParseCourseIdPipe` moves to `api/src/common/validation/`.

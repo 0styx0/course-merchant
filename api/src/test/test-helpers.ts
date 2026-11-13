@@ -45,7 +45,7 @@ export function asPartialFake<T>(fake: object): T {
   return fake as unknown as T;
 }
 
-type TransactionHooks = {
+export type TransactionHooks = {
   /** Runs when a transaction callback starts. */
   onBegin?: () => void;
   /** Runs when it finishes without throwing, after the callback returned. */
