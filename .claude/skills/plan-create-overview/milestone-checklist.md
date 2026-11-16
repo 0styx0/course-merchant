@@ -53,7 +53,7 @@ Used in steps 4 and 5 of [SKILL.md](SKILL.md). The format is in [../_shared/mile
 - Builds on: [CLAUDE.md](../CLAUDE.md) *Conventions*; `payments/` split as the model.
 - Size: 3 commits (moves grouped per package; rows are by kind, not by folder).
 - Risk: grouping by job is a judgement call per folder; the owner approves each tree.
-- Done when: the folder-count command prints nothing; type check and the full test suite pass; test count unchanged.
+- Done when: the folder-count command prints nothing; type check and the full test suite pass; no test deleted, skipped or loosened.
 - Blocks the split: does `api/src/courses/test/unit` follow the source sub-folders? It conflicts with [api-tests.md](../.claude/rules/api-tests.md).
 - Can wait: names of the new folders.
 - Re-measure: the folder-count command in *Numbers*.

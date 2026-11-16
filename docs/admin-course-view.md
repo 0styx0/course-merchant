@@ -12,21 +12,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **1a.** Pages that show a course choose its image; the public course page stays the same.
   - [x] **1b.** The shop and admin pages use one check for "this course doesn't exist". *(mechanical)*
   - [x] **1c.** The admin opens a course's admin page from its edit page and sees the course and its students by name and email.
-  - [ ] **1d.** The edit page and the admin page share the status words, the price split and the "shown in shop" check; the edit page stays the same. *(mechanical)* **Next**
-    - *Behaviours*:
-      - Edit's prices, status options and shop link stay the same; the tests move with the code.
-    - *New shared pieces* (typed from `AdminCourse`, never from edit's form types):
-      - The status words, so the panel's pill and edit's options read the same.
-      - The split of prices into in-effect and future; edit drops the ids afterwards.
-      - The "shown in shop" check.
-    - *Files*:
-      - [edit-course-fields.ts](../web/src/features/admin-courses/edit-course/edit-course-fields.ts)
-      - [edit-form-prefill.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.ts)
-      - [edit-page-header.tsx](../web/src/features/admin-courses/edit-course/header/edit-page-header.tsx)
-      - [the edit page](../web/src/app/admin/(signed-in)/courses/[courseId]/edit/page.tsx)
-      - `web/src/features/admin-courses/course-summary/` (new folder: the status words, the price split and the shop check)
-    - *Done when*: `check:changed` passes and the test count stays the same.
-  - [ ] **1e.** The admin sees the course's status, times, current and scheduled prices, private link and public page link in the side panel.
+  - [x] **1d.** The edit page and the admin page share the status words, the price split and the "shown in shop" check; the edit page stays the same. *(mechanical)*
+  - [ ] **1e.** The admin sees the course's status, times, current and scheduled prices, private link and public page link in the side panel. **Next**
     - *Behaviours*:
       - The status pill shows the status word; Published is `--success` and every other status is `--muted`.
       - The panel shows the start and end in the course's time zone.

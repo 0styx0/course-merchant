@@ -1,22 +1,30 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { EditPageHeader, isShownInShop } from "./edit-page-header";
+import { EditPageHeader } from "./edit-page-header";
 
 describe("EditPageHeader", () => {
-  it("shows the saved name and the status label", () => {
-    render(
-      <EditPageHeader
-        courseId="c1"
-        name="Intro to Go"
-        statusName="drafted"
-        isInShop={false}
-      />,
-    );
+  it.each([
+    ["published", "Published"],
+    ["drafted", "Drafted"],
+    ["archived", "Archived"],
+    ["deleted", "Deleted"],
+  ] as const)(
+    "shows the saved name and the %s status as %s",
+    (statusName, label) => {
+      render(
+        <EditPageHeader
+          courseId="c1"
+          name="Intro to Go"
+          statusName={statusName}
+          isInShop={false}
+        />,
+      );
 
-    expect(screen.getByText("Intro to Go")).toBeInTheDocument();
-    expect(screen.getByText("Drafted")).toBeInTheDocument();
-  });
+      expect(screen.getByText("Intro to Go")).toBeInTheDocument();
+      expect(screen.getByText(label)).toBeInTheDocument();
+    },
+  );
 
   it("links to the shop page when the shop shows the course", () => {
     render(
@@ -64,20 +72,4 @@ describe("EditPageHeader", () => {
       "/admin/courses/c1",
     );
   });
-});
-
-describe("isShownInShop", () => {
-  it.each([
-    ["published", 1, true],
-    ["published", 2, true],
-    ["published", 0, false],
-    ["drafted", 1, false],
-    ["archived", 1, false],
-    ["deleted", 1, false],
-  ] as const)(
-    "%s with %i prices in effect gives %s",
-    (status, count, isShown) => {
-      expect(isShownInShop(status, count)).toBe(isShown);
-    },
-  );
 });

@@ -2,12 +2,10 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { ProblemAlert } from "@/components/problem-alert";
+import { isShownInShop } from "@/features/admin-courses/shop-visibility/is-shown-in-shop";
 import { EditCourseForm } from "@/features/admin-courses/edit-course/edit-course-form";
 import { toEditFormPrefill } from "@/features/admin-courses/edit-course/edit-form-prefill";
-import {
-  EditPageHeader,
-  isShownInShop,
-} from "@/features/admin-courses/edit-course/header/edit-page-header";
+import { EditPageHeader } from "@/features/admin-courses/edit-course/header/edit-page-header";
 import { getAdminCourseOrNotFound } from "@/features/admin-courses/api/get-admin-course-or-not-found";
 
 export const metadata: Metadata = {
@@ -20,7 +18,7 @@ type EditCoursePageProps = {
   searchParams: Promise<{ saved?: string | string[] }>;
 };
 
-// Edit's narrow form column; the admin course page uses the public frame.
+// A narrow column, so the form reads as one column of fields.
 function EditCoursePageLayout({ children }: { children: ReactNode }) {
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">

@@ -48,7 +48,7 @@ A commit is also eligible when it is **plan-conformant**: all four hold.
 A plan-conformant commit may contain logic.
 
 Give a **short outline** of about 5 lines after the opening.
-- It has the files (with the per-folder BEFORE/AFTER diagram for moves), the check that proves nothing changed (type check, test count before and after), the doc tick, the file count and the *Preflight* line.
+- It has the files (with the per-folder BEFORE/AFTER diagram for moves), the check that proves nothing changed (type check, and no existing test deleted, skipped or loosened; added tests are welcome), the doc tick, the file count and the *Preflight* line.
 - For a plan-conformant commit with logic, add the parts diagram ([../_shared/parts-diagram.md](../_shared/parts-diagram.md)), the flow diagram ([../_shared/flow-diagram.md](../_shared/flow-diagram.md)) and the test table.
 - Leave out *Terms*, *Trade-offs*, *Questions* and *Tests* unless one applies. Define a new term in the bullet where it first appears.
 - Switch to the full outline, and wait, when the commit has any of these: new logic that is not plan-conformant, a changed lint rule, a new decision row, a question for the owner, code the tests don't pin.

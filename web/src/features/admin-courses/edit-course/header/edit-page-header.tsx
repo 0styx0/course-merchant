@@ -3,8 +3,8 @@ import Link from "next/link";
 import { shopCoursePath } from "@/features/courses/shop-course-path";
 
 import { adminCourseViewPath } from "../../addresses/admin-course-path";
+import { courseStatusLabels } from "../../course-status/course-status-labels";
 import type { EditCourseFormValues } from "../../validation/edit-course-form-schema";
-import { courseStatusLabels } from "../edit-course-fields";
 
 type CourseStatusName = EditCourseFormValues["status"];
 
@@ -14,14 +14,6 @@ type EditPageHeaderProps = {
   statusName: CourseStatusName;
   isInShop: boolean;
 };
-
-/** The shop lists a published course that has at least one price in effect. */
-export function isShownInShop(
-  statusName: CourseStatusName,
-  pricesInEffectCount: number,
-): boolean {
-  return statusName === "published" && pricesInEffectCount > 0;
-}
 
 function ShopLinkOrNote({
   courseId,

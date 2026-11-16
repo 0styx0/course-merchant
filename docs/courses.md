@@ -33,7 +33,7 @@ Keep this file current **in the same commit as the work**.
 | Admin list | Every course whose latest status isn't `deleted` | [admin-courses.repository.ts](../api/src/courses/repositories/admin-courses.repository.ts) |
 | Admin get by id | Any course | same |
 
-"Visible" means the latest status is `published` and some price has taken effect. The current price is the latest one in effect. This rule is shared with checkout through [course-visibility.ts](../api/src/courses/course-visibility.ts), which also exports `latestStatusIs` and `latestStatusIsNot` for any query on a course's latest status (the admin list uses the latter). Reuse them rather than deriving it again.
+"Visible" means the latest status is `published` and some price has taken effect. The current price is the latest one in effect. This rule is shared with checkout through [course-visibility.ts](../api/src/courses/course-visibility.ts), which also exports `latestStatusIs` and `latestStatusIsNot` for any query on a course's latest status (the admin list uses the latter). Reuse them rather than deriving it again. The web cannot import API code, so the admin pages mirror the rule in `isShownInShop` ([is-shown-in-shop.ts](../web/src/features/admin-courses/shop-visibility/is-shown-in-shop.ts)); change both together.
 
 `contentUrl` (the Drive or Zoom link) is private. Only admin responses and the access email ever include it.
 

@@ -1,6 +1,6 @@
 # Is this commit small enough?
 
-One rule, used by `/plan-create-implementation` (when splitting a milestone) and `/next-commit` (before outlining). A **mechanical** commit (defined in [../next-commit/outline.md](../next-commit/outline.md)) is measured by kind, not file count: one kind of change in one package passes even with more than 6 files, because reviewing it means checking that the diff shows renames and the test count is unchanged.
+One rule, used by `/plan-create-implementation` (when splitting a milestone) and `/next-commit` (before outlining). A **mechanical** commit (defined in [../next-commit/outline.md](../next-commit/outline.md)) is measured by kind, not file count: one kind of change in one package passes even with more than 6 files, because reviewing it means checking that the diff shows renames and that no existing test was deleted, skipped or loosened. The test count may grow; a test that moves keeps its assertions.
 
 Any other commit is too big if any of these is true:
 

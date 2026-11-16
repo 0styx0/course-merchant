@@ -7,8 +7,9 @@ import { showsFieldError } from "@/components/form/validated-field";
 import { FieldError } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
+import { courseStatusLabels } from "../../course-status/course-status-labels";
 import type { EditCourseFormValues } from "../../validation/edit-course-form-schema";
-import { courseStatusLabels, statusFieldLabel } from "../edit-course-fields";
+import { statusFieldLabel } from "../edit-course-fields";
 
 type CourseStatusName = EditCourseFormValues["status"];
 

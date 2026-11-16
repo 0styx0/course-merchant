@@ -1,3 +1,4 @@
+import { splitPricesByStart } from "../price/split-prices-by-start";
 import { toDollarText } from "../price/dollar-amount";
 import { utcToWallClock } from "@/lib/time/wall-clock-time";
 import type { AdminCourse } from "@/lib/types";
@@ -34,26 +35,24 @@ function storedTimeBoxes(utc: string, timeZone: string) {
   return { date: wallClock?.date ?? "", timeOfDay: wallClock?.timeOfDay ?? "" };
 }
 
+function withoutId({
+  amount,
+  currency,
+  effectiveAt,
+}: AdminCourse["prices"][number]): LoadedPrice {
+  return { amount, currency, effectiveAt };
+}
+
 /**
- * Splits once, when the page renders, so the server and the browser agree on
- * which prices are rows. The API keeps a price that matches a stored one
- * exactly, so the prices carry no ids.
+ * The API keeps a price that matches a stored one exactly, so the prices
+ * carry no ids.
  */
 function splitLoadedPrices(
   prices: AdminCourse["prices"],
   renderMs: number,
 ): LoadedPrices {
-  const withoutIds = prices.map(({ amount, currency, effectiveAt }) => ({
-    amount,
-    currency,
-    effectiveAt,
-  }));
-  const hasStarted = (price: LoadedPrice) =>
-    Date.parse(price.effectiveAt) <= renderMs;
-  return {
-    inEffect: withoutIds.filter(hasStarted),
-    future: withoutIds.filter((price) => !hasStarted(price)),
-  };
+  const { inEffect, future } = splitPricesByStart(prices, renderMs);
+  return { inEffect: inEffect.map(withoutId), future: future.map(withoutId) };
 }
 
 function scheduleProgressAt(
