@@ -202,9 +202,9 @@ Image (3:2), eyebrow (`NN / FORMAT`), title (h3), description (body, clamp 3), m
 
 The card uses `rounded-lg`, `bg-card`, `border-border`, no shadow and 24px padding. The grid has 3 / 2 / 1 columns with a 24px gap. The whole card is one link, and the button inside it gets `tabIndex={-1}`. The split row on the Courses page holds the same content at a different density.
 
-### Badge and status pill (shadcn `Badge`)
+### Status pill (`StatusPill`)
 
-`rounded-full px-3 py-1`, eyebrow type. A status always shows its word.
+`rounded-full px-3 py-1`, eyebrow type. A status always shows its word. Every status pill draws through our own `StatusPill` component in `web/src/components/` (not shadcn `Badge`), with the colour pair as a prop.
 
 | Status | Fill | Text |
 |---|---|---|

@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { ProblemAlert } from "@/components/problem-alert";
 import { EnrollButton } from "@/features/checkout/enroll-button/enroll-button";
-import { BuyPanel, EndedPanel } from "@/features/courses/buy-panel/buy-panel";
+import { BuyPanel } from "@/features/courses/buy-panel/buy-panel";
+import { EndedPanel } from "@/features/courses/buy-panel/ended-panel";
 import {
   getCourseStage,
   type CourseStage,

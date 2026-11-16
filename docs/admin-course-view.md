@@ -18,19 +18,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **2a.** The admin course answers say when each student enrolled, which currency they paid in, and which email they got last or are missing.
   - [x] **2b.** The admin sees the date each student enrolled, in the course's time zone, beside their name and email.
 - [ ] **3. The admin sees each student's enrollment, access, payment and problems.** A table on wide screens, cards on phones, coloured pills and Attention lines.
-  - [ ] **3a.** Status pills on the admin and public pages share one look. *(mechanical)* **Next**
-    - *Behaviours*:
-      - The course status pill keeps its words and colours (Published green, the rest grey).
-      - The public Ended pill keeps its word and grey colours (coverage first: add a test of its classes before the change).
-    - *New shared pieces*: `StatusPill` in `web/src/components/` (a word plus a colour pair; the course status, Ended and student pills all draw through it).
-    - *Files*:
-      - `web/src/components/status-pill.tsx` and its test (new; this fills the folder to the limit, so no later commit adds there)
-      - [course-status-pill.tsx](../web/src/features/admin-courses/course-view/course-status-pill.tsx)
-      - [buy-panel.tsx](../web/src/features/courses/buy-panel/buy-panel.tsx) (`EndedPanel`) and its test (the Ended pill's classes)
-      - [style-guide.md](style-guide.md) §7 (the pill heading names `StatusPill`, not shadcn `Badge`)
-    - *Settled*: the row that starts "One `StatusPill` component".
-    - *Done when*: `yarn --cwd web check:changed` passes and the existing pill assertions are unchanged.
-  - [ ] **3b.** The admin sees each student as a card with their name, email, enrolled date and an access pill.
+  - [x] **3a.** Status pills on the admin and public pages share one look.
+  - [ ] **3b.** The admin sees each student as a card with their name, email, enrolled date and an access pill. **Next**
     - *Behaviours*:
       - The heading counts every student the API returns, un-enrolled ones too ("Students (8)").
       - An enrollment with neither date set reads Active, green.
@@ -107,7 +96,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - **Twin:** existing code that does a similar job, which a new piece shares or copies the shape of.
 - **Journey (J1 to J4):** a one-sentence task the owner walks in `dev:mock` to prove a milestone.
 - **Attention:** the column that lists what the owner must act on for a student.
-- **Pill:** the rounded status label from [style-guide.md](style-guide.md) §7 *Badge and status pill*.
+- **Pill:** the rounded status label from [style-guide.md](style-guide.md) §7 *Status pill*.
 - **Active, Suspended, Un-enrolled:** access as [enrollment-access.ts](../api/src/enrollments/enrollment-access.ts) classifies it; a suspension outranks an un-enroll.
 - **`dev:mock`:** `yarn --cwd web dev:mock`, the web app with canned API answers ([web.md](web.md)).
 - **Re-measure:** a command that prints a fact that changes, so no count is typed into this doc.
@@ -251,7 +240,7 @@ Where each wireframe state is built:
 
 - Why here: the table is the page's main job; sorting, Un-enroll and Copy addresses all work on its rows.
 - Needs: 1, 2.
-- Builds on: [style-guide.md](style-guide.md) §7 *Badge and status pill* (the existing `--success`, `--muted` and `--secondary` pairs), [course-status-pill.tsx](../web/src/features/admin-courses/course-view/course-status-pill.tsx) and `EndedPanel` in [buy-panel.tsx](../web/src/features/courses/buy-panel/buy-panel.tsx) (the pill twins), `formatPrice` and `dateOnlyFormatter` in [formatters.ts](../web/src/lib/utils/formatters.ts), shadcn `Table` (copied in; no new dependency), lucide's `CircleAlert` icon.
+- Builds on: [style-guide.md](style-guide.md) §7 *Status pill* (the existing `--success`, `--muted` and `--secondary` pairs), [course-status-pill.tsx](../web/src/features/admin-courses/course-view/course-status-pill.tsx) and `EndedPanel` in [ended-panel.tsx](../web/src/features/courses/buy-panel/ended-panel.tsx) (the pill twins), `formatPrice` and `dateOnlyFormatter` in [formatters.ts](../web/src/lib/utils/formatters.ts), shadcn `Table` (copied in; no new dependency), lucide's `CircleAlert` icon.
 - **Sketch** *(temporary)*: the whole-page Students table in the API's order, with no Sort menu, no Copy button and no Un-enroll buttons; phones show one card per student.
 
 ```
