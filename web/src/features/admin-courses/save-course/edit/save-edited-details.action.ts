@@ -14,7 +14,7 @@ import {
   type LoadedSchedule,
 } from "../../validation/edit-course-form-schema";
 import { findLoadedFuturePrice } from "../../validation/price-row-issues";
-import { updateCourse } from "../admin-courses.api";
+import { updateCourse } from "../../api/admin-courses.api";
 import { toScheduledPrice } from "../to-course-request";
 import {
   invalidCourseIdFailure,

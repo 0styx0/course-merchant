@@ -2,13 +2,20 @@ import Image from "next/image";
 
 type CourseImageProps = {
   src: string;
+  /**
+   * Serves the file straight from `src`. Pages behind the admin login need
+   * it: Next's resizer fetches the image without the browser's cookies, so
+   * the admin image route would refuse it.
+   */
+  isUnoptimized?: boolean;
 };
 
 // A missing or failing image leaves the empty 16:9 box; nothing else moves.
-export function CourseImage({ src }: CourseImageProps) {
+export function CourseImage({ src, isUnoptimized }: CourseImageProps) {
   return (
     <Image
       src={src}
+      unoptimized={isUnoptimized}
       width={1600}
       height={900}
       alt=""

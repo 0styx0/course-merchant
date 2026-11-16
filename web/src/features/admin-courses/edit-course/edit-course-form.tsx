@@ -18,7 +18,7 @@ import {
   type EditCourseFormValues,
 } from "../validation/edit-course-form-schema";
 import { editCourseFields } from "./edit-course-fields";
-import { editCoursePath } from "./edit-course-path";
+import { editCoursePath } from "../addresses/admin-course-path";
 import {
   EditBasicsSection,
   EditPricingSection,

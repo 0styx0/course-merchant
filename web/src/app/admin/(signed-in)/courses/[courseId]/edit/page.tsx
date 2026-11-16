@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { notFound } from "next/navigation";
 
 import { ProblemAlert } from "@/components/problem-alert";
 import { EditCourseForm } from "@/features/admin-courses/edit-course/edit-course-form";
@@ -9,8 +8,7 @@ import {
   EditPageHeader,
   isShownInShop,
 } from "@/features/admin-courses/edit-course/header/edit-page-header";
-import { getCourseAsAdmin } from "@/features/admin-courses/save-course/admin-courses.api";
-import { isCourseMissingProblem } from "@/lib/api/is-course-missing-problem";
+import { getAdminCourseOrNotFound } from "@/features/admin-courses/api/get-admin-course-or-not-found";
 
 export const metadata: Metadata = {
   title: "Edit course",
@@ -22,6 +20,7 @@ type EditCoursePageProps = {
   searchParams: Promise<{ saved?: string | string[] }>;
 };
 
+// Edit's narrow form column; the admin course page uses the public frame.
 function EditCoursePageLayout({ children }: { children: ReactNode }) {
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -43,11 +42,7 @@ export default async function EditCoursePage({
 }: EditCoursePageProps) {
   const { courseId } = await params;
   const { saved } = await searchParams;
-  const result = await getCourseAsAdmin(courseId);
-
-  if (result.state === "failure" && isCourseMissingProblem(result.error)) {
-    notFound();
-  }
+  const result = await getAdminCourseOrNotFound(courseId);
 
   if (result.state === "failure") {
     return (

@@ -1,5 +1,5 @@
 import type { ProblemDetails, Result } from "@/lib/types";
-import { getCourseImageAsAdmin } from "@/features/admin-courses/save-course/admin-courses.api";
+import { getCourseImageAsAdmin } from "@/features/admin-courses/api/admin-courses.api";
 import { isUuid } from "@/features/admin-courses/save-course/course-action-result";
 
 type CourseImageRouteContext = {

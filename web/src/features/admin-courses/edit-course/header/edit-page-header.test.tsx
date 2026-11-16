@@ -46,7 +46,23 @@ describe("EditPageHeader", () => {
     );
 
     expect(screen.getByText("Not in the shop")).toBeInTheDocument();
-    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.queryByRole("link", { name: "View in the shop" })).toBeNull();
+  });
+
+  it("links to the course's admin page", () => {
+    render(
+      <EditPageHeader
+        courseId="c1"
+        name="Intro to Go"
+        statusName="drafted"
+        isInShop={false}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "View course" })).toHaveAttribute(
+      "href",
+      "/admin/courses/c1",
+    );
   });
 });
 

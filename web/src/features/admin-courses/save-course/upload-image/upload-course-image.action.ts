@@ -1,6 +1,6 @@
 "use server";
 
-import { uploadCourseImage } from "../admin-courses.api";
+import { uploadCourseImage } from "../../api/admin-courses.api";
 import {
   invalidCourseIdFailure,
   invalidImageFailure,

@@ -1,6 +1,6 @@
 "use server";
 
-import { updateCourse } from "../admin-courses.api";
+import { updateCourse } from "../../api/admin-courses.api";
 import {
   invalidCourseIdFailure,
   invalidFormFailure,

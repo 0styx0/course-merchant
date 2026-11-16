@@ -11,26 +11,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [ ] **1. The admin opens a course's admin page.** The course shows like the public page with an admin side panel, students are listed by name and email, and the edit page links to it.
   - [x] **1a.** Pages that show a course choose its image; the public course page stays the same.
   - [x] **1b.** The shop and admin pages use one check for "this course doesn't exist". *(mechanical)*
-  - [ ] **1c.** The admin opens a course's admin page from its edit page and sees the course and its students by name and email. **Next**
-    - *Behaviours* (page unit tests, like [checkout success page.test.tsx](../web/src/app/(shop)/checkout/success/page.test.tsx)):
-      - With `withEnrollment`, the page shows the name, summary and description, and lists "Ada Lovelace · ada@example.com".
-      - With no students, the list reads "No students yet.".
-      - A stored image loads from the admin image route through `next/image` with `unoptimized`.
-      - A course with no image shows the empty 16:9 box.
-      - Any other problem shows the API's title and detail in `ProblemAlert`.
-      - The side column shows an Edit course link to the edit page.
-      - The edit page header shows a "View course" link to the admin page.
-      - An unknown course answers with a 404 status; this one is a browser test, because jsdom can't show the status code.
-    - *New shared pieces*:
-      - The admin page's address, in `course-view/` just as `editCoursePath` lives in `edit-course/`; the edit header uses it now and the admin course list will later.
-    - *Files*:
-      - `web/src/app/admin/(signed-in)/courses/[courseId]/page.tsx` and its test (new)
-      - `web/src/features/admin-courses/course-view/` (new folder): the image or empty box, the student list and the page address, each with a test
-      - [edit-page-header.tsx](../web/src/features/admin-courses/edit-course/header/edit-page-header.tsx)
-      - `web/tests/browser/admin-courses/course-view.spec.ts` (the 404 case only)
-    - *Needs*: 1a, 1b.
-    - *Done when*: the tests pass, and `dev:mock` with `withEnrollment` shows Ada.
-  - [ ] **1d.** The edit page and the admin page share the status words, the price split and the "shown in shop" check; the edit page stays the same. *(mechanical)*
+  - [x] **1c.** The admin opens a course's admin page from its edit page and sees the course and its students by name and email.
+  - [ ] **1d.** The edit page and the admin page share the status words, the price split and the "shown in shop" check; the edit page stays the same. *(mechanical)* **Next**
     - *Behaviours*:
       - Edit's prices, status options and shop link stay the same; the tests move with the code.
     - *New shared pieces* (typed from `AdminCourse`, never from edit's form types):

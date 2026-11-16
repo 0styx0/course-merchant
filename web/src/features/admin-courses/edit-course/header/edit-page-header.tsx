@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { shopCoursePath } from "@/features/courses/shop-course-path";
 
+import { adminCourseViewPath } from "../../addresses/admin-course-path";
 import type { EditCourseFormValues } from "../../validation/edit-course-form-schema";
 import { courseStatusLabels } from "../edit-course-fields";
 
@@ -36,7 +37,7 @@ function ShopLinkOrNote({
   );
 }
 
-/** The saved course's name, its status and where the shop shows it. */
+/** The saved course's name, its status, where the shop shows it and a link to its admin page. */
 export function EditPageHeader({
   courseId,
   name,
@@ -49,6 +50,9 @@ export function EditPageHeader({
       <p className="mt-1 flex gap-4 text-muted-foreground">
         <span>{courseStatusLabels[statusName]}</span>
         <ShopLinkOrNote courseId={courseId} isInShop={isInShop} />
+        <Link className="underline" href={adminCourseViewPath(courseId)}>
+          View course
+        </Link>
       </p>
     </header>
   );

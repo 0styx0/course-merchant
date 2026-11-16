@@ -10,7 +10,7 @@ import type {
 import { type CourseActionResult } from "../save-course/course-action-result";
 import { createCourseAction } from "../save-course/create/create-course.action";
 import { retryDraftSaveAction } from "../save-course/create/retry-draft-save.action";
-import { editCoursePath } from "../edit-course/edit-course-path";
+import { editCoursePath } from "../addresses/admin-course-path";
 
 type CourseForm = UseFormReturn<
   CourseFormWithImageValues,

@@ -1,6 +1,6 @@
 "use server";
 
-import { createCourse } from "../admin-courses.api";
+import { createCourse } from "../../api/admin-courses.api";
 import {
   invalidFormFailure,
   problemFailure,

@@ -19,6 +19,12 @@ describe("CourseImage", () => {
     );
   });
 
+  it("shows the image straight from the given address when unoptimized", () => {
+    const { container } = render(<CourseImage src={imageSrc} isUnoptimized />);
+
+    expect(container.querySelector("img")).toHaveAttribute("src", imageSrc);
+  });
+
   it("sizes the image to seven grid columns from md and full width below", () => {
     const { container } = render(<CourseImage src={imageSrc} />);
 

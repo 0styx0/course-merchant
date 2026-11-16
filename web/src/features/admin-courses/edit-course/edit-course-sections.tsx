@@ -25,7 +25,7 @@ import {
 } from "../course-form/sections/course-form-sections";
 import { ImageInput } from "../course-form/fields/image-input";
 import type { ChosenImage } from "../image/course-image";
-import { adminCourseImagePath } from "../image/course-image-route";
+import { adminCourseImagePath } from "../addresses/admin-course-path";
 import { ImagePreview } from "../image/image-preview";
 import { emptyPriceRow, PriceRow } from "../price/price-row";
 import { PricesInEffect } from "../price/prices-in-effect";
