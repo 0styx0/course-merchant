@@ -14,7 +14,55 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **1c.** The admin opens a course's admin page from its edit page and sees the course and its students by name and email.
   - [x] **1d.** The edit page and the admin page share the status words, the price split and the "shown in shop" check; the edit page stays the same. *(mechanical)*
   - [x] **1e.** The admin sees the course's status, times, current and scheduled prices, private link and public page link in the side panel.
-- [ ] **2. The admin can see when each student enrolled, which currency they paid in and which email failed.** **Next**
+- [ ] **2. The admin can see when each student enrolled, which currency they paid in and which email failed.**
+  - [ ] **2a.** The admin course answers say when each student enrolled, which currency they paid in, and which email they got last or are missing. **Next**
+    - *Behaviours*:
+      - Each enrollment carries `enrolledAt`, the time access was last granted (the enrollment's `purchasedAt`), in UTC ending in `Z`.
+      - A free enrollment (payment null) still carries `enrolledAt`.
+      - A paid enrollment's `payment.currency` is the payment's own ISO 4217 code ("USD").
+      - `latestEmail` holds the kind and status of the newest email linked to the enrollment.
+      - With two emails (an older failed `access_granted`, a newer sent `already_owned`), `latestEmail` is `{ kind: "already_owned", status: "sent" }`.
+      - With no email and no suspension, `latestEmail` is `{ kind: "access_granted", status: "failed" }`.
+      - With no email on a suspended enrollment, `latestEmail` is `{ kind: "access_suspended", status: "failed" }`.
+      - `emailStatus` is gone from the answer.
+      - The admin course list answer gains the same facts (it shares the mapper).
+      - A caller without a session still gets 401 (the existing route-protection e2e covers it, so no new test).
+    - *New shared pieces*:
+      - `enrolledAt`, `payment.currency` and `latestEmail` on `AdminEnrollment` in the contract, because milestones 3 to 6 read them.
+      - A `CurrencyCode` contract schema, so `Price.currency` and `payment.currency` share one pattern instead of a copy.
+    - *Files*:
+      - [openapi-v1.yaml](../api/openapi/openapi-v1.yaml) (`AdminEnrollment`: `enrolledAt`, `payment.currency`, `latestEmail` in place of `emailStatus`, and a new `CurrencyCode`)
+      - [admin-courses.repository.ts](../api/src/courses/repositories/admin-courses.repository.ts) (model type gains `purchasedAt`, `payment.currency`, email `kind`, and the email include selects `kind`)
+      - [courses.mapper.ts](../api/src/courses/courses.mapper.ts) (`toAdminEnrollmentResponse`, plus a small function for the missing email's kind)
+      - [course-fixtures.ts](../api/src/test/course-fixtures.ts) (test fixture):
+        - `createEnrollment` takes `purchasedAt`.
+        - `createEnrollmentEmail` takes `kind` and its payload, typed from `EmailPayloads` in [email-payloads.ts](../api/src/email/outbox/email-payloads.ts) so the two can't disagree.
+      - tests: mapper unit specs and fixtures, admin get, list and update integration specs, admin get and list e2e specs
+      - generated: `api/src/generated/api.d.ts`, `web/src/lib/api/generated.ts`
+      - web fixture data only, because the pre-commit hook regenerates and type-checks web when the contract changes (the hand-off repeats it under *Deviations*):
+        - [admin-courses.ts](../web/src/mocks/fixtures/admin-courses.ts)
+        - [edit-form-prefill.test.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.test.ts)
+      - docs: [payments.md](payments.md) line on `emailStatus`, this file's tick
+      - 3 counted source files, and no new files
+    - *Settled*:
+      - the Decision rows on the admin course answer's new facts and on `enrolledAt`
+      - the `latestEmail` row in [payments/email.md](payments/email.md)
+    - *Done when*:
+      - the admin get e2e spec shows the new facts for a paid student with one email and for a free student with none
+      - `yarn --cwd api check:changed` and `yarn --cwd web check:changed` pass
+  - [ ] **2b.** The admin sees the date each student enrolled beside their name and email.
+    - *Behaviours*:
+      - Each line reads `Ada Lovelace · ada@example.com · enrolled Oct 16, 2026`.
+      - The date reads in the course's time zone: `2026-10-17T02:00:00Z` in `America/New_York` reads Oct 16 (tests run in Pacific/Chatham, where it is Oct 17).
+      - No students still reads "No students yet."
+    - *New shared pieces*: none (reuses `dateOnlyFormatter` from [formatters.ts](../web/src/lib/utils/formatters.ts))
+    - *Files*:
+      - [student-list.tsx](../web/src/features/admin-courses/course-view/student-list.tsx) (takes the course's time zone)
+      - [student-list.test.tsx](../web/src/features/admin-courses/course-view/student-list.test.tsx)
+      - [page.tsx](../web/src/app/admin/(signed-in)/courses/[courseId]/page.tsx) (passes `course.schedule.timeZone`)
+      - docs: this file's tick and Retro, [courses.md](courses.md) status line
+    - *Settled*: the Decision row on student dates.
+    - *Done when*: in `dev:mock` with `withEnrollment`, the list reads `Ada Lovelace · ada@example.com · enrolled Oct 16, 2026`.
 - [ ] **3. The admin sees each student's enrollment, access, payment and problems.** A table on wide screens, cards on phones, coloured pills and Attention lines.
 - [ ] **4. The admin un-enrolls a student.** A dialog confirms, then the row shows Un-enrolled and Refunded.
 - [ ] **5. The admin sorts the students.** Needs attention first is the default.
@@ -57,7 +105,7 @@ The finished page, desktop, with one row for each case the data allows:
 | Dana Cohen       | Nov 2, 2026 | (Active)      | $99.00 | (Paid)     | ⚠ Already-enrolled email failed | [Un-enroll] |
 |  dana@…          |             |               |        |            | ⚠ Refund owed                   |             |
 | Omar Haddad      | Nov 4, 2026 | (Active)      | $99.00 | (Paid)     | ⚠ Course access email failed    | [Un-enroll] |
-| Noa Levi         | Nov 7, 2026 | (Active)      | (Free) | —          | ⚠ No email sent                 | [Un-enroll] |
+| Noa Levi         | Nov 7, 2026 | (Active)      | (Free) | —          | ⚠ Course access email failed    | [Un-enroll] |
 | Lee Park         | Oct 30,2026 | (Suspended)   | $79.00 | (Paid)     | ⚠ Suspension email failed       | [Un-enroll] |
 | Sam Ortiz        | Nov 9, 2026 | (Active)      | $99.00 | (Paid)     |                                 | [Un-enroll] |
 | Rina Gold        | Oct 29,2026 | (Suspended)   | $79.00 | (Refunded) |                                 |             |
@@ -105,12 +153,14 @@ Where each wireframe state is built:
 |---|---|---|
 | The admin course view is `/admin/courses/[courseId]` and reuses the public course layout; the caller passes the image element | The owner sees the course as buyers do, and one layout stays in step with the public page. The admin page draws the stored image from the admin image route with `next/image`'s `unoptimized`, because Next's optimizer forwards no cookies to the image it fetches ([image docs](../web/node_modules/next/dist/docs/01-app/03-api-reference/02-components/image.md), under `src`). A course with no image shows the empty 16:9 box, as the public page does | A copy of the layout (two to keep in step); the public image route (404 for drafts); optimizing the admin route (breaks once login guards it; low); a NO IMAGE box (differs from the public page; low) |
 | Students show as a table from `md` up and as one card per student below, sorted by one menu (revisit after use) | Phones come first. A card has no column header to click, so one menu works at every width | Clickable headers (two sort controls); a table that scrolls sideways on phones |
-| One Attention column names each failed email by kind ("Course access email failed", "Already-enrolled email failed", "Suspension email failed", "No email sent") and "Refund owed"; pills show only state (revisit after use) | The owner sees what to fix and which email to resend, and red stays for problems | An Email status column (repeats Attention); a generic "Email failed" |
+| One Attention column names each failed email by kind ("Course access email failed", "Already-enrolled email failed", "Suspension email failed") and "Refund owed"; pills show only state (revisit after use) | The owner sees what to fix and which email to resend, and red stays for problems. An email that was never queued reads as its kind failed ([payments/email.md](payments/email.md) `latestEmail` row), because the owner sends it by hand either way | An Email status column (repeats Attention); a generic "Email failed"; a separate "No email sent" line (same action for the owner, and the page shows no send error that would tell the two apart) |
 | The admin course answer adds each student's enrolled time, payment currency and the latest email's kind | The page can't work these out: free students have no payment time, and the status alone doesn't say which email | A separate students endpoint (more contract for one page) |
 | Sorting runs in the browser over the full answer | The answer already holds every student, so the contract stays as it is | API sort parameters (contract, tests and paging for small lists) |
 | Un-enroll confirms in a dialog, like Delete | [style-guide.md](style-guide.md) §7 *Button* keeps the destructive fill inside a confirm dialog, and [course-edit.md](course-edit.md) already rejected an inline confirm for Delete; the twin exists | An inline confirm in the row |
 | "Copy addresses" copies the active students' email addresses, comma-separated, to the clipboard | One way that works with any mail app and any class size; no outbox kind, template or sender | A `mailto:` link with Bcc (some mail apps cut long links, so it needs a fallback anyway); server-sent bulk email (a new email kind, template and limits) |
 | The page uses the public 1200px frame; a table too wide for the screen scrolls inside its own box | One frame keeps the course block the same on both pages, and the page never scrolls sideways (revisit after use) | The edit page's 672px column (too narrow for seven columns); a wider admin frame (a second frame to keep in step) |
+| The contract calls the enrollment's `purchasedAt` `enrolledAt` | Free students enroll without buying, and the page's column reads "Enrolled" | Renaming the column (a migration for one word; low); `purchasedAt` in the contract (wrong for free courses) |
+| Student dates on the admin page read in the course's time zone and en-US, like the side panel's times (revisit after use) | One page shows one zone, and the panel already says "Times in <zone>"; a server-rendered page has no visitor zone | The visitor's zone (client rendering for a date; medium); the request locale (the page would mix two date styles; low) |
 | Active and Paid pills are `--success`; every other access and payment pill is `--muted`; no new token | Nothing sets a suspension any more ([payments/refunds.md](payments/refunds.md) row on `suspendedAt`) and Pending can't belong to an enrollment, so a warning colour would show only for old rows. Red stays for Attention | A new `--warning` token for Suspended and Pending (a token and contrast checks for states only old data reaches); red for Suspended (clashes with errors) |
 
 ## Step 1. The admin opens a course's admin page
@@ -152,9 +202,55 @@ Where each wireframe state is built:
 - Needs: 1.
 - Builds on: [admin-courses.repository.ts](../api/src/courses/repositories/admin-courses.repository.ts) (the enrollment include), [enrollments.repository.ts](../api/src/enrollments/enrollments.repository.ts) (`purchasedAt` resets on a rebuy), [courses.mapper.ts](../api/src/courses/courses.mapper.ts) (`toAdminEnrollmentResponse`), `AdminEnrollment` in [openapi-v1.yaml](../api/openapi/openapi-v1.yaml), [admin-courses.ts fixtures](../web/src/mocks/fixtures/admin-courses.ts).
 - **Sketch:** milestone 1's list gains the enrolled date.
-- Size: 2 to 3 commits: the contract, repository and mapper with tests, then the web types, fixtures and the list line.
-- Test data: the web commit adds the new fields to the fixtures.
+- Size: 2 commits, one per package; 2a also edits web's generated types and fixture data, because the pre-commit hook regenerates and type-checks web whenever the contract changes.
+- Test data: 2a adds the new fields to the existing web fixtures.
 - Done when: the API e2e test for admin get shows the three new facts; in `dev:mock` with `withEnrollment`, the plain list reads `Ada Lovelace · ada@example.com · enrolled Oct 16, 2026`.
+- Contract names *(temporary)*: `enrolledAt` (top level of the enrollment), `payment.currency` (beside `amount`, a `$ref` to a new `CurrencyCode` schema that `Price.currency` shares), `latestEmail: { kind, status }` in place of `emailStatus`. All required, none nullable.
+- Email kinds *(temporary)*: `latestEmail.kind` lists only the three outbox kinds; the missing-email rule always names one, so there is no `unknown`. A missing `already_owned` email can't be detected, because the enrollment looks the same whether or not it went.
+- Repository *(temporary)*: `include("payment")` already loads every payment column and the enrollment's `purchasedAt`; only the email select gains `kind`, plus the model type.
+- Web date *(temporary)*: `dateOnlyFormatter(courseTimeZone, "en-US")`; milestone 3's Suspended date reuses it.
+- Example answer *(temporary)*, one enrollment per case (customer and payment shortened):
+
+```json
+[
+  { "enrolledAt": "2026-10-16T10:00:00Z", "suspendedAt": null,
+    "latestEmail": { "kind": "access_granted", "status": "sent" },
+    "payment": { "status": "succeeded", "amount": 9900, "currency": "USD", "paidAt": "2026-10-16T10:00:00Z" } },
+  { "enrolledAt": "2026-11-07T14:00:00Z", "suspendedAt": null,
+    "latestEmail": { "kind": "access_granted", "status": "failed" },
+    "payment": null },
+  { "enrolledAt": "2026-10-30T09:00:00Z", "suspendedAt": "2026-11-02T12:00:00Z",
+    "latestEmail": { "kind": "access_suspended", "status": "failed" },
+    "payment": { "status": "succeeded", "amount": 7900, "currency": "USD", "paidAt": "2026-10-30T09:00:00Z" } }
+]
+```
+
+- Flow *(temporary)*:
+
+```
+Admin opens /admin/courses/{id}
+└── web loads GET /v1/admin/courses/{id}                   existing (1c)
+    └── API reads course with enrollments                  existing
+        ├── enrollment's purchasedAt → enrolledAt           2a
+        ├── payment row → payment.currency                  2a
+        │   └── free course: payment null                   existing
+        └── newest linked email → latestEmail {kind,status} 2a
+            └── no email: status failed                     2a
+                ├── suspended → kind access_suspended       2a
+                └── otherwise → kind access_granted         2a
+    └── student line: name · email · enrolled <date>       2b
+        └── no students: "No students yet."                existing (1c)
+```
+
+- Failure table *(temporary)*:
+
+| Actor | Failure | What the system does | Test |
+|---|---|---|---|
+| Checkout | Email cap skips a free grant's email | `access_granted`, `failed` | integration get |
+| Fulfillment | Suspension email never queued | `access_suspended`, `failed` | mapper unit |
+| Outbox | Newer email sent after a failure | newest kind and status | integration get |
+| Customer | Rebuys after un-enroll | `enrolledAt` = rebuy time | enrollments repository (existing) |
+| Anonymous caller | No session | 401 | route-protection e2e (existing) |
 
 ## Step 3. The admin sees each student's enrollment, access, payment and problems
 
