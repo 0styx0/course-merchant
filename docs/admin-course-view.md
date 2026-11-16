@@ -15,42 +15,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **1d.** The edit page and the admin page share the status words, the price split and the "shown in shop" check; the edit page stays the same. *(mechanical)*
   - [x] **1e.** The admin sees the course's status, times, current and scheduled prices, private link and public page link in the side panel.
 - [ ] **2. The admin can see when each student enrolled, which currency they paid in and which email failed.**
-  - [ ] **2a.** The admin course answers say when each student enrolled, which currency they paid in, and which email they got last or are missing. **Next**
-    - *Behaviours*:
-      - Each enrollment carries `enrolledAt`, the time access was last granted (the enrollment's `purchasedAt`), in UTC ending in `Z`.
-      - A free enrollment (payment null) still carries `enrolledAt`.
-      - A paid enrollment's `payment.currency` is the payment's own ISO 4217 code ("USD").
-      - `latestEmail` holds the kind and status of the newest email linked to the enrollment.
-      - With two emails (an older failed `access_granted`, a newer sent `already_owned`), `latestEmail` is `{ kind: "already_owned", status: "sent" }`.
-      - With no email and no suspension, `latestEmail` is `{ kind: "access_granted", status: "failed" }`.
-      - With no email on a suspended enrollment, `latestEmail` is `{ kind: "access_suspended", status: "failed" }`.
-      - `emailStatus` is gone from the answer.
-      - The admin course list answer gains the same facts (it shares the mapper).
-      - A caller without a session still gets 401 (the existing route-protection e2e covers it, so no new test).
-    - *New shared pieces*:
-      - `enrolledAt`, `payment.currency` and `latestEmail` on `AdminEnrollment` in the contract, because milestones 3 to 6 read them.
-      - A `CurrencyCode` contract schema, so `Price.currency` and `payment.currency` share one pattern instead of a copy.
-    - *Files*:
-      - [openapi-v1.yaml](../api/openapi/openapi-v1.yaml) (`AdminEnrollment`: `enrolledAt`, `payment.currency`, `latestEmail` in place of `emailStatus`, and a new `CurrencyCode`)
-      - [admin-courses.repository.ts](../api/src/courses/repositories/admin-courses.repository.ts) (model type gains `purchasedAt`, `payment.currency`, email `kind`, and the email include selects `kind`)
-      - [courses.mapper.ts](../api/src/courses/courses.mapper.ts) (`toAdminEnrollmentResponse`, plus a small function for the missing email's kind)
-      - [course-fixtures.ts](../api/src/test/course-fixtures.ts) (test fixture):
-        - `createEnrollment` takes `purchasedAt`.
-        - `createEnrollmentEmail` takes `kind` and its payload, typed from `EmailPayloads` in [email-payloads.ts](../api/src/email/outbox/email-payloads.ts) so the two can't disagree.
-      - tests: mapper unit specs and fixtures, admin get, list and update integration specs, admin get and list e2e specs
-      - generated: `api/src/generated/api.d.ts`, `web/src/lib/api/generated.ts`
-      - web fixture data only, because the pre-commit hook regenerates and type-checks web when the contract changes (the hand-off repeats it under *Deviations*):
-        - [admin-courses.ts](../web/src/mocks/fixtures/admin-courses.ts)
-        - [edit-form-prefill.test.ts](../web/src/features/admin-courses/edit-course/edit-form-prefill.test.ts)
-      - docs: [payments.md](payments.md) line on `emailStatus`, this file's tick
-      - 3 counted source files, and no new files
-    - *Settled*:
-      - the Decision rows on the admin course answer's new facts and on `enrolledAt`
-      - the `latestEmail` row in [payments/email.md](payments/email.md)
-    - *Done when*:
-      - the admin get e2e spec shows the new facts for a paid student with one email and for a free student with none
-      - `yarn --cwd api check:changed` and `yarn --cwd web check:changed` pass
-  - [ ] **2b.** The admin sees the date each student enrolled beside their name and email.
+  - [x] **2a.** The admin course answers say when each student enrolled, which currency they paid in, and which email they got last or are missing.
+  - [ ] **2b.** The admin sees the date each student enrolled beside their name and email. **Next**
     - *Behaviours*:
       - Each line reads `Ada Lovelace · ada@example.com · enrolled Oct 16, 2026`.
       - The date reads in the course's time zone: `2026-10-17T02:00:00Z` in `America/New_York` reads Oct 16 (tests run in Pacific/Chatham, where it is Oct 17).
@@ -260,6 +226,7 @@ Admin opens /admin/courses/{id}
 - **Sketch:** the whole-page Students table in the API's order, with no Sort menu, no Copy button and no Un-enroll buttons.
 - Size: 3 to 4 commits: the words for each row (access, payment, attention) as pure functions, then the table, then the phone cards.
 - Table width: the table sits in its own box with `overflow-x: auto`, so a table wider than the screen scrolls inside the box and the page keeps no sideways scroll.
+- Attention skips un-enrolled rows: the API reads an un-enrolled student with no email as `{ access_granted, failed }` (the `latestEmail` rule), but the owner has nothing to resend to someone they removed.
 - Test data: new `adminCourseWithEveryStudentCase` (the eight rows) and its `withEveryStudentCase` scenario, created by the first commit that needs them.
 - Done when: in `dev:mock` with `withEveryStudentCase`, all eight rows match the sketch at desktop and phone width, and J3 is walked (Omar shows "Course access email failed").
 

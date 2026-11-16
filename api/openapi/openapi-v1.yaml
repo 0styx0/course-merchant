@@ -1678,11 +1678,19 @@ components:
       required:
         - customer
         - payment
+        - enrolledAt
         - revokedAt
         - suspendedAt
-        - emailStatus
+        - latestEmail
         - refundStatus
       properties:
+        enrolledAt:
+          type: string
+          format: date-time
+          description: >
+            When the customer last gained access, in UTC (ending in `Z`). Set
+            for free enrollments too. Buying the course again after an
+            un-enroll moves it to the new purchase.
         revokedAt:
           type:
             - string
@@ -1700,16 +1708,33 @@ components:
           description: >
             When a payment dispute suspended access, in UTC. Cleared by hand
             by the owner.
-        emailStatus:
-          type: string
-          enum:
-            - pending
-            - sent
-            - failed
+        latestEmail:
           description: >
-            Delivery status of the latest email sent to the customer about this
-            course. `failed` means every send attempt failed, and is also
-            returned when no email was ever queued, so the owner can follow up.
+            The newest email queued about this enrollment. When none was
+            queued, `kind` names the email that should have gone
+            (`access_suspended` for a suspended enrollment, else
+            `access_granted`) and `status` is `failed`, so the owner can send
+            it by hand.
+          type: object
+          required:
+            - kind
+            - status
+          properties:
+            kind:
+              type: string
+              enum:
+                - access_granted
+                - already_owned
+                - access_suspended
+            status:
+              type: string
+              enum:
+                - pending
+                - sent
+                - failed
+              description: >
+                `failed` means every send attempt failed, or that no email was
+                queued.
         refundStatus:
           type: string
           enum:
@@ -1742,6 +1767,7 @@ components:
           required:
             - status
             - amount
+            - currency
             - paidAt
           properties:
             status:
@@ -1757,6 +1783,8 @@ components:
               minimum: 0
               maximum: 9007199254740991
               description: Payment amount in the smallest unit of the currency.
+            currency:
+              $ref: "#/components/schemas/CurrencyCode"
             paidAt:
               type:
                 - string
@@ -1786,11 +1814,14 @@ components:
           examples:
             - 9900
         currency:
-          type: string
-          description: ISO 4217 currency code.
-          pattern: "^[A-Z]{3}$"
-          examples:
-            - USD
+          $ref: "#/components/schemas/CurrencyCode"
+
+    CurrencyCode:
+      type: string
+      description: ISO 4217 currency code.
+      pattern: "^[A-Z]{3}$"
+      examples:
+        - USD
 
     CourseSchedule:
       type: object

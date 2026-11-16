@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { db } from "../prisma/db.js";
 import { instant } from "./test-helpers.js";
 import { Models } from "@/prisma/contract.js";
+import type { EmailPayloads } from "@/email/outbox/email-payloads.js";
 
 /** A one-paragraph description document. */
 export function descriptionDoc(text: string) {
@@ -162,6 +163,7 @@ export async function createEnrollment(input: {
   customerId: string;
   // omitted for a free course
   paymentId?: string;
+  purchasedAt?: Temporal.Instant;
   revokedAt?: Temporal.Instant;
   suspendedAt?: Temporal.Instant;
 }) {
@@ -169,27 +171,35 @@ export async function createEnrollment(input: {
     courseId: input.courseId,
     customerId: input.customerId,
     paymentId: input.paymentId,
+    ...(input.purchasedAt && { purchasedAt: input.purchasedAt }),
     revokedAt: input.revokedAt,
     suspendedAt: input.suspendedAt,
   });
 }
 
-/** An email about the enrollment, stored as the outbox would after queueing. */
+// each kind paired with its own payload, so a test can't mix them up
+type EnrollmentEmailContent = {
+  [Kind in keyof EmailPayloads]: { kind: Kind; payload: EmailPayloads[Kind] };
+}[keyof EmailPayloads];
+
+/**
+ * An email about the enrollment, stored as the outbox would after queueing.
+ * Without `content`, it is the enrollment's `access_granted` email.
+ */
 export async function createEnrollmentEmail(input: {
   enrollment: { id: string; courseId: string; customerId: string };
   recipient: string;
   status: Models.public_EmailOutbox["status"];
+  content?: EnrollmentEmailContent;
   createdAt?: Temporal.Instant;
 }) {
   const { enrollment } = input;
+  const content = input.content ?? accessGrantedContent(enrollment);
 
   const email = await db.orm.public.EmailOutbox.create({
-    kind: "access_granted",
+    kind: content.kind,
     recipient: input.recipient,
-    payload: {
-      courseId: enrollment.courseId,
-      customerId: enrollment.customerId,
-    },
+    payload: content.payload,
     status: input.status,
     attempts: 0,
     ...(input.createdAt && { createdAt: input.createdAt }),
@@ -201,6 +211,19 @@ export async function createEnrollmentEmail(input: {
   });
 
   return email;
+}
+
+function accessGrantedContent(enrollment: {
+  courseId: string;
+  customerId: string;
+}): EnrollmentEmailContent {
+  return {
+    kind: "access_granted",
+    payload: {
+      courseId: enrollment.courseId,
+      customerId: enrollment.customerId,
+    },
+  };
 }
 
 export function archiveCourse(courseId: string, archiveAt: Temporal.Instant) {

@@ -71,6 +71,7 @@ describe("Admin Courses API (e2e)", () => {
         courseId: course.id,
         customerId: customer.id,
         paymentId: payment.id,
+        purchasedAt: paidAt,
       });
 
       await createEnrollmentEmail({
@@ -118,9 +119,10 @@ describe("Admin Courses API (e2e)", () => {
             ],
             enrollments: [
               {
+                enrolledAt: "2026-09-29T15:00:00Z",
                 revokedAt: null,
                 suspendedAt: null,
-                emailStatus: "sent",
+                latestEmail: { kind: "access_granted", status: "sent" },
                 refundStatus: "not_owed",
                 customer: {
                   id: customer.id,
@@ -130,6 +132,7 @@ describe("Admin Courses API (e2e)", () => {
                 payment: {
                   status: "succeeded",
                   amount: 9900,
+                  currency: "USD",
                   paidAt: "2026-09-29T15:00:00Z",
                 },
               },

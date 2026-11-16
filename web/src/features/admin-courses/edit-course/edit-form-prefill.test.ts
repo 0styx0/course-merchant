@@ -6,9 +6,10 @@ import type { AdminCourse } from "@/lib/types";
 import { toEditFormPrefill } from "./edit-form-prefill";
 
 const enrollment = {
+  enrolledAt: "2026-10-16T10:00:00Z",
   revokedAt: null,
   suspendedAt: null,
-  emailStatus: "sent",
+  latestEmail: { kind: "access_granted", status: "sent" },
   refundStatus: "not_owed",
   customer: {
     id: "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
@@ -18,6 +19,7 @@ const enrollment = {
   payment: {
     status: "succeeded",
     amount: 9900,
+    currency: "USD",
     paidAt: "2026-10-16T10:00:00Z",
   },
 } as const satisfies AdminCourse["enrollments"][number];

@@ -33,7 +33,7 @@ Keep these files current **in the same commit as the work**. Tick off status her
   - [x] `EmailOutboxRepository.findDue`, `markSent` and `markFailedAttempt`, with the backoff in `email/delivery/retry-policy.ts`.
   - [x] Templates for each `EmailKind` and `EmailSender` over SMTP.
   - [x] `EmailWorker` on a `@nestjs/schedule` interval, with `EmailComposer` loading each email's course, customer or payment (via `EmailViewsRepository`) and rendering it.
-  - [x] Admin course view shows each enrollment's `emailStatus`, the only alert for a failed email.
+  - [x] Admin course view shows each enrollment's `latestEmail`, the only alert for a failed email.
 - [x] **5. Sweeper** (see [refunds.md](payments/refunds.md)):
   - [x] `PaymentRefunds` refunds through Stripe, then marks the payment `refunded`; fulfillment and the sweeper both use it.
   - [x] `PaymentSweeper` on a 10-minute interval: refunds orphan payments, rechecks overdue pending payments with Stripe, expires payments with no checkout.

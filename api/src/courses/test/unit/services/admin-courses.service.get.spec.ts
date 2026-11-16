@@ -46,6 +46,7 @@ const repositoryCourse = {
 
 function enrollmentsOf(customerIds: string[]) {
   return customerIds.map((customerId) => ({
+    purchasedAt: instant("2026-09-29T15:00:00Z"),
     revokedAt: null,
     suspendedAt: null,
     customer: {

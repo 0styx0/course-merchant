@@ -130,15 +130,33 @@ function refundStatusOf(
   return owedCustomerIds.has(enrollment.customer.id) ? "owed" : "not_owed";
 }
 
+// the email that should have gone when none was queued
+function missingEmailKind(
+  enrollment: AdminEnrollment,
+): "access_granted" | "access_suspended" {
+  return enrollment.suspendedAt === null
+    ? "access_granted"
+    : "access_suspended";
+}
+
+// no email at all reads as failed, so the owner sends it by hand
+function latestEmailOf(enrollment: AdminEnrollment) {
+  const newest = enrollment.emails[0]?.email;
+
+  return newest
+    ? { kind: newest.kind, status: newest.status }
+    : { kind: missingEmailKind(enrollment), status: "failed" as const };
+}
+
 function toAdminEnrollmentResponse(
   enrollment: AdminEnrollment,
   owedCustomerIds: ReadonlySet<string>,
 ) {
   return {
+    enrolledAt: enrollment.purchasedAt.toString(),
     revokedAt: formatOptionalDate(enrollment.revokedAt),
     suspendedAt: formatOptionalDate(enrollment.suspendedAt),
-    // no email at all reads as failed, so the owner follows up
-    emailStatus: enrollment.emails[0]?.email?.status ?? "failed",
+    latestEmail: latestEmailOf(enrollment),
     refundStatus: refundStatusOf(enrollment, owedCustomerIds),
     customer: {
       id: enrollment.customer.id,
@@ -148,6 +166,7 @@ function toAdminEnrollmentResponse(
     payment: enrollment.payment && {
       status: enrollment.payment.status,
       amount: enrollment.payment.amount,
+      currency: enrollment.payment.currency,
       paidAt: formatOptionalDate(enrollment.payment.paidAt),
     },
   };

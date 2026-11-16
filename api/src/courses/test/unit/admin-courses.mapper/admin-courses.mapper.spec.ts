@@ -48,9 +48,10 @@ describe("toAdminCourseResponse", () => {
 
       enrollments: [
         {
+          enrolledAt: "2026-09-29T15:00:00Z",
           revokedAt: null,
           suspendedAt: null,
-          emailStatus: "sent",
+          latestEmail: { kind: "access_granted", status: "sent" },
           refundStatus: "not_owed",
           customer: {
             id: "customer_1",
@@ -60,13 +61,15 @@ describe("toAdminCourseResponse", () => {
           payment: {
             status: "succeeded",
             amount: 7900,
+            currency: "USD",
             paidAt: "2026-09-29T15:00:00Z",
           },
         },
         {
+          enrolledAt: "2026-09-27T10:00:00Z",
           revokedAt: "2026-09-28T09:00:00Z",
           suspendedAt: null,
-          emailStatus: "failed",
+          latestEmail: { kind: "access_granted", status: "failed" },
           refundStatus: "not_owed",
           customer: {
             id: "customer_2",
@@ -76,6 +79,7 @@ describe("toAdminCourseResponse", () => {
           payment: {
             status: "refunded",
             amount: 9900,
+            currency: "USD",
             paidAt: "2026-09-27T10:00:00Z",
           },
         },

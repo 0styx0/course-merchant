@@ -173,6 +173,34 @@ describe("AdminCoursesService (integration)", () => {
       );
     });
 
+    it("answers with each enrollment's time, currency and latest email", async () => {
+      const { course, pastPrice } = await createStartedCourse();
+      const ada = await createCustomer({});
+      const payment = await createPayment({
+        customerId: ada.id,
+        coursePriceId: pastPrice.id,
+        amount: pastPrice.amount,
+        currency: pastPrice.currency,
+      });
+      await createEnrollment({
+        courseId: course.id,
+        customerId: ada.id,
+        paymentId: payment.id,
+        purchasedAt: Temporal.Instant.from("2026-09-29T09:30:00Z"),
+      });
+
+      const answer = await service.updateCourse(
+        course.id,
+        toRequest(await findCourse(course.id)),
+      );
+
+      expect(answer.enrollments[0]).toMatchObject({
+        enrolledAt: "2026-09-29T09:30:00Z",
+        latestEmail: { kind: "access_granted", status: "failed" },
+        payment: { currency: pastPrice.currency },
+      });
+    });
+
     it("changes nothing for an unchanged round-trip", async () => {
       const { course } = await createStartedCourse();
       const before = await findCourse(course.id);

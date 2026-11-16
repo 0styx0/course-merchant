@@ -1,6 +1,7 @@
 import {
   createCustomer,
   createEnrollment,
+  createEnrollmentEmail,
   createPayment,
   createPricedCourse,
   updateCourseStatus,
@@ -139,6 +140,59 @@ describe("Admin Courses Create API (e2e)", () => {
           [bob.id, "not_owed"],
         ]),
       );
+    });
+
+    it("says when each student enrolled, in which currency they paid and which email they got last", async () => {
+      const { course, price } = await createPricedCourse();
+      const ada = await createCustomer({ name: "Ada Lovelace" });
+      const payment = await createPayment({
+        customerId: ada.id,
+        coursePriceId: price.id,
+        amount: price.amount,
+        currency: "USD",
+      });
+      const adaEnrollment = await createEnrollment({
+        courseId: course.id,
+        customerId: ada.id,
+        paymentId: payment.id,
+        purchasedAt: instant("2026-09-29T15:00:00Z"),
+      });
+      await createEnrollmentEmail({
+        enrollment: adaEnrollment,
+        recipient: ada.email,
+        status: "sent",
+      });
+      const grace = await createCustomer({ name: "Grace Hopper" });
+      await createEnrollment({
+        courseId: course.id,
+        customerId: grace.id,
+        purchasedAt: instant("2026-09-30T08:00:00Z"),
+      });
+
+      const response: TypedResponse<GetCourseAdminResponse> = await request(
+        httpServer(app),
+      )
+        .get(`/v1/admin/courses/${course.id}`)
+        .set("Authorization", bearer(token))
+        .expect(200);
+
+      expect(response.body.enrollments).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            customer: expect.objectContaining({ id: ada.id }),
+            enrolledAt: "2026-09-29T15:00:00Z",
+            payment: expect.objectContaining({ currency: "USD" }),
+            latestEmail: { kind: "access_granted", status: "sent" },
+          }),
+          expect.objectContaining({
+            customer: expect.objectContaining({ id: grace.id }),
+            enrolledAt: "2026-09-30T08:00:00Z",
+            payment: null,
+            latestEmail: { kind: "access_granted", status: "failed" },
+          }),
+        ]),
+      );
+      expect(response.body.enrollments[0]).not.toHaveProperty("emailStatus");
     });
 
     it("uses the most recent archived status, even when an older status is published", async () => {

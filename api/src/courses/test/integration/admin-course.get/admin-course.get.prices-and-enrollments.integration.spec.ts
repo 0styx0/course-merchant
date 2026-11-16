@@ -138,6 +138,7 @@ describe("AdminCoursesService integration", () => {
         courseId: course.id,
         customerId: ada.id,
         paymentId: adaPayment.id,
+        purchasedAt: adaPaidAt,
       });
 
       const grace = await createCustomer({
@@ -158,6 +159,7 @@ describe("AdminCoursesService integration", () => {
         courseId: course.id,
         customerId: grace.id,
         paymentId: gracePayment.id,
+        purchasedAt: gracePaidAt,
       });
 
       await createEnrollmentEmail({
@@ -175,9 +177,10 @@ describe("AdminCoursesService integration", () => {
       expect(result.enrollments).toEqual(
         expect.arrayContaining([
           {
+            enrolledAt: "2026-10-18T15:00:00Z",
             revokedAt: null,
             suspendedAt: null,
-            emailStatus: "sent",
+            latestEmail: { kind: "access_granted", status: "sent" },
             refundStatus: "not_owed",
             customer: {
               id: ada.id,
@@ -187,14 +190,16 @@ describe("AdminCoursesService integration", () => {
             payment: {
               status: "succeeded",
               amount: julyPrice.amount,
+              currency: "USD",
               paidAt: "2026-10-18T15:00:00Z",
             },
           },
           {
+            enrolledAt: "2026-10-18T16:30:00Z",
             revokedAt: null,
             suspendedAt: null,
             // no email was ever queued for Grace
-            emailStatus: "failed",
+            latestEmail: { kind: "access_granted", status: "failed" },
             refundStatus: "not_owed",
             customer: {
               id: grace.id,
@@ -204,6 +209,7 @@ describe("AdminCoursesService integration", () => {
             payment: {
               status: "succeeded",
               amount: augustPrice.amount,
+              currency: "USD",
               paidAt: "2026-10-18T16:30:00Z",
             },
           },
@@ -211,7 +217,7 @@ describe("AdminCoursesService integration", () => {
       );
     });
 
-    it("reports the status of the enrollment's newest email", async () => {
+    it("reports the kind and status of the enrollment's newest email", async () => {
       const { course } = await createPricedCourse();
       const ada = await createCustomer({ name: "Ada Lovelace" });
       const enrollment = await createEnrollment({
@@ -229,12 +235,40 @@ describe("AdminCoursesService integration", () => {
         enrollment,
         recipient: ada.email,
         status: "sent",
+        content: {
+          kind: "already_owned",
+          payload: {
+            courseId: course.id,
+            customerId: ada.id,
+            refundIssued: true,
+          },
+        },
         createdAt: instant("2026-09-29T11:00:00Z"),
       });
 
       const result = await service.findByIdAdmin(course.id);
 
-      expect(result.enrollments[0].emailStatus).toBe("sent");
+      expect(result.enrollments[0].latestEmail).toEqual({
+        kind: "already_owned",
+        status: "sent",
+      });
+    });
+
+    it("gives a free enrollment the time it was granted", async () => {
+      const { course } = await createPricedCourse();
+      const ada = await createCustomer({ name: "Ada Lovelace" });
+      await createEnrollment({
+        courseId: course.id,
+        customerId: ada.id,
+        purchasedAt: instant("2026-09-29T09:30:00Z"),
+      });
+
+      const result = await service.findByIdAdmin(course.id);
+
+      expect(result.enrollments[0]).toMatchObject({
+        enrolledAt: "2026-09-29T09:30:00Z",
+        payment: null,
+      });
     });
 
     it("marks an enrollment owed only when its customer has an orphan payment for this course", async () => {

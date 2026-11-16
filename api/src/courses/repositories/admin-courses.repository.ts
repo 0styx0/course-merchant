@@ -28,6 +28,8 @@ export type CourseRepositoryModelAdmin = {
   // never the bytes. null until an image is uploaded
   image: { updatedAt: Temporal.Instant } | null;
   enrollments: {
+    // when access was last granted
+    purchasedAt: Temporal.Instant;
     revokedAt: Temporal.Instant | null;
     suspendedAt: Temporal.Instant | null;
     customer: {
@@ -38,12 +40,16 @@ export type CourseRepositoryModelAdmin = {
     // only the newest email, so empty when none was queued. The ORM types a
     // nested to-one include as nullable, although the link always has its email
     emails: {
-      email: { status: Models.public_EmailOutbox["status"] } | null;
+      email: {
+        kind: Models.public_EmailOutbox["kind"];
+        status: Models.public_EmailOutbox["status"];
+      } | null;
     }[];
     // null for free courses
     payment: {
       status: Models.public_Payment["status"];
       amount: number;
+      currency: string;
       paidAt: Models.public_Payment["paidAt"];
     } | null;
   }[];
@@ -112,7 +118,7 @@ export class AdminCoursesRepository {
           .include("payment")
           .include("emails", (links) =>
             links
-              .include("email", (email) => email.select("status"))
+              .include("email", (email) => email.select("kind", "status"))
               .orderBy((link) => link.email.createdAt.desc())
               .limit(1),
           ),

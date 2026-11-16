@@ -45,6 +45,7 @@ export const repositoryCourse = {
 
   enrollments: [
     {
+      purchasedAt: instant("2026-09-29T15:00:00Z"),
       revokedAt: null,
       suspendedAt: null,
       customer: {
@@ -52,14 +53,16 @@ export const repositoryCourse = {
         name: "Ada Lovelace",
         email: "ada@example.com",
       },
-      emails: [{ email: { status: "sent" } }],
+      emails: [{ email: { kind: "access_granted", status: "sent" } }],
       payment: {
         status: "succeeded",
         amount: 7900,
+        currency: "USD",
         paidAt: instant("2026-09-29T15:00:00Z"),
       },
     },
     {
+      purchasedAt: instant("2026-09-27T10:00:00Z"),
       revokedAt: instant("2026-09-28T09:00:00Z"),
       suspendedAt: null,
       customer: {
@@ -71,6 +74,7 @@ export const repositoryCourse = {
       payment: {
         status: "refunded",
         amount: 9900,
+        currency: "USD",
         paidAt: instant("2026-09-27T10:00:00Z"),
       },
     },

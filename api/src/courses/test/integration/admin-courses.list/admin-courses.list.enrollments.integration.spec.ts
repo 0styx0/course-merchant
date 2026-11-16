@@ -87,6 +87,7 @@ describe("AdminCoursesService integration", () => {
         courseId: course.id,
         customerId: ada.id,
         paymentId: adaPayment.id,
+        purchasedAt: adaPaidAt,
       });
 
       const grace = await createCustomer({
@@ -107,6 +108,7 @@ describe("AdminCoursesService integration", () => {
         courseId: course.id,
         customerId: grace.id,
         paymentId: gracePayment.id,
+        purchasedAt: gracePaidAt,
       });
 
       await createEnrollmentEmail({
@@ -130,9 +132,10 @@ describe("AdminCoursesService integration", () => {
       expect(listedCourse!.enrollments).toEqual(
         expect.arrayContaining([
           {
+            enrolledAt: "2026-09-29T13:00:00Z",
             revokedAt: null,
             suspendedAt: null,
-            emailStatus: "sent",
+            latestEmail: { kind: "access_granted", status: "sent" },
             refundStatus: "not_owed",
             customer: {
               id: ada.id,
@@ -142,13 +145,15 @@ describe("AdminCoursesService integration", () => {
             payment: {
               status: "succeeded",
               amount: julyPrice.amount,
+              currency: "USD",
               paidAt: "2026-09-29T13:00:00Z",
             },
           },
           {
+            enrolledAt: "2026-09-29T12:00:00Z",
             revokedAt: null,
             suspendedAt: null,
-            emailStatus: "pending",
+            latestEmail: { kind: "access_granted", status: "pending" },
             refundStatus: "not_owed",
             customer: {
               id: grace.id,
@@ -158,6 +163,7 @@ describe("AdminCoursesService integration", () => {
             payment: {
               status: "succeeded",
               amount: augustPrice.amount,
+              currency: "USD",
               paidAt: "2026-09-29T12:00:00Z",
             },
           },

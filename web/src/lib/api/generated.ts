@@ -576,6 +576,11 @@ export interface components {
         AdminEnrollment: {
             /**
              * Format: date-time
+             * @description When the customer last gained access, in UTC (ending in `Z`). Set for free enrollments too. Buying the course again after an un-enroll moves it to the new purchase.
+             */
+            enrolledAt: string;
+            /**
+             * Format: date-time
              * @description When an administrator's un-enroll (after a refund made in Stripe) removed access, in UTC. Cleared if the customer buys the course again.
              */
             revokedAt: string | null;
@@ -584,11 +589,16 @@ export interface components {
              * @description When a payment dispute suspended access, in UTC. Cleared by hand by the owner.
              */
             suspendedAt: string | null;
-            /**
-             * @description Delivery status of the latest email sent to the customer about this course. `failed` means every send attempt failed, and is also returned when no email was ever queued, so the owner can follow up.
-             * @enum {string}
-             */
-            emailStatus: "pending" | "sent" | "failed";
+            /** @description The newest email queued about this enrollment. When none was queued, `kind` names the email that should have gone (`access_suspended` for a suspended enrollment, else `access_granted`) and `status` is `failed`, so the owner can send it by hand. */
+            latestEmail: {
+                /** @enum {string} */
+                kind: "access_granted" | "already_owned" | "access_suspended";
+                /**
+                 * @description `failed` means every send attempt failed, or that no email was queued.
+                 * @enum {string}
+                 */
+                status: "pending" | "sent" | "failed";
+            };
             /**
              * @description `owed` means the customer has a paid payment for this course that no enrollment uses, such as a second purchase of a course they already own, so the owner still has to refund it. `not_owed` means no such payment is waiting.
              * @enum {string}
@@ -609,6 +619,7 @@ export interface components {
                  * @description Payment amount in the smallest unit of the currency.
                  */
                 amount: number;
+                currency: components["schemas"]["CurrencyCode"];
                 /**
                  * Format: date-time
                  * @description Time the payment succeeded, in UTC (ending in `Z`). Customers are only enrolled once their payment succeeds, so this is set for every enrollment.
@@ -623,12 +634,13 @@ export interface components {
              * @example 9900
              */
             amount: number;
-            /**
-             * @description ISO 4217 currency code.
-             * @example USD
-             */
-            currency: string;
+            currency: components["schemas"]["CurrencyCode"];
         };
+        /**
+         * @description ISO 4217 currency code.
+         * @example USD
+         */
+        CurrencyCode: string;
         CourseSchedule: {
             /**
              * Format: date-time
