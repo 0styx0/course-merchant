@@ -28,19 +28,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3g (web).** Web tests run in `Pacific/Chatham` unless the shell sets `TZ`; no existing test needed a fix.
 - [ ] **4. Browser tests wait for the page.** Layout checks retry until they hold, tests type only once the page is ready, and the course list's loading-state test stops racing a timer. Split into commits, one per kind of fix:
   - [x] **4a.** Admin form tests open their page through one helper that waits for the Bold button, so typing starts after the page has attached its scripts. The re-run found 3 slow-save failures in 170 runs, so the plan needs a commit for them.
-  - [ ] **4b.** The Save bar and phone-width card checks retry until the layout settles. **Next**
-    - *Behaviours*:
-      - Each save-bar position check reads both boxes inside one `expect.poll`: the bar inside the screen, the last price above the bar, a focused field above the bar, and a chosen field below the error box.
-      - The save-bar block opens the page through 4a's helper and drops `networkidle`.
-      - The create page's "legend inside its card" and "no sideways scroll" checks poll.
-      - Break it once: removing `scroll-mb-24` in the app makes the focus check time out and print the numbers it measured.
-      - `web-tests.md` gains: read layout inside `expect.poll`.
-    - *New shared pieces*: none.
-    - *Files*: [edit-course.spec.ts](../web/tests/browser/admin-courses/edit-course.spec.ts), [create-course.spec.ts](../web/tests/browser/admin-courses/create-course.spec.ts), [web-tests.md](../.claude/rules/web-tests.md)
-    - *Needs*: 4a
-    - *Settled*: the decision row "Browser layout and font checks go through `expect.poll`…".
-    - *Done when*: edit-course.spec.ts passes `--repeat-each=5 --workers=8`.
-  - [ ] **4c.** The course list's loading test and the free enrollment's "Sending…" test decide when the mock answers.
+  - [x] **4b.** The save-bar and phone-card checks retry until layout settles.
+  - [ ] **4c.** The course list's loading test and the free enrollment's "Sending…" test decide when the mock answers. **Next**
     - *Behaviours*:
       - list-courses.ts gains a factory, called in each test, that returns a gated handler and its release function. The handler answers only after the release.
       - The loading test sees "Loading courses...", releases, then sees the first course.

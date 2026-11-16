@@ -74,12 +74,22 @@ const scrollToEnd = (page: Page) =>
 
 const findSaveBar = (page: Page) => page.getByTestId("save-bar");
 
+const findStartDate = (page: Page) =>
+  page.getByLabel("Start date", { exact: true });
+
 const findLastPrice = (page: Page) =>
   page.getByLabel("Price", { exact: true }).last();
 
-async function readBottomEdge(locator: Locator) {
-  const box = (await locator.boundingBox())!;
-  return box.y + box.height;
+async function expectSaveBarBottomOnScreen(page: Page, screenHeight: number) {
+  await expect
+    .poll(
+      async () => {
+        const bar = (await findSaveBar(page).boundingBox())!;
+        return bar.y + bar.height;
+      },
+      { message: "the save bar's bottom edge should be inside the screen" },
+    )
+    .toBeLessThanOrEqual(screenHeight);
 }
 
 async function expectSaveStaysOnScreen(page: Page, screenHeight: number) {
@@ -87,37 +97,77 @@ async function expectSaveStaysOnScreen(page: Page, screenHeight: number) {
   await expect(save).toBeInViewport({ ratio: 1 });
   await expect(findSaveBar(page)).toHaveCSS("position", "sticky");
 
-  await page.getByLabel("Start date", { exact: true }).scrollIntoViewIfNeeded();
+  await findStartDate(page).scrollIntoViewIfNeeded();
   await expect(save).toBeInViewport({ ratio: 1 });
-  expect(await readBottomEdge(findSaveBar(page))).toBeLessThanOrEqual(
-    screenHeight,
-  );
+  await expectSaveBarBottomOnScreen(page, screenHeight);
 
   await scrollToEnd(page);
   await expect(save).toBeInViewport({ ratio: 1 });
 }
 
 async function expectLastFieldAboveBar(page: Page) {
-  const barTop = (await findSaveBar(page).boundingBox())!.y;
-  expect(await readBottomEdge(findLastPrice(page))).toBeLessThanOrEqual(barTop);
+  await expect
+    .poll(
+      async () => {
+        const barTop = (await findSaveBar(page).boundingBox())!.y;
+        const price = (await findLastPrice(page).boundingBox())!;
+        return barTop - (price.y + price.height);
+      },
+      {
+        message:
+          "the gap between the last price's bottom edge and the save bar's top edge should not be negative",
+      },
+    )
+    .toBeGreaterThanOrEqual(0);
+}
+
+async function expectFocusedStartDateBelowErrorBox(
+  page: Page,
+  errorBox: Locator,
+) {
+  await expect
+    .poll(
+      async () => {
+        const errorBoxBox = (await errorBox.boundingBox())!;
+        const startDateBox = (await findStartDate(page).boundingBox())!;
+        return startDateBox.y - (errorBoxBox.y + errorBoxBox.height);
+      },
+      {
+        message:
+          "the gap between the error box's bottom edge and the focused Start date's top edge should not be negative",
+      },
+    )
+    .toBeGreaterThanOrEqual(0);
+}
+
+async function expectFocusedStartDateAboveBar(page: Page) {
+  await expect
+    .poll(
+      async () => {
+        const barTop = (await findSaveBar(page).boundingBox())!.y;
+        const startDateBox = (await findStartDate(page).boundingBox())!;
+        return barTop - (startDateBox.y + startDateBox.height);
+      },
+      {
+        message:
+          "the gap between the focused Start date's bottom edge and the save bar's top edge should not be negative",
+      },
+    )
+    .toBeGreaterThanOrEqual(0);
 }
 
 async function expectErrorListFocusBetweenBoxAndBar(page: Page) {
-  await page.getByLabel("Start date", { exact: true }).fill("");
+  await findStartDate(page).fill("");
   await page.getByRole("button", { name: "Save changes" }).click();
   const errorBox = page.getByRole("alert").filter({ hasText: "Fix" });
   await expect(errorBox).toBeVisible();
   await scrollToEnd(page);
 
   await errorBox.getByRole("button", { name: "Start date" }).click();
-  const startDate = page.getByLabel("Start date", { exact: true });
-  await expect(startDate).toBeFocused();
+  await expect(findStartDate(page)).toBeFocused();
 
-  const focusedBox = (await startDate.boundingBox())!;
-  expect(focusedBox.y).toBeGreaterThanOrEqual(await readBottomEdge(errorBox));
-  expect(focusedBox.y + focusedBox.height).toBeLessThanOrEqual(
-    (await findSaveBar(page).boundingBox())!.y,
-  );
+  await expectFocusedStartDateBelowErrorBox(page, errorBox);
+  await expectFocusedStartDateAboveBar(page);
 }
 
 // Layout depends on the screen size, so each size gets one test; the checks

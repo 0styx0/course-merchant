@@ -139,24 +139,34 @@ test("draws each section as a card at phone width", async ({ page }) => {
   const sections = page.locator("form fieldset");
   await expect(sections).toHaveCount(4);
 
-  const legendsAreInsideTheirCard = await sections.evaluateAll((cards) =>
-    cards.every((card) => {
-      const legend = card.querySelector(":scope > legend");
-      if (!legend) return false;
-      const border = parseFloat(getComputedStyle(card).borderTopWidth);
-      return (
-        border > 0 &&
-        legend.getBoundingClientRect().top >=
-          card.getBoundingClientRect().top + border
-      );
-    }),
-  );
-  expect(legendsAreInsideTheirCard).toBe(true);
+  await expect
+    .poll(
+      () =>
+        sections.evaluateAll((cards) =>
+          cards.every((card) => {
+            const legend = card.querySelector(":scope > legend");
+            if (!legend) return false;
+            const border = parseFloat(getComputedStyle(card).borderTopWidth);
+            return (
+              border > 0 &&
+              legend.getBoundingClientRect().top >=
+                card.getBoundingClientRect().top + border
+            );
+          }),
+        ),
+      { message: "every section's legend should sit inside its card border" },
+    )
+    .toBe(true);
 
-  const hasHorizontalScroll = await page.evaluate(
-    () =>
-      document.documentElement.scrollWidth >
-      document.documentElement.clientWidth,
-  );
-  expect(hasHorizontalScroll).toBe(false);
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () =>
+            document.documentElement.scrollWidth >
+            document.documentElement.clientWidth,
+        ),
+      { message: "the page should not scroll sideways" },
+    )
+    .toBe(false);
 });
