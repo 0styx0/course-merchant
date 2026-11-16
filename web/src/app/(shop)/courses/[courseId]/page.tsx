@@ -16,6 +16,7 @@ import {
   type GetCourseResult,
 } from "@/features/courses/courses.api";
 import { shopCourseImagePath } from "@/features/courses/shop-course-path";
+import { isCourseMissingProblem } from "@/lib/api/is-course-missing-problem";
 import type { Course } from "@/lib/types";
 import { formatPrice } from "@/lib/utils/formatters";
 import { readRequestLocale } from "@/lib/locale/request-locale";
@@ -26,11 +27,7 @@ type CoursePageProps = {
 };
 
 function isCourseNotFound(result: GetCourseResult): boolean {
-  return (
-    result.state === "failure" &&
-    (result.error.code === "COURSE_NOT_FOUND" ||
-      result.error.code === "INVALID_COURSE_ID")
-  );
+  return result.state === "failure" && isCourseMissingProblem(result.error);
 }
 
 export async function generateMetadata({

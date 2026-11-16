@@ -10,18 +10,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 
 - [ ] **1. The admin opens a course's admin page.** The course shows like the public page with an admin side panel, students are listed by name and email, and the edit page links to it.
   - [x] **1a.** Pages that show a course choose its image; the public course page stays the same.
-  - [ ] **1b.** The shop and admin pages use one check for "this course doesn't exist". *(mechanical)* **Next**
-    - *Behaviours*:
-      - `COURSE_NOT_FOUND` and `INVALID_COURSE_ID` still give a 404 on the shop page, the shop image route and the edit page; their tests stay the same.
-    - *New shared pieces*:
-      - One check for "this problem means the course is missing", shared by four callers.
-    - *Files*:
-      - a new check and its test in `web/src/lib/api/` (re-count the folder against the limit before adding)
-      - [the shop course page](../web/src/app/(shop)/courses/[courseId]/page.tsx)
-      - [the shop image route](../web/src/app/(shop)/courses/[courseId]/image/[version]/route.ts)
-      - [the edit page](../web/src/app/admin/(signed-in)/courses/[courseId]/edit/page.tsx)
-    - *Done when*: `check:changed` passes and the test count stays the same.
-  - [ ] **1c.** The admin opens a course's admin page from its edit page and sees the course and its students by name and email.
+  - [x] **1b.** The shop and admin pages use one check for "this course doesn't exist". *(mechanical)*
+  - [ ] **1c.** The admin opens a course's admin page from its edit page and sees the course and its students by name and email. **Next**
     - *Behaviours* (page unit tests, like [checkout success page.test.tsx](../web/src/app/(shop)/checkout/success/page.test.tsx)):
       - With `withEnrollment`, the page shows the name, summary and description, and lists "Ada Lovelace · ada@example.com".
       - With no students, the list reads "No students yet.".

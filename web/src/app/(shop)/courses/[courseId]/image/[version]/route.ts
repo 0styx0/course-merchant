@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import type { CourseImageFile } from "@/features/courses/courses.api";
 import { getCourseImage } from "@/features/courses/courses.api";
+import { isCourseMissingProblem } from "@/lib/api/is-course-missing-problem";
 import type { ProblemDetails, Result } from "@/lib/types";
 
 type CourseImageRouteContext = {
@@ -19,12 +20,6 @@ function isImageAddressValid(courseId: string, version: string): boolean {
   );
 }
 
-function isImageMissingProblem(problem: ProblemDetails): boolean {
-  return (
-    problem.code === "COURSE_NOT_FOUND" || problem.code === "INVALID_COURSE_ID"
-  );
-}
-
 function imageResponseFromResult(
   result: Result<CourseImageFile, ProblemDetails>,
 ): Response {
@@ -35,7 +30,7 @@ function imageResponseFromResult(
     }
     return new Response(result.data.bytes, { headers });
   }
-  if (isImageMissingProblem(result.error)) {
+  if (isCourseMissingProblem(result.error)) {
     return new Response(null, { status: 404 });
   }
   throw new Error(

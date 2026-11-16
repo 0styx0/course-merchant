@@ -10,6 +10,7 @@ import {
   isShownInShop,
 } from "@/features/admin-courses/edit-course/header/edit-page-header";
 import { getCourseAsAdmin } from "@/features/admin-courses/save-course/admin-courses.api";
+import { isCourseMissingProblem } from "@/lib/api/is-course-missing-problem";
 
 export const metadata: Metadata = {
   title: "Edit course",
@@ -36,10 +37,6 @@ function listTimeZonesOnServer(): string[] {
   return Intl.supportedValuesOf("timeZone");
 }
 
-function isCourseMissingCode(code: string): boolean {
-  return code === "COURSE_NOT_FOUND" || code === "INVALID_COURSE_ID";
-}
-
 export default async function EditCoursePage({
   params,
   searchParams,
@@ -48,7 +45,7 @@ export default async function EditCoursePage({
   const { saved } = await searchParams;
   const result = await getCourseAsAdmin(courseId);
 
-  if (result.state === "failure" && isCourseMissingCode(result.error.code)) {
+  if (result.state === "failure" && isCourseMissingProblem(result.error)) {
     notFound();
   }
 
