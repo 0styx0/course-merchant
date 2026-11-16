@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { ProblemAlert } from "@/components/problem-alert";
 import { CourseAdminPanel } from "@/features/admin-courses/course-view/course-admin-panel";
 import { AdminCourseImage } from "@/features/admin-courses/course-view/admin-course-image";
-import { StudentList } from "@/features/admin-courses/course-view/student-list";
+import { StudentList } from "@/features/admin-courses/course-view/students/student-list";
 import { getAdminCourseOrNotFound } from "@/features/admin-courses/api/get-admin-course-or-not-found";
 import { CoursePageLayout } from "@/features/courses/course-page-layout";
 import { pageFrameClasses } from "@/features/site-layout/page-frame-classes";

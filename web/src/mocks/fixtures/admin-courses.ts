@@ -77,3 +77,148 @@ export const adminCourseWithEnrollment = {
     },
   ],
 } as const satisfies AdminCourse;
+
+/**
+ * A course with one student for each access, payment and email case the
+ * admin page draws, in the order the API returns them.
+ */
+export const adminCourseWithEveryStudentCase = {
+  ...draftedAdminCourse,
+  enrollments: [
+    {
+      enrolledAt: "2026-11-02T15:00:00Z",
+      revokedAt: null,
+      suspendedAt: null,
+      latestEmail: { kind: "already_owned", status: "failed" },
+      refundStatus: "owed",
+      customer: {
+        id: "5a1c0d2e-7b3f-4c8a-9e6d-000000000001",
+        name: "Dana Cohen",
+        email: "dana@example.com",
+      },
+      payment: {
+        status: "succeeded",
+        amount: 9900,
+        currency: "USD",
+        paidAt: "2026-11-02T15:00:00Z",
+      },
+    },
+    {
+      enrolledAt: "2026-11-04T15:00:00Z",
+      revokedAt: null,
+      suspendedAt: null,
+      latestEmail: { kind: "access_granted", status: "failed" },
+      refundStatus: "not_owed",
+      customer: {
+        id: "5a1c0d2e-7b3f-4c8a-9e6d-000000000002",
+        name: "Omar Haddad",
+        email: "omar@example.com",
+      },
+      payment: {
+        status: "succeeded",
+        amount: 9900,
+        currency: "USD",
+        paidAt: "2026-11-04T15:00:00Z",
+      },
+    },
+    {
+      enrolledAt: "2026-11-07T15:00:00Z",
+      revokedAt: null,
+      suspendedAt: null,
+      latestEmail: { kind: "access_granted", status: "failed" },
+      refundStatus: "not_owed",
+      customer: {
+        id: "5a1c0d2e-7b3f-4c8a-9e6d-000000000003",
+        name: "Noa Levi",
+        email: "noa@example.com",
+      },
+      payment: null,
+    },
+    {
+      enrolledAt: "2026-10-30T15:00:00Z",
+      revokedAt: null,
+      suspendedAt: "2026-10-30T18:00:00Z",
+      latestEmail: { kind: "access_suspended", status: "failed" },
+      refundStatus: "not_owed",
+      customer: {
+        id: "5a1c0d2e-7b3f-4c8a-9e6d-000000000004",
+        name: "Lee Park",
+        email: "lee@example.com",
+      },
+      payment: {
+        status: "succeeded",
+        amount: 7900,
+        currency: "USD",
+        paidAt: "2026-10-30T15:00:00Z",
+      },
+    },
+    {
+      enrolledAt: "2026-11-09T15:00:00Z",
+      revokedAt: null,
+      suspendedAt: null,
+      latestEmail: { kind: "access_granted", status: "sent" },
+      refundStatus: "not_owed",
+      customer: {
+        id: "5a1c0d2e-7b3f-4c8a-9e6d-000000000005",
+        name: "Sam Ortiz",
+        email:
+          "samuelalexanderortizmontgomeryworkshops@verylongcompanydomainexample.com",
+      },
+      payment: {
+        status: "succeeded",
+        amount: 9900,
+        currency: "USD",
+        paidAt: "2026-11-09T15:00:00Z",
+      },
+    },
+    {
+      enrolledAt: "2026-10-29T15:00:00Z",
+      revokedAt: "2026-11-03T15:00:00Z",
+      suspendedAt: "2026-11-01T18:00:00Z",
+      latestEmail: { kind: "access_suspended", status: "sent" },
+      refundStatus: "not_owed",
+      customer: {
+        id: "5a1c0d2e-7b3f-4c8a-9e6d-000000000006",
+        name: "Rina Gold",
+        email: "rina@example.com",
+      },
+      payment: {
+        status: "refunded",
+        amount: 7900,
+        currency: "USD",
+        paidAt: "2026-10-29T15:00:00Z",
+      },
+    },
+    {
+      enrolledAt: "2026-10-28T15:00:00Z",
+      revokedAt: "2026-11-05T15:00:00Z",
+      suspendedAt: null,
+      latestEmail: { kind: "access_granted", status: "failed" },
+      refundStatus: "not_owed",
+      customer: {
+        id: "5a1c0d2e-7b3f-4c8a-9e6d-000000000007",
+        name: "Ari Stein",
+        email: "ari@example.com",
+      },
+      payment: {
+        status: "refunded",
+        amount: 7900,
+        currency: "USD",
+        paidAt: "2026-10-28T15:00:00Z",
+      },
+    },
+    {
+      enrolledAt: "2026-10-27T15:00:00Z",
+      revokedAt: "2026-11-06T15:00:00Z",
+      suspendedAt: null,
+      latestEmail: { kind: "access_granted", status: "failed" },
+      refundStatus: "not_owed",
+      customer: {
+        id: "5a1c0d2e-7b3f-4c8a-9e6d-000000000008",
+        name: "Ben Shaw",
+        email: "ben@example.com",
+      },
+      payment: null,
+    },
+  ],
+} as const satisfies AdminCourse;

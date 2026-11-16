@@ -17,3 +17,24 @@ test("shows the 404 page for a course the API does not know", async ({
   expect(response?.status()).toBe(404);
   await expect(page.getByRole("heading", { name: "Students" })).toHaveCount(0);
 });
+
+// jsdom lays nothing out, so only a browser can show the email wrapping.
+test("wraps a long student email inside its card at 400px", async ({
+  page,
+  msw,
+}) => {
+  msw.use(getCourseAsAdminHandlers.withEveryStudentCase);
+  await page.setViewportSize({ width: 400, height: 800 });
+
+  await page.goto(adminCoursePath);
+
+  await expect(
+    page.getByRole("heading", { name: "Students (8)" }),
+  ).toBeVisible();
+  const overflow = await page.evaluate(
+    () =>
+      document.documentElement.scrollWidth -
+      document.documentElement.clientWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(0);
+});

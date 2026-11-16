@@ -211,7 +211,8 @@ The card uses `rounded-lg`, `bg-card`, `border-border`, no shadow and 24px paddi
 | Free | `--secondary` | `--secondary-foreground` |
 | Live / Online | `--surface-alt` | `--olive` |
 | Ended, Sold out, Draft | `--muted` | `--muted-foreground` |
-| Published (admin) | `--success` | `--success-foreground` |
+| Published, Active (admin) | `--success` | `--success-foreground` |
+| Suspended, Un-enrolled (admin) | `--muted` | `--muted-foreground` |
 
 ### Alert and notice (shadcn `Alert`)
 

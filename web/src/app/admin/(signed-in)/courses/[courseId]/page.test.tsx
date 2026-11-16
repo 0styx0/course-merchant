@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -6,6 +7,7 @@ import {
   adminCourseWithImage,
 } from "@/mocks/fixtures/admin-courses";
 import { getCourseAsAdminHandlers } from "@/mocks/handlers/admin-courses/get-course-as-admin";
+import { MOCK_API_BASE_URL } from "@/mocks/mock-api";
 import { server } from "@/mocks/server";
 import AdminCoursePage, { metadata } from "./page";
 
@@ -45,11 +47,33 @@ describe("AdminCoursePage", () => {
       screen.getByText(adminCourseWithEnrollment.summary),
     ).toBeInTheDocument();
     expect(screen.getByText("Three small apps")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Ada Lovelace · ada@example.com · enrolled Oct 16, 2026",
+    expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
+    expect(screen.getByText("ada@example.com")).toBeInTheDocument();
+  });
+
+  it("dates each student in the course's time zone", async () => {
+    const tokyoCourse = {
+      ...adminCourseWithEnrollment,
+      schedule: {
+        ...adminCourseWithEnrollment.schedule,
+        timeZone: "Asia/Tokyo",
+      },
+      enrollments: [
+        {
+          ...adminCourseWithEnrollment.enrollments[0],
+          enrolledAt: "2026-10-16T16:00:00Z",
+        },
+      ],
+    };
+    server.use(
+      http.get(`${MOCK_API_BASE_URL}/v1/admin/courses/:courseId`, () =>
+        HttpResponse.json(tokyoCourse),
       ),
-    ).toBeInTheDocument();
+    );
+
+    await renderPage();
+
+    expect(screen.getByText("Oct 17, 2026")).toBeInTheDocument();
   });
 
   it("says no students yet when nobody has enrolled", async () => {

@@ -3,6 +3,7 @@ import type { AdminCourse } from "@/lib/types";
 import { http, HttpResponse } from "msw";
 import {
   adminCourseWithEnrollment,
+  adminCourseWithEveryStudentCase,
   adminCourseWithFuturePrice,
   adminCourseWithImage,
   publishedAdminCourse,
@@ -33,6 +34,10 @@ const adminCourseByIdWithImage =
   makeAdminCourseByIdHandler(adminCourseWithImage);
 const adminCourseByIdWithEnrollment = makeAdminCourseByIdHandler(
   adminCourseWithEnrollment,
+);
+
+const adminCourseByIdWithEveryStudentCase = makeAdminCourseByIdHandler(
+  adminCourseWithEveryStudentCase,
 );
 
 const adminCourseByIdPublished =
@@ -79,6 +84,7 @@ export const getCourseAsAdminHandlers = {
   success: adminCourseByIdSuccess,
   withImage: adminCourseByIdWithImage,
   withEnrollment: adminCourseByIdWithEnrollment,
+  withEveryStudentCase: adminCourseByIdWithEveryStudentCase,
   published: adminCourseByIdPublished,
   notFound: adminCourseByIdNotFound,
   invalidId: adminCourseByIdInvalidId,
