@@ -46,7 +46,9 @@ describe("AdminCoursePage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Three small apps")).toBeInTheDocument();
     expect(
-      screen.getByText("Ada Lovelace · ada@example.com"),
+      screen.getByText(
+        "Ada Lovelace · ada@example.com · enrolled Oct 16, 2026",
+      ),
     ).toBeInTheDocument();
   });
 

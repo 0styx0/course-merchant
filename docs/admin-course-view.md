@@ -14,22 +14,10 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **1c.** The admin opens a course's admin page from its edit page and sees the course and its students by name and email.
   - [x] **1d.** The edit page and the admin page share the status words, the price split and the "shown in shop" check; the edit page stays the same. *(mechanical)*
   - [x] **1e.** The admin sees the course's status, times, current and scheduled prices, private link and public page link in the side panel.
-- [ ] **2. The admin can see when each student enrolled, which currency they paid in and which email failed.**
+- [x] **2. The admin can see when each student enrolled, which currency they paid in and which email failed.**
   - [x] **2a.** The admin course answers say when each student enrolled, which currency they paid in, and which email they got last or are missing.
-  - [ ] **2b.** The admin sees the date each student enrolled beside their name and email. **Next**
-    - *Behaviours*:
-      - Each line reads `Ada Lovelace · ada@example.com · enrolled Oct 16, 2026`.
-      - The date reads in the course's time zone: `2026-10-17T02:00:00Z` in `America/New_York` reads Oct 16 (tests run in Pacific/Chatham, where it is Oct 17).
-      - No students still reads "No students yet."
-    - *New shared pieces*: none (reuses `dateOnlyFormatter` from [formatters.ts](../web/src/lib/utils/formatters.ts))
-    - *Files*:
-      - [student-list.tsx](../web/src/features/admin-courses/course-view/student-list.tsx) (takes the course's time zone)
-      - [student-list.test.tsx](../web/src/features/admin-courses/course-view/student-list.test.tsx)
-      - [page.tsx](../web/src/app/admin/(signed-in)/courses/[courseId]/page.tsx) (passes `course.schedule.timeZone`)
-      - docs: this file's tick and Retro, [courses.md](courses.md) status line
-    - *Settled*: the Decision row on student dates.
-    - *Done when*: in `dev:mock` with `withEnrollment`, the list reads `Ada Lovelace · ada@example.com · enrolled Oct 16, 2026`.
-- [ ] **3. The admin sees each student's enrollment, access, payment and problems.** A table on wide screens, cards on phones, coloured pills and Attention lines.
+  - [x] **2b.** The admin sees the date each student enrolled, in the course's time zone, beside their name and email.
+- [ ] **3. The admin sees each student's enrollment, access, payment and problems.** A table on wide screens, cards on phones, coloured pills and Attention lines. **Next**
 - [ ] **4. The admin un-enrolls a student.** A dialog confirms, then the row shows Un-enrolled and Refunded.
 - [ ] **5. The admin sorts the students.** Needs attention first is the default.
 - [ ] **6. The admin copies the addresses of every student with access.**
@@ -171,52 +159,10 @@ Where each wireframe state is built:
 - Size: 2 commits, one per package; 2a also edits web's generated types and fixture data, because the pre-commit hook regenerates and type-checks web whenever the contract changes.
 - Test data: 2a adds the new fields to the existing web fixtures.
 - Done when: the API e2e test for admin get shows the three new facts; in `dev:mock` with `withEnrollment`, the plain list reads `Ada Lovelace · ada@example.com · enrolled Oct 16, 2026`.
-- Contract names *(temporary)*: `enrolledAt` (top level of the enrollment), `payment.currency` (beside `amount`, a `$ref` to a new `CurrencyCode` schema that `Price.currency` shares), `latestEmail: { kind, status }` in place of `emailStatus`. All required, none nullable.
-- Email kinds *(temporary)*: `latestEmail.kind` lists only the three outbox kinds; the missing-email rule always names one, so there is no `unknown`. A missing `already_owned` email can't be detected, because the enrollment looks the same whether or not it went.
-- Repository *(temporary)*: `include("payment")` already loads every payment column and the enrollment's `purchasedAt`; only the email select gains `kind`, plus the model type.
-- Web date *(temporary)*: `dateOnlyFormatter(courseTimeZone, "en-US")`; milestone 3's Suspended date reuses it.
-- Example answer *(temporary)*, one enrollment per case (customer and payment shortened):
-
-```json
-[
-  { "enrolledAt": "2026-10-16T10:00:00Z", "suspendedAt": null,
-    "latestEmail": { "kind": "access_granted", "status": "sent" },
-    "payment": { "status": "succeeded", "amount": 9900, "currency": "USD", "paidAt": "2026-10-16T10:00:00Z" } },
-  { "enrolledAt": "2026-11-07T14:00:00Z", "suspendedAt": null,
-    "latestEmail": { "kind": "access_granted", "status": "failed" },
-    "payment": null },
-  { "enrolledAt": "2026-10-30T09:00:00Z", "suspendedAt": "2026-11-02T12:00:00Z",
-    "latestEmail": { "kind": "access_suspended", "status": "failed" },
-    "payment": { "status": "succeeded", "amount": 7900, "currency": "USD", "paidAt": "2026-10-30T09:00:00Z" } }
-]
-```
-
-- Flow *(temporary)*:
-
-```
-Admin opens /admin/courses/{id}
-└── web loads GET /v1/admin/courses/{id}                   existing (1c)
-    └── API reads course with enrollments                  existing
-        ├── enrollment's purchasedAt → enrolledAt           2a
-        ├── payment row → payment.currency                  2a
-        │   └── free course: payment null                   existing
-        └── newest linked email → latestEmail {kind,status} 2a
-            └── no email: status failed                     2a
-                ├── suspended → kind access_suspended       2a
-                └── otherwise → kind access_granted         2a
-    └── student line: name · email · enrolled <date>       2b
-        └── no students: "No students yet."                existing (1c)
-```
-
-- Failure table *(temporary)*:
-
-| Actor | Failure | What the system does | Test |
-|---|---|---|---|
-| Checkout | Email cap skips a free grant's email | `access_granted`, `failed` | integration get |
-| Fulfillment | Suspension email never queued | `access_suspended`, `failed` | mapper unit |
-| Outbox | Newer email sent after a failure | newest kind and status | integration get |
-| Customer | Rebuys after un-enroll | `enrolledAt` = rebuy time | enrollments repository (existing) |
-| Anonymous caller | No session | 401 | route-protection e2e (existing) |
+- *Retro*:
+  - Planned 2 commits in the overview and the plan; shipped 2 (2a, 2b).
+  - The owner's changes after using the page: not yet recorded.
+  - Rule friction: not yet recorded.
 
 ## Step 3. The admin sees each student's enrollment, access, payment and problems
 
