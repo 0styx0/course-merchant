@@ -20,20 +20,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [ ] **3. The admin sees each student's enrollment, access, payment and problems.** A table on wide screens, cards on phones, coloured pills and Attention lines.
   - [x] **3a.** Status pills on the admin and public pages share one look.
   - [x] **3b.** The admin sees each student as a card with their name, email, enrolled date and an access pill.
-  - [ ] **3c.** Each card shows what the student paid and the state of the payment. **Next**
-    - *Behaviours*:
-      - A payment shows its amount in its own currency by [style-guide.md](style-guide.md) §8 ("$99", "$49.50").
-      - No payment (a free course) shows the Free pill (`--secondary`) under Paid and "—" under Payment.
-      - `succeeded` reads Paid, green.
-      - `refunded`, `pending` and `expired` read Refunded, Pending and Expired, grey.
-    - *New shared pieces*: none
-    - *Files*:
-      - `course-view/students/words/payment-words.ts` (new)
-      - `student-fields.tsx`, `student-cards.tsx`
-      - `status-pill.tsx` (adds the `--secondary` pair)
-      - [style-guide.md](style-guide.md) §7 (the payment pills)
-    - *Done when*: in `dev:mock`, Dana reads $99 and Paid, Noa reads Free and —, Ari reads $79 and Refunded.
-  - [ ] **3d.** Each card lists what the owner must act on: a failed email by its kind, and Refund owed.
+  - [x] **3c.** The admin sees what each student paid and the state of the payment on their card.
+  - [ ] **3d.** Each card lists what the owner must act on: a failed email by its kind, and Refund owed. **Next**
     - *Behaviours*:
       - `access_granted` failed reads "Course access email failed".
       - `already_owned` failed reads "Already-enrolled email failed".

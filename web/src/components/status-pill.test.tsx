@@ -28,7 +28,16 @@ describe("StatusPill", () => {
     );
   });
 
-  it.each(["success", "muted"] as const)(
+  it("reads gold for the secondary colour pair", () => {
+    render(<StatusPill colourPair="secondary">Free</StatusPill>);
+
+    expect(screen.getByText("Free")).toHaveClass(
+      "bg-secondary",
+      "text-secondary-foreground",
+    );
+  });
+
+  it.each(["success", "muted", "secondary"] as const)(
     "keeps the same pill shape for the %s colour pair",
     (colourPair) => {
       render(<StatusPill colourPair={colourPair}>Word</StatusPill>);

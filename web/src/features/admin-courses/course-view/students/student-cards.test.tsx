@@ -38,7 +38,7 @@ describe("StudentCards", () => {
     ]);
   });
 
-  it("shows name, email, Enrolled and Access, in that order", () => {
+  it("shows name, email, Enrolled, Access, Paid and Payment, in that order", () => {
     render(
       <StudentCards
         enrollments={[adaEnrollment]}
@@ -51,10 +51,12 @@ describe("StudentCards", () => {
       within(card)
         .getAllByRole("term")
         .map((term) => term.textContent),
-    ).toEqual(["Student", "Enrolled", "Access"]);
+    ).toEqual(["Student", "Enrolled", "Access", "Paid", "Payment"]);
     expect(fieldText(card, "Student")).toBe("Ada Lovelaceada@example.com");
     expect(fieldText(card, "Enrolled")).toBe("Oct 16, 2026");
     expect(fieldText(card, "Access")).toBe("Active");
+    expect(fieldText(card, "Paid")).toBe("$99");
+    expect(fieldText(card, "Payment")).toBe("Paid");
   });
 
   it("dates each enrollment in the course's time zone", () => {
@@ -113,5 +115,22 @@ describe("StudentCards", () => {
       "Un-enrolled",
       "Un-enrolled",
     ]);
+  });
+
+  it("shows what each student paid and the state of the payment", () => {
+    render(
+      <StudentCards
+        enrollments={adminCourseWithEveryStudentCase.enrollments}
+        timeZone="America/New_York"
+      />,
+    );
+
+    const [dana, , noa, , , , ari] = screen.getAllByRole("listitem");
+    expect(fieldText(dana, "Paid")).toBe("$99");
+    expect(fieldText(dana, "Payment")).toBe("Paid");
+    expect(fieldText(noa, "Paid")).toBe("Free");
+    expect(fieldText(noa, "Payment")).toBe("—");
+    expect(fieldText(ari, "Paid")).toBe("$79");
+    expect(fieldText(ari, "Payment")).toBe("Refunded");
   });
 });

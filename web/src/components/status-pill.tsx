@@ -5,6 +5,7 @@ const PILL_CLASS = "inline-block rounded-full px-3 py-1 text-eyebrow uppercase";
 const pillColourClasses = {
   success: "bg-success text-success-foreground",
   muted: "bg-muted text-muted-foreground",
+  secondary: "bg-secondary text-secondary-foreground",
 };
 
 type StatusPillProps = {

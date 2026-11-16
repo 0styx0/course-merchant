@@ -2,7 +2,13 @@ import type { ReactNode } from "react";
 
 import type { AdminCourse } from "@/lib/types";
 
-import { AccessPill, EnrolledDate, StudentIdentity } from "./student-fields";
+import {
+  AccessPill,
+  EnrolledDate,
+  PaidAmount,
+  PaymentPill,
+  StudentIdentity,
+} from "./student-fields";
 
 type StudentCardsProps = {
   enrollments: AdminCourse["enrollments"];
@@ -25,7 +31,7 @@ function StudentCardField({
   );
 }
 
-/** Each student as a card: who they are, when they enrolled and their access. */
+/** Each student as a card: who they are, when they enrolled, their access, what they paid and the payment's state. */
 export function StudentCards({ enrollments, timeZone }: StudentCardsProps) {
   return (
     <ul className="mt-4 space-y-3">
@@ -46,6 +52,12 @@ export function StudentCards({ enrollments, timeZone }: StudentCardsProps) {
             </StudentCardField>
             <StudentCardField label="Access">
               <AccessPill access={enrollment} timeZone={timeZone} />
+            </StudentCardField>
+            <StudentCardField label="Paid">
+              <PaidAmount payment={enrollment.payment} />
+            </StudentCardField>
+            <StudentCardField label="Payment">
+              <PaymentPill payment={enrollment.payment} />
             </StudentCardField>
           </dl>
         </li>
