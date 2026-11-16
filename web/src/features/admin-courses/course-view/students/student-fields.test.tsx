@@ -1,7 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { AccessPill, PaidAmount, PaymentPill } from "./student-fields";
+import {
+  AccessPill,
+  AttentionLines,
+  PaidAmount,
+  PaymentPill,
+} from "./student-fields";
 
 describe("AccessPill", () => {
   it("draws Active in the green pair with no date", () => {
@@ -128,5 +133,29 @@ describe("PaymentPill", () => {
 
     expect(container).toHaveTextContent(/^—$/);
     expect(container.firstElementChild).toBeNull();
+  });
+});
+
+describe("AttentionLines", () => {
+  it("draws each line as red text, in order", () => {
+    render(
+      <AttentionLines lines={["Course access email failed", "Refund owed"]} />,
+    );
+
+    const items = screen.getAllByRole("listitem");
+    expect(items.map((item) => item.textContent)).toEqual([
+      "Course access email failed",
+      "Refund owed",
+    ]);
+    items.forEach((item) => expect(item).toHaveClass("text-destructive"));
+  });
+
+  it("hides each icon from screen readers", () => {
+    const { container } = render(<AttentionLines lines={["Refund owed"]} />);
+
+    expect(container.querySelector("svg")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
   });
 });

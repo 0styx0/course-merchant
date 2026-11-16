@@ -1,3 +1,5 @@
+import { CircleAlert } from "lucide-react";
+
 import { StatusPill } from "@/components/status-pill";
 import type { AdminCourse } from "@/lib/types";
 import { dateOnlyFormatter, formatPrice } from "@/lib/utils/formatters";
@@ -73,4 +75,18 @@ export function PaymentPill({ payment }: PaymentProps) {
   if (payment === null) return <>—</>;
   const { word, colourPair } = paymentWords(payment.status);
   return <StatusPill colourPair={colourPair}>{word}</StatusPill>;
+}
+
+/** Each Attention line as red text with an alert icon; the icon is decoration. */
+export function AttentionLines({ lines }: { lines: string[] }) {
+  return (
+    <ul className="space-y-1">
+      {lines.map((line) => (
+        <li key={line} className="flex items-center gap-2 text-destructive">
+          <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
+          {line}
+        </li>
+      ))}
+    </ul>
+  );
 }

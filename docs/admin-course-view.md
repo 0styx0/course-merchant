@@ -21,23 +21,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3a.** Status pills on the admin and public pages share one look.
   - [x] **3b.** The admin sees each student as a card with their name, email, enrolled date and an access pill.
   - [x] **3c.** The admin sees what each student paid and the state of the payment on their card.
-  - [ ] **3d.** Each card lists what the owner must act on: a failed email by its kind, and Refund owed. **Next**
-    - *Behaviours*:
-      - `access_granted` failed reads "Course access email failed".
-      - `already_owned` failed reads "Already-enrolled email failed".
-      - `access_suspended` failed reads "Suspension email failed".
-      - A pending or sent email adds nothing.
-      - A failed email adds nothing when `studentAccess` reads Un-enrolled (Ari).
-      - A suspended and un-enrolled student's failed email still shows, because their access reads Suspended (unit test).
-      - `refundStatus: owed` adds "Refund owed" on any row, after the email line (Dana has both).
-      - Each line is red text with an alert icon hidden from screen readers; a card with no lines shows no Attention field.
-    - *New shared pieces*: none
-    - *Files*:
-      - `course-view/students/words/attention-lines.ts` (new)
-      - `student-fields.tsx`, `student-cards.tsx`
-    - *Settled*: the Attention row and the row that starts "Refund owed shows on every row".
-    - *Done when*: J3 walked (Omar shows "Course access email failed").
-  - [ ] **3e.** From medium screens up, the students show as a table with the same fields; phones keep the cards.
+  - [x] **3d.** Each card lists what the owner must act on, as red Attention lines: a failed email by its kind, and Refund owed.
+  - [ ] **3e.** From medium screens up, the students show as a table with the same fields; phones keep the cards. **Next**
     - *Behaviours*:
       - The columns are Student (name over email), Enrolled, Access, Paid, Payment and Attention, with column headers.
       - Paid is right-aligned with `tabular-nums` ([style-guide.md](style-guide.md) §8).

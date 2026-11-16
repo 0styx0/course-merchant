@@ -10,6 +10,11 @@ import { StudentCards } from "./student-cards";
 
 const [adaEnrollment] = adminCourseWithEnrollment.enrollments;
 
+// The cards are the outer list's children; Attention lines are nested list items.
+function studentCards() {
+  return Array.from(screen.getAllByRole("list")[0].children) as HTMLElement[];
+}
+
 function fieldText(card: HTMLElement, term: string) {
   const termElement = within(card).getByText(term, { selector: "dt" });
   return termElement.nextElementSibling?.textContent;
@@ -24,9 +29,7 @@ describe("StudentCards", () => {
       />,
     );
 
-    expect(
-      screen.getAllByRole("listitem").map((card) => fieldText(card, "Student")),
-    ).toEqual([
+    expect(studentCards().map((card) => fieldText(card, "Student"))).toEqual([
       expect.stringMatching(/^Dana Cohen/),
       expect.stringMatching(/^Omar Haddad/),
       expect.stringMatching(/^Noa Levi/),
@@ -46,7 +49,7 @@ describe("StudentCards", () => {
       />,
     );
 
-    const card = screen.getByRole("listitem");
+    const [card] = studentCards();
     expect(
       within(card)
         .getAllByRole("term")
@@ -103,9 +106,7 @@ describe("StudentCards", () => {
       />,
     );
 
-    expect(
-      screen.getAllByRole("listitem").map((card) => fieldText(card, "Access")),
-    ).toEqual([
+    expect(studentCards().map((card) => fieldText(card, "Access"))).toEqual([
       "Active",
       "Active",
       "Active",
@@ -125,12 +126,83 @@ describe("StudentCards", () => {
       />,
     );
 
-    const [dana, , noa, , , , ari] = screen.getAllByRole("listitem");
+    const [dana, , noa, , , , ari] = studentCards();
     expect(fieldText(dana, "Paid")).toBe("$99");
     expect(fieldText(dana, "Payment")).toBe("Paid");
     expect(fieldText(noa, "Paid")).toBe("Free");
     expect(fieldText(noa, "Payment")).toBe("—");
     expect(fieldText(ari, "Paid")).toBe("$79");
     expect(fieldText(ari, "Payment")).toBe("Refunded");
+  });
+
+  it("lists Dana's two Attention lines in order", () => {
+    render(
+      <StudentCards
+        enrollments={adminCourseWithEveryStudentCase.enrollments.slice(0, 1)}
+        timeZone="America/New_York"
+      />,
+    );
+
+    const [card] = studentCards();
+    const lines = within(
+      within(card).getByText("Attention", { selector: "dt" })
+        .nextElementSibling as HTMLElement,
+    ).getAllByRole("listitem");
+    expect(lines.map((line) => line.textContent)).toEqual([
+      "Already-enrolled email failed",
+      "Refund owed",
+    ]);
+  });
+
+  it("gives each card its own student's Attention lines", () => {
+    render(
+      <StudentCards
+        enrollments={adminCourseWithEveryStudentCase.enrollments}
+        timeZone="America/New_York"
+      />,
+    );
+
+    expect(
+      studentCards().map(
+        (card) =>
+          within(card).queryByText("Attention", { selector: "dt" })
+            ?.nextElementSibling?.textContent ?? null,
+      ),
+    ).toEqual([
+      "Already-enrolled email failedRefund owed",
+      "Course access email failed",
+      "Course access email failed",
+      "Suspension email failed",
+      null,
+      null,
+      null,
+      null,
+    ]);
+  });
+
+  it("shows no Attention field on a card with no lines", () => {
+    render(
+      <StudentCards
+        enrollments={[adaEnrollment]}
+        timeZone="America/New_York"
+      />,
+    );
+
+    expect(screen.queryByText("Attention", { selector: "dt" })).toBeNull();
+  });
+
+  it("hides the Attention icons from screen readers", () => {
+    const { container } = render(
+      <StudentCards
+        enrollments={adminCourseWithEveryStudentCase.enrollments.slice(0, 1)}
+        timeZone="America/New_York"
+      />,
+    );
+
+    const icons = container.querySelectorAll("svg");
+    expect(icons).toHaveLength(2);
+    icons.forEach((icon) =>
+      expect(icon).toHaveAttribute("aria-hidden", "true"),
+    );
   });
 });
