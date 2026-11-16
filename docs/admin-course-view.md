@@ -8,30 +8,13 @@ Keep this file current **in the same commit as the work**: tick the step, mark t
 
 Each milestone delivers one outcome. `/plan-create-implementation` splits a milestone into commit lines when it becomes the next one.
 
-- [ ] **1. The admin opens a course's admin page.** The course shows like the public page with an admin side panel, students are listed by name and email, and the edit page links to it.
+- [x] **1. The admin opens a course's admin page.** The course shows like the public page with an admin side panel, students are listed by name and email, and the edit page links to it.
   - [x] **1a.** Pages that show a course choose its image; the public course page stays the same.
   - [x] **1b.** The shop and admin pages use one check for "this course doesn't exist". *(mechanical)*
   - [x] **1c.** The admin opens a course's admin page from its edit page and sees the course and its students by name and email.
   - [x] **1d.** The edit page and the admin page share the status words, the price split and the "shown in shop" check; the edit page stays the same. *(mechanical)*
-  - [ ] **1e.** The admin sees the course's status, times, current and scheduled prices, private link and public page link in the side panel. **Next**
-    - *Behaviours*:
-      - The status pill shows the status word; Published is `--success` and every other status is `--muted`.
-      - The panel shows the start and end in the course's time zone.
-      - It shows the price in effect, then each scheduled price with its start; a price of 0 reads "Free".
-      - A course with no price in effect yet shows only its scheduled prices.
-      - It shows the private course link.
-      - "View public page" shows only for a published course with a price in effect.
-      - Drafts, archived courses and deleted courses get no public link, and neither does a published course whose prices are all in the future.
-    - *New shared pieces*: none
-    - *Files*:
-      - the panel and its test, in `course-view/`
-      - the admin page
-      - a new `published` scenario in [get-course-as-admin.ts](../web/src/mocks/handlers/admin-courses/get-course-as-admin.ts), with its fixture (test data)
-      - docs/admin-course-view.md and docs/courses.md (status ticks)
-    - *Needs*: 1c, 1d.
-    - *Settled*: [style-guide.md](style-guide.md) §7 *Badge and status pill*.
-    - *Done when*: the milestone's Done-when is walked in `dev:mock` with `withEnrollment`, `success` and `published`.
-- [ ] **2. The admin can see when each student enrolled, which currency they paid in and which email failed.**
+  - [x] **1e.** The admin sees the course's status, times, current and scheduled prices, private link and public page link in the side panel.
+- [ ] **2. The admin can see when each student enrolled, which currency they paid in and which email failed.** **Next**
 - [ ] **3. The admin sees each student's enrollment, access, payment and problems.** A table on wide screens, cards on phones, coloured pills and Attention lines.
 - [ ] **4. The admin un-enrolls a student.** A dialog confirms, then the row shows Un-enrolled and Refunded.
 - [ ] **5. The admin sorts the students.** Needs attention first is the default.
@@ -104,7 +87,7 @@ Where each wireframe state is built:
 
 - To choose a scenario for `dev:mock`, edit the `scenario` constant in [server.ts](../web/src/mocks/server.ts); an endpoint without that scenario serves its `success`.
 - Existing admin-get scenarios in [get-course-as-admin.ts](../web/src/mocks/handlers/admin-courses/get-course-as-admin.ts): `success` (no students), `withEnrollment` (one), `notFound`, `invalidId`, `error`.
-- Milestone 1 (commit 1e) adds `published`, a published course with a price in effect; every other fixture is a draft, so none shows the Published pill or the public link.
+- Milestone 1 added `published`, a published course with a price in effect; every other fixture is a draft, so none shows the Published pill or the public link.
 - Milestone 3 adds `withEveryStudentCase` (the eight rows above); milestone 4 adds `revokeEnrollmentHandlers`.
 - Check a commit with `yarn --cwd web check:changed` (or `api`).
 
@@ -158,31 +141,10 @@ Where each wireframe state is built:
 - Done when: in `dev:mock` with `withEnrollment`, the edit page's "View course" link opens the page with the course, the panel and Ada Lovelace listed; with `success`, the list reads "No students yet." A draft course shows its Drafted pill, and the "View public page" link shows only when `isShownInShop` is true (try `published`).
 - Can wait: the panel's words.
 
-### Design notes *(temporary)*
-
-- Image:
-  - Next's optimizer forwards no headers to the image it fetches, so an image behind the admin login can't go through it. The admin page passes `unoptimized`.
-  - `unoptimized` skips the `localPatterns` check, so `next.config.ts` stays the same.
-- Privacy: the page, the panel and the list are server components, so the admin course answer never reaches the browser as data.
-- Frame: `main` uses `pageFrameClasses`, with no site header or footer. The shared layout keeps its 96px sticky offset and gets no offset prop until an admin header exists.
-- Folder: `course-view/` ends at about 8 files; milestone 3 groups it when it adds the 11th.
-- Shared pieces are typed from `AdminCourse`, never from edit's form types ([code.md](../.claude/rules/code.md) *Compose siblings*).
-
-### Flow *(temporary)*
-
-```
-Admin clicks "View course" on the edit page                    1c
-└── page loads the admin course answer                         existing (getCourseAsAdmin)
-    ├── course missing → 404 page                              1b check, 1c
-    ├── other problem → ProblemAlert, API's words              1c
-    └── success → shared course layout                         1a
-        ├── image stored → admin route, unoptimized            1c
-        ├── no image → empty 16:9 box                          1c
-        ├── panel: Edit course link                            1c
-        ├── panel: pill, times, prices, course link            1e
-        ├── panel: View public page only if shown in shop      1e
-        └── Students: names and emails, or "No students yet."  1c
-```
+- *Retro*:
+  - Planned 3 to 4 commits in the overview, then 5 in the plan; shipped 5 (1a to 1e).
+  - The owner's changes after using the page: not yet recorded.
+  - Rule friction: not yet recorded.
 
 ## Step 2. The admin course answer says when each student enrolled, in which currency they paid, and which email failed
 

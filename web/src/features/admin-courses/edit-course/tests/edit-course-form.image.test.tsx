@@ -25,7 +25,7 @@ vi.mock("../../description-editor/description-editor", async () => ({
     .MockDescriptionEditor,
 }));
 
-const prefillWithImage = toEditFormPrefill(adminCourseWithImage);
+const prefillWithImage = toEditFormPrefill(adminCourseWithImage, Date.now());
 const noImageText =
   "No image yet. A course needs one before it can be published.";
 

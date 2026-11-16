@@ -5,6 +5,7 @@ import {
   adminCourseWithEnrollment,
   adminCourseWithFuturePrice,
   adminCourseWithImage,
+  publishedAdminCourse,
 } from "../../fixtures/admin-courses";
 import { MOCK_API_BASE_URL } from "../../mock-api";
 import { problemResponse } from "../../problem-response";
@@ -33,6 +34,9 @@ const adminCourseByIdWithImage =
 const adminCourseByIdWithEnrollment = makeAdminCourseByIdHandler(
   adminCourseWithEnrollment,
 );
+
+const adminCourseByIdPublished =
+  makeAdminCourseByIdHandler(publishedAdminCourse);
 
 const adminCourseByIdNotFound = http.get(adminCourseByIdUrl, ({ params }) => {
   const body = {
@@ -75,6 +79,7 @@ export const getCourseAsAdminHandlers = {
   success: adminCourseByIdSuccess,
   withImage: adminCourseByIdWithImage,
   withEnrollment: adminCourseByIdWithEnrollment,
+  published: adminCourseByIdPublished,
   notFound: adminCourseByIdNotFound,
   invalidId: adminCourseByIdInvalidId,
   error: adminCourseByIdError,

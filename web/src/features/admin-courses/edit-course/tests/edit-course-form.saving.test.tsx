@@ -198,7 +198,10 @@ describe("EditCourseForm saving", () => {
 
     view.rerender(
       makeEditFormElement(
-        toEditFormPrefill({ ...draftedAdminCourse, name: "Stored name" }),
+        toEditFormPrefill(
+          { ...draftedAdminCourse, name: "Stored name" },
+          Date.now(),
+        ),
       ),
     );
 
@@ -215,7 +218,10 @@ describe("EditCourseForm saving", () => {
 
     view.rerender(
       makeEditFormElement(
-        toEditFormPrefill({ ...draftedAdminCourse, name: "Renamed" }),
+        toEditFormPrefill(
+          { ...draftedAdminCourse, name: "Renamed" },
+          Date.now(),
+        ),
       ),
     );
 
@@ -278,18 +284,21 @@ describe("EditCourseForm saving", () => {
 
     view.rerender(
       makeEditFormElement(
-        toEditFormPrefill({
-          ...draftedAdminCourse,
-          prices: [
-            ...draftedAdminCourse.prices,
-            {
-              id: "0b7a9c3e-1f2d-4e5a-8b6c-7d8e9f0a1b2c",
-              amount: 15000,
-              currency: "USD",
-              effectiveAt: "2099-03-01T14:00:00Z",
-            },
-          ],
-        }),
+        toEditFormPrefill(
+          {
+            ...draftedAdminCourse,
+            prices: [
+              ...draftedAdminCourse.prices,
+              {
+                id: "0b7a9c3e-1f2d-4e5a-8b6c-7d8e9f0a1b2c",
+                amount: 15000,
+                currency: "USD",
+                effectiveAt: "2099-03-01T14:00:00Z",
+              },
+            ],
+          },
+          Date.now(),
+        ),
       ),
     );
 

@@ -106,10 +106,13 @@ describe("EditCourseForm status", () => {
 
   it("chooses Archived when the course loads archived", () => {
     renderForm(
-      toEditFormPrefill({
-        ...draftedAdminCourse,
-        status: { name: "archived", changedAt: "2026-10-15T18:30:00Z" },
-      }),
+      toEditFormPrefill(
+        {
+          ...draftedAdminCourse,
+          status: { name: "archived", changedAt: "2026-10-15T18:30:00Z" },
+        },
+        Date.now(),
+      ),
     );
 
     expect(statusOption("Archived")).toBeChecked();
@@ -168,7 +171,10 @@ describe("EditCourseForm status", () => {
   });
 
   describe("with students enrolled", () => {
-    const enrolledPrefill = toEditFormPrefill(adminCourseWithEnrollment);
+    const enrolledPrefill = toEditFormPrefill(
+      adminCourseWithEnrollment,
+      Date.now(),
+    );
 
     it("greys out Deleted and says to archive instead", () => {
       renderForm(enrolledPrefill);
@@ -195,10 +201,13 @@ describe("EditCourseForm status", () => {
 
     it("keeps Deleted available when the course loads deleted", () => {
       renderForm(
-        toEditFormPrefill({
-          ...adminCourseWithEnrollment,
-          status: { name: "deleted", changedAt: "2026-10-15T18:30:00Z" },
-        }),
+        toEditFormPrefill(
+          {
+            ...adminCourseWithEnrollment,
+            status: { name: "deleted", changedAt: "2026-10-15T18:30:00Z" },
+          },
+          Date.now(),
+        ),
       );
 
       expect(statusOption("Deleted")).not.toHaveAttribute(

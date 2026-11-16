@@ -7,6 +7,7 @@ import { EditCourseForm } from "@/features/admin-courses/edit-course/edit-course
 import { toEditFormPrefill } from "@/features/admin-courses/edit-course/edit-form-prefill";
 import { EditPageHeader } from "@/features/admin-courses/edit-course/header/edit-page-header";
 import { getAdminCourseOrNotFound } from "@/features/admin-courses/api/get-admin-course-or-not-found";
+import { readRequestTime } from "@/lib/time/read-request-time";
 
 export const metadata: Metadata = {
   title: "Edit course",
@@ -50,7 +51,7 @@ export default async function EditCoursePage({
     );
   }
 
-  const prefill = toEditFormPrefill(result.data);
+  const prefill = toEditFormPrefill(result.data, readRequestTime());
 
   return (
     <EditCoursePageLayout>

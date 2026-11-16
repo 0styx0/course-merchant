@@ -27,6 +27,12 @@ export const draftedAdminCourse = {
   ],
 } as const satisfies AdminCourse;
 
+/** A published course with a price in effect, so the shop lists it. */
+export const publishedAdminCourse = {
+  ...draftedAdminCourse,
+  status: { name: "published", changedAt: "2026-10-15T19:00:00Z" },
+} as const satisfies AdminCourse;
+
 /** A course being edited: one price in effect and one still to come. */
 export const adminCourseWithFuturePrice = {
   ...draftedAdminCourse,

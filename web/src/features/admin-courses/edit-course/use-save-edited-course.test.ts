@@ -27,7 +27,7 @@ vi.mock("../save-course/upload-image/upload-course-image.action", () => ({
 
 const detailsAction = vi.mocked(saveEditedDetailsAction);
 const uploadAction = vi.mocked(uploadCourseImageAction);
-const prefill = toEditFormPrefill(draftedAdminCourse);
+const prefill = toEditFormPrefill(draftedAdminCourse, Date.now());
 const courseId = draftedAdminCourse.id;
 
 const saved: CourseActionResult = {

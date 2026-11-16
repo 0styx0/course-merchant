@@ -82,7 +82,7 @@ function toPriceRowValues(
  */
 export function toEditFormPrefill(
   course: AdminCourse,
-  renderMs = Date.now(),
+  renderMs: number,
 ): EditFormPrefill {
   const { startTime, endTime, timeZone } = course.schedule;
   const start = storedTimeBoxes(startTime, timeZone);

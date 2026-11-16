@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { ProblemAlert } from "@/components/problem-alert";
+import { CourseAdminPanel } from "@/features/admin-courses/course-view/course-admin-panel";
 import { AdminCourseImage } from "@/features/admin-courses/course-view/admin-course-image";
 import { StudentList } from "@/features/admin-courses/course-view/student-list";
-import { editCoursePath } from "@/features/admin-courses/addresses/admin-course-path";
 import { getAdminCourseOrNotFound } from "@/features/admin-courses/api/get-admin-course-or-not-found";
 import { CoursePageLayout } from "@/features/courses/course-page-layout";
 import { pageFrameClasses } from "@/features/site-layout/page-frame-classes";
+import { readRequestTime } from "@/lib/time/read-request-time";
 import type { AdminCourse } from "@/lib/types";
 
 export const metadata: Metadata = {
@@ -25,7 +25,13 @@ function AdminCoursePageFrame({ children }: { children: ReactNode }) {
   return <main className={`${pageFrameClasses} py-12`}>{children}</main>;
 }
 
-function AdminCourseDetails({ course }: { course: AdminCourse }) {
+type AdminCourseDetailsProps = {
+  course: AdminCourse;
+  /** When the page rendered, in milliseconds since 1970. */
+  renderMs: number;
+};
+
+function AdminCourseDetails({ course, renderMs }: AdminCourseDetailsProps) {
   return (
     <>
       <CoursePageLayout
@@ -34,9 +40,7 @@ function AdminCourseDetails({ course }: { course: AdminCourse }) {
         summary={course.summary}
         description={course.description}
       >
-        <Link className="underline" href={editCoursePath(course.id)}>
-          Edit course
-        </Link>
+        <CourseAdminPanel course={course} renderMs={renderMs} />
       </CoursePageLayout>
       <StudentList enrollments={course.enrollments} />
     </>
@@ -48,13 +52,14 @@ export default async function AdminCoursePage({
 }: AdminCoursePageProps) {
   const { courseId } = await params;
   const result = await getAdminCourseOrNotFound(courseId);
+  const renderMs = readRequestTime();
 
   return (
     <AdminCoursePageFrame>
       {result.state === "failure" ? (
         <ProblemAlert problem={result.error} />
       ) : (
-        <AdminCourseDetails course={result.data} />
+        <AdminCourseDetails course={result.data} renderMs={renderMs} />
       )}
     </AdminCoursePageFrame>
   );

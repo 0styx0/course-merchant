@@ -40,7 +40,7 @@ function pricedAt(effectiveAt: string, amount: number) {
 
 describe("toEditFormPrefill", () => {
   it("takes the edited fields from the course, with the times in its zone", () => {
-    const { values } = toEditFormPrefill(course);
+    const { values } = toEditFormPrefill(course, Date.now());
 
     expect(values).toEqual({
       name: course.name,
@@ -62,10 +62,13 @@ describe("toEditFormPrefill", () => {
   });
 
   it("fills the times in UTC when the stored zone is not a real zone", () => {
-    const { values } = toEditFormPrefill({
-      ...course,
-      schedule: { ...course.schedule, timeZone: "Not/AZone" },
-    });
+    const { values } = toEditFormPrefill(
+      {
+        ...course,
+        schedule: { ...course.schedule, timeZone: "Not/AZone" },
+      },
+      Date.now(),
+    );
 
     expect(values.schedule).toEqual({
       timeZone: "Not/AZone",
@@ -82,21 +85,25 @@ describe("toEditFormPrefill", () => {
       image: { updatedAt: "2026-10-01T10:00:00Z", version: "3" },
     };
 
-    expect(toEditFormPrefill(withImage).storedImageVersion).toBe("3");
-    expect(toEditFormPrefill(course).storedImageVersion).toBeNull();
+    expect(toEditFormPrefill(withImage, Date.now()).storedImageVersion).toBe(
+      "3",
+    );
+    expect(toEditFormPrefill(course, Date.now()).storedImageVersion).toBeNull();
   });
 
   it("holds the status as loaded, as a form value", () => {
-    expect(toEditFormPrefill(course).values.status).toBe("drafted");
+    expect(toEditFormPrefill(course, Date.now()).values.status).toBe("drafted");
   });
 
   it("says yes for a course with an enrollment and no for one without", () => {
-    expect(toEditFormPrefill(course).hasEnrollments).toBe(true);
-    expect(toEditFormPrefill(draftedAdminCourse).hasEnrollments).toBe(false);
+    expect(toEditFormPrefill(course, Date.now()).hasEnrollments).toBe(true);
+    expect(
+      toEditFormPrefill(draftedAdminCourse, Date.now()).hasEnrollments,
+    ).toBe(false);
   });
 
   it("keeps the start and end as the loaded UTC strings", () => {
-    expect(toEditFormPrefill(course).loadedSchedule).toEqual({
+    expect(toEditFormPrefill(course, Date.now()).loadedSchedule).toEqual({
       startTime: course.schedule.startTime,
       endTime: course.schedule.endTime,
     });
@@ -185,7 +192,7 @@ describe("toEditFormPrefill", () => {
   });
 
   it("never carries the enrollments", () => {
-    const start = toEditFormPrefill(course);
+    const start = toEditFormPrefill(course, Date.now());
 
     expect(JSON.stringify(start)).not.toContain("ada@example.com");
     expect(start).not.toHaveProperty("enrollments");

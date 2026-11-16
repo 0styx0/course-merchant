@@ -3,8 +3,7 @@ import { useId } from "react";
 import { storedPriceStartMs } from "./split-prices-by-start";
 import { formatMoment } from "../schedule/summary/format-moment";
 import type { LoadedPrice } from "../validation/edit-course-form-schema";
-import { toDollarText } from "./dollar-amount";
-import { formatDollars } from "./price-summary";
+import { formatCents } from "./price-summary";
 
 type PricesInEffectProps = {
   prices: LoadedPrice[];
@@ -13,7 +12,7 @@ type PricesInEffectProps = {
 
 /** "$99.00 from Oct 15, 2026, 2:31 PM": one stored price as the list shows it. */
 function priceInEffectText(price: LoadedPrice, timeZone: string): string {
-  const amount = formatDollars(toDollarText(price.amount));
+  const amount = formatCents(price.amount);
   return `${amount} from ${formatMoment(storedPriceStartMs(price), timeZone)}`;
 }
 

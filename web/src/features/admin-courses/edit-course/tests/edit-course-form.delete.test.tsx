@@ -127,10 +127,13 @@ describe("EditCourseForm delete confirmation", () => {
     const user = userEvent.setup();
     mockSaveSucceeds();
     renderForm(
-      toEditFormPrefill({
-        ...draftedAdminCourse,
-        status: { name: "deleted", changedAt: "2026-10-15T18:30:00Z" },
-      }),
+      toEditFormPrefill(
+        {
+          ...draftedAdminCourse,
+          status: { name: "deleted", changedAt: "2026-10-15T18:30:00Z" },
+        },
+        Date.now(),
+      ),
     );
 
     await clickSave(user);
@@ -151,10 +154,13 @@ describe("EditCourseForm delete confirmation", () => {
 
     view.rerender(
       makeEditFormElement(
-        toEditFormPrefill({
-          ...draftedAdminCourse,
-          status: { name: "deleted", changedAt: "2026-11-03T12:00:00Z" },
-        }),
+        toEditFormPrefill(
+          {
+            ...draftedAdminCourse,
+            status: { name: "deleted", changedAt: "2026-11-03T12:00:00Z" },
+          },
+          Date.now(),
+        ),
       ),
     );
     await clickSave(user);
@@ -196,10 +202,13 @@ describe("EditCourseForm delete confirmation", () => {
   it("returns a course loaded as archived to Archived on Keep the course", async () => {
     const user = userEvent.setup();
     renderForm(
-      toEditFormPrefill({
-        ...draftedAdminCourse,
-        status: { name: "archived", changedAt: "2026-10-15T18:30:00Z" },
-      }),
+      toEditFormPrefill(
+        {
+          ...draftedAdminCourse,
+          status: { name: "archived", changedAt: "2026-10-15T18:30:00Z" },
+        },
+        Date.now(),
+      ),
     );
     await saveAsDeleted(user);
     await findDeleteDialog();

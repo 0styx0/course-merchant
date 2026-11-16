@@ -44,15 +44,21 @@ const oldestPrice = {
 } as const;
 
 /** Two prices in effect (the fixture's $99 is the latest) and one future price. */
-const prefillWithPricesInEffect = toEditFormPrefill({
-  ...draftedAdminCourse,
-  prices: [...draftedAdminCourse.prices, oldestPrice, futurePrice],
-});
+const prefillWithPricesInEffect = toEditFormPrefill(
+  {
+    ...draftedAdminCourse,
+    prices: [...draftedAdminCourse.prices, oldestPrice, futurePrice],
+  },
+  Date.now(),
+);
 
-const prefillWithOnlyFuturePrice = toEditFormPrefill({
-  ...draftedAdminCourse,
-  prices: [futurePrice],
-});
+const prefillWithOnlyFuturePrice = toEditFormPrefill(
+  {
+    ...draftedAdminCourse,
+    prices: [futurePrice],
+  },
+  Date.now(),
+);
 
 const FROZEN_DAY = new Date(FROZEN_NOW)
   .toISOString()

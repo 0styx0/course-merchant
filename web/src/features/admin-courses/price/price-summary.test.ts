@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { priceSummary } from "./price-summary";
+import { formatCents, priceSummary } from "./price-summary";
 
 describe("priceSummary", () => {
   const zone = "America/New_York";
@@ -149,5 +149,16 @@ describe("priceSummary", () => {
       "",
       "$5.00 from when the course is published",
     ]);
+  });
+});
+
+describe("formatCents", () => {
+  it.each([
+    [9900, "$99.00"],
+    [7950, "$79.50"],
+    [5, "$0.05"],
+    [0, "Free"],
+  ])("reads %i cents as %s", (cents, expected) => {
+    expect(formatCents(cents)).toBe(expected);
   });
 });

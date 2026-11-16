@@ -8,15 +8,20 @@ import {
   priceStartProblem,
   type PriceStartProblem,
 } from "../validation/price-row-issues";
-import { normalizeDollars } from "./dollar-amount";
+import { normalizeDollars, toDollarText } from "./dollar-amount";
 import { formatMoment } from "../schedule/summary/format-moment";
 
 /** "$79.50", "$99.00" or "Free": the typed amount, with a comma read as the decimal mark. */
-export function formatDollars(typed: string): string {
+function formatDollars(typed: string): string {
   const dollars = normalizeDollars(typed);
   if (Number(dollars) === 0) return "Free";
   const [whole, cents = ""] = dollars.split(".");
   return `$${Number(whole)}.${cents.padEnd(2, "0")}`;
+}
+
+/** "$99.00", "$79.50" or "Free": a stored amount in whole cents. */
+export function formatCents(cents: number): string {
+  return formatDollars(toDollarText(cents));
 }
 
 /** When a price starts: -Infinity for "when published", nothing if the row is incomplete or unconvertible. */
