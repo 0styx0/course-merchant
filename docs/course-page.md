@@ -429,8 +429,8 @@ While the image loads: an empty 16:9 box, so nothing below it moves.
 
 - Why here: the layout needs the header (6) and the form (2) to arrange.
 - Needs: 2, 6.
-- Size: 5 commits (handler folders; image route; image on the page; grid; description styles); the handler folders came first because `mocks/handlers/` held 10 files. Twins: [course-details.tsx](../web/src/features/courses/course-details.tsx), `.description-content` in globals.css (shared with the admin editor), courses.md *Course images*, item 5 (*Showing it*). Cards keep no image until the homepage redesign, so that item stays open for the card half.
-- Builds on: [course-details.tsx](../web/src/features/courses/course-details.tsx), [the course page route](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx) (the 56px and 72px heights the sticky top measures from), `.description-content` in [globals.css](../web/src/app/globals.css), courses.md *Course images*, style guide §7, the wireframe's course page grid, and the Decision rows on the desktop panel and the header heights.
+- Size: 5 commits (handler folders; image route; image on the page; grid; description styles); the handler folders came first because `mocks/handlers/` held 10 files. Twins: [course-page-layout.tsx](../web/src/features/courses/course-page-layout.tsx), `.description-content` in globals.css (shared with the admin editor), courses.md *Course images*, item 5 (*Showing it*). Cards keep no image until the homepage redesign, so that item stays open for the card half.
+- Builds on: [course-page-layout.tsx](../web/src/features/courses/course-page-layout.tsx), [the course page route](../web/src/app/%28shop%29/courses/%5BcourseId%5D/page.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx) (the 56px and 72px heights the sticky top measures from), `.description-content` in [globals.css](../web/src/app/globals.css), courses.md *Course images*, style guide §7, the wireframe's course page grid, and the Decision rows on the desktop panel and the header heights.
 - Risk: restyling `.description-content` changes the admin editor.
 - Done when: journey: scroll the course page at 1280 px and see the panel stay 96px under the header; at 320 px a long name wraps; a slow image keeps its 16:9 box.
 - Retro:
@@ -461,7 +461,7 @@ On a phone: the same panel at full width, under the summary.
 
 - Why here: the panel exists in the layout, so its states have a place.
 - Needs: 7.
-- Builds on: [course-details.tsx](../web/src/features/courses/course-details.tsx), [enroll-button.tsx](../web/src/features/checkout/enroll-button/enroll-button.tsx), [formatters.ts](../web/src/lib/utils/formatters.ts), [not-found-message.tsx](../web/src/components/not-found-message.tsx), [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx), the fixtures from step 2, wireframe states 1 to 5 and notes 5, 11 to 14, 20 and 24, style guide §7 and §8.
+- Builds on: [course-page-layout.tsx](../web/src/features/courses/course-page-layout.tsx), [enroll-button.tsx](../web/src/features/checkout/enroll-button/enroll-button.tsx), [formatters.ts](../web/src/lib/utils/formatters.ts), [not-found-message.tsx](../web/src/components/not-found-message.tsx), [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx), the fixtures from step 2, wireframe states 1 to 5 and notes 5, 11 to 14, 20 and 24, style guide §7 and §8.
 - Size: 5 commits (8a to 8e). The overview said 3 to 4: the price format stands alone because it also changes the card, and the shared "See current courses" link needs its own mechanical commit before the ended look.
 - Risk: changing `formatPrice` changes the card.
 - Done when: journey (`dev:mock`, 400 px and desktop, keyboard only): open React Fundamentals (state 1), Mindful Breathing (2), the in-progress course (3) and the ended course by its URL (4) and see the screen drawn in the wireframe; send the free form and see the note hide; walk `notPurchasable` on the in-progress course; no page shows an enrollment count.
@@ -540,7 +540,7 @@ No bar at the top, even when the button sits below the fold.
 
 - Why here: the bar repeats the button the panel (8) already holds.
 - Needs: 8.
-- Builds on: [enroll-button.tsx](../web/src/features/checkout/enroll-button/enroll-button.tsx), [course-details.tsx](../web/src/features/courses/course-details.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx) (the header the bar's watcher measures), admin's `SaveBar` in [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (the look), wireframe note 21, the Decision rows on the phone bar and the one primary button Principle.
+- Builds on: [enroll-button.tsx](../web/src/features/checkout/enroll-button/enroll-button.tsx), [course-page-layout.tsx](../web/src/features/courses/course-page-layout.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx) (the header the bar's watcher measures), admin's `SaveBar` in [edit-course-form.tsx](../web/src/features/admin-courses/edit-course/edit-course-form.tsx) (the look), wireframe note 21, the Decision rows on the phone bar and the one primary button Principle.
 - Size: 2 commits (the bar; the landing below the header). The overview said 2 to 3.
 - Risk: a focused field hidden under the header or the bar.
 - Done when: journey J1 at 400 px; the bar never shows beside the inline button, and the last paragraph and the footer stay clear of it.
@@ -567,7 +567,7 @@ No bar at the top, even when the button sits below the fold.
 
 - Why here: the findings are small, UI-only and unrelated to payments, so they ship before the checkout work; 12b's walk also covers the phone layout step 11 skipped.
 - Needs: 11.
-- Builds on: [course-details.tsx](../web/src/features/courses/course-details.tsx), [see-current-courses-link.tsx](../web/src/components/see-current-courses-link.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx), [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx), [course-time-lines.ts](../web/src/features/courses/course-time/course-time-lines.ts), [buy-panel.tsx](../web/src/features/courses/buy-panel/buy-panel.tsx), style guide §7, and the Decision rows on the course line, the header and the return page.
+- Builds on: [course-page-layout.tsx](../web/src/features/courses/course-page-layout.tsx), [see-current-courses-link.tsx](../web/src/components/see-current-courses-link.tsx), [site-header.tsx](../web/src/features/site-layout/site-header.tsx), [checkout-status-message.tsx](../web/src/features/checkout/success-page/checkout-status-message.tsx), [course-time-lines.ts](../web/src/features/courses/course-time/course-time-lines.ts), [buy-panel.tsx](../web/src/features/courses/buy-panel/buy-panel.tsx), style guide §7, and the Decision rows on the course line, the header and the return page.
 - Size: 2 commits (the overview said 2 to 5: the small fixes share one bundle, and the long-course rule needs its own tests and fixture). The wider gaps and the visible mock image already shipped in b103062f8.
 - Risk: the ghost link's alignment change touches the 404 page, the ended panel and the return page; the long-course rule changes what an ended long course shows.
 - Done when: 12b's walk.

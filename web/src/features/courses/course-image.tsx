@@ -1,17 +1,14 @@
 import Image from "next/image";
 
-import { shopCourseImagePath } from "./shop-course-path";
-
 type CourseImageProps = {
-  courseId: string;
-  imageVersion: string;
+  src: string;
 };
 
 // A missing or failing image leaves the empty 16:9 box; nothing else moves.
-export function CourseImage({ courseId, imageVersion }: CourseImageProps) {
+export function CourseImage({ src }: CourseImageProps) {
   return (
     <Image
-      src={shopCourseImagePath(courseId, imageVersion)}
+      src={src}
       width={1600}
       height={900}
       alt=""

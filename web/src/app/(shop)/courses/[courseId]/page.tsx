@@ -9,11 +9,13 @@ import {
   getCourseStage,
   type CourseStage,
 } from "@/features/courses/buy-panel/course-stage";
-import { CourseDetails } from "@/features/courses/course-details";
+import { CourseImage } from "@/features/courses/course-image";
+import { CoursePageLayout } from "@/features/courses/course-page-layout";
 import {
   getCourse,
   type GetCourseResult,
 } from "@/features/courses/courses.api";
+import { shopCourseImagePath } from "@/features/courses/shop-course-path";
 import type { Course } from "@/lib/types";
 import { formatPrice } from "@/lib/utils/formatters";
 import { readRequestLocale } from "@/lib/locale/request-locale";
@@ -67,13 +69,22 @@ export default async function CoursePage({ params }: CoursePageProps) {
   const course = result.data;
 
   return (
-    <CourseDetails course={course}>
+    <CoursePageLayout
+      image={
+        <CourseImage
+          src={shopCourseImagePath(course.id, course.image.version)}
+        />
+      }
+      name={course.name}
+      summary={course.summary}
+      description={course.description}
+    >
       <CourseBuyPanel
         course={course}
         stage={getCourseStage(course.schedule, new Date())}
         locale={locale}
       />
-    </CourseDetails>
+    </CoursePageLayout>
   );
 }
 

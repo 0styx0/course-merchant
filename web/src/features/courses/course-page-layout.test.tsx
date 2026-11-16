@@ -3,14 +3,30 @@ import "@testing-library/jest-dom/vitest";
 import { describe, expect, it } from "vitest";
 
 import { reactCourse } from "@/mocks/fixtures/courses";
-import { CourseDetails } from "./course-details";
+import { CoursePageLayout } from "./course-page-layout";
+import { CourseImage } from "./course-image";
 
 const course = reactCourse;
+const imageSrc = "/given-image.png";
+const image = <CourseImage src={imageSrc} />;
 const buyBlock = <button type="button">Enroll now</button>;
 
-describe("CourseDetails", () => {
+function renderCoursePageLayout() {
+  return render(
+    <CoursePageLayout
+      image={image}
+      name={course.name}
+      summary={course.summary}
+      description={course.description}
+    >
+      {buyBlock}
+    </CoursePageLayout>,
+  );
+}
+
+describe("CoursePageLayout", () => {
   it("displays the course details", () => {
-    render(<CourseDetails course={course}>{buyBlock}</CourseDetails>);
+    renderCoursePageLayout();
 
     expect(
       screen.getByRole("heading", {
@@ -34,7 +50,7 @@ describe("CourseDetails", () => {
   });
 
   it("shows no price, schedule or enrollment count of its own", () => {
-    render(<CourseDetails course={course}>{buyBlock}</CourseDetails>);
+    renderCoursePageLayout();
 
     expect(screen.queryByText("12 enrolled")).not.toBeInTheDocument();
     expect(screen.queryByText("$99")).not.toBeInTheDocument();
@@ -42,35 +58,35 @@ describe("CourseDetails", () => {
   });
 
   it("puts the buy block before the description in the page source", () => {
-    render(<CourseDetails course={course}>{buyBlock}</CourseDetails>);
+    renderCoursePageLayout();
 
     const description = screen.getByRole("heading", {
       level: 2,
       name: "What you will build",
     });
-    const isAfterDescription = (element: HTMLElement) =>
+    const isBeforeDescription = (element: HTMLElement) =>
       Boolean(
         description.compareDocumentPosition(element) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
+        Node.DOCUMENT_POSITION_PRECEDING,
       );
 
     expect(
-      isAfterDescription(screen.getByRole("button", { name: "Enroll now" })),
-    ).toBe(false);
+      isBeforeDescription(screen.getByRole("button", { name: "Enroll now" })),
+    ).toBe(true);
   });
 
-  it("shows the course image before the title", () => {
-    const { container } = render(
-      <CourseDetails course={course}>{buyBlock}</CourseDetails>,
-    );
+  it("shows the image it was given before the title", () => {
+    const { container } = renderCoursePageLayout();
 
-    const [image, title] = container.querySelectorAll("img, h1");
-    expect(image.tagName).toBe("IMG");
+    const [firstElement, title] = container.querySelectorAll("img, h1");
+    expect(firstElement.getAttribute("src")).toContain(
+      encodeURIComponent(imageSrc),
+    );
     expect(title).toBe(screen.getByRole("heading", { level: 1 }));
   });
 
   it("shows the summary in the muted text colour", () => {
-    render(<CourseDetails course={course}>{buyBlock}</CourseDetails>);
+    renderCoursePageLayout();
 
     expect(screen.getByText(course.summary)).toHaveClass(
       "text-muted-foreground",

@@ -9,19 +9,8 @@ Keep this file current **in the same commit as the work**: tick the step, mark t
 Each milestone delivers one outcome. `/plan-create-implementation` splits a milestone into commit lines when it becomes the next one.
 
 - [ ] **1. The admin opens a course's admin page.** The course shows like the public page with an admin side panel, students are listed by name and email, and the edit page links to it.
-  - [ ] **1a.** Pages that show a course choose its image; the public course page stays the same. *(mechanical)* **Next**
-    - *Behaviours*:
-      - The public page shows the same image, text and buy panel; the existing tests pass and the test count stays the same.
-    - *New shared pieces*:
-      - The course layout takes an image element plus only the name, summary and description, so an admin course fits it too.
-      - The course image takes its address from its caller.
-    - *Files*:
-      - [course-details.tsx](../web/src/features/courses/course-details.tsx)
-      - [course-image.tsx](../web/src/features/courses/course-image.tsx)
-      - [the shop course page](../web/src/app/(shop)/courses/[courseId]/page.tsx)
-    - *Settled*: the first Decision row.
-    - *Done when*: `yarn --cwd web check:changed` passes and the test count stays the same.
-  - [ ] **1b.** The shop and admin pages use one check for "this course doesn't exist". *(mechanical)*
+  - [x] **1a.** Pages that show a course choose its image; the public course page stays the same.
+  - [ ] **1b.** The shop and admin pages use one check for "this course doesn't exist". *(mechanical)* **Next**
     - *Behaviours*:
       - `COURSE_NOT_FOUND` and `INVALID_COURSE_ID` still give a 404 on the shop page, the shop image route and the edit page; their tests stay the same.
     - *New shared pieces*:
@@ -186,7 +175,7 @@ Where each wireframe state is built:
 
 - Why here: the thinnest path through the route, the admin loader and the shared course layout; every later milestone fills in this page.
 - Needs: none.
-- Builds on: [the edit page](../web/src/app/admin/(signed-in)/courses/[courseId]/edit/page.tsx) (loader, 404 and `ProblemAlert` handling), [course-details.tsx](../web/src/features/courses/course-details.tsx) (layout twin), [the admin image route](../web/src/app/admin/(signed-in)/courses/[courseId]/image/route.ts) (serves drafts' images too), [edit-page-header.tsx](../web/src/features/admin-courses/edit-course/header/edit-page-header.tsx) (gets the "View course" link, and `isShownInShop` decides the public page link), [get-course-as-admin.ts](../web/src/mocks/handlers/admin-courses/get-course-as-admin.ts).
+- Builds on: [the edit page](../web/src/app/admin/(signed-in)/courses/[courseId]/edit/page.tsx) (loader, 404 and `ProblemAlert` handling), [course-page-layout.tsx](../web/src/features/courses/course-page-layout.tsx) (layout twin), [the admin image route](../web/src/app/admin/(signed-in)/courses/[courseId]/image/route.ts) (serves drafts' images too), [edit-page-header.tsx](../web/src/features/admin-courses/edit-course/header/edit-page-header.tsx) (gets the "View course" link, and `isShownInShop` decides the public page link), [get-course-as-admin.ts](../web/src/mocks/handlers/admin-courses/get-course-as-admin.ts).
 - **Sketch** (desktop; on phones the panel sits under the summary): the top half of the whole-page sketch; Students is a plain list, `Ada Lovelace · ada@example.com`, or "No students yet."
 
 ```
