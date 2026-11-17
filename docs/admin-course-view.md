@@ -24,27 +24,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3d.** Each card lists what the owner must act on, as red Attention lines: a failed email by its kind, and Refund owed.
   - [x] **3e.** From medium screens up, the students show as a table with the same fields; phones keep the cards.
 - [ ] **4. The admin un-enrolls a student.** A dialog confirms, then the row shows Un-enrolled and Refunded.
-  - [ ] **4a.** The web server can un-enroll a student through the API (not used yet; 4b uses it). **Next**
-    - *Behaviours*:
-      - Un-enrolling sends `POST …/enrollments/{customerId}/revocation`, calls Next's `refresh()` once (the server re-renders the page and sends it back in the same reply, with no browser reload) and returns success.
-      - A repeat (the API's 204 again) is a success too.
-      - An API problem (404 `ENROLLMENT_NOT_FOUND`, 500) comes back with the API's title and detail, with no refresh.
-      - A malformed course or customer id returns `VALIDATION_FAILED` ("The course or student id is not valid.") with no API call and no refresh.
-      - The action returns `Result<null, ProblemDetails>`, not the course form's result, because it has no fields to mark. Its problem lives in the action file.
-    - *New shared pieces*: `revokeEnrollmentHandlers` (`success`, `notFound`, `error`), because 4b's tests and 4c's store use them.
-    - *Files*:
-      - [admin-courses.api.ts](../web/src/features/admin-courses/api/admin-courses.api.ts) (`revokeEnrollment` wrapper)
-      - `web/src/features/admin-courses/course-view/students/unenroll/unenroll-student.action.ts` (new folder)
-      - `web/src/mocks/handlers/admin-courses/revoke-enrollment.ts` (its folder stays under the limit)
-      - [server.ts](../web/src/mocks/server.ts)
-    - *Settled*:
-      - [payments/refunds.md](payments/refunds.md) rows on un-enroll
-      - the Principle "The page shows the API's words on failure"
-    - *Done when*:
-      - the action's tests pass
-      - `check:changed` is green (knip counts the test's import as use)
-      - `/security-review` is clean
-  - [ ] **4b.** The admin clicks Un-enroll on a student, confirms, and the page re-renders with the student un-enrolled.
+  - [x] **4a.** The web server can un-enroll a student through the API (not used yet; 4b uses it).
+  - [ ] **4b.** The admin clicks Un-enroll on a student, confirms, and the page re-renders with the student un-enrolled. **Next**
     - *Behaviours*:
       - Every row and card whose `revokedAt` is empty shows "Un-enroll" (accessible name "Un-enroll Dana Cohen"). Rina, Ari and Ben show none.
       - The dialog asks "Un-enroll Dana Cohen?" and, for a paid student, says to refund in Stripe first.

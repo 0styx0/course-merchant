@@ -51,6 +51,18 @@ export async function updateCourse(
   );
 }
 
+export async function revokeEnrollment(
+  courseId: string,
+  customerId: string,
+): Promise<Result<undefined, ProblemDetails>> {
+  return toResult(
+    await api.POST(
+      "/admin/courses/{courseId}/enrollments/{customerId}/revocation",
+      { params: { path: { courseId, customerId } } },
+    ),
+  );
+}
+
 // The generated type calls the file a string; the serializer sends the real file.
 export async function uploadCourseImage(
   courseId: string,

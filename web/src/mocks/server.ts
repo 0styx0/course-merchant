@@ -21,6 +21,7 @@ import {
   uploadCourseImageHandlers,
 } from "./handlers/admin-courses/upload-course-image";
 import { getCourseImageAsAdminHandlers } from "./handlers/admin-courses/get-course-image-as-admin";
+import { revokeEnrollmentHandlers } from "./handlers/admin-courses/revoke-enrollment";
 import { startCheckoutHandlers } from "./handlers/checkout/start-checkout";
 import { getCheckoutStatusHandlers } from "./handlers/checkout/get-checkout-status";
 import { makeRememberedCourse } from "./handlers/admin-courses/remembered-course";
@@ -51,28 +52,35 @@ const uploadCourseImageScenarios = {
 };
 
 function scenarioHandler(
+  endpointName: string,
   handlers: Record<string, RequestHandler>,
 ): RequestHandler {
   if (scenario in handlers) {
     return handlers[scenario];
   }
   console.info(
-    `[MSW Setup] An endpoint has no "${scenario}" scenario, so it serves "success".`,
+    `[MSW Setup] ${endpointName} has no "${scenario}" scenario, so it serves "success".`,
   );
   return handlers.success;
 }
 
+// Each endpoint's name and the scenarios it can serve.
+const endpointScenarios: Record<string, Record<string, RequestHandler>> = {
+  listCourses: listCoursesHandlers,
+  getCourse: getCourseHandlers,
+  getCourseImage: getCourseImageHandlers,
+  createCourse: createCourseScenarios,
+  getCourseAsAdmin: getCourseAsAdminScenarios,
+  updateCourse: updateCourseScenarios,
+  uploadCourseImage: uploadCourseImageScenarios,
+  getCourseImageAsAdmin: getCourseImageAsAdminHandlers,
+  revokeEnrollment: revokeEnrollmentHandlers,
+  startCheckout: startCheckoutHandlers,
+  getCheckoutStatus: getCheckoutStatusHandlers,
+};
+
 if (
-  !(scenario in listCoursesHandlers) &&
-  !(scenario in getCourseHandlers) &&
-  !(scenario in getCourseImageHandlers) &&
-  !(scenario in createCourseScenarios) &&
-  !(scenario in getCourseAsAdminScenarios) &&
-  !(scenario in updateCourseScenarios) &&
-  !(scenario in uploadCourseImageScenarios) &&
-  !(scenario in getCourseImageAsAdminHandlers) &&
-  !(scenario in startCheckoutHandlers) &&
-  !(scenario in getCheckoutStatusHandlers)
+  !Object.values(endpointScenarios).some((handlers) => scenario in handlers)
 ) {
   throw new Error(
     `[MSW Setup] Unknown scenario "${scenario}". Pick one in src/mocks/server.ts`,
@@ -80,14 +88,7 @@ if (
 }
 
 export const server = setupServer(
-  scenarioHandler(listCoursesHandlers),
-  scenarioHandler(getCourseHandlers),
-  scenarioHandler(getCourseImageHandlers),
-  scenarioHandler(createCourseScenarios),
-  scenarioHandler(getCourseAsAdminScenarios),
-  scenarioHandler(updateCourseScenarios),
-  scenarioHandler(uploadCourseImageScenarios),
-  scenarioHandler(getCourseImageAsAdminHandlers),
-  scenarioHandler(startCheckoutHandlers),
-  scenarioHandler(getCheckoutStatusHandlers),
+  ...Object.entries(endpointScenarios).map(([endpointName, handlers]) =>
+    scenarioHandler(endpointName, handlers),
+  ),
 );
