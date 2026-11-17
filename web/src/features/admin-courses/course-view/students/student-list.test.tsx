@@ -46,5 +46,18 @@ describe("StudentList", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("No students yet.")).toBeInTheDocument();
     expect(screen.queryByRole("list")).toBeNull();
+    expect(screen.queryByRole("table")).toBeNull();
+  });
+
+  it("draws the students as cards and as a table, for CSS to choose between", () => {
+    render(
+      <StudentList
+        enrollments={adminCourseWithEveryStudentCase.enrollments}
+        timeZone="America/New_York"
+      />,
+    );
+
+    expect(screen.getAllByRole("list")[0].children).toHaveLength(8);
+    expect(screen.getAllByRole("row")).toHaveLength(9);
   });
 });

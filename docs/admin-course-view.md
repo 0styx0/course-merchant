@@ -17,28 +17,13 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **2. The admin can see when each student enrolled, which currency they paid in and which email failed.**
   - [x] **2a.** The admin course answers say when each student enrolled, which currency they paid in, and which email they got last or are missing.
   - [x] **2b.** The admin sees the date each student enrolled, in the course's time zone, beside their name and email.
-- [ ] **3. The admin sees each student's enrollment, access, payment and problems.** A table on wide screens, cards on phones, coloured pills and Attention lines.
+- [x] **3. The admin sees each student's enrollment, access, payment and problems.** A table on wide screens, cards on phones, coloured pills and Attention lines.
   - [x] **3a.** Status pills on the admin and public pages share one look.
   - [x] **3b.** The admin sees each student as a card with their name, email, enrolled date and an access pill.
   - [x] **3c.** The admin sees what each student paid and the state of the payment on their card.
   - [x] **3d.** Each card lists what the owner must act on, as red Attention lines: a failed email by its kind, and Refund owed.
-  - [ ] **3e.** From medium screens up, the students show as a table with the same fields; phones keep the cards. **Next**
-    - *Behaviours*:
-      - The columns are Student (name over email), Enrolled, Access, Paid, Payment and Attention, with column headers.
-      - Paid is right-aligned with `tabular-nums` ([style-guide.md](style-guide.md) §8).
-      - A row with no Attention lines leaves the cell empty.
-      - Table tests render the table directly, because jsdom shows both layouts.
-      - Below `md` only the cards show; from `md` only the table (browser test).
-      - At `md` width the table scrolls inside its own box and the page never scrolls sideways (browser test).
-    - *New shared pieces*: shadcn `Table` (vendored with `yarn --cwd web shadcn add table`; its wrapper already scrolls sideways).
-    - *Files*:
-      - `web/src/components/ui/table.tsx` (vendored)
-      - `course-view/students/student-table.tsx` (new)
-      - `student-list.tsx`
-      - [course-view.spec.ts](../web/tests/browser/admin-courses/course-view.spec.ts)
-      - this doc (tick step 3, Retro)
-    - *Done when*: step 3's *Done when*.
-- [ ] **4. The admin un-enrolls a student.** A dialog confirms, then the row shows Un-enrolled and Refunded.
+  - [x] **3e.** From medium screens up, the students show as a table with the same fields; phones keep the cards.
+- [ ] **4. The admin un-enrolls a student.** A dialog confirms, then the row shows Un-enrolled and Refunded. **Next** (run `/plan-create-implementation` first)
 - [ ] **5. The admin sorts the students.** Needs attention first is the default.
 - [ ] **6. The admin copies the addresses of every student with access.**
 
@@ -192,55 +177,14 @@ Where each wireframe state is built:
 - Why here: the table is the page's main job; sorting, Un-enroll and Copy addresses all work on its rows.
 - Needs: 1, 2.
 - Builds on: [style-guide.md](style-guide.md) §7 *Status pill* (the existing `--success`, `--muted` and `--secondary` pairs), [course-status-pill.tsx](../web/src/features/admin-courses/course-view/course-status-pill.tsx) and `EndedPanel` in [ended-panel.tsx](../web/src/features/courses/buy-panel/ended-panel.tsx) (the pill twins), `formatPrice` and `dateOnlyFormatter` in [formatters.ts](../web/src/lib/utils/formatters.ts), shadcn `Table` (copied in; no new dependency), lucide's `CircleAlert` icon.
-- **Sketch** *(temporary)*: the whole-page Students table in the API's order, with no Sort menu, no Copy button and no Un-enroll buttons; phones show one card per student.
-
-```
-PHONE (below md)                 DESKTOP (md and up)
-Students (8)                     Students (8)
-┌───────────────────────────┐    | Student    | Enrolled    | Access      | Paid | Payment    | Attention                       |
-│ Dana Cohen                │    | Dana Cohen | Nov 2, 2026 | (ACTIVE)    |  $99 | (PAID)     | ⚠ Already-enrolled email failed |
-│ dana@example.com          │    |  dana@…    |             |             |      |            | ⚠ Refund owed                   |
-│ Enrolled   Nov 2, 2026    │    | Lee Park   | Oct 30,2026 | (SUSPENDED) |  $79 | (PAID)     | ⚠ Suspension email failed       |
-│ Access     (ACTIVE)       │    | Noa Levi   | Nov 7, 2026 | (ACTIVE)    |(FREE)| —          | ⚠ Course access email failed    |
-│ Paid       $99            │    | Ari Stein  | Oct 28,2026 |(UN-ENROLLED)|  $79 | (REFUNDED) |                                 |
-│ Payment    (PAID)         │    …the API's order; no Sort, Copy or Un-enroll yet
-│ Attention  ⚠ Already-…    │
-│            ⚠ Refund owed  │
-└───────────────────────────┘
-A card with no Attention lines has no Attention row. Empty: "No students yet."
-```
-
 - Size: 5 commits (the overview guessed 3 to 4): a mechanical pill-sharing commit, one slice per field group on the cards, then the table.
-- Order *(temporary)*: the cards come before the table, so every commit in between looks right on a phone; until 3e the cards show at every width.
-- Words *(temporary)*: the word functions in `students/words/` take one enrollment and return words plus a colour pair; the student field components draw them, so cards and table share them.
-- Prices *(temporary)*: the Paid column follows [style-guide.md](style-guide.md) §8 (`$99`, `$49.50`) through `formatPrice`, not the whole-page sketch's `$99.00`.
-- Folders *(temporary)*: the student files go in `course-view/students/` (list, fields, cards, table) and `course-view/students/words/` (access, payment, attention), so no folder passes the limit; `web/src/components/` reaches the limit with `StatusPill`.
-- Flow *(temporary)*:
-
-```
-Admin opens the course's admin page                          existing (1c)
-└── Students section                                          existing (1c)
-    ├── no students → "No students yet."                      existing (1c)
-    └── students
-        ├── heading "Students (N)"                            3b
-        ├── cards below md                                    3b
-        │   table from md, scrolls in its own box             3e
-        └── per student
-            ├── Access: suspendedAt → Suspended + date        3b
-            │           revokedAt → Un-enrolled               3b
-            │           else → Active                         3b
-            ├── Paid: no payment → Free pill; else amount     3c
-            ├── Payment: none → "—"; succeeded → Paid;        3c
-            │            refunded/pending/expired → grey      3c
-            └── Attention
-                ├── email failed, not Un-enrolled → kind line 3d
-                ├── refund owed (any access) → Refund owed    3d
-                └── neither → nothing                         3d
-```
-
 - Test data: new `adminCourseWithEveryStudentCase` (the eight rows) and its `withEveryStudentCase` scenario, created in 3b.
-- Done when: in `dev:mock` with `withEveryStudentCase`, all eight rows match the sketch at desktop and phone width, and J3 is walked (Omar shows "Course access email failed").
+- Done when: in `dev:mock` with `withEveryStudentCase`, all eight rows match the whole-page sketch (in the API's order, without Sort, Copy or Un-enroll) at desktop and phone width, and J3 is walked (Omar shows "Course access email failed").
 - Can wait (3b): where Suspended's date sits beside its pill; what the heading reads with no students.
+- *Retro*:
+  - Planned 3 to 4 commits in the overview, then 5 in the plan; shipped 5 (3a to 3e).
+  - The owner's changes after using the page: not yet recorded.
+  - Rule friction: not yet recorded.
 
 ## Step 4. The admin un-enrolls a student
 

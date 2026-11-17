@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
@@ -47,8 +47,10 @@ describe("AdminCoursePage", () => {
       screen.getByText(adminCourseWithEnrollment.summary),
     ).toBeInTheDocument();
     expect(screen.getByText("Three small apps")).toBeInTheDocument();
-    expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
-    expect(screen.getByText("ada@example.com")).toBeInTheDocument();
+    // jsdom draws the cards and the table both; the table is one to look in.
+    const studentTable = within(screen.getByRole("table"));
+    expect(studentTable.getByText("Ada Lovelace")).toBeInTheDocument();
+    expect(studentTable.getByText("ada@example.com")).toBeInTheDocument();
   });
 
   it("dates each student in the course's time zone", async () => {
@@ -73,7 +75,9 @@ describe("AdminCoursePage", () => {
 
     await renderPage();
 
-    expect(screen.getByText("Oct 17, 2026")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("table")).getByText("Oct 17, 2026"),
+    ).toBeInTheDocument();
   });
 
   it("says no students yet when nobody has enrolled", async () => {

@@ -21,8 +21,11 @@ type AdminCoursePageProps = {
 };
 
 // The public course page's frame, so the course reads as buyers see it.
+// `w-full` keeps the frame at the screen's width: the root layout's body
+// (app/layout.tsx) is a flex column, which sizes an auto-margin child to its
+// content, so a wide students table would stretch the page sideways.
 function AdminCoursePageFrame({ children }: { children: ReactNode }) {
-  return <main className={`${pageFrameClasses} py-12`}>{children}</main>;
+  return <main className={`${pageFrameClasses} w-full py-12`}>{children}</main>;
 }
 
 type AdminCourseDetailsProps = {

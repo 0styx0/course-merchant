@@ -15,7 +15,10 @@ function formatCourseDate(isoTime: string, timeZone: string) {
   return dateOnlyFormatter(timeZone, "en-US").format(new Date(isoTime));
 }
 
-/** The student's name with their email under it; a long email wraps. */
+/**
+ * The student's name with their email under it. A long email wraps in a card;
+ * a table cell keeps it on one line and the table scrolls instead.
+ */
 export function StudentIdentity({
   customer,
 }: {
