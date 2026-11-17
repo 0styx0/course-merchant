@@ -21,16 +21,27 @@ import {
   uploadCourseImageHandlers,
 } from "./handlers/admin-courses/upload-course-image";
 import { getCourseImageAsAdminHandlers } from "./handlers/admin-courses/get-course-image-as-admin";
-import { revokeEnrollmentHandlers } from "./handlers/admin-courses/revoke-enrollment";
+import {
+  makeRememberedRevokeHandler,
+  revokeEnrollmentHandlers,
+} from "./handlers/admin-courses/revoke-enrollment";
 import { startCheckoutHandlers } from "./handlers/checkout/start-checkout";
 import { getCheckoutStatusHandlers } from "./handlers/checkout/get-checkout-status";
 import { makeRememberedCourse } from "./handlers/admin-courses/remembered-course";
+import { adminCourseWithEveryStudentCase } from "./fixtures/admin-courses";
 
 const scenario = "success"; // change to the mock you want to test
 
 // The four course endpoints share one store, so a saved course comes back as
 // saved in the `remembered` scenario.
 const rememberedCourse = makeRememberedCourse();
+
+// The `rememberedStudents` scenario serves the eight student rows from a second
+// store that only get and un-enroll share; a save would empty its students, so
+// update stays unwired there.
+const rememberedStudentsCourse = makeRememberedCourse(
+  adminCourseWithEveryStudentCase,
+);
 
 const updateCourseScenarios = {
   ...updateCourseHandlers,
@@ -45,6 +56,11 @@ const createCourseScenarios = {
 const getCourseAsAdminScenarios = {
   ...getCourseAsAdminHandlers,
   remembered: makeRememberedGetHandler(rememberedCourse),
+  rememberedStudents: makeRememberedGetHandler(rememberedStudentsCourse),
+};
+const revokeEnrollmentScenarios = {
+  ...revokeEnrollmentHandlers,
+  rememberedStudents: makeRememberedRevokeHandler(rememberedStudentsCourse),
 };
 const uploadCourseImageScenarios = {
   ...uploadCourseImageHandlers,
@@ -74,7 +90,7 @@ const endpointScenarios: Record<string, Record<string, RequestHandler>> = {
   updateCourse: updateCourseScenarios,
   uploadCourseImage: uploadCourseImageScenarios,
   getCourseImageAsAdmin: getCourseImageAsAdminHandlers,
-  revokeEnrollment: revokeEnrollmentHandlers,
+  revokeEnrollment: revokeEnrollmentScenarios,
   startCheckout: startCheckoutHandlers,
   getCheckoutStatus: getCheckoutStatusHandlers,
 };

@@ -1,9 +1,19 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { CreateCourseRequest, UpdateCourseRequest } from "@/lib/types";
+import type {
+  AdminCourse,
+  CreateCourseRequest,
+  UpdateCourseRequest,
+} from "@/lib/types";
 
-import { draftedAdminCourse } from "../../fixtures/admin-courses";
-import { makeRememberedCourse } from "./remembered-course";
+import {
+  adminCourseWithEveryStudentCase,
+  draftedAdminCourse,
+} from "../../fixtures/admin-courses";
+import {
+  makeRememberedCourse,
+  type RememberedCourse,
+} from "./remembered-course";
 
 const savedAt = new Date("2026-11-03T10:00:00Z");
 
@@ -36,6 +46,12 @@ afterEach(() => {
 describe("makeRememberedCourse", () => {
   it("starts with the drafted sample course", () => {
     expect(makeRememberedCourse().current()).toEqual(draftedAdminCourse);
+  });
+
+  it("starts with the course it is given", () => {
+    const store = makeRememberedCourse(adminCourseWithEveryStudentCase);
+
+    expect(store.current()).toEqual(adminCourseWithEveryStudentCase);
   });
 
   it("stores a created course with the request's fields and a drafted status", () => {
@@ -124,5 +140,84 @@ describe("makeRememberedCourse", () => {
     first.saveSentCourse(updateRequest);
 
     expect(makeRememberedCourse().current()).toEqual(draftedAdminCourse);
+  });
+
+  describe("revokeEnrollment", () => {
+    const dana = adminCourseWithEveryStudentCase.enrollments.find(
+      (enrollment) => enrollment.customer.name === "Dana Cohen",
+    )!;
+    const freeStudent = adminCourseWithEveryStudentCase.enrollments.find(
+      (enrollment) => enrollment.payment === null,
+    )!;
+
+    function enrollmentOf(store: RememberedCourse, customerId: string) {
+      return store
+        .current()
+        .enrollments.find(
+          (enrollment) => enrollment.customer.id === customerId,
+        );
+    }
+
+    it("sets revokedAt to now and turns a succeeded payment refunded", () => {
+      vi.useFakeTimers({ now: savedAt });
+      const store = makeRememberedCourse(adminCourseWithEveryStudentCase);
+
+      const wasKnown = store.revokeEnrollment(dana.customer.id);
+
+      expect(wasKnown).toBe(true);
+      expect(enrollmentOf(store, dana.customer.id)).toMatchObject({
+        revokedAt: savedAt.toISOString(),
+        refundStatus: "owed",
+        payment: { status: "refunded", amount: 9900 },
+      });
+    });
+
+    it("keeps no payment for a free student", () => {
+      vi.useFakeTimers({ now: savedAt });
+      const store = makeRememberedCourse(adminCourseWithEveryStudentCase);
+
+      store.revokeEnrollment(freeStudent.customer.id);
+
+      expect(enrollmentOf(store, freeStudent.customer.id)).toMatchObject({
+        revokedAt: savedAt.toISOString(),
+        payment: null,
+      });
+    });
+
+    it("keeps the first revokedAt on a repeat", () => {
+      vi.useFakeTimers({ now: savedAt });
+      const store = makeRememberedCourse(adminCourseWithEveryStudentCase);
+      store.revokeEnrollment(dana.customer.id);
+
+      vi.setSystemTime(new Date("2026-11-04T10:00:00Z"));
+      store.revokeEnrollment(dana.customer.id);
+
+      expect(enrollmentOf(store, dana.customer.id)?.revokedAt).toBe(
+        savedAt.toISOString(),
+      );
+    });
+
+    it("leaves the other students alone", () => {
+      const store = makeRememberedCourse(adminCourseWithEveryStudentCase);
+
+      store.revokeEnrollment(dana.customer.id);
+
+      const others = (course: AdminCourse) =>
+        course.enrollments.filter(
+          (enrollment) => enrollment.customer.id !== dana.customer.id,
+        );
+      expect(others(store.current())).toEqual(
+        others(adminCourseWithEveryStudentCase),
+      );
+    });
+
+    it("returns false and changes nothing for an unknown customer", () => {
+      const store = makeRememberedCourse(adminCourseWithEveryStudentCase);
+
+      const wasKnown = store.revokeEnrollment("no-such-customer");
+
+      expect(wasKnown).toBe(false);
+      expect(store.current()).toEqual(adminCourseWithEveryStudentCase);
+    });
   });
 });

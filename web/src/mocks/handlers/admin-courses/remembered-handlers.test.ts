@@ -3,9 +3,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { AdminCourse, UpdateCourseRequest } from "@/lib/types";
 
-import { draftedAdminCourse } from "../../fixtures/admin-courses";
+import {
+  adminCourseWithEveryStudentCase,
+  draftedAdminCourse,
+} from "../../fixtures/admin-courses";
 import { makeRememberedCreateHandler } from "./create-course";
 import { makeRememberedGetHandler } from "./get-course-as-admin";
+import { makeRememberedRevokeHandler } from "./revoke-enrollment";
 import { makeRememberedUpdateHandler } from "./update-course";
 import { makeRememberedUploadHandler } from "./upload-course-image";
 import { MOCK_API_BASE_URL } from "../../mock-api";
@@ -116,7 +120,7 @@ describe("remembered handlers", () => {
     });
   });
 
-  it("x", async () => {
+  it("starts each store with the drafted course", async () => {
     useRememberedHandlers();
     await sendJson("PUT", courseUrl, request);
 
@@ -132,5 +136,47 @@ describe("remembered handlers", () => {
     await sendJson("PUT", courseUrl, { ...request, name: "Second name" });
 
     expect((await getCourse()).name).toBe("Second name");
+  });
+
+  describe("revoke handler", () => {
+    const dana = adminCourseWithEveryStudentCase.enrollments[0];
+    const revokeUrl = `${courseUrl}/enrollments/${dana.customer.id}/revocation`;
+
+    function useRememberedStudents() {
+      const store = makeRememberedCourse(adminCourseWithEveryStudentCase);
+      server.use(
+        makeRememberedGetHandler(store),
+        makeRememberedRevokeHandler(store),
+      );
+      return store;
+    }
+
+    it("answers 204 and then shows the student un-enrolled", async () => {
+      vi.useFakeTimers({ now: savedAt, toFake: ["Date"] });
+      useRememberedStudents();
+
+      const revoked = await fetch(revokeUrl, { method: "POST" });
+
+      expect(revoked.status).toBe(204);
+      expect((await getCourse()).enrollments[0]).toMatchObject({
+        revokedAt: savedAt.toISOString(),
+        payment: { status: "refunded" },
+      });
+    });
+
+    it("answers 404 ENROLLMENT_NOT_FOUND for an unknown customer and keeps the store", async () => {
+      const store = useRememberedStudents();
+
+      const revoked = await fetch(
+        `${courseUrl}/enrollments/no-such-customer/revocation`,
+        { method: "POST" },
+      );
+
+      expect(revoked.status).toBe(404);
+      expect(await revoked.json()).toMatchObject({
+        code: "ENROLLMENT_NOT_FOUND",
+      });
+      expect(store.current()).toEqual(adminCourseWithEveryStudentCase);
+    });
   });
 });

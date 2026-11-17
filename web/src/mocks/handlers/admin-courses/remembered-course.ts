@@ -37,13 +37,34 @@ function buildStoredCourse(
   };
 }
 
+type Enrollment = AdminCourse["enrollments"][number];
+
+function refundPayment(payment: Enrollment["payment"]) {
+  if (payment?.status !== "succeeded") return payment;
+  return { ...payment, status: "refunded" as const };
+}
+
+function buildRevokedEnrollment(enrollment: Enrollment, revokedAt: Date) {
+  return {
+    ...enrollment,
+    revokedAt: enrollment.revokedAt ?? revokedAt.toISOString(),
+    payment: refundPayment(enrollment.payment),
+  };
+}
+
+function hasCustomer(enrollment: Enrollment, customerId: string) {
+  return enrollment.customer.id === customerId;
+}
+
 /**
- * Makes a store holding one course that the create, update, upload and get
- * handlers share, so a saved course comes back as saved. It starts with the
- * drafted sample course.
+ * Makes a store holding one course that the create, update, upload, get and
+ * un-enroll handlers share, so a saved course comes back as saved. It starts
+ * with the given course, or the drafted sample course.
  */
-export function makeRememberedCourse() {
-  let storedCourse: AdminCourse = draftedAdminCourse;
+export function makeRememberedCourse(
+  startCourse: AdminCourse = draftedAdminCourse,
+) {
+  let storedCourse: AdminCourse = startCourse;
 
   return {
     current: () => storedCourse,
@@ -52,6 +73,27 @@ export function makeRememberedCourse() {
     },
     saveUploadedImage: () => {
       storedCourse = { ...storedCourse, image: buildImageVersion(new Date()) };
+    },
+    /**
+     * Un-enrolls the student: sets revokedAt once and marks a succeeded payment
+     * refunded. refundStatus stays, because the owner still refunds in Stripe.
+     * Returns false when the course has no student with that customer id.
+     */
+    revokeEnrollment: (customerId: string) => {
+      const isKnown = storedCourse.enrollments.some((enrollment) =>
+        hasCustomer(enrollment, customerId),
+      );
+      if (!isKnown) return false;
+      const revokedAt = new Date();
+      storedCourse = {
+        ...storedCourse,
+        enrollments: storedCourse.enrollments.map((enrollment) =>
+          hasCustomer(enrollment, customerId)
+            ? buildRevokedEnrollment(enrollment, revokedAt)
+            : enrollment,
+        ),
+      };
+      return true;
     },
   };
 }

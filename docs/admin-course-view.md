@@ -23,28 +23,12 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3c.** The admin sees what each student paid and the state of the payment on their card.
   - [x] **3d.** Each card lists what the owner must act on, as red Attention lines: a failed email by its kind, and Refund owed.
   - [x] **3e.** From medium screens up, the students show as a table with the same fields; phones keep the cards.
-- [ ] **4. The admin un-enrolls a student.** A dialog confirms, then the row shows Un-enrolled and Refunded.
-  - [x] **4a.** The web server can un-enroll a student through the API (not used yet; 4b uses it).
+- [x] **4. The admin un-enrolls a student.** A dialog confirms, then the row shows Un-enrolled and Refunded.
+  - [x] **4a.** The web server can un-enroll a student through the API.
   - [x] **4b.** The admin clicks Un-enroll on a student, confirms in a dialog, and the page re-renders with the student un-enrolled.
-  - [ ] **4c.** In `dev:mock` and the browser test, an un-enrolled student's row turns Un-enrolled and Refunded after the re-render. **Next**
-    - *Behaviours*:
-      - The mock store can start from any course, and existing callers keep the drafted one.
-      - Un-enrolling in the store sets `revokedAt` to now and turns a `succeeded` payment `refunded`. A free student keeps no payment.
-      - A repeat keeps the first `revokedAt`.
-      - The store's handler answers 204, or 404 `ENROLLMENT_NOT_FOUND` for an unknown customer.
-      - New `dev:mock` scenario `rememberedStudents`: get and un-enroll share a store holding the eight rows. Update stays unwired there, because a save empties the store's students.
-      - Browser test (J1): Un-enroll Dana and confirm, and her row shows Un-enrolled, Refunded, Refund owed and no button. jsdom can't run a Server Action and Next's refresh.
-    - *New shared pieces*: none.
-    - *Files*:
-      - [remembered-course.ts](../web/src/mocks/handlers/admin-courses/remembered-course.ts)
-      - [revoke-enrollment.ts](../web/src/mocks/handlers/admin-courses/revoke-enrollment.ts) (exists from 4a; gains the remembered handler)
-      - [server.ts](../web/src/mocks/server.ts)
-      - [course-view.spec.ts](../web/tests/browser/admin-courses/course-view.spec.ts) (one test)
-      - this doc: tick step 4, make step 5 the next one, add the Retro.
-    - *Done when*:
-      - J1 walked in `dev:mock` with `rememberedStudents`
-      - the spec passes
-- [ ] **5. The admin sorts the students.** Needs attention first is the default.
+  - [x] **4c.** In `dev:mock` and the browser test, an un-enrolled student's row turns Un-enrolled and Refunded after the re-render.
+- [ ] **5. The admin sorts the students.** Needs attention first is the default. **Next**
+  - Plan it with `/plan-create-implementation`: milestone 5's section (*Step 5*) has the sketch and size; *Done when* is J2.
 - [ ] **6. The admin copies the addresses of every student with access.**
 
 ## Terms
@@ -115,7 +99,7 @@ Where each wireframe state is built:
 - To choose a scenario for `dev:mock`, edit the `scenario` constant in [server.ts](../web/src/mocks/server.ts); an endpoint without that scenario serves its `success`.
 - Existing admin-get scenarios in [get-course-as-admin.ts](../web/src/mocks/handlers/admin-courses/get-course-as-admin.ts): `success` (no students), `withEnrollment` (one), `notFound`, `invalidId`, `error`.
 - Milestone 1 added `published`, a published course with a price in effect; every other fixture is a draft, so none shows the Published pill or the public link.
-- Milestone 3 adds `withEveryStudentCase` (the eight rows above); milestone 4 adds `revokeEnrollmentHandlers`.
+- Milestone 3 adds `withEveryStudentCase` (the eight rows above); milestone 4 adds `revokeEnrollmentHandlers` and the `rememberedStudents` scenario (get and un-enroll share one store of the eight rows).
 - Check a commit with `yarn --cwd web check:changed` (or `api`).
 
 ## Principles
@@ -215,58 +199,14 @@ Where each wireframe state is built:
 - Why here: the page's one action that changes data, built after the rows it acts on.
 - Needs: 3.
 - Builds on: `revokeEnrollment` in [openapi-v1.yaml](../api/openapi/openapi-v1.yaml) (204, a repeat is also 204, 404 `ENROLLMENT_NOT_FOUND`), [delete-confirmation.tsx](../web/src/features/admin-courses/edit-course/status/delete-confirmation.tsx) (dialog twin), the edit save's `refresh()` (the row in [course-edit.md](course-edit.md) that starts "After a save, the details action calls Next's `refresh()`"), the remembered course ([remembered-course.ts](../web/src/mocks/handlers/admin-courses/remembered-course.ts)).
-- **Sketch** *(temporary)*: milestone 3 plus an `[Un-enroll]` button on each row with no `revokedAt`, and its dialog. Phones put the button full width at the bottom of the card.
-
-```
-| Dana Cohen | Nov 2, 2026 | (Active)    | $99.00 | (Paid)     | ⚠ … | [Un-enroll] |
-| Rina Gold  | Oct 29,2026 | (Suspended) | $79.00 | (Refunded) |     |             |
-
-+--------------------------------------------------------------+
-| Un-enroll Dana Cohen?                                        |
-| Refund their payment in Stripe first. Un-enrolling removes   |
-| their access and marks the payment Refunded; it doesn't      |
-| contact Stripe.   (free: "Un-enrolling removes their access   |
-|                    to the course.")                          |
-| [ProblemAlert: API title / detail]   ← only after a failure  |
-|                      [ Keep student ]  [ Un-enroll ] (red)   |
-+--------------------------------------------------------------+
-```
 - Size: 3 to 4 commits: the API wrapper, action and mock handler, then the dialog and button, then a browser test of J1.
 - Risk: a payments area, so `/security-review` on each commit.
 - Test data: new `revokeEnrollmentHandlers` (`success`, `notFound`, `error`) that update the remembered course, so the row changes after the refresh.
 - Done when: J1 walked in `dev:mock`; a failed call shows the API's message in the dialog.
-- Flow *(temporary)*, with the commit that builds each step:
-
-```
-Admin opens the course's admin page                        existing (3e)
-└── Row with no revokedAt shows [Un-enroll]                 4b
-    └── Click → dialog "Un-enroll Dana Cohen?"              4b
-        ├── Keep student / Escape → closes, no request      4b
-        └── Confirm → "Un-enrolling…", buttons disabled     4b
-            └── Action checks both ids                      4a
-                ├── malformed → VALIDATION_FAILED, no request, shown in dialog  4a/4b
-                └── POST …/revocation                       4a
-                    ├── 204 → refresh(); page re-rendered in the same reply  4a
-                    │   └── dialog closes; row Un-enrolled, Refunded, no button  4b (mock 4c)
-                    ├── problem → API words in dialog, open, no refresh  4a/4b
-                    └── throws → fixed "Couldn't un-enroll…", dialog open  4b
-```
-
-- Folder *(temporary)*: `course-view/students/unenroll/` holds the action, the button, the dialog and their tests, because `students/` is near the files-per-folder limit.
-- One rule *(temporary)*: `UnenrollButton` draws nothing when `revokedAt` is set, so the table and the cards share the rule.
-- Pending *(temporary)*: the button runs the action inside `useTransition`, as the edit save does. `refresh()` puts the re-rendered page in the action's reply ([server-actions.md](../web/node_modules/next/dist/docs/01-app/02-guides/server-actions.md), "re-renders the current route"), so the dialog likely stays pending until the row has changed; 4b's outline confirms it.
-- Reuse *(temporary)*: the action checks ids with `isUuid` from [is-uuid.ts](../web/src/lib/ids/is-uuid.ts), as the image route does. Messages use `ProblemAlert`'s title and detail; the thrown message has its own words, because the course form's reads "Couldn't save the course".
-- Failure table *(temporary)*:
-
-| Actor | Abuse or failure | What happens | Test |
-|---|---|---|---|
-| Admin | double-click | buttons disabled; API repeat is 204 | 4b |
-| Admin | second tab, already done | 204 → success | 4a |
-| Admin | forgets the Stripe refund | dialog says refund first | 4b |
-| Crafted call | bad ids | `VALIDATION_FAILED`, no API call | 4a |
-| API | 404 / 500 / 401 | API words, no refresh | 4a, 4b |
-| API | down or over 10 s | fixed message | 4b |
-| Other site | cross-site post | Next's Origin check | none new |
+- *Retro*:
+  - Planned 3 to 4 commits in the overview, then 3 (4a, 4b, 4c) in the plan; shipped 3.
+  - The owner's changes after using the page: not yet recorded.
+  - Rule friction: the 10-files-per-folder limit pushed the dialog, button and action into a new `unenroll/` folder.
 
 ## Step 5. The admin sorts the students
 

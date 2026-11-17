@@ -1,7 +1,13 @@
 import type { Page } from "@playwright/test";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
-import { getCourseAsAdminHandlers } from "@/mocks/handlers/admin-courses/get-course-as-admin";
+import { adminCourseWithEveryStudentCase } from "@/mocks/fixtures/admin-courses";
+import {
+  getCourseAsAdminHandlers,
+  makeRememberedGetHandler,
+} from "@/mocks/handlers/admin-courses/get-course-as-admin";
+import { makeRememberedCourse } from "@/mocks/handlers/admin-courses/remembered-course";
+import { makeRememberedRevokeHandler } from "@/mocks/handlers/admin-courses/revoke-enrollment";
 
 const { test, expect } = msw;
 
@@ -79,4 +85,29 @@ test("scrolls the table inside its own box, not the page, at 768px", async ({
     (box) => box.scrollWidth - box.clientWidth,
   );
   expect(tableBoxOverflow).toBeGreaterThan(0);
+});
+
+// jsdom can't run a Server Action or Next's refresh, so only a browser shows the row change after the dialog confirms.
+test("shows an un-enrolled student's row as Un-enrolled and Refunded after confirming", async ({
+  page,
+  msw,
+}) => {
+  const store = makeRememberedCourse(adminCourseWithEveryStudentCase);
+  msw.use(makeRememberedGetHandler(store), makeRememberedRevokeHandler(store));
+  await page.setViewportSize({ width: 768, height: 800 });
+  await page.goto(adminCoursePath);
+  const danaRow = page.getByRole("row", { name: /Dana Cohen/ });
+
+  await danaRow.getByRole("button", { name: "Un-enroll Dana Cohen" }).click();
+  await page
+    .getByRole("alertdialog", { name: "Un-enroll Dana Cohen?" })
+    .getByRole("button", { name: "Un-enroll", exact: true })
+    .click();
+
+  await expect(danaRow).toContainText("Un-enrolled");
+  await expect(danaRow).toContainText("Refunded");
+  await expect(danaRow).toContainText("Refund owed");
+  await expect(danaRow.getByRole("button", { name: /Un-enroll/ })).toHaveCount(
+    0,
+  );
 });
