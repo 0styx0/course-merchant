@@ -30,7 +30,44 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **5. The admin sorts the students.** Newest enrolled first is the default.
   - [x] **5a.** The students list shows newest enrolled first, and the page can put them in three other orders.
   - [x] **5b.** The admin picks an order from a "Sort by" menu beside the Students heading, on phones and on wide screens.
-- [ ] **6. The admin copies the addresses of every student with access.** **Next** (not split into commits yet; run `/plan-create-implementation` first)
+- [ ] **6. The admin copies the addresses of every student with access.**
+  - [ ] **6a.** The admin clicks "Copy active students' addresses" beside the Sort menu and gets the Active students' addresses on the clipboard. **Next**
+    - *Behaviours*:
+      - The address list holds Active students only: the eight-row fixture gives Sam, Noa, Omar and Dana, in the API's order.
+      - The list leaves out Suspended students (Lee, Rina) and Un-enrolled students (Ari, Ben).
+      - The list is empty for no students, and for students with none Active.
+      - A click writes the addresses joined by ", " to the clipboard.
+      - After a click the note reads "Copied all 4 active students' addresses." in a `role="status"` line.
+      - With one address the note reads "Copied all 1 active student's address." ("all" stays, so the admin knows the copy took everyone).
+      - The button takes the list in the API's order, so picking another sort leaves the clipboard text the same.
+      - With no students the button is absent, like the Sort menu.
+      - An un-enroll that changes the addresses clears the old note, because the list keys the button by the addresses.
+    - *New shared pieces*: none (both pieces live in the copy folder, and only the Students list uses them).
+    - *Files*:
+      - `web/src/features/admin-courses/course-view/students/copy-addresses/active-student-addresses.ts` (+ test; calls `studentAccess` directly, as the sort's `activeRank` does)
+      - `web/src/features/admin-courses/course-view/students/copy-addresses/copy-addresses-button.tsx` (+ test, with user-event's clipboard stub)
+      - [student-list.tsx](../web/src/features/admin-courses/course-view/students/student-list.tsx) (+ test; the header's right side stacks Sort, then Copy)
+      - the new `copy-addresses/` folder is a topic folder like `sort/` and `unenroll/`, so `students/` gains no loose files
+    - *Settled*: the Decision rows on the copy button's words and on when it hides.
+    - *Done when*: `yarn --cwd web check:changed` passes, and `dev:mock` with `withEveryStudentCase` copies the four addresses.
+  - [ ] **6b.** The admin sees why Copy can't run: no Active students, or a browser that refuses the copy.
+    - *Behaviours*:
+      - With students but none Active, the button is disabled and a grey line reads "No active students to copy."
+      - When `writeText` rejects, a red `role="alert"` line reads "Couldn't copy the addresses. Your browser blocked the clipboard; click again or allow clipboard access."
+      - A browser without `navigator.clipboard` (plain http) shows the same red line.
+      - A later successful click replaces the red line with the Copied note.
+      - Browser test, J4 at desktop width: click, then read the real clipboard back as Sam, Noa, Omar and Dana's addresses.
+        - It uses a `describe` with `test.use({ permissions: ["clipboard-read", "clipboard-write"] })`, because jsdom has only user-event's stub.
+    - *New shared pieces*: none
+    - *Files*:
+      - `copy-addresses-button.tsx` (+ test)
+      - [course-view.spec.ts](../web/tests/browser/admin-courses/course-view.spec.ts)
+      - this doc: tick, retro, J4's words, the whole-page sketch's button and empty line, and the state table row
+    - *Settled*: the Decision rows on the copy button's words, on when it hides, and on a refused copy.
+    - *Done when*:
+      - J4 walked in `dev:mock`;
+      - with `rememberedStudents`, un-enrolling Sam clears the note and the next copy says 3;
+      - `check:changed` and the browser spec pass.
 
 ## Terms
 
@@ -137,6 +174,9 @@ Where each wireframe state is built:
 | Active first lists the Active students, then everyone else | Neither Suspended nor Un-enrolled students have access (revisit after use) | Three groups, Active, Suspended, Un-enrolled (adds a rank that only old data reaches; low) |
 | The chosen order lives in the page's browser state, and a reload goes back to the default | Sorting is instant, and Next keeps `useState` through Un-enroll's `refresh()` ([use-router docs](../web/node_modules/next/dist/docs/01-app/03-api-reference/04-functions/use-router.md)) | `?sort=` in the URL (survives reloads and links, but each change re-asks the API and the page must check the value; medium) |
 | The Sort menu is shadcn's Base UI `select` | It looks the same in every browser, like the site's other popups | shadcn `native-select` (opens the phone's own picker with less code; low) |
+| The copy button reads "Copy active students' addresses" and its note "Copied all 4 active students' addresses.", with "all" even for one | The admin reads that Suspended and Un-enrolled students are left out before clicking ([style-guide.md](style-guide.md) §9 rule 6), and "all" says the count is everyone with access (revisit after use) | "Copy addresses" with a grey "Active students only (4 of 8)" line (two lines to read; low); the count in the button (the word "active" alone carries the limit; low) |
+| With no students the Copy button hides, like the Sort menu; with students but none Active it shows disabled with "No active students to copy." | "No students yet." already explains an empty list, and a disabled button there would repeat it (revisit after use) | Disabled on an empty list too (two messages for one fact; low) |
+| A refused copy shows a red line asking the admin to click again or allow clipboard access | On HTTPS after a click the browser almost never refuses, so a fallback box would rarely show | A read-only box of the addresses to copy by hand (always works, but more UI and tests for a rare case; low) |
 | Refund owed shows on every row; failed-email lines skip students whose access reads Un-enrolled | Money owed stays owed after an un-enroll, but the owner has nothing to resend to a student they removed. The API reads an un-enrolled student with no email as `{ access_granted, failed }` (the `latestEmail` rule), so the page must skip it | Skipping un-enrolled rows entirely (hides a refund still owed; low) |
 
 ## Step 1. The admin opens a course's admin page
@@ -246,15 +286,49 @@ Empty: "Students (0)", "No students yet.", no menu.
 - Why here: it needs milestone 3's access words and nothing from 4 or 5.
 - Needs: 3.
 - Builds on: milestone 3's access function; the browser's [Clipboard API `writeText`](https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText) (needs HTTPS or localhost and a click; both hold here).
-- **Sketch:** the whole-page sketch.
-- Size: 2 commits: the address list, then the button with its "Copied 4 addresses" note and disabled state.
+- **Sketch:** milestone 5's header plus the Copy button:
+
+```
+Students (8)                        Sort by [ Newest enrolled first ▾ ]
+                                    [ Copy active students' addresses ]
+                                    Copied all 4 active students' addresses.
+
+Refused:   Couldn't copy the addresses. Your browser blocked the
+           clipboard; click again or allow clipboard access.   (red)
+None Active (Ari, Ben only):
+           [ Copy active students' addresses ]  (disabled)
+           No active students to copy.
+Empty:     Students (0) · "No students yet." · no menu, no button
+Phone:     heading, then Sort, then a full-width Copy button
+```
+
+- Size: 2 commits, as the overview planned: a working button first (6a), then its disabled and refused states and the browser test (6b).
+- Test data: existing `withEveryStudentCase` and `rememberedStudents`; no new fixture.
 - Done when: J4 walked; the clipboard holds exactly the active students' addresses.
-- Can wait: what shows if the browser refuses the copy.
+- Flow *(temporary)*:
+
+```
+Admin opens the course's admin page
+├── no students → no Sort, no Copy button                          6a
+└── students → Copy button beside Sort                             6a
+    ├── none Active → disabled, "No active students to copy."      6b
+    └── some Active → admin clicks Copy                            6a
+        ├── clipboard write works → "Copied all N active students'  6a
+        │   addresses." (clipboard holds them, API order)
+        └── write refused / no clipboard → red line, click again    6b
+Admin un-enrolls a student → page re-renders → note cleared        6a
+```
+
+- Design notes *(temporary)*:
+  - The address list reuses `studentAccess` from [access-words.ts](../web/src/features/admin-courses/course-view/students/words/access-words.ts), so Copy and "Active first" share one access rule.
+  - The Copy button is a client component that holds its own note state, as `UnenrollButton` holds its problem.
+  - One `try/catch` around `navigator.clipboard.writeText` covers both a rejection and a missing clipboard.
+  - The button is `variant="outline"`, full width below `md`, like Un-enroll.
+  - Clipboard stub: user-event's `setup()` puts a fake clipboard on `navigator` that jsdom tests read back; the browser test uses Chromium's real one.
 
 ## Open questions
 
 - Milestone 1, can wait: the panel's words.
-- Milestone 6, can wait: what shows if the browser refuses the copy.
 
 ## Out of scope
 
