@@ -67,7 +67,7 @@ Bullets only, at most ~500 words (this overrides the word cap in chat-rules.md),
 3. **Brief:** the 5 bullets from step 1, then the journeys.
 4. **Whole-page sketch**, when the area has screens.
 5. **Milestones:** each as its Status line, then *Needs*, *Size* and *Done when* on one line, and its *Sketch* for an area with screens.
-6. **Proposed decision rows:** the exact `| Decision | Why | Rejected |` text. For each rejected option: what it would give, cost and complexity. Only strong contenders. A row deciding what shows, where, or in what order on a page ends its *Why* with "(revisit after use)".
+6. **Proposed decision rows:** the exact row text, as one markdown table that starts with its header and separator lines (`| Decision | Why | Rejected |`, then `|---|---|---|`), so it renders as a table; rows without those two lines show as plain text. For each rejected option: what it would give, cost and complexity. Only strong contenders. A row deciding what shows, where, or in what order on a page ends its *Why* with "(revisit after use)".
 7. **Open questions:** one line each, with the milestone and *blocks the split* or *can wait*.
 8. **Out of scope.**
 9. **Review result:** one line per accepted or rejected finding.

@@ -23,7 +23,69 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3c.** The admin sees what each student paid and the state of the payment on their card.
   - [x] **3d.** Each card lists what the owner must act on, as red Attention lines: a failed email by its kind, and Refund owed.
   - [x] **3e.** From medium screens up, the students show as a table with the same fields; phones keep the cards.
-- [ ] **4. The admin un-enrolls a student.** A dialog confirms, then the row shows Un-enrolled and Refunded. **Next** (run `/plan-create-implementation` first)
+- [ ] **4. The admin un-enrolls a student.** A dialog confirms, then the row shows Un-enrolled and Refunded.
+  - [ ] **4a.** The web server can un-enroll a student through the API (not used yet; 4b uses it). **Next**
+    - *Behaviours*:
+      - Un-enrolling sends `POST …/enrollments/{customerId}/revocation`, calls Next's `refresh()` once (the server re-renders the page and sends it back in the same reply, with no browser reload) and returns success.
+      - A repeat (the API's 204 again) is a success too.
+      - An API problem (404 `ENROLLMENT_NOT_FOUND`, 500) comes back with the API's title and detail, with no refresh.
+      - A malformed course or customer id returns `VALIDATION_FAILED` ("The course or student id is not valid.") with no API call and no refresh.
+      - The action returns `Result<null, ProblemDetails>`, not the course form's result, because it has no fields to mark. Its problem lives in the action file.
+    - *New shared pieces*: `revokeEnrollmentHandlers` (`success`, `notFound`, `error`), because 4b's tests and 4c's store use them.
+    - *Files*:
+      - [admin-courses.api.ts](../web/src/features/admin-courses/api/admin-courses.api.ts) (`revokeEnrollment` wrapper)
+      - `web/src/features/admin-courses/course-view/students/unenroll/unenroll-student.action.ts` (new folder)
+      - `web/src/mocks/handlers/admin-courses/revoke-enrollment.ts` (its folder stays under the limit)
+      - [server.ts](../web/src/mocks/server.ts)
+    - *Settled*:
+      - [payments/refunds.md](payments/refunds.md) rows on un-enroll
+      - the Principle "The page shows the API's words on failure"
+    - *Done when*:
+      - the action's tests pass
+      - `check:changed` is green (knip counts the test's import as use)
+      - `/security-review` is clean
+  - [ ] **4b.** The admin clicks Un-enroll on a student, confirms, and the page re-renders with the student un-enrolled.
+    - *Behaviours*:
+      - Every row and card whose `revokedAt` is empty shows "Un-enroll" (accessible name "Un-enroll Dana Cohen"). Rina, Ari and Ben show none.
+      - The dialog asks "Un-enroll Dana Cohen?" and, for a paid student, says to refund in Stripe first.
+      - A free student's dialog (Noa) says only that access ends.
+      - "Keep student" or Escape closes it and sends nothing.
+      - Confirming calls the action with the course and customer ids. While it runs, the button reads "Un-enrolling…", both buttons are disabled and Escape keeps the dialog open.
+      - Success closes the dialog once the re-rendered page has arrived.
+      - A refusal keeps the dialog open with the API's title and detail. Confirming again clears it first.
+      - A thrown call shows "Couldn't un-enroll the student" / "Something went wrong while un-enrolling. Check your connection and try again."
+      - Reopening after a failure shows no old message.
+    - *New shared pieces*: `UnenrollButton`, because the table and the cards both draw it.
+    - *Files*:
+      - `…/students/unenroll/unenroll-button.tsx` (client: button, state, action call)
+      - `…/students/unenroll/unenroll-dialog.tsx` (the dialog, a twin of `DeleteConfirmation`)
+      - [student-table.tsx](../web/src/features/admin-courses/course-view/students/student-table.tsx) (gains a last column)
+      - [student-cards.tsx](../web/src/features/admin-courses/course-view/students/student-cards.tsx)
+      - [student-list.tsx](../web/src/features/admin-courses/course-view/students/student-list.tsx) (passes `courseId`)
+      - [page.tsx](../web/src/app/admin/(signed-in)/courses/[courseId]/page.tsx) (passes `course.id`)
+    - *Needs*: 4a.
+    - *Settled*: the Decision rows on Un-enroll.
+    - *Done when*:
+      - component tests pass
+      - in `dev:mock` with `withEveryStudentCase`, Dana, Omar, Noa, Lee and Sam show the button, and the dialog opens and closes on confirm
+  - [ ] **4c.** In `dev:mock` and the browser test, an un-enrolled student's row turns Un-enrolled and Refunded after the re-render.
+    - *Behaviours*:
+      - The mock store can start from any course, and existing callers keep the drafted one.
+      - Un-enrolling in the store sets `revokedAt` to now and turns a `succeeded` payment `refunded`. A free student keeps no payment.
+      - A repeat keeps the first `revokedAt`.
+      - The store's handler answers 204, or 404 `ENROLLMENT_NOT_FOUND` for an unknown customer.
+      - New `dev:mock` scenario `rememberedStudents`: get and un-enroll share a store holding the eight rows. Update stays unwired there, because a save empties the store's students.
+      - Browser test (J1): Un-enroll Dana and confirm, and her row shows Un-enrolled, Refunded, Refund owed and no button. jsdom can't run a Server Action and Next's refresh.
+    - *New shared pieces*: none.
+    - *Files*:
+      - [remembered-course.ts](../web/src/mocks/handlers/admin-courses/remembered-course.ts)
+      - `web/src/mocks/handlers/admin-courses/revoke-enrollment.ts` (the remembered handler)
+      - [server.ts](../web/src/mocks/server.ts)
+      - [course-view.spec.ts](../web/tests/browser/admin-courses/course-view.spec.ts) (one test)
+      - this doc: tick step 4, make step 5 the next one, add the Retro.
+    - *Done when*:
+      - J1 walked in `dev:mock` with `rememberedStudents`
+      - the spec passes
 - [ ] **5. The admin sorts the students.** Needs attention first is the default.
 - [ ] **6. The admin copies the addresses of every student with access.**
 
@@ -116,6 +178,10 @@ Where each wireframe state is built:
 | The admin course answer adds each student's enrolled time, payment currency and the latest email's kind | The page can't work these out: free students have no payment time, and the status alone doesn't say which email | A separate students endpoint (more contract for one page) |
 | Sorting runs in the browser over the full answer | The answer already holds every student, so the contract stays as it is | API sort parameters (contract, tests and paging for small lists) |
 | Un-enroll confirms in a dialog, like Delete | [style-guide.md](style-guide.md) §7 *Button* keeps the destructive fill inside a confirm dialog, and [course-edit.md](course-edit.md) already rejected an inline confirm for Delete; the twin exists | An inline confirm in the row |
+| Un-enroll shows on every student whose `revokedAt` is empty, Suspended included | Un-enrolling a suspended student still records their payment as refunded; keying on Active would leave Lee's payment `succeeded` for good (revisit after use) | Active rows only (hides Lee's; low) |
+| A paid student's Un-enroll dialog says to refund in Stripe first | The API records Refunded without asking Stripe, so un-enrolling first shows Refunded while the money stays taken (revisit after use) | An "I refunded in Stripe" checkbox (an extra click, same trust; low) |
+| After un-enrolling, the action calls `refresh()` and the dialog stays open until the re-rendered page arrives | The row shows what the API stored, as the edit save does | Changing the row in the browser first (`useOptimistic`; can show Refunded the API never stored; medium) |
+| Un-enroll's dialog composes shadcn's `AlertDialog` parts beside `DeleteConfirmation`, not one shared confirm component | The shared part is shadcn's already; Un-enroll stays open with a pending state and errors inside, Delete closes and errors show above the form | One `ConfirmDialog` (a refactor commit plus props Delete never uses; low) |
 | "Copy addresses" copies the active students' email addresses, comma-separated, to the clipboard | One way that works with any mail app and any class size; no outbox kind, template or sender | A `mailto:` link with Bcc (some mail apps cut long links, so it needs a fallback anyway); server-sent bulk email (a new email kind, template and limits) |
 | The page uses the public 1200px frame; a table too wide for the screen scrolls inside its own box | One frame keeps the course block the same on both pages, and the page never scrolls sideways (revisit after use) | The edit page's 672px column (too narrow for seven columns); a wider admin frame (a second frame to keep in step) |
 | The contract calls the enrollment's `purchasedAt` `enrolledAt` | Free students enroll without buying, and the page's column reads "Enrolled" | Renaming the column (a migration for one word; low); `purchasedAt` in the contract (wrong for free courses) |
@@ -191,12 +257,58 @@ Where each wireframe state is built:
 - Why here: the page's one action that changes data, built after the rows it acts on.
 - Needs: 3.
 - Builds on: `revokeEnrollment` in [openapi-v1.yaml](../api/openapi/openapi-v1.yaml) (204, a repeat is also 204, 404 `ENROLLMENT_NOT_FOUND`), [delete-confirmation.tsx](../web/src/features/admin-courses/edit-course/status/delete-confirmation.tsx) (dialog twin), the edit save's `refresh()` (the row in [course-edit.md](course-edit.md) that starts "After a save, the details action calls Next's `refresh()`"), the remembered course ([remembered-course.ts](../web/src/mocks/handlers/admin-courses/remembered-course.ts)).
-- **Sketch:** milestone 3 plus an `[Un-enroll]` button per row and its dialog.
+- **Sketch** *(temporary)*: milestone 3 plus an `[Un-enroll]` button on each row with no `revokedAt`, and its dialog. Phones put the button full width at the bottom of the card.
+
+```
+| Dana Cohen | Nov 2, 2026 | (Active)    | $99.00 | (Paid)     | ⚠ … | [Un-enroll] |
+| Rina Gold  | Oct 29,2026 | (Suspended) | $79.00 | (Refunded) |     |             |
+
++--------------------------------------------------------------+
+| Un-enroll Dana Cohen?                                        |
+| Refund their payment in Stripe first. Un-enrolling removes   |
+| their access and marks the payment Refunded; it doesn't      |
+| contact Stripe.   (free: "Un-enrolling removes their access   |
+|                    to the course.")                          |
+| [ProblemAlert: API title / detail]   ← only after a failure  |
+|                      [ Keep student ]  [ Un-enroll ] (red)   |
++--------------------------------------------------------------+
+```
 - Size: 3 to 4 commits: the API wrapper, action and mock handler, then the dialog and button, then a browser test of J1.
 - Risk: a payments area, so `/security-review` on each commit.
 - Test data: new `revokeEnrollmentHandlers` (`success`, `notFound`, `error`) that update the remembered course, so the row changes after the refresh.
 - Done when: J1 walked in `dev:mock`; a failed call shows the API's message in the dialog.
-- Can wait: the dialog's words; whether Rina's row (suspended and already un-enrolled) shows the button.
+- Flow *(temporary)*, with the commit that builds each step:
+
+```
+Admin opens the course's admin page                        existing (3e)
+└── Row with no revokedAt shows [Un-enroll]                 4b
+    └── Click → dialog "Un-enroll Dana Cohen?"              4b
+        ├── Keep student / Escape → closes, no request      4b
+        └── Confirm → "Un-enrolling…", buttons disabled     4b
+            └── Action checks both ids                      4a
+                ├── malformed → VALIDATION_FAILED, no request, shown in dialog  4a/4b
+                └── POST …/revocation                       4a
+                    ├── 204 → refresh(); page re-rendered in the same reply  4a
+                    │   └── dialog closes; row Un-enrolled, Refunded, no button  4b (mock 4c)
+                    ├── problem → API words in dialog, open, no refresh  4a/4b
+                    └── throws → fixed "Couldn't un-enroll…", dialog open  4b
+```
+
+- Folder *(temporary)*: `course-view/students/unenroll/` holds the action, the button, the dialog and their tests, because `students/` is near the files-per-folder limit.
+- One rule *(temporary)*: `UnenrollButton` draws nothing when `revokedAt` is set, so the table and the cards share the rule.
+- Pending *(temporary)*: the button runs the action inside `useTransition`, as the edit save does. `refresh()` puts the re-rendered page in the action's reply ([server-actions.md](../web/node_modules/next/dist/docs/01-app/02-guides/server-actions.md), "re-renders the current route"), so the dialog likely stays pending until the row has changed; 4b's outline confirms it.
+- Reuse *(temporary)*: the action checks ids with `isUuid` from [course-action-result.ts](../web/src/features/admin-courses/save-course/course-action-result.ts), as the image route does. Messages use `ProblemAlert`'s title and detail; the thrown message has its own words, because the course form's reads "Couldn't save the course".
+- Failure table *(temporary)*:
+
+| Actor | Abuse or failure | What happens | Test |
+|---|---|---|---|
+| Admin | double-click | buttons disabled; API repeat is 204 | 4b |
+| Admin | second tab, already done | 204 → success | 4a |
+| Admin | forgets the Stripe refund | dialog says refund first | 4b |
+| Crafted call | bad ids | `VALIDATION_FAILED`, no API call | 4a |
+| API | 404 / 500 / 401 | API words, no refresh | 4a, 4b |
+| API | down or over 10 s | fixed message | 4b |
+| Other site | cross-site post | Next's Origin check | none new |
 
 ## Step 5. The admin sorts the students
 
@@ -220,7 +332,6 @@ Where each wireframe state is built:
 ## Open questions
 
 - Milestone 1, can wait: the panel's words.
-- Milestone 4, can wait: the dialog's words; Rina's row.
 - Milestone 6, can wait: what shows if the browser refuses the copy.
 
 ## Out of scope

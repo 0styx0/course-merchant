@@ -89,7 +89,7 @@ Bullets only, at most ~600 words (this overrides the word cap in chat-rules.md),
 4. **Page sketch**, for a milestone that adds or reorders a page, section or field: an ASCII wireframe in one code block with the sections in order (titles and help text), the fields in order, and what shows while the page is empty. It fills in the part of the whole-page sketch in *Journeys*. The owner approves it with the plan.
 5. **Flow diagram** ([../_shared/flow-diagram.md](../_shared/flow-diagram.md)), for a milestone with logic, with the commit line that builds each step.
 6. **Design notes:** bullets by topic, from step 4.
-7. **Proposed decision rows:** the exact `| Decision | Why | Rejected |` text. For each rejected option: what it would give, what it would cost, and its complexity. Only strong contenders. A row deciding what shows, where, or in what order on a page ends its *Why* with "(revisit after use)".
+7. **Proposed decision rows:** the exact row text, as one markdown table that starts with its header and separator lines (`| Decision | Why | Rejected |`, then `|---|---|---|`), so it renders as a table; rows without those two lines show as plain text. For each rejected option: what it would give, what it would cost, and its complexity. Only strong contenders. A row deciding what shows, where, or in what order on a page ends its *Why* with "(revisit after use)".
 8. **Review result:** one line per accepted or rejected finding.
 9. **Terms:** each specialized term the plan uses (CLAUDE.md *Plain language*).
 
