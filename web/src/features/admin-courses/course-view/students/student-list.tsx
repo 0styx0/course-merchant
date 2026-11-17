@@ -1,5 +1,6 @@
 import type { AdminCourse } from "@/lib/types";
 
+import { studentsInOrder } from "./sort/students-in-order";
 import { StudentCards } from "./student-cards";
 import { StudentTable } from "./student-table";
 
@@ -39,9 +40,9 @@ function StudentListBody({
 
 /**
  * Every enrollment the API returns, whatever its access, counted in the
- * heading and drawn as one card each below the medium breakpoint and as one
- * table row each from it up. Both copies are drawn, so each student has an
- * Un-enroll button, with its own dialog, in each.
+ * heading, listed newest enrolled first and drawn as one card each below the
+ * medium breakpoint and as one table row each from it up. Both copies are
+ * drawn, so each student has an Un-enroll button, with its own dialog, in each.
  */
 export function StudentList({
   courseId,
@@ -53,7 +54,7 @@ export function StudentList({
       <h2 className="font-heading text-h3">Students ({enrollments.length})</h2>
       <StudentListBody
         courseId={courseId}
-        enrollments={enrollments}
+        enrollments={studentsInOrder(enrollments, "newest")}
         timeZone={timeZone}
       />
     </section>

@@ -94,4 +94,30 @@ describe("StudentList", () => {
       screen.getAllByRole("button", { name: "Un-enroll Ada Lovelace" }),
     ).toHaveLength(2);
   });
+
+  it("lists the students newest enrolled first in both the cards and the table", () => {
+    const newestFirst = [
+      "Sam Ortiz",
+      "Noa Levi",
+      "Omar Haddad",
+      "Dana Cohen",
+      "Lee Park",
+      "Rina Gold",
+      "Ari Stein",
+      "Ben Shaw",
+    ];
+
+    render(
+      <StudentList
+        courseId={courseId}
+        enrollments={adminCourseWithEveryStudentCase.enrollments}
+        timeZone="America/New_York"
+      />,
+    );
+
+    const namesInReadingOrder = screen
+      .getAllByText(/^(Sam|Noa|Omar|Dana|Lee|Rina|Ari|Ben) \w+$/)
+      .map((element) => element.textContent);
+    expect(namesInReadingOrder).toEqual([...newestFirst, ...newestFirst]);
+  });
 });

@@ -28,26 +28,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **4b.** The admin clicks Un-enroll on a student, confirms in a dialog, and the page re-renders with the student un-enrolled.
   - [x] **4c.** In `dev:mock` and the browser test, an un-enrolled student's row turns Un-enrolled and Refunded after the re-render.
 - [ ] **5. The admin sorts the students.** Newest enrolled first is the default.
-  - [ ] **5a.** The students list newest enrolled first, and the page can put them in three other orders. **Next**
-    - *Behaviours*:
-      - The page shows Newest enrolled first (fixture: Sam, Noa, Omar, Dana, Lee, Rina, Ari, Ben).
-      - Oldest enrolled first gives the reverse.
-      - Active first lists Active students, then everyone else, each group newest first; a test adds a newer un-enrolled student, who lands below the Active rows.
-      - Needs attention first lists Refund owed, then failed email, then the rest, each group newest first (Dana, Noa, Omar, Lee, Sam, Rina, Ari, Ben).
-      - An un-enrolled student with a failed email ranks with the rest, because their row shows no Attention line.
-      - An un-enrolled student with Refund owed ranks first, because the line still shows.
-      - Two students with the same enrolled time keep the API's order.
-      - The function leaves its input list unchanged, and an empty list comes back empty.
-    - *New shared pieces*:
-      - The order-name type, which 5b's menu uses.
-      - `isRefundOwed`, exported from [attention-lines.ts](../web/src/features/admin-courses/course-view/students/words/attention-lines.ts), so the Attention line and the ranking share one "owed" rule.
-    - *Files*:
-      - `web/src/features/admin-courses/course-view/students/sort/students-in-order.ts` and its test (a new `sort/` folder, because the menu's two files would push `students/` past the folder limit)
-      - [attention-lines.ts](../web/src/features/admin-courses/course-view/students/words/attention-lines.ts)
-      - [student-list.tsx](../web/src/features/admin-courses/course-view/students/student-list.tsx) (sorts with the default order)
-    - *Settled*: the Decision rows on the default order, the attention ranks and Active first.
-    - *Done when*: `yarn --cwd web check:changed` passes.
-  - [ ] **5b.** The admin picks an order from a "Sort by" menu beside the Students heading, on phones and on wide screens.
+  - [x] **5a.** The students list shows newest enrolled first, and the page can put them in three other orders.
+  - [ ] **5b.** The admin picks an order from a "Sort by" menu beside the Students heading, on phones and on wide screens. **Next**
     - *Behaviours*:
       - On first render the trigger reads "Newest enrolled first" (a jsdom render check).
       - The trigger's accessible name is "Sort by".
