@@ -16,19 +16,26 @@ import {
   PaymentPill,
   StudentIdentity,
 } from "./student-fields";
+import { UnenrollButton } from "./unenroll/unenroll-button";
 import { attentionLineWords } from "./words/attention-lines";
 
 type StudentTableProps = {
+  courseId: string;
   enrollments: AdminCourse["enrollments"];
   timeZone: string;
 };
 
 type StudentTableRowProps = {
+  courseId: string;
   enrollment: AdminCourse["enrollments"][number];
   timeZone: string;
 };
 
-function StudentTableRow({ enrollment, timeZone }: StudentTableRowProps) {
+function StudentTableRow({
+  courseId,
+  enrollment,
+  timeZone,
+}: StudentTableRowProps) {
   const lines = attentionLineWords(enrollment);
   return (
     <TableRow>
@@ -50,6 +57,9 @@ function StudentTableRow({ enrollment, timeZone }: StudentTableRowProps) {
       <TableCell>
         {lines.length > 0 && <AttentionLines lines={lines} />}
       </TableCell>
+      <TableCell>
+        <UnenrollButton courseId={courseId} enrollment={enrollment} />
+      </TableCell>
     </TableRow>
   );
 }
@@ -57,9 +67,14 @@ function StudentTableRow({ enrollment, timeZone }: StudentTableRowProps) {
 /**
  * Each student as a table row: who they are, when they enrolled, their
  * access, what they paid, the payment's state and what needs the owner's
- * action. A table too wide for the page scrolls inside its own box.
+ * action, with Un-enroll for a student who still has access. A table too
+ * wide for the page scrolls inside its own box.
  */
-export function StudentTable({ enrollments, timeZone }: StudentTableProps) {
+export function StudentTable({
+  courseId,
+  enrollments,
+  timeZone,
+}: StudentTableProps) {
   return (
     <Table className="mt-4">
       <TableHeader>
@@ -70,12 +85,14 @@ export function StudentTable({ enrollments, timeZone }: StudentTableProps) {
           <TableHead className="text-right">Paid</TableHead>
           <TableHead>Payment</TableHead>
           <TableHead>Attention</TableHead>
+          <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {enrollments.map((enrollment) => (
           <StudentTableRow
             key={enrollment.customer.id}
+            courseId={courseId}
             enrollment={enrollment}
             timeZone={timeZone}
           />

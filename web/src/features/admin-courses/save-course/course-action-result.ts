@@ -30,12 +30,6 @@ const invalidCourseIdProblem: ProblemDetails = {
   code: "VALIDATION_FAILED",
 };
 
-const uuidSchema = z.uuid();
-
-export function isUuid(value: string): boolean {
-  return uuidSchema.safeParse(value).success;
-}
-
 export function invalidCourseIdFailure(): CourseActionResult {
   return {
     state: "failure",

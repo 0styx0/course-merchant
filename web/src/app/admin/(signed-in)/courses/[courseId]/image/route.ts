@@ -1,6 +1,6 @@
 import type { ProblemDetails, Result } from "@/lib/types";
 import { getCourseImageAsAdmin } from "@/features/admin-courses/api/admin-courses.api";
-import { isUuid } from "@/features/admin-courses/save-course/course-action-result";
+import { isUuid } from "@/lib/ids/is-uuid";
 
 type CourseImageRouteContext = {
   params: Promise<{ courseId: string }>;

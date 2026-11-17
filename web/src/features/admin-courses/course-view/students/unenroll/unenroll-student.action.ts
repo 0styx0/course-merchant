@@ -2,10 +2,10 @@
 
 import { refresh } from "next/cache";
 
+import { isUuid } from "@/lib/ids/is-uuid";
 import type { ProblemDetails, Result } from "@/lib/types";
 
 import { revokeEnrollment } from "../../../api/admin-courses.api";
-import { isUuid } from "../../../save-course/course-action-result";
 
 export type UnenrollStudentResult = Result<null, ProblemDetails>;
 

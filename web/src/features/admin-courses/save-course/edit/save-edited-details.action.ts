@@ -3,6 +3,7 @@
 import { refresh } from "next/cache";
 
 import { toCourseDescription } from "@/features/course-description/description-document";
+import { isUuid } from "@/lib/ids/is-uuid";
 import { wallClockToUtc } from "@/lib/time/wall-clock-time";
 
 import {
@@ -19,7 +20,6 @@ import { toScheduledPrice } from "../to-course-request";
 import {
   invalidCourseIdFailure,
   invalidFormFailure,
-  isUuid,
   problemFailure,
   successWithCourseId,
   type CourseActionResult,

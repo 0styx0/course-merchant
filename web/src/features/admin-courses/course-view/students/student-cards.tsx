@@ -10,9 +10,11 @@ import {
   PaymentPill,
   StudentIdentity,
 } from "./student-fields";
+import { UnenrollButton } from "./unenroll/unenroll-button";
 import { attentionLineWords } from "./words/attention-lines";
 
 type StudentCardsProps = {
+  courseId: string;
   enrollments: AdminCourse["enrollments"];
   timeZone: string;
 };
@@ -34,11 +36,12 @@ function StudentCardField({
 }
 
 type StudentCardProps = {
+  courseId: string;
   enrollment: AdminCourse["enrollments"][number];
   timeZone: string;
 };
 
-function StudentCard({ enrollment, timeZone }: StudentCardProps) {
+function StudentCard({ courseId, enrollment, timeZone }: StudentCardProps) {
   const lines = attentionLineWords(enrollment);
   return (
     <li className="min-w-0 rounded-lg border p-4">
@@ -67,20 +70,31 @@ function StudentCard({ enrollment, timeZone }: StudentCardProps) {
           </StudentCardField>
         )}
       </dl>
+      {/* UnenrollButton draws nothing for an un-enrolled student, so the
+          empty box hides with it. */}
+      <div className="mt-4 empty:hidden">
+        <UnenrollButton courseId={courseId} enrollment={enrollment} />
+      </div>
     </li>
   );
 }
 
 /**
  * Each student as a card: who they are, when they enrolled, their access,
- * what they paid, the payment's state and what needs the owner's action.
+ * what they paid, the payment's state, what needs the owner's action and,
+ * last, Un-enroll for a student who still has access.
  */
-export function StudentCards({ enrollments, timeZone }: StudentCardsProps) {
+export function StudentCards({
+  courseId,
+  enrollments,
+  timeZone,
+}: StudentCardsProps) {
   return (
     <ul className="mt-4 space-y-3">
       {enrollments.map((enrollment) => (
         <StudentCard
           key={enrollment.customer.id}
+          courseId={courseId}
           enrollment={enrollment}
           timeZone={timeZone}
         />

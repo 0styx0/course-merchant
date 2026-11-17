@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   adminCourseWithEnrollment,
@@ -7,6 +7,12 @@ import {
 } from "@/mocks/fixtures/admin-courses";
 
 import { StudentCards } from "./student-cards";
+
+vi.mock("./unenroll/unenroll-student.action", () => ({
+  unenrollStudentAction: vi.fn(),
+}));
+
+const courseId = adminCourseWithEveryStudentCase.id;
 
 const [adaEnrollment] = adminCourseWithEnrollment.enrollments;
 
@@ -24,6 +30,7 @@ describe("StudentCards", () => {
   it("draws one card per student, in the API's order", () => {
     render(
       <StudentCards
+        courseId={courseId}
         enrollments={adminCourseWithEveryStudentCase.enrollments}
         timeZone="America/New_York"
       />,
@@ -44,6 +51,7 @@ describe("StudentCards", () => {
   it("shows name, email, Enrolled, Access, Paid and Payment, in that order", () => {
     render(
       <StudentCards
+        courseId={courseId}
         enrollments={[adaEnrollment]}
         timeZone="America/New_York"
       />,
@@ -70,6 +78,7 @@ describe("StudentCards", () => {
 
     render(
       <StudentCards
+        courseId={courseId}
         enrollments={[lateEveningEnrollment]}
         timeZone="America/New_York"
       />,
@@ -88,6 +97,7 @@ describe("StudentCards", () => {
 
     render(
       <StudentCards
+        courseId={courseId}
         enrollments={[lateEveningEnrollment]}
         timeZone="Asia/Tokyo"
       />,
@@ -101,6 +111,7 @@ describe("StudentCards", () => {
   it("shows each student's access, with the date beside Suspended", () => {
     render(
       <StudentCards
+        courseId={courseId}
         enrollments={adminCourseWithEveryStudentCase.enrollments}
         timeZone="America/New_York"
       />,
@@ -121,6 +132,7 @@ describe("StudentCards", () => {
   it("shows what each student paid and the state of the payment", () => {
     render(
       <StudentCards
+        courseId={courseId}
         enrollments={adminCourseWithEveryStudentCase.enrollments}
         timeZone="America/New_York"
       />,
@@ -138,6 +150,7 @@ describe("StudentCards", () => {
   it("lists Dana's two Attention lines in order", () => {
     render(
       <StudentCards
+        courseId={courseId}
         enrollments={adminCourseWithEveryStudentCase.enrollments.slice(0, 1)}
         timeZone="America/New_York"
       />,
@@ -157,6 +170,7 @@ describe("StudentCards", () => {
   it("gives each card its own student's Attention lines", () => {
     render(
       <StudentCards
+        courseId={courseId}
         enrollments={adminCourseWithEveryStudentCase.enrollments}
         timeZone="America/New_York"
       />,
@@ -183,6 +197,7 @@ describe("StudentCards", () => {
   it("shows no Attention field on a card with no lines", () => {
     render(
       <StudentCards
+        courseId={courseId}
         enrollments={[adaEnrollment]}
         timeZone="America/New_York"
       />,
@@ -194,6 +209,7 @@ describe("StudentCards", () => {
   it("hides the Attention icons from screen readers", () => {
     const { container } = render(
       <StudentCards
+        courseId={courseId}
         enrollments={adminCourseWithEveryStudentCase.enrollments.slice(0, 1)}
         timeZone="America/New_York"
       />,
@@ -203,6 +219,26 @@ describe("StudentCards", () => {
     expect(icons).toHaveLength(2);
     icons.forEach((icon) =>
       expect(icon).toHaveAttribute("aria-hidden", "true"),
+    );
+  });
+
+  it("offers Un-enroll at the bottom of every card whose student still has access", () => {
+    render(
+      <StudentCards
+        courseId={courseId}
+        enrollments={adminCourseWithEveryStudentCase.enrollments}
+        timeZone="America/New_York"
+      />,
+    );
+
+    expect(
+      studentCards().map(
+        (card) => within(card).queryAllByRole("button").length,
+      ),
+    ).toEqual([1, 1, 1, 1, 1, 0, 0, 0]);
+    const [dana] = studentCards();
+    expect(dana.lastElementChild).toContainElement(
+      within(dana).getByRole("button", { name: "Un-enroll Dana Cohen" }),
     );
   });
 });

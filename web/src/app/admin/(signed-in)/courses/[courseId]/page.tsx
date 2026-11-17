@@ -46,6 +46,7 @@ function AdminCourseDetails({ course, renderMs }: AdminCourseDetailsProps) {
         <CourseAdminPanel course={course} renderMs={renderMs} />
       </CoursePageLayout>
       <StudentList
+        courseId={course.id}
         enrollments={course.enrollments}
         timeZone={course.schedule.timeZone}
       />

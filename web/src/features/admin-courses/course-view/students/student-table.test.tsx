@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   adminCourseWithEnrollment,
@@ -7,6 +7,12 @@ import {
 } from "@/mocks/fixtures/admin-courses";
 
 import { StudentTable } from "./student-table";
+
+vi.mock("./unenroll/unenroll-student.action", () => ({
+  unenrollStudentAction: vi.fn(),
+}));
+
+const courseId = adminCourseWithEveryStudentCase.id;
 
 const [adaEnrollment] = adminCourseWithEnrollment.enrollments;
 
@@ -36,9 +42,10 @@ function enrollmentNamed(name: string) {
 }
 
 describe("StudentTable", () => {
-  it("heads the columns Student, Enrolled, Access, Paid, Payment and Attention", () => {
+  it("heads the columns Student, Enrolled, Access, Paid, Payment, Attention and Actions", () => {
     render(
       <StudentTable
+        courseId={courseId}
         enrollments={[adaEnrollment]}
         timeZone="America/New_York"
       />,
@@ -53,12 +60,14 @@ describe("StudentTable", () => {
       "Paid",
       "Payment",
       "Attention",
+      "Actions",
     ]);
   });
 
   it("shows name over email, Enrolled, Access, Paid and Payment in one row", () => {
     render(
       <StudentTable
+        courseId={courseId}
         enrollments={[adaEnrollment]}
         timeZone="America/New_York"
       />,
@@ -81,6 +90,7 @@ describe("StudentTable", () => {
   it("right-aligns the Paid column and its header with tabular figures", () => {
     render(
       <StudentTable
+        courseId={courseId}
         enrollments={[adaEnrollment]}
         timeZone="America/New_York"
       />,
@@ -96,7 +106,13 @@ describe("StudentTable", () => {
   it("shows the Free pill and a dash for a free student", () => {
     const noa = enrollmentNamed("Noa Levi");
 
-    render(<StudentTable enrollments={[noa]} timeZone="America/New_York" />);
+    render(
+      <StudentTable
+        courseId={courseId}
+        enrollments={[noa]}
+        timeZone="America/New_York"
+      />,
+    );
 
     const [row] = studentRows();
     expect(within(cellInColumn(row, "Paid")).getByText("Free")).toHaveClass(
@@ -108,7 +124,13 @@ describe("StudentTable", () => {
   it("lists Dana's failed-email and Refund owed lines in the Attention cell", () => {
     const dana = enrollmentNamed("Dana Cohen");
 
-    render(<StudentTable enrollments={[dana]} timeZone="America/New_York" />);
+    render(
+      <StudentTable
+        courseId={courseId}
+        enrollments={[dana]}
+        timeZone="America/New_York"
+      />,
+    );
 
     const [row] = studentRows();
     const lines = within(cellInColumn(row, "Attention")).getAllByRole(
@@ -123,6 +145,7 @@ describe("StudentTable", () => {
   it("leaves the Attention cell empty on a row with no lines", () => {
     render(
       <StudentTable
+        courseId={courseId}
         enrollments={[adaEnrollment]}
         timeZone="America/New_York"
       />,
@@ -135,6 +158,7 @@ describe("StudentTable", () => {
   it("draws one row per student, in the API's order", () => {
     render(
       <StudentTable
+        courseId={courseId}
         enrollments={adminCourseWithEveryStudentCase.enrollments}
         timeZone="America/New_York"
       />,
@@ -152,5 +176,37 @@ describe("StudentTable", () => {
       expect.stringMatching(/^Ari Stein/),
       expect.stringMatching(/^Ben Shaw/),
     ]);
+  });
+
+  it("offers Un-enroll on every row whose student still has access", () => {
+    render(
+      <StudentTable
+        courseId={courseId}
+        enrollments={adminCourseWithEveryStudentCase.enrollments}
+        timeZone="America/New_York"
+      />,
+    );
+
+    expect(
+      studentRows().map((row) =>
+        within(cellInColumn(row, "Actions"))
+          .queryAllByRole("button")
+          .map((button) => button.textContent),
+      ),
+    ).toEqual([
+      ["Un-enroll"],
+      ["Un-enroll"],
+      ["Un-enroll"],
+      ["Un-enroll"],
+      ["Un-enroll"],
+      [],
+      [],
+      [],
+    ]);
+    expect(
+      within(studentRows()[0]).getByRole("button", {
+        name: "Un-enroll Dana Cohen",
+      }),
+    ).toBeInTheDocument();
   });
 });

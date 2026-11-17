@@ -25,31 +25,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **3e.** From medium screens up, the students show as a table with the same fields; phones keep the cards.
 - [ ] **4. The admin un-enrolls a student.** A dialog confirms, then the row shows Un-enrolled and Refunded.
   - [x] **4a.** The web server can un-enroll a student through the API (not used yet; 4b uses it).
-  - [ ] **4b.** The admin clicks Un-enroll on a student, confirms, and the page re-renders with the student un-enrolled. **Next**
-    - *Behaviours*:
-      - Every row and card whose `revokedAt` is empty shows "Un-enroll" (accessible name "Un-enroll Dana Cohen"). Rina, Ari and Ben show none.
-      - The dialog asks "Un-enroll Dana Cohen?" and, for a paid student, says to refund in Stripe first.
-      - A free student's dialog (Noa) says only that access ends.
-      - "Keep student" or Escape closes it and sends nothing.
-      - Confirming calls the action with the course and customer ids. While it runs, the button reads "Un-enrolling…", both buttons are disabled and Escape keeps the dialog open.
-      - Success closes the dialog once the re-rendered page has arrived.
-      - A refusal keeps the dialog open with the API's title and detail. Confirming again clears it first.
-      - A thrown call shows "Couldn't un-enroll the student" / "Something went wrong while un-enrolling. Check your connection and try again."
-      - Reopening after a failure shows no old message.
-    - *New shared pieces*: `UnenrollButton`, because the table and the cards both draw it.
-    - *Files*:
-      - `…/students/unenroll/unenroll-button.tsx` (client: button, state, action call)
-      - `…/students/unenroll/unenroll-dialog.tsx` (the dialog, a twin of `DeleteConfirmation`)
-      - [student-table.tsx](../web/src/features/admin-courses/course-view/students/student-table.tsx) (gains a last column)
-      - [student-cards.tsx](../web/src/features/admin-courses/course-view/students/student-cards.tsx)
-      - [student-list.tsx](../web/src/features/admin-courses/course-view/students/student-list.tsx) (passes `courseId`)
-      - [page.tsx](../web/src/app/admin/(signed-in)/courses/[courseId]/page.tsx) (passes `course.id`)
-    - *Needs*: 4a.
-    - *Settled*: the Decision rows on Un-enroll.
-    - *Done when*:
-      - component tests pass
-      - in `dev:mock` with `withEveryStudentCase`, Dana, Omar, Noa, Lee and Sam show the button, and the dialog opens and closes on confirm
-  - [ ] **4c.** In `dev:mock` and the browser test, an un-enrolled student's row turns Un-enrolled and Refunded after the re-render.
+  - [x] **4b.** The admin clicks Un-enroll on a student, confirms in a dialog, and the page re-renders with the student un-enrolled.
+  - [ ] **4c.** In `dev:mock` and the browser test, an un-enrolled student's row turns Un-enrolled and Refunded after the re-render. **Next**
     - *Behaviours*:
       - The mock store can start from any course, and existing callers keep the drafted one.
       - Un-enrolling in the store sets `revokedAt` to now and turns a `succeeded` payment `refunded`. A free student keeps no payment.
@@ -60,7 +37,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
     - *New shared pieces*: none.
     - *Files*:
       - [remembered-course.ts](../web/src/mocks/handlers/admin-courses/remembered-course.ts)
-      - `web/src/mocks/handlers/admin-courses/revoke-enrollment.ts` (the remembered handler)
+      - [revoke-enrollment.ts](../web/src/mocks/handlers/admin-courses/revoke-enrollment.ts) (exists from 4a; gains the remembered handler)
       - [server.ts](../web/src/mocks/server.ts)
       - [course-view.spec.ts](../web/tests/browser/admin-courses/course-view.spec.ts) (one test)
       - this doc: tick step 4, make step 5 the next one, add the Retro.
@@ -278,7 +255,7 @@ Admin opens the course's admin page                        existing (3e)
 - Folder *(temporary)*: `course-view/students/unenroll/` holds the action, the button, the dialog and their tests, because `students/` is near the files-per-folder limit.
 - One rule *(temporary)*: `UnenrollButton` draws nothing when `revokedAt` is set, so the table and the cards share the rule.
 - Pending *(temporary)*: the button runs the action inside `useTransition`, as the edit save does. `refresh()` puts the re-rendered page in the action's reply ([server-actions.md](../web/node_modules/next/dist/docs/01-app/02-guides/server-actions.md), "re-renders the current route"), so the dialog likely stays pending until the row has changed; 4b's outline confirms it.
-- Reuse *(temporary)*: the action checks ids with `isUuid` from [course-action-result.ts](../web/src/features/admin-courses/save-course/course-action-result.ts), as the image route does. Messages use `ProblemAlert`'s title and detail; the thrown message has its own words, because the course form's reads "Couldn't save the course".
+- Reuse *(temporary)*: the action checks ids with `isUuid` from [is-uuid.ts](../web/src/lib/ids/is-uuid.ts), as the image route does. Messages use `ProblemAlert`'s title and detail; the thrown message has its own words, because the course form's reads "Couldn't save the course".
 - Failure table *(temporary)*:
 
 | Actor | Abuse or failure | What happens | Test |

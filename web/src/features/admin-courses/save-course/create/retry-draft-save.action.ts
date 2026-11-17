@@ -1,10 +1,11 @@
 "use server";
 
+import { isUuid } from "@/lib/ids/is-uuid";
+
 import { updateCourse } from "../../api/admin-courses.api";
 import {
   invalidCourseIdFailure,
   invalidFormFailure,
-  isUuid,
   problemFailure,
   successWithCourseId,
   type CourseActionResult,
