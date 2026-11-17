@@ -27,8 +27,44 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **4a.** The web server can un-enroll a student through the API.
   - [x] **4b.** The admin clicks Un-enroll on a student, confirms in a dialog, and the page re-renders with the student un-enrolled.
   - [x] **4c.** In `dev:mock` and the browser test, an un-enrolled student's row turns Un-enrolled and Refunded after the re-render.
-- [ ] **5. The admin sorts the students.** Needs attention first is the default. **Next**
-  - Plan it with `/plan-create-implementation`: milestone 5's section (*Step 5*) has the sketch and size; *Done when* is J2.
+- [ ] **5. The admin sorts the students.** Newest enrolled first is the default.
+  - [ ] **5a.** The students list newest enrolled first, and the page can put them in three other orders. **Next**
+    - *Behaviours*:
+      - The page shows Newest enrolled first (fixture: Sam, Noa, Omar, Dana, Lee, Rina, Ari, Ben).
+      - Oldest enrolled first gives the reverse.
+      - Active first lists Active students, then everyone else, each group newest first; a test adds a newer un-enrolled student, who lands below the Active rows.
+      - Needs attention first lists Refund owed, then failed email, then the rest, each group newest first (Dana, Noa, Omar, Lee, Sam, Rina, Ari, Ben).
+      - An un-enrolled student with a failed email ranks with the rest, because their row shows no Attention line.
+      - An un-enrolled student with Refund owed ranks first, because the line still shows.
+      - Two students with the same enrolled time keep the API's order.
+      - The function leaves its input list unchanged, and an empty list comes back empty.
+    - *New shared pieces*:
+      - The order-name type, which 5b's menu uses.
+      - `isRefundOwed`, exported from [attention-lines.ts](../web/src/features/admin-courses/course-view/students/words/attention-lines.ts), so the Attention line and the ranking share one "owed" rule.
+    - *Files*:
+      - `web/src/features/admin-courses/course-view/students/sort/students-in-order.ts` and its test (a new `sort/` folder, because the menu's two files would push `students/` past the folder limit)
+      - [attention-lines.ts](../web/src/features/admin-courses/course-view/students/words/attention-lines.ts)
+      - [student-list.tsx](../web/src/features/admin-courses/course-view/students/student-list.tsx) (sorts with the default order)
+    - *Settled*: the Decision rows on the default order, the attention ranks and Active first.
+    - *Done when*: `yarn --cwd web check:changed` passes.
+  - [ ] **5b.** The admin picks an order from a "Sort by" menu beside the Students heading, on phones and on wide screens.
+    - *Behaviours*:
+      - On first render the trigger reads "Newest enrolled first" (a jsdom render check).
+      - The trigger's accessible name is "Sort by".
+      - Picking an order reorders both the cards and the table.
+      - With no students the menu stays hidden, and "No students yet." shows.
+      - When the page re-renders with a newly un-enrolled student, the chosen order stays; under Active first, that student's row moves below the Active rows.
+      - A reload goes back to the default.
+      - Browser test at 400px: picking Needs attention first puts Dana's card first (J2), and the page still never scrolls sideways.
+    - *New shared pieces*: shadcn `select`, added by `yarn --cwd web shadcn add select` into `components/ui/` (skipped by the folder-count limit).
+    - *Files*:
+      - `web/src/components/ui/select.tsx`
+      - `web/src/features/admin-courses/course-view/students/sort/student-order-menu.tsx` and its test (holds the four labels)
+      - [student-list.tsx](../web/src/features/admin-courses/course-view/students/student-list.tsx) and its test (`"use client"`, holds the chosen order)
+      - [course-view.spec.ts](../web/tests/browser/admin-courses/course-view.spec.ts)
+    - *Needs*: 5a.
+    - *Settled*: the Decision rows on browser state and the Base UI `select`.
+    - *Done when*: `check:changed` and the browser spec pass, and J2 is walked in `dev:mock` with `withEveryStudentCase`.
 - [ ] **6. The admin copies the addresses of every student with access.**
 
 ## Terms
@@ -47,7 +83,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 ## Journeys
 
 - J1 Refund then un-enroll: the owner refunds Dana in Stripe, opens the page, clicks Un-enroll and confirms; Dana's row turns grey with Refunded and no button.
-- J2 Spot Refund owed: the owner opens the page, Dana is on top with "Refund owed", and the owner refunds the extra payment in Stripe.
+- J2 Spot Refund owed: the owner opens the page, picks "Needs attention first", Dana is on top with "Refund owed", and the owner refunds the extra payment in Stripe.
 - J3 Follow up a failed email: Omar shows "Course access email failed"; the owner emails him the course link by hand.
 - J4 Email everyone: the owner clicks "Copy addresses", sees "Copied 4 addresses" and pastes Omar, Dana, Noa and Sam into Bcc in their mail app.
 
@@ -62,15 +98,15 @@ The finished page, desktop, with one row for each case the data allows:
 |                                            | Course link: zoom.us/j/… (private)  |
 |                                            | [ Edit course ]  View public page ↗ |
 +----------------------------------------------------------------------------------+
-| Students (8)                        Sort by: [ Needs attention first ▾ ]         |
+| Students (8)                        Sort by: [ Newest enrolled first ▾ ]         |
 |                                     [ Copy addresses ]                           |
 | Student          | Enrolled    | Access        | Paid   | Payment    | Attention                       |             |
+| Sam Ortiz        | Nov 9, 2026 | (Active)      | $99.00 | (Paid)     |                                 | [Un-enroll] |
+| Noa Levi         | Nov 7, 2026 | (Active)      | (Free) | —          | ⚠ Course access email failed    | [Un-enroll] |
+| Omar Haddad      | Nov 4, 2026 | (Active)      | $99.00 | (Paid)     | ⚠ Course access email failed    | [Un-enroll] |
 | Dana Cohen       | Nov 2, 2026 | (Active)      | $99.00 | (Paid)     | ⚠ Already-enrolled email failed | [Un-enroll] |
 |  dana@…          |             |               |        |            | ⚠ Refund owed                   |             |
-| Omar Haddad      | Nov 4, 2026 | (Active)      | $99.00 | (Paid)     | ⚠ Course access email failed    | [Un-enroll] |
-| Noa Levi         | Nov 7, 2026 | (Active)      | (Free) | —          | ⚠ Course access email failed    | [Un-enroll] |
 | Lee Park         | Oct 30,2026 | (Suspended)   | $79.00 | (Paid)     | ⚠ Suspension email failed       | [Un-enroll] |
-| Sam Ortiz        | Nov 9, 2026 | (Active)      | $99.00 | (Paid)     |                                 | [Un-enroll] |
 | Rina Gold        | Oct 29,2026 | (Suspended)   | $79.00 | (Refunded) |                                 |             |
 | Ari Stein        | Oct 28,2026 | (Un-enrolled) | $79.00 | (Refunded) |                                 |             |
 | Ben Shaw         | Oct 27,2026 | (Un-enrolled) | (Free) | —          |                                 |             |
@@ -131,6 +167,11 @@ Where each wireframe state is built:
 | Active and Paid pills are `--success`; every other access and payment pill is `--muted`; no new token | Nothing sets a suspension any more ([payments/refunds.md](payments/refunds.md) row on `suspendedAt`) and Pending can't belong to an enrollment, so a warning colour would show only for old rows. Red stays for Attention | A new `--warning` token for Suspended and Pending (a token and contrast checks for states only old data reaches); red for Suspended (clashes with errors) |
 | Students render twice: cards below `md`, a table from `md`; CSS hides the other | Each layout keeps plain HTML (a table with column headers, a list of cards), and the server renders both, so nothing flashes on load (revisit after use) | One table restyled into cards by CSS (screen readers lose the column headers once the display changes, so every cell needs ARIA roles; medium); a browser hook that picks a layout by width (client rendering and a flash of the wrong layout on load; medium) |
 | One `StatusPill` component in `web/src/components/` draws every status pill, with the colour pair as a prop | The course status, Ended and student pills look alike from one place, as [style-guide.md](style-guide.md) §7 sets them | shadcn `Badge` with a local change, like `Button` (its fixed 20px height clips the eyebrow line, and its padding, type and colours differ from §7, so the edit undoes most defaults and must be re-applied after every overwrite; low); a shared class string (each caller repeats the colour choice; low) |
+| The Students list opens Newest enrolled first, and every other order breaks ties by enrolled time, newest first | The owner's usual question is who just joined. One tie rule keeps every order predictable (revisit after use) | Needs attention first as the default (buries new students; low) |
+| Needs attention first ranks Refund owed, then a failed email, then the rest | Money owed costs the most, so it goes on top (revisit after use) | Every problem ranks equal (Dana drops to third; low); more lines rank higher (a lone Refund owed ties with one failed email; low) |
+| Active first lists the Active students, then everyone else | Neither Suspended nor Un-enrolled students have access (revisit after use) | Three groups, Active, Suspended, Un-enrolled (adds a rank that only old data reaches; low) |
+| The chosen order lives in the page's browser state, and a reload goes back to the default | Sorting is instant, and Next keeps `useState` through Un-enroll's `refresh()` ([use-router docs](../web/node_modules/next/dist/docs/01-app/03-api-reference/04-functions/use-router.md)) | `?sort=` in the URL (survives reloads and links, but each change re-asks the API and the page must check the value; medium) |
+| The Sort menu is shadcn's Base UI `select` | It looks the same in every browser, like the site's other popups | shadcn `native-select` (opens the phone's own picker with less code; low) |
 | Refund owed shows on every row; failed-email lines skip students whose access reads Un-enrolled | Money owed stays owed after an un-enroll, but the owner has nothing to resend to a student they removed. The API reads an un-enrolled student with no email as `{ access_granted, failed }` (the `latestEmail` rule), so the page must skip it | Skipping un-enrolled rows entirely (hides a refund still owed; low) |
 
 ## Step 1. The admin opens a course's admin page
@@ -212,10 +253,36 @@ Where each wireframe state is built:
 
 - Why here: sorting needs the columns it orders by.
 - Needs: 3.
-- Builds on: milestone 3's row functions.
-- **Sketch:** milestone 4 plus the Sort menu: newest or oldest enrolled, active first, needs attention first (default).
-- Size: 2 commits: the three orderings as pure functions, then the menu.
-- Done when: J2 walked (with "Needs attention first", Dana sorts to the top); each sort orders the eight-row fixture as the whole-page sketch shows.
+- Builds on: milestone 3's row functions (`attentionLineWords` in [attention-lines.ts](../web/src/features/admin-courses/course-view/students/words/attention-lines.ts), `studentAccess` in [access-words.ts](../web/src/features/admin-courses/course-view/students/words/access-words.ts)), the `toSorted` pattern in [course-admin-panel.tsx](../web/src/features/admin-courses/course-view/course-admin-panel.tsx), and the Base UI twin [time-zone-picker.tsx](../web/src/features/admin-courses/schedule/time-zone-picker/time-zone-picker.tsx) for jsdom interaction tests.
+- **Sketch:** milestone 4 plus the Sort menu:
+
+```
+Students (8)                         Sort by [ Newest enrolled first ▾ ]
+Sam Ortiz    Nov 9, 2026  …
+Noa Levi     Nov 7, 2026  …
+Omar Haddad  Nov 4, 2026  …
+Dana Cohen   Nov 2, 2026  …
+Lee · Rina · Ari · Ben
+Menu: Newest enrolled first · Oldest enrolled first · Active first · Needs attention first
+Phone: the label and the menu wrap under the heading.
+Empty: "Students (0)", "No students yet.", no menu.
+```
+
+- Size: 2 commits (5a, 5b), as the overview planned.
+- Test data: existing `withEveryStudentCase` and `rememberedStudents`; no new fixture.
+- Done when: J2 walked (with "Needs attention first", Dana sorts to the top); each sort orders the eight-row fixture as 5a's behaviours list.
+- *(temporary)* The ranking is one table with a rank for each order, not a switch with logic inside each case. A rank is the group a student sorts into before the enrolled time breaks ties.
+- *(temporary)* Select gets `items`, so the server-rendered trigger shows the order's label rather than its stored value ([Base UI Select](https://base-ui.com/react/components/select)).
+- *(temporary)* The rows stay keyed by student, so an open Un-enroll dialog moves with its row.
+- *(temporary)* Flow:
+
+```
+page (server) → StudentList
+  → students-in-order(enrollments, order)     [5a]
+  → cards + table in that order               [5a]
+admin picks an order → state → re-render      [5b]
+Un-enroll → refresh() → new rows, same order  [5b]
+```
 
 ## Step 6. The admin copies the addresses of every student with access
 
