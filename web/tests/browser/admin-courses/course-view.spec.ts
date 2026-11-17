@@ -1,7 +1,10 @@
 import type { Page } from "@playwright/test";
 import msw from "next/experimental/testmode/playwright/msw.js";
 
-import { adminCourseWithEveryStudentCase } from "@/mocks/fixtures/admin-courses";
+import {
+  adminCourseWithEveryStudentCase,
+  everyStudentCaseEmail,
+} from "@/mocks/fixtures/admin-courses";
 import {
   getCourseAsAdminHandlers,
   makeRememberedGetHandler,
@@ -131,4 +134,34 @@ test("puts Dana's card first after picking Needs attention first at 400px", asyn
     .getByRole("listitem")
     .first();
   await expect(firstCard).toContainText("Dana Cohen");
+});
+
+// jsdom has only user-event's stand-in clipboard, so only a browser shows the real one filled.
+test.describe("with clipboard access", () => {
+  test.use({ permissions: ["clipboard-read", "clipboard-write"] });
+
+  test("puts the four Active students' addresses on the clipboard at 1280px", async ({
+    page,
+    msw,
+  }) => {
+    msw.use(getCourseAsAdminHandlers.withEveryStudentCase);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(adminCoursePath);
+
+    await page
+      .getByRole("button", { name: "Copy active students' addresses" })
+      .click();
+
+    const activeEmailsInApiOrder = [
+      "Dana Cohen",
+      "Omar Haddad",
+      "Noa Levi",
+      "Sam Ortiz",
+    ]
+      .map(everyStudentCaseEmail)
+      .join(", ");
+    await expect
+      .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toBe(activeEmailsInApiOrder);
+  });
 });
