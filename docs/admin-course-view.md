@@ -27,27 +27,10 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **4a.** The web server can un-enroll a student through the API.
   - [x] **4b.** The admin clicks Un-enroll on a student, confirms in a dialog, and the page re-renders with the student un-enrolled.
   - [x] **4c.** In `dev:mock` and the browser test, an un-enrolled student's row turns Un-enrolled and Refunded after the re-render.
-- [ ] **5. The admin sorts the students.** Newest enrolled first is the default.
+- [x] **5. The admin sorts the students.** Newest enrolled first is the default.
   - [x] **5a.** The students list shows newest enrolled first, and the page can put them in three other orders.
-  - [ ] **5b.** The admin picks an order from a "Sort by" menu beside the Students heading, on phones and on wide screens. **Next**
-    - *Behaviours*:
-      - On first render the trigger reads "Newest enrolled first" (a jsdom render check).
-      - The trigger's accessible name is "Sort by".
-      - Picking an order reorders both the cards and the table.
-      - With no students the menu stays hidden, and "No students yet." shows.
-      - When the page re-renders with a newly un-enrolled student, the chosen order stays; under Active first, that student's row moves below the Active rows.
-      - A reload goes back to the default.
-      - Browser test at 400px: picking Needs attention first puts Dana's card first (J2), and the page still never scrolls sideways.
-    - *New shared pieces*: shadcn `select`, added by `yarn --cwd web shadcn add select` into `components/ui/` (skipped by the folder-count limit).
-    - *Files*:
-      - `web/src/components/ui/select.tsx`
-      - `web/src/features/admin-courses/course-view/students/sort/student-order-menu.tsx` and its test (holds the four labels)
-      - [student-list.tsx](../web/src/features/admin-courses/course-view/students/student-list.tsx) and its test (`"use client"`, holds the chosen order)
-      - [course-view.spec.ts](../web/tests/browser/admin-courses/course-view.spec.ts)
-    - *Needs*: 5a.
-    - *Settled*: the Decision rows on browser state and the Base UI `select`.
-    - *Done when*: `check:changed` and the browser spec pass, and J2 is walked in `dev:mock` with `withEveryStudentCase`.
-- [ ] **6. The admin copies the addresses of every student with access.**
+  - [x] **5b.** The admin picks an order from a "Sort by" menu beside the Students heading, on phones and on wide screens.
+- [ ] **6. The admin copies the addresses of every student with access.** **Next** (not split into commits yet; run `/plan-create-implementation` first)
 
 ## Terms
 
@@ -253,18 +236,10 @@ Empty: "Students (0)", "No students yet.", no menu.
 - Size: 2 commits (5a, 5b), as the overview planned.
 - Test data: existing `withEveryStudentCase` and `rememberedStudents`; no new fixture.
 - Done when: J2 walked (with "Needs attention first", Dana sorts to the top); each sort orders the eight-row fixture as 5a's behaviours list.
-- *(temporary)* The ranking is one table with a rank for each order, not a switch with logic inside each case. A rank is the group a student sorts into before the enrolled time breaks ties.
-- *(temporary)* Select gets `items`, so the server-rendered trigger shows the order's label rather than its stored value ([Base UI Select](https://base-ui.com/react/components/select)).
-- *(temporary)* The rows stay keyed by student, so an open Un-enroll dialog moves with its row.
-- *(temporary)* Flow:
-
-```
-page (server) → StudentList
-  → students-in-order(enrollments, order)     [5a]
-  → cards + table in that order               [5a]
-admin picks an order → state → re-render      [5b]
-Un-enroll → refresh() → new rows, same order  [5b]
-```
+- *Retro*:
+  - Planned 2 commits in the overview and the plan; shipped 2 (5a, 5b).
+  - The owner's changes after using the page: not yet recorded.
+  - Rule friction: none recorded.
 
 ## Step 6. The admin copies the addresses of every student with access
 

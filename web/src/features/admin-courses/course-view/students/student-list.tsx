@@ -1,6 +1,11 @@
+"use client";
+
+import { useState } from "react";
+
 import type { AdminCourse } from "@/lib/types";
 
-import { studentsInOrder } from "./sort/students-in-order";
+import { StudentOrderMenu } from "./sort/student-order-menu";
+import { type StudentOrder, studentsInOrder } from "./sort/students-in-order";
 import { StudentCards } from "./student-cards";
 import { StudentTable } from "./student-table";
 
@@ -40,21 +45,35 @@ function StudentListBody({
 
 /**
  * Every enrollment the API returns, whatever its access, counted in the
- * heading, listed newest enrolled first and drawn as one card each below the
- * medium breakpoint and as one table row each from it up. Both copies are
- * drawn, so each student has an Un-enroll button, with its own dialog, in each.
+ * heading, listed in the order the admin picks from the Sort by menu (newest
+ * enrolled first until they pick; a reload goes back to it) and drawn as one
+ * card each below the medium breakpoint and as one table row each from it up.
+ * Both copies are drawn, so each student has an Un-enroll button, with its own
+ * dialog, in each.
  */
 export function StudentList({
   courseId,
   enrollments,
   timeZone,
 }: StudentListProps) {
+  const [studentOrder, setStudentOrder] = useState<StudentOrder>("newest");
+
   return (
     <section className="mt-12">
-      <h2 className="font-heading text-h3">Students ({enrollments.length})</h2>
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <h2 className="font-heading text-h3">
+          Students ({enrollments.length})
+        </h2>
+        {enrollments.length > 0 && (
+          <StudentOrderMenu
+            order={studentOrder}
+            onOrderChange={setStudentOrder}
+          />
+        )}
+      </div>
       <StudentListBody
         courseId={courseId}
-        enrollments={studentsInOrder(enrollments, "newest")}
+        enrollments={studentsInOrder(enrollments, studentOrder)}
         timeZone={timeZone}
       />
     </section>

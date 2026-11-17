@@ -111,3 +111,24 @@ test("shows an un-enrolled student's row as Un-enrolled and Refunded after confi
     0,
   );
 });
+
+// jsdom lays nothing out, so only a browser shows the open menu fitting a phone screen.
+test("puts Dana's card first after picking Needs attention first at 400px", async ({
+  page,
+  msw,
+}) => {
+  msw.use(getCourseAsAdminHandlers.withEveryStudentCase);
+  await page.setViewportSize({ width: 400, height: 800 });
+  await page.goto(adminCoursePath);
+
+  await page.getByRole("combobox", { name: "Sort by" }).click();
+  await expect.poll(() => pageSideOverflow(page)).toBeLessThanOrEqual(0);
+  await page.getByRole("option", { name: "Needs attention first" }).click();
+
+  const firstCard = page
+    .getByRole("list")
+    .filter({ has: page.getByText("Dana Cohen", { exact: true }) })
+    .getByRole("listitem")
+    .first();
+  await expect(firstCard).toContainText("Dana Cohen");
+});
