@@ -222,3 +222,14 @@ export const adminCourseWithEveryStudentCase = {
     },
   ],
 } as const satisfies AdminCourse;
+
+/** The email of the student with this full name in the every-case course. */
+export function everyStudentCaseEmail(studentName: string) {
+  const enrollment = adminCourseWithEveryStudentCase.enrollments.find(
+    (candidate) => candidate.customer.name === studentName,
+  );
+  if (enrollment === undefined) {
+    throw new Error(`No fixture student ${studentName}`);
+  }
+  return enrollment.customer.email;
+}

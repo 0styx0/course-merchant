@@ -31,26 +31,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **5a.** The students list shows newest enrolled first, and the page can put them in three other orders.
   - [x] **5b.** The admin picks an order from a "Sort by" menu beside the Students heading, on phones and on wide screens.
 - [ ] **6. The admin copies the addresses of every student with access.**
-  - [ ] **6a.** The admin clicks "Copy active students' addresses" beside the Sort menu and gets the Active students' addresses on the clipboard. **Next**
-    - *Behaviours*:
-      - The address list holds Active students only: the eight-row fixture gives Sam, Noa, Omar and Dana, in the API's order.
-      - The list leaves out Suspended students (Lee, Rina) and Un-enrolled students (Ari, Ben).
-      - The list is empty for no students, and for students with none Active.
-      - A click writes the addresses joined by ", " to the clipboard.
-      - After a click the note reads "Copied all 4 active students' addresses." in a `role="status"` line.
-      - With one address the note reads "Copied all 1 active student's address." ("all" stays, so the admin knows the copy took everyone).
-      - The button takes the list in the API's order, so picking another sort leaves the clipboard text the same.
-      - With no students the button is absent, like the Sort menu.
-      - An un-enroll that changes the addresses clears the old note, because the list keys the button by the addresses.
-    - *New shared pieces*: none (both pieces live in the copy folder, and only the Students list uses them).
-    - *Files*:
-      - `web/src/features/admin-courses/course-view/students/copy-addresses/active-student-addresses.ts` (+ test; calls `studentAccess` directly, as the sort's `activeRank` does)
-      - `web/src/features/admin-courses/course-view/students/copy-addresses/copy-addresses-button.tsx` (+ test, with user-event's clipboard stub)
-      - [student-list.tsx](../web/src/features/admin-courses/course-view/students/student-list.tsx) (+ test; the header's right side stacks Sort, then Copy)
-      - the new `copy-addresses/` folder is a topic folder like `sort/` and `unenroll/`, so `students/` gains no loose files
-    - *Settled*: the Decision rows on the copy button's words and on when it hides.
-    - *Done when*: `yarn --cwd web check:changed` passes, and `dev:mock` with `withEveryStudentCase` copies the four addresses.
-  - [ ] **6b.** The admin sees why Copy can't run: no Active students, or a browser that refuses the copy.
+  - [x] **6a.** The admin clicks "Copy active students' addresses" beside the Sort menu and gets the Active students' addresses on the clipboard.
+  - [ ] **6b.** The admin sees why Copy can't run: no Active students, or a browser that refuses the copy. **Next**
     - *Behaviours*:
       - With students but none Active, the button is disabled and a grey line reads "No active students to copy."
       - When `writeText` rejects, a red `role="alert"` line reads "Couldn't copy the addresses. Your browser blocked the clipboard; click again or allow clipboard access."

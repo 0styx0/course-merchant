@@ -4,6 +4,8 @@ import { useState } from "react";
 
 import type { AdminCourse } from "@/lib/types";
 
+import { activeStudentEmails } from "./copy-addresses/active-student-emails";
+import { CopyAddressesButton } from "./copy-addresses/copy-addresses-button";
 import { StudentOrderMenu } from "./sort/student-order-menu";
 import { type StudentOrder, studentsInOrder } from "./sort/students-in-order";
 import { StudentCards } from "./student-cards";
@@ -49,7 +51,8 @@ function StudentListBody({
  * enrolled first until they pick; a reload goes back to it) and drawn as one
  * card each below the medium breakpoint and as one table row each from it up.
  * Both copies are drawn, so each student has an Un-enroll button, with its own
- * dialog, in each.
+ * dialog, in each. Beside the Sort by menu, a Copy button puts the Active
+ * students' addresses on the clipboard.
  */
 export function StudentList({
   courseId,
@@ -57,6 +60,8 @@ export function StudentList({
   timeZone,
 }: StudentListProps) {
   const [studentOrder, setStudentOrder] = useState<StudentOrder>("newest");
+  // The API's order, so the copied text stays the same whichever sort is picked.
+  const activeEmails = activeStudentEmails(enrollments);
 
   return (
     <section className="mt-12">
@@ -65,10 +70,17 @@ export function StudentList({
           Students ({enrollments.length})
         </h2>
         {enrollments.length > 0 && (
-          <StudentOrderMenu
-            order={studentOrder}
-            onOrderChange={setStudentOrder}
-          />
+          <div className="flex flex-col gap-2 md:items-end">
+            <StudentOrderMenu
+              order={studentOrder}
+              onOrderChange={setStudentOrder}
+            />
+            {/* A new key when the emails change, so an un-enroll clears the old Copied note. */}
+            <CopyAddressesButton
+              key={activeEmails.join(",")}
+              emails={activeEmails}
+            />
+          </div>
         )}
       </div>
       <StudentListBody

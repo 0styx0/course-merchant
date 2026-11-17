@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   adminCourseWithEnrollment,
   adminCourseWithEveryStudentCase,
+  everyStudentCaseEmail,
 } from "@/mocks/fixtures/admin-courses";
 
 import type { AdminCourse } from "@/lib/types";
@@ -42,6 +43,31 @@ function studentListShowing(enrollments: AdminCourse["enrollments"]) {
       enrollments={enrollments}
       timeZone="America/New_York"
     />
+  );
+}
+
+const copyButtonName = "Copy active students' addresses";
+
+function commaSeparatedEmails(studentNames: string[]) {
+  return studentNames.map(everyStudentCaseEmail).join(", ");
+}
+
+const activeEmailsInApiOrder = commaSeparatedEmails([
+  "Dana Cohen",
+  "Omar Haddad",
+  "Noa Levi",
+  "Sam Ortiz",
+]);
+
+function copyButton() {
+  return screen.getByRole("button", { name: copyButtonName });
+}
+
+function withSamUnenrolled() {
+  return everyStudent.map((enrollment) =>
+    enrollment.customer.name === "Sam Ortiz"
+      ? { ...enrollment, revokedAt: "2026-11-16T15:00:00Z" }
+      : enrollment,
   );
 }
 
@@ -183,13 +209,8 @@ describe("StudentList", () => {
   it("keeps the chosen order when the page re-renders with a newly un-enrolled student", async () => {
     const { rerender } = renderEveryStudent();
     await pickStudentOrder("Active first");
-    const withSamUnenrolled = everyStudent.map((enrollment) =>
-      enrollment.customer.name === "Sam Ortiz"
-        ? { ...enrollment, revokedAt: "2026-11-16T15:00:00Z" }
-        : enrollment,
-    );
 
-    rerender(studentListShowing(withSamUnenrolled));
+    rerender(studentListShowing(withSamUnenrolled()));
 
     expect(screen.getByRole("combobox", { name: "Sort by" })).toHaveTextContent(
       "Active first",
@@ -217,5 +238,61 @@ describe("StudentList", () => {
       "Newest enrolled first",
     );
     expect(cardNames()[0]).toBe("Sam Ortiz");
+  });
+
+  it("offers Copy active students' addresses when the course has students", () => {
+    renderEveryStudent();
+
+    expect(copyButton()).toBeInTheDocument();
+  });
+
+  it("hides the Copy button when nobody has enrolled", () => {
+    render(studentListShowing([]));
+
+    expect(screen.queryByRole("button", { name: copyButtonName })).toBeNull();
+  });
+
+  it("copies the Active students' addresses in the API's order", async () => {
+    renderEveryStudent();
+
+    await userEvent.setup().click(copyButton());
+
+    await expect(navigator.clipboard.readText()).resolves.toBe(
+      activeEmailsInApiOrder,
+    );
+  });
+
+  it("copies the same text whichever order the admin picks", async () => {
+    renderEveryStudent();
+    await pickStudentOrder("Oldest enrolled first");
+
+    await userEvent.setup().click(copyButton());
+
+    await expect(navigator.clipboard.readText()).resolves.toBe(
+      activeEmailsInApiOrder,
+    );
+  });
+
+  it("clears the Copied note when an un-enroll changes the addresses", async () => {
+    const { rerender } = renderEveryStudent();
+    await userEvent.setup().click(copyButton());
+    await screen.findByRole("status");
+
+    rerender(studentListShowing(withSamUnenrolled()));
+
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("copies the three addresses left after Sam is un-enrolled", async () => {
+    render(studentListShowing(withSamUnenrolled()));
+
+    await userEvent.setup().click(copyButton());
+
+    await expect(navigator.clipboard.readText()).resolves.toBe(
+      commaSeparatedEmails(["Dana Cohen", "Omar Haddad", "Noa Levi"]),
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Copied all 3 active students' addresses.",
+    );
   });
 });
