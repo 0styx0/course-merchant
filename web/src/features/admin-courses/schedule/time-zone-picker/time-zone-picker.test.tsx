@@ -55,7 +55,9 @@ describe("TimeZonePicker", () => {
     const { user } = renderPicker();
     await user.clear(input());
     await user.type(input(), "PARIS");
-    expect(screen.getByRole("option", { name: "Europe/Paris" })).toBeVisible();
+    expect(
+      await screen.findByRole("option", { name: "Europe/Paris" }),
+    ).toBeVisible();
     expect(screen.queryByRole("option", { name: "Asia/Tokyo" })).toBeNull();
   });
 
@@ -64,7 +66,7 @@ describe("TimeZonePicker", () => {
     await user.clear(input());
     await user.type(input(), "new york");
     expect(
-      screen.getByRole("option", { name: "America/New_York" }),
+      await screen.findByRole("option", { name: "America/New_York" }),
     ).toBeVisible();
   });
 
@@ -72,7 +74,9 @@ describe("TimeZonePicker", () => {
     const { user } = renderPicker();
     await user.clear(input());
     await user.type(input(), "  tokyo ");
-    expect(screen.getByRole("option", { name: "Asia/Tokyo" })).toBeVisible();
+    expect(
+      await screen.findByRole("option", { name: "Asia/Tokyo" }),
+    ).toBeVisible();
   });
 
   it("says when nothing matches", async () => {
@@ -86,7 +90,7 @@ describe("TimeZonePicker", () => {
     const { user, onChange } = renderPicker();
     await user.clear(input());
     await user.type(input(), "tokyo");
-    await user.click(screen.getByRole("option", { name: "Asia/Tokyo" }));
+    await user.click(await screen.findByRole("option", { name: "Asia/Tokyo" }));
     expect(onChange).toHaveBeenCalledWith("Asia/Tokyo");
   });
 

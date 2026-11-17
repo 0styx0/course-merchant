@@ -64,7 +64,9 @@ describe("EditCourseForm schedule", () => {
     const zone = screen.getByRole("combobox", { name: "Time zone" });
     await user.clear(zone);
     await user.type(zone, "paris");
-    await user.click(screen.getByRole("option", { name: "Europe/Paris" }));
+    await user.click(
+      await screen.findByRole("option", { name: "Europe/Paris" }),
+    );
 
     expect(
       screen.getByText(/^Runs .*2:00 PM to .*4:00 PM \(Europe\/Paris\)/),
@@ -97,7 +99,9 @@ describe("EditCourseForm schedule", () => {
     const zone = screen.getByRole("combobox", { name: "Time zone" });
     await user.clear(zone);
     await user.type(zone, "paris");
-    await user.click(screen.getByRole("option", { name: "Europe/Paris" }));
+    await user.click(
+      await screen.findByRole("option", { name: "Europe/Paris" }),
+    );
     await clickSave(user);
 
     await screen.findAllByText("The start time must be in the future.");
@@ -256,7 +260,9 @@ describe("EditCourseForm schedule", () => {
 
     async function pickParis(user: ReturnType<typeof userEvent.setup>) {
       await typeZone(user, "paris");
-      await user.click(screen.getByRole("option", { name: "Europe/Paris" }));
+      await user.click(
+        await screen.findByRole("option", { name: "Europe/Paris" }),
+      );
     }
 
     it("shows no note for the loaded zone", () => {
@@ -319,7 +325,7 @@ describe("EditCourseForm schedule", () => {
 
       await typeZone(user, "york");
       await user.click(
-        screen.getByRole("option", { name: "America/New_York" }),
+        await screen.findByRole("option", { name: "America/New_York" }),
       );
 
       expect(screen.queryByText(/stay as typed/)).not.toBeInTheDocument();

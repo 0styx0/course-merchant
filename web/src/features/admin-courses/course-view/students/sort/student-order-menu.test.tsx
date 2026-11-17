@@ -26,10 +26,12 @@ describe("StudentOrderMenu", () => {
     render(<StudentOrderMenu order="newest" onOrderChange={onOrderChange} />);
 
     await user.click(sortByMenu());
-    const optionNames = screen
-      .getAllByRole("option")
-      .map((option) => option.textContent);
-    await user.click(screen.getByRole("option", { name: "Active first" }));
+    const optionNames = (await screen.findAllByRole("option")).map(
+      (option) => option.textContent,
+    );
+    await user.click(
+      await screen.findByRole("option", { name: "Active first" }),
+    );
 
     expect(optionNames).toEqual([
       "Newest enrolled first",

@@ -45,7 +45,7 @@ async function pickTimeZone(
   const zone = screen.getByRole("combobox", { name: "Time zone" });
   await user.clear(zone);
   await user.type(zone, search);
-  await user.click(screen.getByRole("option", { name: option }));
+  await user.click(await screen.findByRole("option", { name: option }));
 }
 
 describe("CourseForm", () => {
@@ -78,7 +78,9 @@ describe("CourseForm", () => {
     const zone = screen.getByRole("combobox", { name: "Time zone" });
     await user.clear(zone);
     await user.type(zone, "paris");
-    await user.click(screen.getByRole("option", { name: "Europe/Paris" }));
+    await user.click(
+      await screen.findByRole("option", { name: "Europe/Paris" }),
+    );
     expect(await screen.findAllByText(/Europe\/Paris/)).not.toHaveLength(0);
     expect(screen.getByText(/^Runs .*\(Europe\/Paris\)/)).toBeVisible();
   });

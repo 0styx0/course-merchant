@@ -33,7 +33,7 @@ function cardNames() {
 async function pickStudentOrder(orderLabel: string) {
   const user = userEvent.setup();
   await user.click(screen.getByRole("combobox", { name: "Sort by" }));
-  await user.click(screen.getByRole("option", { name: orderLabel }));
+  await user.click(await screen.findByRole("option", { name: orderLabel }));
 }
 
 function studentListShowing(enrollments: AdminCourse["enrollments"]) {

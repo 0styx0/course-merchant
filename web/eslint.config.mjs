@@ -131,6 +131,18 @@ const eslintConfig = defineConfig([
       "testing-library/no-wait-for-side-effects": "error",
       "testing-library/prefer-find-by": "error",
       "testing-library/no-unnecessary-act": "error",
+      // Base UI opens a Select's popup one animation frame after the click, and
+      // user.click can return before that frame, so a one-shot getByRole("option")
+      // misses the option now and then. findByRole retries until it appears.
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.property.name=/^get(All)?ByRole$/] > Literal.arguments:first-child[value='option']",
+          message:
+            "Options live in a popup that may open a frame after the click. Use findByRole / findAllByRole.",
+        },
+      ],
     },
   },
   {

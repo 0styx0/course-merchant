@@ -78,7 +78,7 @@ async function chooseZone(
   const zone = screen.getByRole("combobox", { name: "Time zone" });
   await user.clear(zone);
   await user.type(zone, zoneName.split("/")[1].replace("_", " "));
-  await user.click(screen.getByRole("option", { name: zoneName }));
+  await user.click(await screen.findByRole("option", { name: zoneName }));
 }
 
 beforeEach(() => {
