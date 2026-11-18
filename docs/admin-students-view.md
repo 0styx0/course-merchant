@@ -26,7 +26,59 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **1c.** The admin's API answers `GET /v1/admin/customers` with every customer, their latest checkout time and their enrollments.
 - [x] **1d.** The admin opens `/admin/students` and sees each student's name and email, "No students yet." when there are none, or the API's message when the load fails.
 - [x] **1e.** The admin sees unfinished checkouts below the students, newest first, each dated in their browser's time zone, and a browser test checks the date follows that zone after hydration.
-- [ ] **2. The admin reaches Students and New course from an admin nav on every admin page.** Needs `/plan-create-implementation` before building. **Next**
+- [ ] **2. The admin reaches Students and New course from an admin nav on every admin page.**
+  - [ ] **2a.** Developers find the site's header, footer and page-frame files in topic folders, so the new header files fit under the files-per-folder limit (CLAUDE.md *Conventions*). *(mechanical)* **Next**
+    - *Behaviours*:
+      - none change; every test passes with the same assertions.
+    - *New shared pieces*: none
+    - *Files*:
+      - `web/src/features/site-layout/header/` (site-header, phone-menu, their tests)
+      - `web/src/features/site-layout/footer/` (site-footer, its test)
+      - `web/src/features/site-layout/page-frame/` (page-frame-classes, admin-page-frame, public-page-layout, its test)
+      - the imports in [layout.tsx](../web/src/app/%28shop%29/layout.tsx), [not-found.tsx](../web/src/app/not-found.tsx), and the Students and course admin pages
+      - the links to the moved files in this doc, [admin-course-view.md](admin-course-view.md) and [course-page.md](course-page.md)
+    - *Done when*: `yarn --cwd web check:changed` passes, and the diff shows renames and import lines only.
+  - [ ] **2b.** Every admin page shows a header with "Embodying Emptiness · Admin" as text, New course and Students links, and a Menu on phones.
+    - *Behaviours*:
+      - the banner shows the site name plus "· Admin" as text, with no link;
+      - New course links to `/admin/courses/new` and Students to `/admin/students`, in that order;
+      - the wide links hide below `md`, and the Menu button hides from `md`;
+      - the phone menu lists New course and Students;
+      - the admin header carries no sticky class and no `data-site-header` (the phone buy bar reads that attribute);
+      - the layout puts the header before the page's content and adds no second `main`;
+      - the public header keeps every existing assertion, now drawn by the shared nav row;
+      - browser test at 400px: on `/admin/students`, open Menu and tap New course → the New course heading, with the admin header still there.
+    - *New shared pieces*:
+      - `HeaderNav`, the framed nav row with a wordmark slot, the wide links and the phone menu, so both headers share the frame, link style and breakpoint;
+      - `NavDestination`, one link's address and label, so the wide row and the phone menu read one list.
+    - *Files*:
+      - `web/src/app/admin/(signed-in)/layout.tsx` (new, with a test)
+      - `web/src/features/site-layout/header/admin-header.tsx` (new, with a test)
+      - `web/src/features/site-layout/header/header-nav.tsx` (new)
+      - `site-header.tsx` (keeps its sticky `<header>`, passes its wordmark link and Courses)
+      - `phone-menu.tsx` (takes the destinations; its test passes Courses)
+      - `web/tests/browser/site-layout/admin-header.spec.ts`
+      - docs: [README.md](../README.md) *Status*, [ARCHITECTURE.md](../ARCHITECTURE.md)'s `app/` row, [web.md](web.md)'s admin-routes row (text in *Step 2*), this doc's tick
+    - *Settled*: the Decision rows on the shared nav row, the admin header scrolling away, and the plain-text wordmark.
+    - *Done when*: `check:changed` and the browser spec pass, and `dev:mock` shows the header on the create, edit, course and Students pages.
+  - [ ] **2c.** Both headers mark the link to the page on screen with the style guide's gold pill, weight 600, dark border and `aria-current="page"`, on wide screens and in the phone menu.
+    - *Behaviours*:
+      - on `/admin/students`, Students is marked and New course isn't;
+      - on `/admin/courses/new`, New course is marked;
+      - on the edit and course pages, neither link is marked;
+      - on `/`, the public Courses link is marked; on a course page, it isn't;
+      - the phone menu marks the same link;
+      - with no address (`usePathname` gives null outside Next's router, as in unit tests), nothing is marked;
+      - every link keeps the pill's padding and a transparent 1px border, so the mark moves nothing.
+    - *New shared pieces*: `HeaderNavLink`, a browser-side link that marks itself when the address matches its href exactly, used by the wide row and the phone menu.
+    - *Files*:
+      - `web/src/features/site-layout/header/header-nav-link.tsx` (new, with a test)
+      - `header-nav.tsx`, `phone-menu.tsx`
+      - the site-header and admin-header tests
+      - docs: [course-page.md](course-page.md)'s shadow-and-pill row (text in *Step 2*), this doc's tick and *Retro*
+      - `header/` stays under the files-per-folder limit; check with `ls web/src/features/site-layout/header | wc -l`
+    - *Settled*: the Decision row on marking the current page.
+    - *Done when*: `check:changed` passes, and `dev:mock` shows the pill on Students, New course and the home page.
 - [ ] **3. The admin copies the addresses of every student in good standing, by button or by hand from a popup.**
 - [ ] **4. The admin unsubscribes and resubscribes a student, and the copy leaves unsubscribed students out.**
 - [ ] **5. The admin finds a student by typing part of their name or email.**
@@ -66,7 +118,7 @@ The finished page, desktop:
 
 ```
 +--------------------------------------------------------------------------+
-| Course Merchant · Admin                     New course   Students        |  admin nav
+| Embodying Emptiness · Admin                 New course  (Students)       |  admin nav
 +--------------------------------------------------------------------------+
 | Students (4)                       Sort by [ Newest enrolled first ▾ ]    |
 | [ Search by name or email                                      ]         |
@@ -154,6 +206,10 @@ Where each sketched state is built:
 | A search box above the lists narrows all three lists by name or email as the admin types, ignoring case, in the browser. Copy ignores the search | J2 and J3 start from an email reply, and phones have no easy find-in-page. If the copy followed the search, a forgotten search would trim the mail list silently (revisit after use) | Browser find only (phones lack it; low); Copy follows the search (silent loss of recipients; medium); an API search parameter (contract and tests for a small list; medium) |
 | Unsubscribe and Resubscribe act on one click, with no dialog, and the page re-renders through Next's `refresh()`, as Un-enroll does in [unenroll-student.action.ts](../web/src/features/admin-courses/course-view/students/unenroll/unenroll-student.action.ts) | Each undoes the other, so a slip costs one click (revisit after use) | A confirm dialog like Un-enroll (a click per student for a reversible change; low); an Undo note where the row was (complexity for the first release; low) |
 | The admin nav sits in the `(signed-in)` layout, so only admin pages show it | The web app has no admin login yet, so the public header can't tell an admin from a visitor. Reading the cookie there would make the cached home page render per request | A Students link in the public header for signed-in admins (needs the login form first and per-request public pages; high) |
+| The admin and public headers share one nav row: the wordmark slot, the wide links and the phone menu. Each header owns its `<header>` and passes its own wordmark and links | A change to the frame, link style or breakpoint reaches both headers | A copied admin header (two to keep in step; low); one header with a sticky flag (a prop for one difference; low) |
+| The admin header scrolls away with the page; only the public header sticks | The create and edit forms pin a notice at the top (`StickyFormNotice`) and Save at the bottom. A sticky header would cover the notice and take 56px more of a phone screen (revisit after use) | A sticky admin header with the notice below it (three pinned bars on a phone, and new scroll margins on the forms; medium) |
+| The admin wordmark reads "Embodying Emptiness · Admin" as plain text, not a link | There is no admin home page. A link to Students would repeat the Students link, and a link to the shop leaves the admin with no nav back (revisit after use) | A link to Students (two links to one page; low); a link to the public home (no way back; low) |
+| Both headers mark the link whose address matches the page exactly, with style guide §7's pill, on wide screens and in the phone menu | The admin sees where they are, and one link piece serves both headers. An exact match leaves the edit and course pages unmarked (revisit after use) | Admin only (two link looks; low); no mark (departs from the style guide; low); a prefix match ("/" would match every public page; low) |
 | Students show as one list at every width: each row lines its fields up from `md` and stacks them on phones (revisit after use) | Four fields fit one row, so a second layout would double the markup and tests for nothing. A list keeps plain HTML with no table semantics to lose | Cards below `md` and a table from `md`, like the course page (two renders of every row; medium) |
 | One menu sorts the Students and Unsubscribed lists in the browser. Newest enrolled first is the default and breaks every tie. Good standing first lists students in good standing, then everyone else (revisit after use) | The answer already holds every customer, as on the course page. One rule keeps every order predictable | API sort parameters (contract and tests for small lists; medium); a menu per list (two controls for one question; low) |
 | The copy button, its Bcc note and the per-enrollment access check are shared with the course page, which passes in the button's words. The course page keeps its approved label ([admin-course-view.md](admin-course-view.md) row "The copy button reads") and gains only the Bcc note | One clipboard behaviour, one refused-copy message (that doc's row "A refused copy shows a red line"), one Bcc warning and one reading of an enrollment's access. The course page's copy row rejected the count in its button, because "active" there already says who is left out | A separate copy for the Students page (two to keep in step); the count on the course page's button too (reverses that page's approved row; low) |
@@ -214,12 +270,47 @@ Empty: "Students (0)" and "No students yet."   API failure: the API's message in
 - **Sketch:**
 
 ```
-| Course Merchant · Admin               New course   Students |
-Phone: | Course Merchant · Admin                         [☰] |
+Wide, /admin/students (the header scrolls away):
+| Embodying Emptiness · Admin              New course  (Students) |
+| Students (5) … page as today, its own main and width …          |
+Phone:
+| Embodying Emptiness · Admin                               [☰]  |
+Menu open (cream sheet, 48px rows):
+| New course                                                [×]  |
+| (Students)                                                      |
+Edit or course page: neither link marked.
+Public home: | Embodying Emptiness                       (Courses) |
+( ) = the current-page pill (2c)
 ```
 
-- Size: 2 to 3 commits: the layout and nav on wide screens, then the phone menu.
-- Docs in the same commits: [web.md](web.md)'s row on the admin routes gains "logout once the login form lands". It's a Decision row, so the owner approves its text.
+- Size: 3 commits (2a to 2c), split in the Status list.
+- Approved row texts, written in the commit that makes each true:
+  - 2b, [web.md](web.md)'s admin-routes row becomes: "Admin routes will be `app/admin/login` and `app/admin/(signed-in)/`. The `(signed-in)` layout shows the admin header, and gains logout once the login form lands" (*Why* and *Rejected* unchanged).
+  - 2c, [course-page.md](course-page.md)'s row "The header shows no scroll shadow and no current-page pill" becomes: "The header shows no scroll shadow, though style guide §7 describes one" | "The wireframe draws none (revisit after use)" | "A shadow now (a browser-side piece watching scroll, about 30 lines plus tests)". The pill moves to this doc's row on marking the current page.
+- Design notes *(temporary)*:
+  - Each header owns its `<header>` element, sticky or not, with `data-site-header` or not. `HeaderNav` owns only the row inside.
+  - A link is current only when the address equals its href. [usePathname](../web/node_modules/next/dist/docs/01-app/03-api-reference/04-functions/use-pathname.md) gives the address in a browser-side component; it returns null outside Next's router, so unit tests without one see no current page. The app has no rewrites or proxy, so the server and browser agree on the address.
+  - Each admin page keeps its own `main` and width; the header uses the 1200px frame.
+  - The layout is not a login check ([web.md](web.md)'s admin-routes row).
+  - No browser test for the pill: unit tests check `aria-current` and the classes.
+- Flow *(temporary)*:
+
+```
+Admin opens a page under /admin/(signed-in)/
+└── layout draws the admin header above the page             2b
+    ├── md and up: wordmark text · New course · Students      2b
+    │   └── link matching the address shows the pill         2c
+    └── below md: wordmark text · Menu                        2b
+        └── tap Menu → sheet: New course, Students            2b
+            ├── row matching the address shows the pill      2c
+            └── tap a link → sheet closes, page loads,
+                header stays                                 existing (PhoneMenu)
+Visitor opens / → Courses shows the pill                       2c
+```
+
+- Terms *(temporary)*:
+  - Nav row: the line inside a header holding the wordmark, the links and the Menu button.
+  - Current-page pill: the style guide's gold rounded fill, bold label and dark border on the link to the page on screen.
 - Done when: journey in `dev:mock`:
   - open the create, edit, course and Students pages → each shows the nav;
   - click Students → the list;
