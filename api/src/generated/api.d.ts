@@ -104,6 +104,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List every customer as an administrator
+         * @description Returns every customer the shop has an email for, newest first, with the start of their latest checkout and all their enrollments. Requires an administrator.
+         *
+         *     A customer who never enrolled has an empty `enrollments` list. The response is not paginated.
+         */
+        get: operations["listCustomersAsAdmin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/courses": {
         parameters: {
             query?: never;
@@ -572,8 +594,8 @@ export interface components {
          * @example 1793102400000
          */
         CourseImageVersion: string;
-        /** @description A customer's enrollment. It gives access only while both `revokedAt` and `suspendedAt` are null. */
-        AdminEnrollment: {
+        /** @description When an enrollment gained and lost access. It gives access only while both `revokedAt` and `suspendedAt` are null. */
+        EnrollmentTimes: {
             /**
              * Format: date-time
              * @description When the customer last gained access, in UTC (ending in `Z`). Set for free enrollments too. Buying the course again after an un-enroll moves it to the new purchase.
@@ -589,6 +611,33 @@ export interface components {
              * @description When a payment dispute suspended access, in UTC. Cleared by hand by the owner.
              */
             suspendedAt: string | null;
+        };
+        /** @description One enrollment of a customer, in a course that may be deleted. */
+        AdminCustomerEnrollment: components["schemas"]["EnrollmentTimes"] & {
+            course: {
+                id: components["schemas"]["CourseId"];
+                /** @description The course's name. */
+                name: string;
+            };
+        };
+        AdminCustomer: {
+            id: components["schemas"]["CustomerId"];
+            name: string;
+            /** Format: email */
+            email: string;
+            /**
+             * Format: date-time
+             * @description When the customer's newest checkout started, in UTC (ending in `Z`). Null when they never started one.
+             */
+            latestCheckoutStartedAt: string | null;
+            /** @description Newest first, including enrollments in deleted courses. */
+            enrollments: components["schemas"]["AdminCustomerEnrollment"][];
+        };
+        ListAdminCustomersResponse: {
+            customers: components["schemas"]["AdminCustomer"][];
+        };
+        /** @description A customer's enrollment. It gives access only while both `revokedAt` and `suspendedAt` are null. */
+        AdminEnrollment: components["schemas"]["EnrollmentTimes"] & {
             /** @description The newest email queued about this enrollment. When none was queued, `kind` names the email that should have gone (`access_suspended` for a suspended enrollment, else `access_granted`) and `status` is `failed`, so the owner can send it by hand. */
             latestEmail: {
                 /** @enum {string} */
@@ -993,6 +1042,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    listCustomersAsAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully retrieved all customers. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListAdminCustomersResponse"];
+                };
             };
             401: components["responses"]["Unauthorized"];
             500: components["responses"]["InternalServerError"];

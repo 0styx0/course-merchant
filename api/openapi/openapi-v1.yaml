@@ -175,6 +175,37 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /admin/customers:
+    get:
+      tags:
+        - Admin
+      operationId: listCustomersAsAdmin
+      summary: List every customer as an administrator
+      description: >
+        Returns every customer the shop has an email for, newest first, with
+        the start of their latest checkout and all their enrollments. Requires
+        an administrator.
+
+
+        A customer who never enrolled has an empty `enrollments` list. The
+        response is not paginated.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Successfully retrieved all customers.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListAdminCustomersResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   /admin/courses:
     get:
       tags:
@@ -1670,19 +1701,15 @@ components:
       examples:
         - "1793102400000"
 
-    AdminEnrollment:
+    EnrollmentTimes:
       description: >
-        A customer's enrollment. It gives access only while both `revokedAt`
-        and `suspendedAt` are null.
+        When an enrollment gained and lost access. It gives access only while
+        both `revokedAt` and `suspendedAt` are null.
       type: object
       required:
-        - customer
-        - payment
         - enrolledAt
         - revokedAt
         - suspendedAt
-        - latestEmail
-        - refundStatus
       properties:
         enrolledAt:
           type: string
@@ -1708,92 +1735,167 @@ components:
           description: >
             When a payment dispute suspended access, in UTC. Cleared by hand
             by the owner.
-        latestEmail:
-          description: >
-            The newest email queued about this enrollment. When none was
-            queued, `kind` names the email that should have gone
-            (`access_suspended` for a suspended enrollment, else
-            `access_granted`) and `status` is `failed`, so the owner can send
-            it by hand.
-          type: object
+
+    AdminCustomerEnrollment:
+      description: One enrollment of a customer, in a course that may be deleted.
+      allOf:
+        - $ref: "#/components/schemas/EnrollmentTimes"
+        - type: object
           required:
-            - kind
-            - status
+            - course
           properties:
-            kind:
-              type: string
-              enum:
-                - access_granted
-                - already_owned
-                - access_suspended
-            status:
-              type: string
-              enum:
-                - pending
-                - sent
-                - failed
-              description: >
-                `failed` means every send attempt failed, or that no email was
-                queued.
-        refundStatus:
+            course:
+              type: object
+              required:
+                - id
+                - name
+              properties:
+                id:
+                  $ref: "#/components/schemas/CourseId"
+                name:
+                  type: string
+                  description: The course's name.
+
+    AdminCustomer:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - latestCheckoutStartedAt
+        - enrollments
+      properties:
+        id:
+          $ref: "#/components/schemas/CustomerId"
+        name:
           type: string
-          enum:
-            - not_owed
-            - owed
-          description: >
-            `owed` means the customer has a paid payment for this course that
-            no enrollment uses, such as a second purchase of a course they
-            already own, so the owner still has to refund it. `not_owed` means
-            no such payment is waiting.
-        customer:
-          type: object
-          required:
-            - id
-            - name
-            - email
-          properties:
-            id:
-              $ref: "#/components/schemas/CustomerId"
-            name:
-              type: string
-            email:
-              type: string
-              format: email
-        payment:
-          description: The payment behind the enrollment, or null for a free course.
+        email:
+          type: string
+          format: email
+        latestCheckoutStartedAt:
           type:
-            - object
+            - string
             - "null"
+          format: date-time
+          description: >
+            When the customer's newest checkout started, in UTC (ending in
+            `Z`). Null when they never started one.
+        enrollments:
+          type: array
+          description: >
+            Newest first, including enrollments in deleted courses.
+          items:
+            $ref: "#/components/schemas/AdminCustomerEnrollment"
+
+    ListAdminCustomersResponse:
+      type: object
+      required:
+        - customers
+      properties:
+        customers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminCustomer"
+
+    AdminEnrollment:
+      description: >
+        A customer's enrollment. It gives access only while both `revokedAt`
+        and `suspendedAt` are null.
+      allOf:
+        - $ref: "#/components/schemas/EnrollmentTimes"
+        - type: object
           required:
-            - status
-            - amount
-            - currency
-            - paidAt
+            - customer
+            - payment
+            - latestEmail
+            - refundStatus
           properties:
-            status:
+            latestEmail:
+              description: >
+                The newest email queued about this enrollment. When none was
+                queued, `kind` names the email that should have gone
+                (`access_suspended` for a suspended enrollment, else
+                `access_granted`) and `status` is `failed`, so the owner can send
+                it by hand.
+              type: object
+              required:
+                - kind
+                - status
+              properties:
+                kind:
+                  type: string
+                  enum:
+                    - access_granted
+                    - already_owned
+                    - access_suspended
+                status:
+                  type: string
+                  enum:
+                    - pending
+                    - sent
+                    - failed
+                  description: >
+                    `failed` means every send attempt failed, or that no email was
+                    queued.
+            refundStatus:
               type: string
               enum:
-                - pending
-                - succeeded
-                - expired
-                - refunded
-            amount:
-              type: integer
-              format: int64
-              minimum: 0
-              maximum: 9007199254740991
-              description: Payment amount in the smallest unit of the currency.
-            currency:
-              $ref: "#/components/schemas/CurrencyCode"
-            paidAt:
-              type:
-                - string
-                - "null"
-              format: date-time
+                - not_owed
+                - owed
               description: >
-                Time the payment succeeded, in UTC (ending in `Z`). Customers
-                are only enrolled once their payment succeeds, so this is set
-                for every enrollment.
+                `owed` means the customer has a paid payment for this course that
+                no enrollment uses, such as a second purchase of a course they
+                already own, so the owner still has to refund it. `not_owed` means
+                no such payment is waiting.
+            customer:
+              type: object
+              required:
+                - id
+                - name
+                - email
+              properties:
+                id:
+                  $ref: "#/components/schemas/CustomerId"
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+            payment:
+              description: The payment behind the enrollment, or null for a free course.
+              type:
+                - object
+                - "null"
+              required:
+                - status
+                - amount
+                - currency
+                - paidAt
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - pending
+                    - succeeded
+                    - expired
+                    - refunded
+                amount:
+                  type: integer
+                  format: int64
+                  minimum: 0
+                  maximum: 9007199254740991
+                  description: Payment amount in the smallest unit of the currency.
+                currency:
+                  $ref: "#/components/schemas/CurrencyCode"
+                paidAt:
+                  type:
+                    - string
+                    - "null"
+                  format: date-time
+                  description: >
+                    Time the payment succeeded, in UTC (ending in `Z`). Customers
+                    are only enrolled once their payment succeeds, so this is set
+                    for every enrollment.
 
     # A price in effect can never be changed or deleted, only overwritten by a price with a later effectiveAt.
     # A price not yet in effect can be replaced or deleted.

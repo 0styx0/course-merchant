@@ -110,9 +110,8 @@ describe("AdminCustomersRepository (integration)", () => {
   });
 
   it("includes an enrollment in a deleted course", async () => {
-    const publishedCourse = (
-      await createPricedCourse({ title: "Advanced React" })
-    ).course;
+    const liveCourse = (await createPricedCourse({ title: "Advanced React" }))
+      .course;
     const customer = await createCustomer({});
     await createEnrollment({
       courseId: course.id,
@@ -120,7 +119,7 @@ describe("AdminCustomersRepository (integration)", () => {
       purchasedAt: instant("2026-09-02T00:00:00.000Z"),
     });
     await createEnrollment({
-      courseId: publishedCourse.id,
+      courseId: liveCourse.id,
       customerId: customer.id,
       purchasedAt: instant("2026-09-03T00:00:00.000Z"),
     });
@@ -133,7 +132,7 @@ describe("AdminCustomersRepository (integration)", () => {
     const [row] = await repository.findAllCustomersWithEnrollments(db);
 
     expect(row?.enrollments.map((enrollment) => enrollment.course)).toEqual([
-      { id: publishedCourse.id, title: "Advanced React" },
+      { id: liveCourse.id, title: "Advanced React" },
       { id: course.id, title: course.title },
     ]);
   });

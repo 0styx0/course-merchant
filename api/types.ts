@@ -15,6 +15,9 @@ export type GetCourseAdminResponse = components["schemas"]["AdminCourse"];
 export type ListCoursesAdminResponse =
   components["schemas"]["ListAdminCoursesResponse"];
 
+export type ListAdminCustomersResponse =
+  components["schemas"]["ListAdminCustomersResponse"];
+
 export type CourseDescription = components["schemas"]["CourseDescription"];
 
 export type CreateCourseRequest = components["schemas"]["CreateCourseRequest"];

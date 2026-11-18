@@ -23,25 +23,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 
 - [x] **1a.** The API can read every customer with their latest checkout time and all their enrollments. Nothing serves it until 1c.
 - [x] **1b.** The admin course answer turns stored enrollment times into API times with a helper in `enrollments/`, ready for the customer list in 1c.
-- [ ] **1c.** The admin's API answers `GET /v1/admin/customers` with every customer. **Next**
-  - *Behaviours*:
-    - signed in, the e2e test gets a 200 with times in UTC, null kept as null, a customer with no enrollment and one with two;
-    - signed out gets 401, which the route-protection e2e test checks from the contract;
-    - the course's stored `title` is sent as `course.name`.
-  - *New shared pieces*:
-    - contract schemas `ListAdminCustomersResponse`, `AdminCustomer` (`latestCheckoutStartedAt`, `enrollments`) and `AdminCustomerEnrollment` (`course` with `id` and `name`, plus the three times), which web and milestones 3 to 7 read;
-    - a new `EnrollmentTimes` schema that `AdminEnrollment` and `AdminCustomerEnrollment` both use, so the three times are defined once.
-  - *Files*:
-    - [openapi-v1.yaml](../api/openapi/openapi-v1.yaml) (`listCustomersAsAdmin`, twin `listCoursesAsAdmin`; regenerate both sides' types)
-    - [api/types.ts](../api/types.ts)
-    - `api/src/admin-customers/admin-customers.controller.ts`
-    - `api/src/admin-customers/admin-customers.service.ts`
-    - `api/src/admin-customers/admin-customers.module.ts`
-    - unit specs for the controller and service, and `api/src/test/e2e/admin-customers/admin-customers.list.spec.ts`
-  - *Needs*: 1a and 1b.
-  - *Settled*: operationId `listCustomersAsAdmin` at `GET /v1/admin/customers`.
-  - *Done when*: the unit and e2e specs pass, including route protection.
-- [ ] **1d.** The admin opens `/admin/students` and sees each student's name and email, "No students yet." when there are none, or the API's message when the load fails.
+- [x] **1c.** The admin's API answers `GET /v1/admin/customers` with every customer, their latest checkout time and their enrollments.
+- [ ] **1d.** The admin opens `/admin/students` and sees each student's name and email, "No students yet." when there are none, or the API's message when the load fails. **Next**
   - *Behaviours*:
     - `success`: "Students (5)" with each name over its email, in the API's order;
     - Tal, who has no enrollment, stays off the list;
