@@ -27,18 +27,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **1d.** The admin opens `/admin/students` and sees each student's name and email, "No students yet." when there are none, or the API's message when the load fails.
 - [x] **1e.** The admin sees unfinished checkouts below the students, newest first, each dated in their browser's time zone, and a browser test checks the date follows that zone after hydration.
 - [ ] **2. The admin reaches Students and New course from an admin nav on every admin page.**
-  - [ ] **2a.** Developers find the site's header, footer and page-frame files in topic folders, so the new header files fit under the files-per-folder limit (CLAUDE.md *Conventions*). *(mechanical)* **Next**
-    - *Behaviours*:
-      - none change; every test passes with the same assertions.
-    - *New shared pieces*: none
-    - *Files*:
-      - `web/src/features/site-layout/header/` (site-header, phone-menu, their tests)
-      - `web/src/features/site-layout/footer/` (site-footer, its test)
-      - `web/src/features/site-layout/page-frame/` (page-frame-classes, admin-page-frame, public-page-layout, its test)
-      - the imports in [layout.tsx](../web/src/app/%28shop%29/layout.tsx), [not-found.tsx](../web/src/app/not-found.tsx), and the Students and course admin pages
-      - the links to the moved files in this doc, [admin-course-view.md](admin-course-view.md) and [course-page.md](course-page.md)
-    - *Done when*: `yarn --cwd web check:changed` passes, and the diff shows renames and import lines only.
-  - [ ] **2b.** Every admin page shows a header with "Embodying Emptiness · Admin" as text, New course and Students links, and a Menu on phones.
+  - [x] **2a.** Developers find the site's header, footer and page-frame files in topic folders, so the new header files fit under the files-per-folder limit.
+  - [ ] **2b.** Every admin page shows a header with "Embodying Emptiness · Admin" as text, New course and Students links, and a Menu on phones. **Next**
     - *Behaviours*:
       - the banner shows the site name plus "· Admin" as text, with no link;
       - New course links to `/admin/courses/new` and Students to `/admin/students`, in that order;
@@ -265,7 +255,7 @@ Empty: "Students (0)" and "No students yet."   API failure: the API's message in
 
 - Why here: it needs a page to link to (milestone 1). It is independent of milestones 3 to 7, so it can slip without blocking them.
   - Each admin page keeps its own `main` frame and width; `grep -rn 'max-w' web/src/app/admin` prints them. The layout adds only the header above it.
-  - The twins are [site-header.tsx](../web/src/features/site-layout/site-header.tsx) and [phone-menu.tsx](../web/src/features/site-layout/phone-menu.tsx).
+  - The twins are [site-header.tsx](../web/src/features/site-layout/header/site-header.tsx) and [phone-menu.tsx](../web/src/features/site-layout/header/phone-menu.tsx).
 - Needs: 1.
 - **Sketch:**
 

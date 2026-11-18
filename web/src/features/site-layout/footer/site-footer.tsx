@@ -3,7 +3,7 @@ import Link from "next/link";
 import { contactEmail } from "@/lib/site-config/contact-email";
 import { SITE_NAME } from "@/lib/site-config/site-name";
 
-import { pageFrameClasses } from "./page-frame-classes";
+import { pageFrameClasses } from "../page-frame/page-frame-classes";
 
 const footerLinkClass =
   "flex min-h-11 items-center text-muted-foreground hover:text-foreground";

@@ -9,7 +9,7 @@ import {
   selectUnfinishedCheckouts,
 } from "@/features/admin-students/lists/customer-groups";
 import { UnfinishedCheckoutList } from "@/features/admin-students/lists/unfinished-checkout-list";
-import { AdminPageFrame } from "@/features/site-layout/admin-page-frame";
+import { AdminPageFrame } from "@/features/site-layout/page-frame/admin-page-frame";
 import type { AdminCustomer } from "@/lib/types";
 
 export const metadata: Metadata = {

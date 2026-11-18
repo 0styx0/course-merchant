@@ -6,7 +6,7 @@ import { AdminCourseImage } from "@/features/admin-courses/course-view/admin-cou
 import { StudentList } from "@/features/admin-courses/course-view/students/student-list";
 import { getAdminCourseOrNotFound } from "@/features/admin-courses/api/get-admin-course-or-not-found";
 import { CoursePageLayout } from "@/features/courses/course-page-layout";
-import { AdminPageFrame } from "@/features/site-layout/admin-page-frame";
+import { AdminPageFrame } from "@/features/site-layout/page-frame/admin-page-frame";
 import { readRequestTime } from "@/lib/time/read-request-time";
 import type { AdminCourse } from "@/lib/types";
 

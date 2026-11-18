@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { SITE_NAME } from "@/lib/site-config/site-name";
 
-import { pageFrameClasses } from "./page-frame-classes";
+import { pageFrameClasses } from "../page-frame/page-frame-classes";
 import { PhoneMenu } from "./phone-menu";
 
 export function SiteHeader() {

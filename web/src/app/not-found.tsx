@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { NotFoundMessage } from "@/components/not-found-message";
-import { PublicPageLayout } from "@/features/site-layout/public-page-layout";
+import { PublicPageLayout } from "@/features/site-layout/page-frame/public-page-layout";
 
 // The root layout's title template adds the site name.
 export const metadata: Metadata = {
