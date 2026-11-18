@@ -21,7 +21,85 @@ Keep this file current **in the same commit as the work**: tick the step, and ma
 
 Each milestone delivers one outcome. `/plan-create-implementation` splits a milestone into commit lines when it becomes the next one. Every milestone ships before launch.
 
-- [ ] **1. The admin opens the Students page and sees every student's name and email, with unfinished checkouts in their own list.** **Next**
+- [ ] **1a.** The API can read every customer with their latest checkout time and all their enrollments. Nothing serves it until 1c. **Next**
+  - *Behaviours*:
+    - a customer with two checkouts and no enrollment gets the newer checkout's time;
+    - a customer with two enrollments gets both, with course id and title and the enrolled, un-enrolled and suspended times;
+    - an enrollment in a deleted course is included;
+    - a customer with only free courses gets a null checkout time;
+    - customers come newest first, and the id breaks ties;
+    - with no customers the list is empty.
+  - *New shared pieces*: the repository and its row type, which 1c maps to the contract.
+  - *Files*:
+    - `api/src/admin-customers/admin-customers.repository.ts` (copies the includes in [admin-courses.repository.ts](../api/src/courses/repositories/admin-courses.repository.ts))
+    - `api/src/admin-customers/admin-customers.module.ts`
+    - [app.module.ts](../api/src/app.module.ts)
+    - [ARCHITECTURE.md](../ARCHITECTURE.md) (a row in the API modules table, shaped like the `enrollments/` row)
+    - an integration spec in `api/src/admin-customers/test/integration/`
+  - *Settled*: Decisions rows "Every customer shows on the page" and "The list answer includes enrollments in deleted courses".
+  - *Done when*: the integration spec and `yarn --cwd api check:changed` pass.
+- [ ] **1b.** Both admin answers turn stored enrollment times into API times with one helper. *(mechanical, coverage first)*
+  - *New shared pieces*: `toEnrollmentTimesResponse` and `formatOptionalDate`, so 1c doesn't copy the course mapper or reach into `courses/`.
+  - *Files*:
+    - `api/src/enrollments/enrollment-times-response.ts`
+    - [courses.mapper.ts](../api/src/courses/courses.mapper.ts)
+  - *Done when*: the existing course tests pass unchanged.
+- [ ] **1c.** The admin's API answers `GET /v1/admin/customers` with every customer.
+  - *Behaviours*:
+    - signed in, the e2e test gets a 200 with times in UTC, null kept as null, a customer with no enrollment and one with two;
+    - signed out gets 401, which the route-protection e2e test checks from the contract;
+    - the course's stored `title` is sent as `course.name`.
+  - *New shared pieces*:
+    - contract schemas `ListAdminCustomersResponse`, `AdminCustomer` (`latestCheckoutStartedAt`, `enrollments`) and `AdminCustomerEnrollment` (`course` with `id` and `name`, plus the three times), which web and milestones 3 to 7 read;
+    - a new `EnrollmentTimes` schema that `AdminEnrollment` and `AdminCustomerEnrollment` both use, so the three times are defined once.
+  - *Files*:
+    - [openapi-v1.yaml](../api/openapi/openapi-v1.yaml) (`listCustomersAsAdmin`, twin `listCoursesAsAdmin`; regenerate both sides' types)
+    - [api/types.ts](../api/types.ts)
+    - `api/src/admin-customers/admin-customers.controller.ts`
+    - `api/src/admin-customers/admin-customers.service.ts`
+    - `api/src/admin-customers/admin-customers.module.ts`
+    - unit specs for the controller and service, and `api/src/test/e2e/admin-customers/admin-customers.list.spec.ts`
+  - *Needs*: 1a and 1b.
+  - *Settled*: operationId `listCustomersAsAdmin` at `GET /v1/admin/customers`.
+  - *Done when*: the unit and e2e specs pass, including route protection.
+- [ ] **1d.** The admin opens `/admin/students` and sees each student's name and email, "No students yet." when there are none, or the API's message when the load fails.
+  - *Behaviours*:
+    - `success`: "Students (5)" with each name over its email, in the API's order;
+    - Tal, who has no enrollment, stays off the list;
+    - `empty`: "Students (0)" and "No students yet.";
+    - `error`: `ProblemAlert` shows the API's title and detail;
+    - the tab reads "Students" and search engines are told not to index the page.
+  - *New shared pieces*:
+    - the `listCustomersAsAdmin` wrapper and the `AdminCustomer` alias, which 1e and milestones 3 to 7 use;
+    - the six-customer fixture, which every later milestone walks.
+  - *Files*:
+    - [lib/types.ts](../web/src/lib/types.ts) (alias)
+    - `web/src/features/admin-students/api/admin-students.api.ts` (twin [admin-courses.api.ts](../web/src/features/admin-courses/api/admin-courses.api.ts))
+    - `web/src/features/admin-students/lists/customer-groups.ts`
+    - `web/src/mocks/handlers/admin-students/list-customers-as-admin.ts` (`success`, `empty`, `error`)
+    - [server.ts](../web/src/mocks/server.ts)
+    - `web/src/app/admin/(signed-in)/students/page.tsx` (`await connection()`; reuses `StudentIdentity` from [student-fields.tsx](../web/src/features/admin-courses/course-view/students/student-fields.tsx))
+    - `web/src/mocks/fixtures/admin-students.ts` (a new file in the fixtures folder; count it against the 10-file limit)
+    - unit tests beside the grouping and the page
+  - *Needs*: 1c.
+  - *Settled*: Decisions row "The Students page calls `await connection()`".
+  - *Done when*: the unit tests and `yarn --cwd web check:changed` pass, and `dev:mock` shows the three states.
+- [ ] **1e.** The admin sees unfinished checkouts below the students, newest first, each dated in their browser's time zone.
+  - *Behaviours*:
+    - "Unfinished checkouts (1)" and the grey line "Started a checkout and never paid.";
+    - each row reads name · email · "Nov 3, 2026";
+    - a null checkout time shows no date and sorts last;
+    - with nobody to show, the section hides;
+    - with no students, the section still shows beside "No students yet.";
+    - one browser test, with a Playwright `timezoneId` where the day differs from UTC, checks the date follows the browser's zone after hydration.
+  - *New shared pieces*: none.
+  - *Files*:
+    - `web/src/features/admin-students/lists/customer-groups.ts`
+    - `web/src/features/admin-students/lists/unfinished-checkout-list.tsx` (uses `useVisitorTimeZone` and `dateOnlyFormatter`)
+    - `web/src/app/admin/(signed-in)/students/page.tsx`
+    - `web/tests/browser/admin-students/students-page.spec.ts`
+    - [README.md](../README.md) *Status*
+  - *Done when*: the unit and browser tests pass, and the milestone's journey passes in `dev:mock`.
 - [ ] **2. The admin reaches Students and New course from an admin nav on every admin page.**
 - [ ] **3. The admin copies the addresses of every student in good standing, by button or by hand from a popup.**
 - [ ] **4. The admin unsubscribes and resubscribes a student, and the copy leaves unsubscribed students out.**
@@ -135,7 +213,7 @@ Where each sketched state is built:
 - **Unsubscribe is about bulk mail only.** Course emails and the course page's copy still reach unsubscribed students, because they need news about a course they joined.
 - **No new API for sorting, searching or copying.** The list answer holds every customer and their enrollments, so the browser does all three, as on the course page.
 - **The page shows the API's words on failure** ([web.md](web.md)).
-- **Every date on this page shows in the admin's browser time zone.** The admin reads one zone, their own, whatever course or checkout a date belongs to. [use-browser-time-zone.ts](../web/src/features/admin-courses/create-course/use-browser-time-zone.ts) is the twin.
+- **Every date on this page shows in the admin's browser time zone.** The admin reads one zone, their own, whatever course or checkout a date belongs to. [use-visitor-time-zone.ts](../web/src/features/courses/course-time/use-visitor-time-zone.ts) is the twin: it reads the browser's zone only after hydration, so the server's HTML and the first browser render match.
 - **No web login check yet.** [web.md](web.md)'s `requireAdminSession()` arrives with the login form. Until then this page, like the other admin pages, calls the API without it.
 
 ## Decisions
@@ -153,6 +231,8 @@ Where each sketched state is built:
 | Students show as one list at every width: each row lines its fields up from `md` and stacks them on phones (revisit after use) | Four fields fit one row, so a second layout would double the markup and tests for nothing. A list keeps plain HTML with no table semantics to lose | Cards below `md` and a table from `md`, like the course page (two renders of every row; medium) |
 | One menu sorts the Students and Unsubscribed lists in the browser. Newest enrolled first is the default and breaks every tie. Good standing first lists students in good standing, then everyone else (revisit after use) | The answer already holds every customer, as on the course page. One rule keeps every order predictable | API sort parameters (contract and tests for small lists; medium); a menu per list (two controls for one question; low) |
 | The copy button, its Bcc note and the per-enrollment access check are shared with the course page, which passes in the button's words. The course page keeps its approved label ([admin-course-view.md](admin-course-view.md) row "The copy button reads") and gains only the Bcc note | One clipboard behaviour, one refused-copy message (that doc's row "A refused copy shows a red line"), one Bcc warning and one reading of an enrollment's access. The course page's copy row rejected the count in its button, because "active" there already says who is left out | A separate copy for the Students page (two to keep in step); the count on the course page's button too (reverses that page's approved row; low) |
+| The Students page calls `await connection()` before it loads | It reads no params or cookies, so Next would build it once at deploy, the list would go stale, and the build would need the API | `force-dynamic` (the same effect through an older option; low); hiding it in the shared client ([web.md](web.md) rejects that) |
+| The list answer includes enrollments in deleted courses | A paying customer stays a student. Without them, such a customer would land under Unfinished checkouts (revisit after use) | Filtering them out (the wrong list for those customers; low) |
 
 ## Step 1. The admin opens the Students page and sees every student's name and email, with unfinished checkouts in their own list
 
@@ -165,49 +245,54 @@ Where each sketched state is built:
   - the page twin, [the course page](../web/src/app/admin/(signed-in)/courses/[courseId]/page.tsx) (loader, `ProblemAlert`, page frame);
   - the wrapper twin [admin-courses.api.ts](../web/src/features/admin-courses/api/admin-courses.api.ts);
   - the mock twins [get-course-as-admin.ts](../web/src/mocks/handlers/admin-courses/get-course-as-admin.ts) and the [admin-courses.ts fixtures](../web/src/mocks/fixtures/admin-courses.ts);
-  - the admin's browser time zone for the checkout date, from [use-browser-time-zone.ts](../web/src/features/admin-courses/create-course/use-browser-time-zone.ts);
+  - the admin's browser time zone for the checkout date, from [use-visitor-time-zone.ts](../web/src/features/courses/course-time/use-visitor-time-zone.ts), with `dateOnlyFormatter` in [formatters.ts](../web/src/lib/utils/formatters.ts);
   - `Customer`, `Payment` (one per checkout attempt) and `Enrollment` in [contract.prisma](../api/src/prisma/contract.prisma). Checkout creates the customer before payment, in [checkout.repository.ts](../api/src/checkout/checkout.repository.ts).
 - **Sketch:**
 
 ```
 /admin/students   (no nav yet; reached by URL, like the edit page)
-Students (5)
-Sam Ortiz · sam@example.com
-Noa Levi · noa@example.com
-Lee Park · lee@example.com
-Ben Shaw · ben@example.com
-Dana Cohen · dana@example.com
-Unfinished checkouts (1)
-Started a checkout and never paid. Never copied.   (grey help)
-Tal Ben · tal@example.com · Nov 3, 2026
-Empty: "No students yet."   API failure: the API's message in ProblemAlert.
+Students (5)                                h1
+Sam Ortiz
+sam@example.com          … Noa, Lee, Ben, Dana the same way
+Unfinished checkouts (1)                    h2
+Started a checkout and never paid.          grey help
+Tal Ben · tal@example.com · Nov 3, 2026     date appears after hydration
+Empty: "Students (0)" and "No students yet."   API failure: the API's message in ProblemAlert.
 ```
 
-- Size: 3 to 4 commits:
-  - the contract and API endpoint, with web's regenerated types as the pre-commit hook requires;
-  - the web wrapper with its mock handler and fixture;
-  - the page, which splits the customers into the two lists.
-- Test data: a new fixture covering every customer case, created in the wrapper commit. It uses the finished sketch's courses and dates from the start, because milestone 6 checks them:
+- Test data: a new fixture covering every customer case, created in 1d. It uses the finished sketch's courses and dates from the start, because milestone 6 checks them:
   - several courses, one course, suspended, and un-enrolled only;
   - Tal, with no enrollment;
   - Dana, a plain student whom milestone 4 marks unsubscribed.
   - A new handler, named after the operationId, serves the fixture with `success`, `empty` and `error`.
 - Docs in the same commits:
-  - a row for the new API module in [ARCHITECTURE.md](../ARCHITECTURE.md)'s API modules table, shaped like the `enrollments/` row (`admin-enrollments/` has none to copy);
-  - the page in [README.md](../README.md)'s *Status*.
+  - 1a adds a row for the new API module to [ARCHITECTURE.md](../ARCHITECTURE.md)'s API modules table, shaped like the `enrollments/` row (`admin-enrollments/` has none to copy);
+  - 1e adds the page to [README.md](../README.md)'s *Status*.
 - Done when:
   - the API e2e test lists a customer with no enrollment and one with two;
   - journey in `dev:mock`:
     - open `/admin/students` with `success` → five students by name and email, and Tal under Unfinished checkouts;
     - switch to `empty` → "No students yet.";
     - switch to `error` → the API's message.
-- Can wait:
-  - the student order before milestone 7 (the Unfinished checkouts list is newest first, with its date, from this milestone);
-  - the response's field names, which `/plan-create-implementation` sets;
-  - the headings' and help line's words;
-  - the operationId and path (recommend `listCustomersAsAdmin` at `GET /v1/admin/customers`, since the table is `Customer`);
-  - the names of the new API module, web feature folder and e2e spec folder (recommend `admin-customers/` in the API and its e2e folder, and `admin-students/` in web, after the page).
-- Re-measure: `ls api/src/test/e2e web/src/mocks/handlers web/src/mocks/fixtures web/src/features` prints the folders the new files join. Count each against the 10-file limit.
+- *(temporary)* Design notes:
+  - The API module is `admin-customers/` (controller → service → repository). The web feature is `admin-students/` with `api/` and `lists/`. Mocks go in `handlers/admin-students/`.
+  - The API lists customers newest first by `Customer.createdAt`, with the id breaking ties. The web keeps that order for Students until milestone 7, and orders Unfinished checkouts itself, newest checkout first.
+  - `latestCheckoutStartedAt` is the newest `Payment.createdAt`. Checkout creates the customer and its payment in one transaction, so null means the customer took only free courses. The web still handles null: no date, last in the list.
+  - New components never reuse the course page's name `StudentList`. Student rows reuse `StudentIdentity`.
+  - Two accepted exceptions to the commit rules:
+    - the page first shows in 1d, and 1a's repository stays unused until 1c;
+    - the cause is the route-protection e2e test, which expects a 401 from every path in the contract, so the contract can't land before its route, and one endpoint spans more files than one commit allows.
+  - 1d's help line leaves out "Never copied." because the copy arrives in milestone 3, which adds those words.
+- *(temporary)* Flow:
+
+```
+Admin opens /admin/students → connection() → GET /v1/admin/customers    1d
+├── signed out → 401 → ProblemAlert                                      existing
+├── API failure → ProblemAlert with the API's words                      1d
+└── 200 (repository 1a, mapping 1b and 1c) → customers split
+    ├── students: none → "No students yet." | rows                        1d
+    └── unfinished: none → hidden | newest first, dated                   1e
+```
 
 ## Step 2. The admin reaches Students and New course from an admin nav on every admin page
 
