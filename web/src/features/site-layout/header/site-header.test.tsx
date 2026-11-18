@@ -1,9 +1,26 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { SiteHeader } from "./site-header";
 
+// usePathname returns null outside Next's router, so tests start there.
+let currentPathname: string | null = null;
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => currentPathname,
+}));
+
+function coursesLink() {
+  return within(screen.getByRole("banner")).getByRole("link", {
+    name: "Courses",
+  });
+}
+
 describe("SiteHeader", () => {
+  afterEach(() => {
+    currentPathname = null;
+  });
+
   it("shows the banner with a Main nav holding the wordmark and Courses links to the home page", () => {
     render(<SiteHeader />);
 
@@ -69,5 +86,19 @@ describe("SiteHeader", () => {
     expect(
       within(screen.getByRole("banner")).getByRole("link", { name: "Courses" }),
     ).toHaveClass("text-meta", "font-medium");
+  });
+
+  it("marks Courses as the current page on the home page", () => {
+    currentPathname = "/";
+    render(<SiteHeader />);
+
+    expect(coursesLink()).toHaveAttribute("aria-current", "page");
+  });
+
+  it("leaves Courses unmarked on a course page", () => {
+    currentPathname = "/courses/x";
+    render(<SiteHeader />);
+
+    expect(coursesLink()).not.toHaveAttribute("aria-current");
   });
 });

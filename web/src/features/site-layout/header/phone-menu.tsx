@@ -1,7 +1,6 @@
 "use client";
 
 import { MenuIcon } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 
 import {
@@ -10,6 +9,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+
+import { HeaderNavLink } from "./header-nav-link";
 
 export type NavDestination = { href: string; label: string };
 
@@ -34,14 +35,14 @@ function MenuSheetContent({
       <SheetTitle className="sr-only">Menu</SheetTitle>
       <nav aria-label="Phone">
         {destinations.map(({ href, label }) => (
-          <Link
+          <HeaderNavLink
             key={href}
             href={href}
             onClick={onLinkTap}
-            className="flex min-h-12 items-center"
+            className="flex w-fit min-h-12 items-center"
           >
             {label}
-          </Link>
+          </HeaderNavLink>
         ))}
       </nav>
     </SheetContent>

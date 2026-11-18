@@ -26,28 +26,11 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **1c.** The admin's API answers `GET /v1/admin/customers` with every customer, their latest checkout time and their enrollments.
 - [x] **1d.** The admin opens `/admin/students` and sees each student's name and email, "No students yet." when there are none, or the API's message when the load fails.
 - [x] **1e.** The admin sees unfinished checkouts below the students, newest first, each dated in their browser's time zone, and a browser test checks the date follows that zone after hydration.
-- [ ] **2. The admin reaches Students and New course from an admin nav on every admin page.**
+- [x] **2. The admin reaches Students and New course from an admin nav on every admin page.**
   - [x] **2a.** Developers find the site's header, footer and page-frame files in topic folders, so the new header files fit under the files-per-folder limit.
   - [x] **2b.** Every admin page shows a header with "Embodying Emptiness · Admin" as text, New course and Students links, and a Menu on phones.
-  - [ ] **2c.** Both headers mark the link to the page on screen with the style guide's gold pill, weight 600, dark border and `aria-current="page"`, on wide screens and in the phone menu. **Next**
-    - *Behaviours*:
-      - on `/admin/students`, Students is marked and New course isn't;
-      - on `/admin/courses/new`, New course is marked;
-      - on the edit and course pages, neither link is marked;
-      - on `/`, the public Courses link is marked; on a course page, it isn't;
-      - the phone menu marks the same link;
-      - with no address (`usePathname` gives null outside Next's router, as in unit tests), nothing is marked;
-      - every link keeps the pill's padding and a transparent 1px border, so the mark moves nothing.
-    - *New shared pieces*: `HeaderNavLink`, a browser-side link that marks itself when the address matches its href exactly, used by the wide row and the phone menu.
-    - *Files*:
-      - `web/src/features/site-layout/header/header-nav-link.tsx` (new, with a test)
-      - `header-nav.tsx`, `phone-menu.tsx`
-      - the site-header and admin-header tests
-      - docs: [course-page.md](course-page.md)'s shadow-and-pill row (text in *Step 2*), this doc's tick and *Retro*
-      - `header/` stays under the files-per-folder limit; check with `ls web/src/features/site-layout/header | wc -l`
-    - *Settled*: the Decision row on marking the current page.
-    - *Done when*: `check:changed` passes, and `dev:mock` shows the pill on Students, New course and the home page.
-- [ ] **3. The admin copies the addresses of every student in good standing, by button or by hand from a popup.**
+  - [x] **2c.** Both headers mark the link to the page on screen with the style guide's gold current-page pill, on wide screens and in the phone menu.
+- [ ] **3. The admin copies the addresses of every student in good standing, by button or by hand from a popup.** **Next**: still needs `/plan-create-implementation admin-students-view` to split it into commits.
 - [ ] **4. The admin unsubscribes and resubscribes a student, and the copy leaves unsubscribed students out.**
 - [ ] **5. The admin finds a student by typing part of their name or email.**
 - [ ] **6. The admin sees each student's course count, last enrolled date and courses, newest first.**
@@ -255,34 +238,14 @@ Public home: | Embodying Emptiness                       (Courses) |
 - Approved row texts, written in the commit that makes each true:
   - 2b, [web.md](web.md)'s admin-routes row becomes: "Admin routes will be `app/admin/login` and `app/admin/(signed-in)/`. The `(signed-in)` layout shows the admin header, and gains logout once the login form lands" (*Why* and *Rejected* unchanged).
   - 2c, [course-page.md](course-page.md)'s row "The header shows no scroll shadow and no current-page pill" becomes: "The header shows no scroll shadow, though style guide §7 describes one" | "The wireframe draws none (revisit after use)" | "A shadow now (a browser-side piece watching scroll, about 30 lines plus tests)". The pill moves to this doc's row on marking the current page.
-- Design notes *(temporary)*:
-  - Each header owns its `<header>` element, sticky or not, with `data-site-header` or not. `HeaderNav` owns only the row inside.
-  - A link is current only when the address equals its href. [usePathname](../web/node_modules/next/dist/docs/01-app/03-api-reference/04-functions/use-pathname.md) gives the address in a browser-side component; it returns null outside Next's router, so unit tests without one see no current page. The app has no rewrites or proxy, so the server and browser agree on the address.
-  - Each admin page keeps its own `main` and width; the header uses the 1200px frame.
-  - The layout is not a login check ([web.md](web.md)'s admin-routes row).
-  - No browser test for the pill: unit tests check `aria-current` and the classes.
-- Flow *(temporary)*:
-
-```
-Admin opens a page under /admin/(signed-in)/
-└── layout draws the admin header above the page             2b
-    ├── md and up: wordmark text · New course · Students      2b
-    │   └── link matching the address shows the pill         2c
-    └── below md: wordmark text · Menu                        2b
-        └── tap Menu → sheet: New course, Students            2b
-            ├── row matching the address shows the pill      2c
-            └── tap a link → sheet closes, page loads,
-                header stays                                 existing (PhoneMenu)
-Visitor opens / → Courses shows the pill                       2c
-```
-
-- Terms *(temporary)*:
-  - Nav row: the line inside a header holding the wordmark, the links and the Menu button.
-  - Current-page pill: the style guide's gold rounded fill, bold label and dark border on the link to the page on screen.
 - Done when: journey in `dev:mock`:
   - open the create, edit, course and Students pages → each shows the nav;
   - click Students → the list;
   - at phone width, open the menu → both links.
+- Retro:
+  - Planned 3 commits (2a to 2c); shipped 3.
+  - Owner changes after using the page: not yet recorded.
+  - Rule friction: none recorded.
 
 ## Step 3. The admin copies the addresses of every student in good standing, by button or by hand from a popup
 

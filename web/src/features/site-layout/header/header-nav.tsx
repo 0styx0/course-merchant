@@ -1,7 +1,7 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { pageFrameClasses } from "../page-frame/page-frame-classes";
+import { HeaderNavLink } from "./header-nav-link";
 import { PhoneMenu, type NavDestination } from "./phone-menu";
 
 export const wordmarkClasses =
@@ -21,13 +21,13 @@ export function HeaderNav({
     >
       {wordmark}
       {destinations.map(({ href, label }) => (
-        <Link
+        <HeaderNavLink
           key={href}
           href={href}
           className="hidden min-h-11 items-center text-meta font-medium md:flex"
         >
           {label}
-        </Link>
+        </HeaderNavLink>
       ))}
       <div className="md:hidden">
         <PhoneMenu destinations={destinations} />
