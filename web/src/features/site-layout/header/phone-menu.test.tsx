@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 
 import { PhoneMenu } from "./phone-menu";
 
+const destinations = [{ href: "/", label: "Courses" }];
+
 function menuButton() {
   return screen.getByRole("button", { name: "Menu" });
 }
@@ -14,7 +16,7 @@ function findMenuSheet() {
 
 async function openMenuSheet() {
   const user = userEvent.setup();
-  render(<PhoneMenu />);
+  render(<PhoneMenu destinations={destinations} />);
   await user.click(menuButton());
   const sheet = await findMenuSheet();
   return { user, sheet };
@@ -32,14 +34,14 @@ function expectFocusInside(sheet: HTMLElement) {
 
 describe("PhoneMenu", () => {
   it("starts closed, showing only the Menu button", () => {
-    render(<PhoneMenu />);
+    render(<PhoneMenu destinations={destinations} />);
 
     expect(menuButton()).toBeVisible();
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("shows a Menu button at least 44px tall and wide", () => {
-    render(<PhoneMenu />);
+    render(<PhoneMenu destinations={destinations} />);
 
     expect(menuButton()).toHaveClass("size-11");
   });

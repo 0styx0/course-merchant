@@ -11,6 +11,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+export type NavDestination = { href: string; label: string };
+
 function MenuButton() {
   return (
     <SheetTrigger className="flex size-11 items-center justify-center">
@@ -20,30 +22,46 @@ function MenuButton() {
   );
 }
 
-function MenuSheetContent({ onLinkTap }: { onLinkTap: () => void }) {
+function MenuSheetContent({
+  destinations,
+  onLinkTap,
+}: {
+  destinations: NavDestination[];
+  onLinkTap: () => void;
+}) {
   return (
     <SheetContent side="right" className="bg-background px-4 pt-14">
       <SheetTitle className="sr-only">Menu</SheetTitle>
       <nav aria-label="Phone">
-        <Link
-          href="/"
-          onClick={onLinkTap}
-          className="flex min-h-12 items-center"
-        >
-          Courses
-        </Link>
+        {destinations.map(({ href, label }) => (
+          <Link
+            key={href}
+            href={href}
+            onClick={onLinkTap}
+            className="flex min-h-12 items-center"
+          >
+            {label}
+          </Link>
+        ))}
       </nav>
     </SheetContent>
   );
 }
 
-export function PhoneMenu() {
+export function PhoneMenu({
+  destinations,
+}: {
+  destinations: NavDestination[];
+}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
       <MenuButton />
-      <MenuSheetContent onLinkTap={() => setIsMenuOpen(false)} />
+      <MenuSheetContent
+        destinations={destinations}
+        onLinkTap={() => setIsMenuOpen(false)}
+      />
     </Sheet>
   );
 }
