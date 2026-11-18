@@ -4,6 +4,7 @@ import { PrismaModule } from "./prisma/prisma.module.js";
 import { CoursesModule } from "./courses/courses.module.js";
 import { CheckoutModule } from "./checkout/checkout.module.js";
 import { AuthModule } from "./auth/auth.module.js";
+import { AdminCustomersModule } from "./admin-customers/admin-customers.module.js";
 import { AdminEnrollmentsModule } from "./admin-enrollments/admin-enrollments.module.js";
 import { WebhooksModule } from "./webhooks/webhooks.module.js";
 
@@ -16,6 +17,7 @@ import { WebhooksModule } from "./webhooks/webhooks.module.js";
     WebhooksModule,
     AuthModule,
     AdminEnrollmentsModule,
+    AdminCustomersModule,
   ],
 })
 export class AppModule {}

@@ -110,10 +110,16 @@ export async function createPricedCourse(
   };
 }
 
-export async function createCustomer(input: { email?: string; name?: string }) {
+export async function createCustomer(input: {
+  email?: string;
+  name?: string;
+  // defaults to now
+  createdAt?: Temporal.Instant;
+}) {
   return db.orm.public.Customer.create({
     email: input.email ?? `test-${crypto.randomUUID()}@example.com`,
     name: input.name ?? `test-${crypto.randomUUID()}`,
+    createdAt: input.createdAt,
   });
 }
 

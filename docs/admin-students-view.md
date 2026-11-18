@@ -21,24 +21,8 @@ Keep this file current **in the same commit as the work**: tick the step, and ma
 
 Each milestone delivers one outcome. `/plan-create-implementation` splits a milestone into commit lines when it becomes the next one. Every milestone ships before launch.
 
-- [ ] **1a.** The API can read every customer with their latest checkout time and all their enrollments. Nothing serves it until 1c. **Next**
-  - *Behaviours*:
-    - a customer with two checkouts and no enrollment gets the newer checkout's time;
-    - a customer with two enrollments gets both, with course id and title and the enrolled, un-enrolled and suspended times;
-    - an enrollment in a deleted course is included;
-    - a customer with only free courses gets a null checkout time;
-    - customers come newest first, and the id breaks ties;
-    - with no customers the list is empty.
-  - *New shared pieces*: the repository and its row type, which 1c maps to the contract.
-  - *Files*:
-    - `api/src/admin-customers/admin-customers.repository.ts` (copies the includes in [admin-courses.repository.ts](../api/src/courses/repositories/admin-courses.repository.ts))
-    - `api/src/admin-customers/admin-customers.module.ts`
-    - [app.module.ts](../api/src/app.module.ts)
-    - [ARCHITECTURE.md](../ARCHITECTURE.md) (a row in the API modules table, shaped like the `enrollments/` row)
-    - an integration spec in `api/src/admin-customers/test/integration/`
-  - *Settled*: Decisions rows "Every customer shows on the page" and "The list answer includes enrollments in deleted courses".
-  - *Done when*: the integration spec and `yarn --cwd api check:changed` pass.
-- [ ] **1b.** Both admin answers turn stored enrollment times into API times with one helper. *(mechanical, coverage first)*
+- [x] **1a.** The API can read every customer with their latest checkout time and all their enrollments. Nothing serves it until 1c.
+- [ ] **1b.** Both admin answers turn stored enrollment times into API times with one helper. *(mechanical, coverage first)* **Next**
   - *New shared pieces*: `toEnrollmentTimesResponse` and `formatOptionalDate`, so 1c doesn't copy the course mapper or reach into `courses/`.
   - *Files*:
     - `api/src/enrollments/enrollment-times-response.ts`
