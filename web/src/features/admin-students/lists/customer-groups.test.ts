@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { AdminCustomer } from "@/lib/types";
-import { selectStudents } from "./customer-groups";
+import { selectStudents, selectUnfinishedCheckouts } from "./customer-groups";
 
 type EnrollmentAccess = {
   revokedAt: string | null;
@@ -25,6 +25,13 @@ function makeCustomer(
       ...access,
     })),
   };
+}
+
+function makeUnfinishedCustomer(
+  name: string,
+  latestCheckoutStartedAt: string | null,
+): AdminCustomer {
+  return { ...makeCustomer(name, []), latestCheckoutStartedAt };
 }
 
 const namesOf = (shown: AdminCustomer[]) =>
@@ -56,5 +63,68 @@ describe("selectStudents", () => {
     ];
 
     expect(namesOf(selectStudents(customers))).toEqual(["lee", "ben"]);
+  });
+});
+
+describe("selectUnfinishedCheckouts", () => {
+  it("keeps only customers with no enrollment, newest checkout first", () => {
+    const customers = [
+      makeUnfinishedCustomer("old", "2026-10-01T09:00:00Z"),
+      makeCustomer("student", [activeAccess]),
+      makeUnfinishedCustomer("new", "2026-11-03T16:00:00Z"),
+    ];
+
+    expect(namesOf(selectUnfinishedCheckouts(customers))).toEqual([
+      "new",
+      "old",
+    ]);
+  });
+
+  it("puts a customer with no checkout time last", () => {
+    const customers = [
+      makeUnfinishedCustomer("none", null),
+      makeUnfinishedCustomer("old", "2026-10-01T09:00:00Z"),
+      makeUnfinishedCustomer("new", "2026-11-03T16:00:00Z"),
+    ];
+
+    expect(namesOf(selectUnfinishedCheckouts(customers))).toEqual([
+      "new",
+      "old",
+      "none",
+    ]);
+  });
+
+  it("keeps the given order for equal checkout times, and for several nulls", () => {
+    const customers = [
+      makeUnfinishedCustomer("first-null", null),
+      makeUnfinishedCustomer("first-tie", "2026-11-03T16:00:00Z"),
+      makeUnfinishedCustomer("second-null", null),
+      makeUnfinishedCustomer("second-tie", "2026-11-03T16:00:00Z"),
+    ];
+
+    expect(namesOf(selectUnfinishedCheckouts(customers))).toEqual([
+      "first-tie",
+      "second-tie",
+      "first-null",
+      "second-null",
+    ]);
+  });
+
+  it("leaves the given list in its order", () => {
+    const customers = [
+      makeUnfinishedCustomer("old", "2026-10-01T09:00:00Z"),
+      makeUnfinishedCustomer("new", "2026-11-03T16:00:00Z"),
+    ];
+
+    const unfinished = selectUnfinishedCheckouts(customers);
+
+    expect(namesOf(unfinished)).toEqual(["new", "old"]);
+    expect(namesOf(customers)).toEqual(["old", "new"]);
+  });
+
+  it("returns nothing when every customer is a student", () => {
+    const customers = [makeCustomer("sam", [activeAccess])];
+
+    expect(selectUnfinishedCheckouts(customers)).toEqual([]);
   });
 });

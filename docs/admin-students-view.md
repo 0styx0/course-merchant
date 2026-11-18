@@ -25,23 +25,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 - [x] **1b.** The admin course answer turns stored enrollment times into API times with a helper in `enrollments/`, ready for the customer list in 1c.
 - [x] **1c.** The admin's API answers `GET /v1/admin/customers` with every customer, their latest checkout time and their enrollments.
 - [x] **1d.** The admin opens `/admin/students` and sees each student's name and email, "No students yet." when there are none, or the API's message when the load fails.
-- [ ] **1e.** The admin sees unfinished checkouts below the students, newest first, each dated in their browser's time zone. **Next**
-  - *Behaviours*:
-    - "Unfinished checkouts (1)" and the grey line "Started a checkout and never paid.";
-    - each row reads name · email · "Nov 3, 2026";
-    - a null checkout time shows no date and sorts last;
-    - with nobody to show, the section hides;
-    - with no students, the section still shows beside "No students yet.";
-    - one browser test, with a Playwright `timezoneId` where the day differs from UTC, checks the date follows the browser's zone after hydration.
-  - *New shared pieces*: none.
-  - *Files*:
-    - `web/src/features/admin-students/lists/customer-groups.ts`
-    - `web/src/features/admin-students/lists/unfinished-checkout-list.tsx` (uses `useVisitorTimeZone` and `dateOnlyFormatter`)
-    - `web/src/app/admin/(signed-in)/students/page.tsx`
-    - `web/tests/browser/admin-students/students-page.spec.ts`
-    - [README.md](../README.md) *Status*
-  - *Done when*: the unit and browser tests pass, and the milestone's journey passes in `dev:mock`.
-- [ ] **2. The admin reaches Students and New course from an admin nav on every admin page.**
+- [x] **1e.** The admin sees unfinished checkouts below the students, newest first, each dated in their browser's time zone, and a browser test checks the date follows that zone after hydration.
+- [ ] **2. The admin reaches Students and New course from an admin nav on every admin page.** Needs `/plan-create-implementation` before building. **Next**
 - [ ] **3. The admin copies the addresses of every student in good standing, by button or by hand from a popup.**
 - [ ] **4. The admin unsubscribes and resubscribes a student, and the copy leaves unsubscribed students out.**
 - [ ] **5. The admin finds a student by typing part of their name or email.**
@@ -215,25 +200,10 @@ Empty: "Students (0)" and "No students yet."   API failure: the API's message in
     - open `/admin/students` with `success` → five students by name and email, and Tal under Unfinished checkouts;
     - switch to `empty` → "No students yet.";
     - switch to `error` → the API's message.
-- *(temporary)* Design notes:
-  - The API module is `admin-customers/` (controller → service → repository). The web feature is `admin-students/` with `api/` and `lists/`. Mocks go in `handlers/admin-students/`.
-  - The API lists customers newest first by `Customer.createdAt`, with the id breaking ties. The web keeps that order for Students until milestone 7, and orders Unfinished checkouts itself, newest checkout first.
-  - `latestCheckoutStartedAt` is the newest `Payment.createdAt`. Checkout creates the customer and its payment in one transaction, so null means the customer took only free courses. The web still handles null: no date, last in the list.
-  - New components never reuse the course page's name `StudentList`. Student rows reuse `StudentIdentity`.
-  - Two accepted exceptions to the commit rules:
-    - the page first shows in 1d, and 1a's repository stays unused until 1c;
-    - the cause is the route-protection e2e test, which expects a 401 from every path in the contract, so the contract can't land before its route, and one endpoint spans more files than one commit allows.
-  - 1d's help line leaves out "Never copied." because the copy arrives in milestone 3, which adds those words.
-- *(temporary)* Flow:
-
-```
-Admin opens /admin/students → connection() → GET /v1/admin/customers    1d
-├── signed out → 401 → ProblemAlert                                      existing
-├── API failure → ProblemAlert with the API's words                      1d
-└── 200 (repository 1a, mapping 1b and 1c) → customers split
-    ├── students: none → "No students yet." | rows                        1d
-    └── unfinished: none → hidden | newest first, dated                   1e
-```
+- Retro:
+  - Planned 5 commits (1a to 1e); shipped 5.
+  - Owner changes after using the page: not yet recorded.
+  - Rule friction: none recorded.
 
 ## Step 2. The admin reaches Students and New course from an admin nav on every admin page
 

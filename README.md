@@ -67,8 +67,9 @@ The web app calls the API only from the server, never from the browser.
   - the API for courses, checkout, Stripe webhooks, email and admin login;
   - the web admin create-course form with image upload, and an edit page (details, status, image, delete with confirmation);
   - the web course page's enroll form (free and paid) and the Stripe return page;
-  - the site header with a phone menu, the footer and the Page not found page.
-- **Next:** the course page layout, the other admin pages and the login form.
+  - the site header with a phone menu, the footer and the Page not found page;
+  - the admin Students page: each student's name and email, and the unfinished checkouts (customers who never paid) with their dates.
+- **Next:** the course page layout, the admin nav, copying and unsubscribing students, student search and sorting, the other admin pages and the login form.
 - **Later:** a job that cleans up old sessions, and handling refunds and disputes made in Stripe.
 
 Progress lives in [docs/payments.md](docs/payments.md) and [docs/courses.md](docs/courses.md).
