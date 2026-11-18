@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 
 import { ProblemAlert } from "@/components/problem-alert";
 import { CourseAdminPanel } from "@/features/admin-courses/course-view/course-admin-panel";
@@ -7,7 +6,7 @@ import { AdminCourseImage } from "@/features/admin-courses/course-view/admin-cou
 import { StudentList } from "@/features/admin-courses/course-view/students/student-list";
 import { getAdminCourseOrNotFound } from "@/features/admin-courses/api/get-admin-course-or-not-found";
 import { CoursePageLayout } from "@/features/courses/course-page-layout";
-import { pageFrameClasses } from "@/features/site-layout/page-frame-classes";
+import { AdminPageFrame } from "@/features/site-layout/admin-page-frame";
 import { readRequestTime } from "@/lib/time/read-request-time";
 import type { AdminCourse } from "@/lib/types";
 
@@ -19,14 +18,6 @@ export const metadata: Metadata = {
 type AdminCoursePageProps = {
   params: Promise<{ courseId: string }>;
 };
-
-// The public course page's frame, so the course reads as buyers see it.
-// `w-full` keeps the frame at the screen's width: the root layout's body
-// (app/layout.tsx) is a flex column, which sizes an auto-margin child to its
-// content, so a wide students table would stretch the page sideways.
-function AdminCoursePageFrame({ children }: { children: ReactNode }) {
-  return <main className={`${pageFrameClasses} w-full py-12`}>{children}</main>;
-}
 
 type AdminCourseDetailsProps = {
   course: AdminCourse;
@@ -62,12 +53,12 @@ export default async function AdminCoursePage({
   const renderMs = readRequestTime();
 
   return (
-    <AdminCoursePageFrame>
+    <AdminPageFrame>
       {result.state === "failure" ? (
         <ProblemAlert problem={result.error} />
       ) : (
         <AdminCourseDetails course={result.data} renderMs={renderMs} />
       )}
-    </AdminCoursePageFrame>
+    </AdminPageFrame>
   );
 }

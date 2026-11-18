@@ -26,3 +26,4 @@ export type CheckoutCustomer = components["schemas"]["CheckoutCustomer"];
 export type StartCheckoutResponse =
   components["schemas"]["StartCheckoutResponse"];
 export type CheckoutStatus = components["schemas"]["CheckoutStatus"];
+export type AdminCustomer = components["schemas"]["AdminCustomer"];

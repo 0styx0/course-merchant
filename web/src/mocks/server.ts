@@ -25,6 +25,7 @@ import {
   makeRememberedRevokeHandler,
   revokeEnrollmentHandlers,
 } from "./handlers/admin-courses/revoke-enrollment";
+import { listCustomersAsAdminHandlers } from "./handlers/admin-students/list-customers-as-admin";
 import { startCheckoutHandlers } from "./handlers/checkout/start-checkout";
 import { getCheckoutStatusHandlers } from "./handlers/checkout/get-checkout-status";
 import { makeRememberedCourse } from "./handlers/admin-courses/remembered-course";
@@ -91,6 +92,7 @@ const endpointScenarios: Record<string, Record<string, RequestHandler>> = {
   uploadCourseImage: uploadCourseImageScenarios,
   getCourseImageAsAdmin: getCourseImageAsAdminHandlers,
   revokeEnrollment: revokeEnrollmentScenarios,
+  listCustomersAsAdmin: listCustomersAsAdminHandlers,
   startCheckout: startCheckoutHandlers,
   getCheckoutStatus: getCheckoutStatusHandlers,
 };

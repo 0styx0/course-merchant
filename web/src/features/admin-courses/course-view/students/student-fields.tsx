@@ -16,13 +16,14 @@ function formatCourseDate(isoTime: string, timeZone: string) {
 }
 
 /**
- * The student's name with their email under it. A long email wraps in a card;
- * a table cell keeps it on one line and the table scrolls instead.
+ * The student's name with their email under it, on the course page and the
+ * Students page. A long email wraps in a card; a table cell keeps it on one
+ * line and the table scrolls instead.
  */
 export function StudentIdentity({
   customer,
 }: {
-  customer: Enrollment["customer"];
+  customer: { name: string; email: string };
 }) {
   return (
     <div className="min-w-0">
