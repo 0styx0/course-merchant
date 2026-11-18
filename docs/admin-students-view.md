@@ -22,13 +22,8 @@ Keep this file current **in the same commit as the work**: tick the step, and ma
 Each milestone delivers one outcome. `/plan-create-implementation` splits a milestone into commit lines when it becomes the next one. Every milestone ships before launch.
 
 - [x] **1a.** The API can read every customer with their latest checkout time and all their enrollments. Nothing serves it until 1c.
-- [ ] **1b.** Both admin answers turn stored enrollment times into API times with one helper. *(mechanical, coverage first)* **Next**
-  - *New shared pieces*: `toEnrollmentTimesResponse` and `formatOptionalDate`, so 1c doesn't copy the course mapper or reach into `courses/`.
-  - *Files*:
-    - `api/src/enrollments/enrollment-times-response.ts`
-    - [courses.mapper.ts](../api/src/courses/courses.mapper.ts)
-  - *Done when*: the existing course tests pass unchanged.
-- [ ] **1c.** The admin's API answers `GET /v1/admin/customers` with every customer.
+- [x] **1b.** The admin course answer turns stored enrollment times into API times with a helper in `enrollments/`, ready for the customer list in 1c.
+- [ ] **1c.** The admin's API answers `GET /v1/admin/customers` with every customer. **Next**
   - *Behaviours*:
     - signed in, the e2e test gets a 200 with times in UTC, null kept as null, a customer with no enrollment and one with two;
     - signed out gets 401, which the route-protection e2e test checks from the contract;

@@ -6,6 +6,10 @@ import {
   GetCourseAdminResponse,
   GetCourseResponse,
 } from "types.js";
+import {
+  formatOptionalDate,
+  toEnrollmentTimesResponse,
+} from "@/enrollments/enrollment-times-response.js";
 import type { CourseRepositoryModelPublic } from "./repositories/courses.repository.js";
 import {
   CourseRepositoryCreateInput,
@@ -110,10 +114,6 @@ export function toPublicCourseResponse(
 type AdminPrice = CourseRepositoryModelAdmin["prices"][number];
 type AdminEnrollment = CourseRepositoryModelAdmin["enrollments"][number];
 
-function formatOptionalDate(time: Temporal.Instant | null) {
-  return time === null ? null : time.toString();
-}
-
 function toAdminPriceResponse(price: AdminPrice) {
   return {
     id: price.id,
@@ -153,9 +153,7 @@ function toAdminEnrollmentResponse(
   owedCustomerIds: ReadonlySet<string>,
 ) {
   return {
-    enrolledAt: enrollment.purchasedAt.toString(),
-    revokedAt: formatOptionalDate(enrollment.revokedAt),
-    suspendedAt: formatOptionalDate(enrollment.suspendedAt),
+    ...toEnrollmentTimesResponse(enrollment),
     latestEmail: latestEmailOf(enrollment),
     refundStatus: refundStatusOf(enrollment, owedCustomerIds),
     customer: {
