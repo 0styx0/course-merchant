@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
-type CopyAddressesButtonProps = {
+type CopyAddressesProps = {
   emails: string[];
 };
 
@@ -22,7 +22,7 @@ const refusedCopyWords =
 type CopyOutcome = "copied" | "refused" | null;
 
 /** Copies the email addresses, comma-separated, to the clipboard and says how many, or why it can't. */
-export function CopyAddressesButton({ emails }: CopyAddressesButtonProps) {
+export function CopyAddresses({ emails }: CopyAddressesProps) {
   const [copyOutcome, setCopyOutcome] = useState<CopyOutcome>(null);
   const hasNoActiveStudent = emails.length === 0;
 

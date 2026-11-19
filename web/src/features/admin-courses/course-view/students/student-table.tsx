@@ -46,7 +46,7 @@ function StudentTableRow({
         <EnrolledDate enrolledAt={enrollment.enrolledAt} timeZone={timeZone} />
       </TableCell>
       <TableCell>
-        <AccessPill access={enrollment} timeZone={timeZone} />
+        <AccessPill enrollmentDates={enrollment} timeZone={timeZone} />
       </TableCell>
       <TableCell className="text-right tabular-nums">
         <PaidAmount payment={enrollment.payment} />

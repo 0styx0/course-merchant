@@ -1,11 +1,8 @@
-import type { AdminCourse } from "@/lib/types";
+import type { EnrollmentTimes } from "@/lib/types";
 
-type AccessDates = Pick<
-  AdminCourse["enrollments"][number],
-  "suspendedAt" | "revokedAt"
->;
+type AccessDates = Pick<EnrollmentTimes, "suspendedAt" | "revokedAt">;
 
-/** A student's access as the admin page names and colours it. */
+/** A student's access as the admin pages name and colour it. */
 export type StudentAccess =
   | { word: "Active"; colourPair: "success" }
   | { word: "Suspended"; colourPair: "muted"; suspendedAt: string }

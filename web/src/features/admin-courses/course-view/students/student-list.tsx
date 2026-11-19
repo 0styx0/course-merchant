@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 
+import { activeStudentEmails } from "@/features/copy-addresses/active-student-emails";
+import { CopyAddresses } from "@/features/copy-addresses/copy-addresses";
 import type { AdminCourse } from "@/lib/types";
 
-import { activeStudentEmails } from "./copy-addresses/active-student-emails";
-import { CopyAddressesButton } from "./copy-addresses/copy-addresses-button";
 import { StudentOrderMenu } from "./sort/student-order-menu";
 import { type StudentOrder, studentsInOrder } from "./sort/students-in-order";
 import { StudentCards } from "./student-cards";
@@ -46,13 +46,15 @@ function StudentListBody({
 }
 
 /**
- * Every enrollment the API returns, whatever its access, counted in the
- * heading, listed in the order the admin picks from the Sort by menu (newest
- * enrolled first until they pick; a reload goes back to it) and drawn as one
- * card each below the medium breakpoint and as one table row each from it up.
- * Both copies are drawn, so each student has an Un-enroll button, with its own
- * dialog, in each. Beside the Sort by menu, a Copy button puts the Active
- * students' addresses on the clipboard.
+ * Every enrollment the API returns, whatever its access.
+ *
+ * - The heading counts them all.
+ * - The Sort by menu picks their order: newest enrolled first until the admin
+ *   picks, and again after a reload.
+ * - Below the medium breakpoint each is a card; from it up, a table row. Both
+ *   are drawn, so each student has an Un-enroll button and dialog in each.
+ * - Beside the Sort by menu, a Copy button puts the Active students'
+ *   addresses on the clipboard.
  */
 export function StudentList({
   courseId,
@@ -76,10 +78,7 @@ export function StudentList({
               onOrderChange={setStudentOrder}
             />
             {/* A new key when the emails change, so an un-enroll clears the old Copied note. */}
-            <CopyAddressesButton
-              key={activeEmails.join(",")}
-              emails={activeEmails}
-            />
+            <CopyAddresses key={activeEmails.join(",")} emails={activeEmails} />
           </div>
         )}
       </div>

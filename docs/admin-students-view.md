@@ -31,20 +31,8 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **2b.** Every admin page shows a header with "Embodying Emptiness · Admin" as text, New course and Students links, and a Menu on phones.
   - [x] **2c.** Both headers mark the link to the page on screen with the style guide's gold current-page pill, on wide screens and in the phone menu.
 - [ ] **3. The admin copies the addresses of every student in good standing, by button or by hand from a popup.**
-  - [ ] **3a.** Developers find the copy and the access check in their own topic folders, ready for the Students page. *(mechanical)* **Next**
-    - *Behaviours*:
-      - both pages stay exactly as they are today; the tests move with their files and keep every assertion
-    - *New shared pieces*:
-      - `CopyAddresses`, renamed from `CopyAddressesButton` now, because 3e adds Show addresses beside the button
-      - the access check reads an `EnrollmentTimes` alias in [types.ts](../web/src/lib/types.ts), so it names neither page's type
-    - *Files*:
-      - `web/src/features/copy-addresses/copy-addresses.tsx` and its test (moved from [copy-addresses-button.tsx](../web/src/features/admin-courses/course-view/students/copy-addresses/copy-addresses-button.tsx) and renamed)
-      - `web/src/features/student-access/access-words.ts` and its test (moved from [access-words.ts](../web/src/features/admin-courses/course-view/students/words/access-words.ts))
-      - [types.ts](../web/src/lib/types.ts)
-      - imports in `student-list.tsx`, `student-fields.tsx`, `attention-checks.ts`, `students-in-order.ts` and `active-student-emails.ts`
-    - *Settled*: the owner chose new topic folders over keeping the files in `admin-courses/` (plan of step 3)
-    - *Done when*: grep finds no old name, and `yarn --cwd web check:changed` is green
-  - [ ] **3b.** The admin sees "(Suspended)" after the name of each student with a suspended enrollment.
+  - [x] **3a.** Developers find the copy and the access check in their own topic folders, ready for the Students page.
+  - [ ] **3b.** The admin sees "(Suspended)" after the name of each student with a suspended enrollment. **Next**
     - *Behaviours*:
       - every enrollment Active → no label
       - any enrollment suspended → "(Suspended)", even when another course reads Active or un-enrolled

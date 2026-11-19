@@ -20,6 +20,7 @@ export type CreateCourseStatus = components["schemas"]["CreateCourseStatus"];
 export type CreateCourseRequest = components["schemas"]["CreateCourseRequest"];
 export type UpdateCourseRequest = components["schemas"]["UpdateCourseRequest"];
 export type AdminCourse = components["schemas"]["AdminCourse"];
+export type EnrollmentTimes = components["schemas"]["EnrollmentTimes"];
 export type ValidationProblemDetails =
   components["schemas"]["ValidationProblemDetails"];
 export type CheckoutCustomer = components["schemas"]["CheckoutCustomer"];

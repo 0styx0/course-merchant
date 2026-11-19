@@ -56,7 +56,7 @@ function StudentCard({ courseId, enrollment, timeZone }: StudentCardProps) {
           />
         </StudentCardField>
         <StudentCardField label="Access">
-          <AccessPill access={enrollment} timeZone={timeZone} />
+          <AccessPill enrollmentDates={enrollment} timeZone={timeZone} />
         </StudentCardField>
         <StudentCardField label="Paid">
           <PaidAmount payment={enrollment.payment} />

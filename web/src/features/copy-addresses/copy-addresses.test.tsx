@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { CopyAddressesButton } from "./copy-addresses-button";
+import { CopyAddresses } from "./copy-addresses";
 
 const fourAddresses = [
   "dana@example.com",
@@ -22,12 +22,12 @@ function copyButton() {
 
 async function clickCopy(addresses: string[]) {
   const user = userEvent.setup();
-  render(<CopyAddressesButton emails={addresses} />);
+  render(<CopyAddresses emails={addresses} />);
   await user.click(copyButton());
   return user;
 }
 
-describe("CopyAddressesButton", () => {
+describe("CopyAddresses", () => {
   it("copies the addresses joined by commas", async () => {
     await clickCopy(fourAddresses);
 
@@ -54,7 +54,7 @@ describe("CopyAddressesButton", () => {
   });
 
   it("disables itself and says so when no student is Active", () => {
-    render(<CopyAddressesButton emails={[]} />);
+    render(<CopyAddresses emails={[]} />);
 
     expect(screen.getByRole("status")).toHaveTextContent(
       "No active students to copy.",
@@ -67,7 +67,7 @@ describe("CopyAddressesButton", () => {
     vi.spyOn(navigator.clipboard, "writeText").mockRejectedValue(
       new DOMException("Write permission denied.", "NotAllowedError"),
     );
-    render(<CopyAddressesButton emails={fourAddresses} />);
+    render(<CopyAddresses emails={fourAddresses} />);
 
     await user.click(copyButton());
 
@@ -79,7 +79,7 @@ describe("CopyAddressesButton", () => {
   it("shows the same alert when the browser has no clipboard", async () => {
     const user = userEvent.setup();
     vi.spyOn(navigator, "clipboard", "get").mockReturnValue(undefined!);
-    render(<CopyAddressesButton emails={fourAddresses} />);
+    render(<CopyAddresses emails={fourAddresses} />);
 
     await user.click(copyButton());
 
@@ -93,7 +93,7 @@ describe("CopyAddressesButton", () => {
     vi.spyOn(navigator.clipboard, "writeText").mockRejectedValueOnce(
       new DOMException("Write permission denied.", "NotAllowedError"),
     );
-    render(<CopyAddressesButton emails={fourAddresses} />);
+    render(<CopyAddresses emails={fourAddresses} />);
     await user.click(copyButton());
     await screen.findByRole("alert");
 

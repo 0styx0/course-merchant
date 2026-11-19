@@ -1,6 +1,6 @@
+import { studentAccess } from "@/features/student-access/student-access";
 import type { AdminCourse } from "@/lib/types";
 
-import { studentAccess } from "../words/access-words";
 import {
   isFailedEmailToResend,
   isRefundOwedToStudent,

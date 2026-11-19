@@ -1,6 +1,5 @@
+import { studentAccess } from "@/features/student-access/student-access";
 import type { AdminCourse } from "@/lib/types";
-
-import { studentAccess } from "../words/access-words";
 
 /** The email addresses of the students whose access reads Active, in the order given. */
 export function activeStudentEmails(enrollments: AdminCourse["enrollments"]) {

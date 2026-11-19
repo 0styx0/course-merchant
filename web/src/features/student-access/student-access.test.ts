@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { studentAccess } from "./access-words";
+import { studentAccess } from "./student-access";
 
 const suspendedAt = "2026-10-30T18:00:00Z";
 const revokedAt = "2026-11-05T15:00:00Z";

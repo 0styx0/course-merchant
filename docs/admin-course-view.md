@@ -224,7 +224,7 @@ Where each wireframe state is built:
 
 - Why here: sorting needs the columns it orders by.
 - Needs: 3.
-- Builds on: milestone 3's row functions (`attentionLineWords` in [attention-lines.ts](../web/src/features/admin-courses/course-view/students/words/attention-lines.ts), `studentAccess` in [access-words.ts](../web/src/features/admin-courses/course-view/students/words/access-words.ts)), the `toSorted` pattern in [course-admin-panel.tsx](../web/src/features/admin-courses/course-view/course-admin-panel.tsx), and the Base UI twin [time-zone-picker.tsx](../web/src/features/admin-courses/schedule/time-zone-picker/time-zone-picker.tsx) for jsdom interaction tests.
+- Builds on: milestone 3's row functions (`attentionLineWords` in [attention-lines.ts](../web/src/features/admin-courses/course-view/students/words/attention-lines.ts), `studentAccess` in [student-access.ts](../web/src/features/student-access/student-access.ts)), the `toSorted` pattern in [course-admin-panel.tsx](../web/src/features/admin-courses/course-view/course-admin-panel.tsx), and the Base UI twin [time-zone-picker.tsx](../web/src/features/admin-courses/schedule/time-zone-picker/time-zone-picker.tsx) for jsdom interaction tests.
 - **Sketch:** milestone 4 plus the Sort menu:
 
 ```

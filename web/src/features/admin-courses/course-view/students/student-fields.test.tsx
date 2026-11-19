@@ -12,7 +12,7 @@ describe("AccessPill", () => {
   it("draws Active in the green pair with no date", () => {
     render(
       <AccessPill
-        access={{ suspendedAt: null, revokedAt: null }}
+        enrollmentDates={{ suspendedAt: null, revokedAt: null }}
         timeZone="America/New_York"
       />,
     );
@@ -26,7 +26,10 @@ describe("AccessPill", () => {
   it("dates Suspended in the course's time zone, beside the pill rather than in it", () => {
     render(
       <AccessPill
-        access={{ suspendedAt: "2026-10-31T02:00:00Z", revokedAt: null }}
+        enrollmentDates={{
+          suspendedAt: "2026-10-31T02:00:00Z",
+          revokedAt: null,
+        }}
         timeZone="America/New_York"
       />,
     );
@@ -38,7 +41,10 @@ describe("AccessPill", () => {
   it("draws Un-enrolled in the grey pair with no date", () => {
     render(
       <AccessPill
-        access={{ suspendedAt: null, revokedAt: "2026-11-05T15:00:00Z" }}
+        enrollmentDates={{
+          suspendedAt: null,
+          revokedAt: "2026-11-05T15:00:00Z",
+        }}
         timeZone="America/New_York"
       />,
     );

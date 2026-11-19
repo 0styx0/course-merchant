@@ -2,9 +2,9 @@ import { CircleAlert } from "lucide-react";
 
 import { StatusPill } from "@/components/status-pill";
 import type { AdminCourse } from "@/lib/types";
+import { studentAccess } from "@/features/student-access/student-access";
 import { dateOnlyFormatter, formatPrice } from "@/lib/utils/formatters";
 
-import { studentAccess } from "./words/access-words";
 import { paymentWords } from "./words/payment-words";
 
 type Enrollment = AdminCourse["enrollments"][number];
@@ -45,21 +45,19 @@ export function EnrolledDate({
 }
 
 type AccessPillProps = {
-  access: Pick<Enrollment, "suspendedAt" | "revokedAt">;
+  enrollmentDates: Pick<Enrollment, "suspendedAt" | "revokedAt">;
   timeZone: string;
 };
 
 /** The access word in a pill; Suspended adds its date beside the pill. */
-export function AccessPill({ access, timeZone }: AccessPillProps) {
-  const studentAccessState = studentAccess(access);
+export function AccessPill({ enrollmentDates, timeZone }: AccessPillProps) {
+  const access = studentAccess(enrollmentDates);
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
-      <StatusPill colourPair={studentAccessState.colourPair}>
-        {studentAccessState.word}
-      </StatusPill>
-      {studentAccessState.word === "Suspended" && (
+      <StatusPill colourPair={access.colourPair}>{access.word}</StatusPill>
+      {access.word === "Suspended" && (
         <span className="text-muted-foreground">
-          {formatCourseDate(studentAccessState.suspendedAt, timeZone)}
+          {formatCourseDate(access.suspendedAt, timeZone)}
         </span>
       )}
     </span>
