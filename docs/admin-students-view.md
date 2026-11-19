@@ -30,7 +30,83 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - [x] **2a.** Developers find the site's header, footer and page-frame files in topic folders, so the new header files fit under the files-per-folder limit.
   - [x] **2b.** Every admin page shows a header with "Embodying Emptiness · Admin" as text, New course and Students links, and a Menu on phones.
   - [x] **2c.** Both headers mark the link to the page on screen with the style guide's gold current-page pill, on wide screens and in the phone menu.
-- [ ] **3. The admin copies the addresses of every student in good standing, by button or by hand from a popup.** **Next**: still needs `/plan-create-implementation admin-students-view` to split it into commits.
+- [ ] **3. The admin copies the addresses of every student in good standing, by button or by hand from a popup.**
+  - [ ] **3a.** Developers find the copy and the access check in their own topic folders, ready for the Students page. *(mechanical)* **Next**
+    - *Behaviours*:
+      - both pages stay exactly as they are today; the tests move with their files and keep every assertion
+    - *New shared pieces*:
+      - `CopyAddresses`, renamed from `CopyAddressesButton` now, because 3e adds Show addresses beside the button
+      - the access check reads an `EnrollmentTimes` alias in [types.ts](../web/src/lib/types.ts), so it names neither page's type
+    - *Files*:
+      - `web/src/features/copy-addresses/copy-addresses.tsx` and its test (moved from [copy-addresses-button.tsx](../web/src/features/admin-courses/course-view/students/copy-addresses/copy-addresses-button.tsx) and renamed)
+      - `web/src/features/student-access/access-words.ts` and its test (moved from [access-words.ts](../web/src/features/admin-courses/course-view/students/words/access-words.ts))
+      - [types.ts](../web/src/lib/types.ts)
+      - imports in `student-list.tsx`, `student-fields.tsx`, `attention-checks.ts`, `students-in-order.ts` and `active-student-emails.ts`
+    - *Settled*: the owner chose new topic folders over keeping the files in `admin-courses/` (plan of step 3)
+    - *Done when*: grep finds no old name, and `yarn --cwd web check:changed` is green
+  - [ ] **3b.** The admin sees "(Suspended)" after the name of each student with a suspended enrollment.
+    - *Behaviours*:
+      - every enrollment Active → no label
+      - any enrollment suspended → "(Suspended)", even when another course reads Active or un-enrolled
+      - an enrollment un-enrolled but not suspended → no label (Ben)
+      - an enrollment in a deleted course counts like any other
+      - the label is grey and reads with the name ("Lee Park (Suspended)")
+    - *New shared pieces*: the good-standing rule (no suspended enrollment). It reads `studentAccess` on each enrollment instead of ranking the dates again; 3d's copy and milestone 7's sort use it
+    - *Files*:
+      - `web/src/features/admin-students/standing/student-standing.ts` (new)
+      - [page.tsx](../web/src/app/admin/(signed-in)/students/page.tsx) (the outline picks a page-local name line or an optional note on `StudentIdentity`)
+    - *Settled*: rows "One Copy button copies" and "After the name of a student with a suspended enrollment"
+    - *Done when*: unit tests cover each case, and the page test shows only Lee labelled with the `success` fixture
+  - [ ] **3c.** After copying on the course page, the admin reads "Paste them into Bcc, not To.", and the page supplies the copy's words.
+    - *Behaviours*:
+      - four addresses → "Copied all 4 active students' addresses. Paste them into Bcc, not To."
+      - one address → "Copied all 1 active student's address. Paste it into Bcc, not To."
+      - coverage first: the course page's list test pins its singular note and "No active students to copy.", because the shared test switches to test words
+    - *New shared pieces*: the copy's three words (button label, copied note, none-to-copy note) arrive as plain-string props, because the Students page is a server component and can't pass functions to a client one ([React: serializable props](https://react.dev/reference/rsc/use-client#serializable-types))
+    - *Files*:
+      - `copy-addresses.tsx` (adds the Bcc sentence, takes the words)
+      - [student-list.tsx](../web/src/features/admin-courses/course-view/students/student-list.tsx) (passes today's words)
+      - [admin-course-view.md](admin-course-view.md)'s copy-words row (approved text in *Step 3*)
+    - *Done when*: the course page's list test and [course-view.spec.ts](../web/tests/browser/admin-courses/course-view.spec.ts) pass
+  - [ ] **3d.** The admin copies every student in good standing from the Students page, with the count on the button.
+    - *Behaviours*:
+      - the button reads "Copy 4 addresses" with the `success` fixture, or "Copy 1 address" for one
+      - a click copies Sam's, Noa's, Ben's and Dana's addresses, comma-separated, in the API's order; Ben is un-enrolled and still copied
+      - Lee, who is suspended, stays out
+      - Tal, with no enrollment, never counts as in good standing, even if every customer is passed in
+      - the note reads "Copied 4 addresses. Paste them into Bcc, not To."
+      - every student suspended → "Copy 0 addresses" disabled, with "No students in good standing to copy."
+      - no students → no button ("No students yet." explains it, as on the course page)
+      - a refused copy shows the shared red line
+    - *New shared pieces*: none
+    - *Files*:
+      - `web/src/features/admin-students/standing/good-standing-emails.ts` (new)
+      - [page.tsx](../web/src/app/admin/(signed-in)/students/page.tsx) (the copy and its words)
+      - [README.md](../README.md) *Status* (the Students page line gains copying; the Next line loses it)
+      - [payments/refunds.md](payments/refunds.md)'s `suspendedAt` row (approved text in *Step 3*)
+    - *Needs*: 3b, 3c
+    - *Done when*: unit and page tests pass, and J1 is walked in `dev:mock` with Dana still copied until milestone 4
+  - [ ] **3e.** The admin opens "Show addresses" beside Copy, on both pages, and copies by hand from a popup with the addresses already selected.
+    - *Behaviours*:
+      - the popup's title reads "Addresses to copy (4)"
+      - a read-only box holds the same text Copy puts on the clipboard, selected when the popup opens
+      - the line under the box reads "Copy them, then paste into Bcc, not To."
+      - Close, × and Escape each shut the popup, and focus returns to Show addresses
+      - Show addresses is disabled when there is nothing to copy
+      - a long list scrolls inside the box, and the popup fits a 400px screen
+      - the refused line reads "Couldn't copy the addresses. Your browser blocked the clipboard; click again, or use Show addresses to copy them by hand."
+    - *New shared pieces*:
+      - the Show addresses popup, used by both pages through `CopyAddresses`
+      - a helper that joins the addresses, so the clipboard and the box hold the same text
+    - *Files*:
+      - `web/src/components/ui/dialog.tsx` (added by `yarn --cwd web shadcn add dialog`; the folder count skips `components/ui/`)
+      - `web/src/features/copy-addresses/show-addresses-dialog.tsx` (new)
+      - `web/src/features/copy-addresses/joined-addresses.ts` (new)
+      - `copy-addresses.tsx` (adds Show addresses and the new refused line)
+      - [admin-course-view.md](admin-course-view.md)'s refused-copy row (approved text in *Step 3*)
+    - *Done when*:
+      - a unit test checks the selection after the popup opens
+      - both pages are walked in `dev:mock` at desktop and 400px, keyboard only
 - [ ] **4. The admin unsubscribes and resubscribes a student, and the copy leaves unsubscribed students out.**
 - [ ] **5. The admin finds a student by typing part of their name or email.**
 - [ ] **6. The admin sees each student's course count, last enrolled date and courses, newest first.**
@@ -46,7 +122,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
   - Course emails and the course page's copy ignore it.
 - **Suspended:** an enrollment with a suspension time set, from a past dispute ([payments/refunds.md](payments/refunds.md)).
 - **Un-enrolled:** an enrollment the admin revoked on the course page.
-- **In good standing:** a student none of whose enrollments is suspended or un-enrolled. A course that has ended doesn't matter.
+- **In good standing:** a student none of whose enrollments is suspended. An un-enroll or a course that has ended doesn't matter.
 - **Search:** the box that narrows what the lists show. It never changes what Copy takes.
 - **Contract:** the API's OpenAPI file, [openapi-v1.yaml](../api/openapi/openapi-v1.yaml). The database schema is [contract.prisma](../api/src/prisma/contract.prisma), named in full where meant.
 - **Twin:** existing code that does a similar job, which new code shares or copies the shape of.
@@ -61,7 +137,7 @@ Each milestone delivers one outcome. `/plan-create-implementation` splits a mile
 
 ## Journeys
 
-- J1 Announce a course: the admin clicks "Copy 2 addresses" and pastes into Bcc. Lee (suspended), Ben (un-enrolled), Dana (unsubscribed) and Tal (unfinished checkout) stay out.
+- J1 Announce a course: the admin clicks "Copy 3 addresses" and pastes into Bcc. Lee (suspended), Dana (unsubscribed) and Tal (unfinished checkout) stay out. Ben, though un-enrolled, is copied.
 - J2 Dana asks to stop: the admin types "dana" in the search box and clicks Unsubscribe. She moves to Unsubscribed, and the Copy button's count drops by one.
 - J3 Dana asks back in: the admin searches for Dana and clicks Resubscribe. She returns to the main list, and the count rises by one.
 
@@ -73,8 +149,8 @@ The finished page, desktop:
 +--------------------------------------------------------------------------+
 | Students (4)                       Sort by [ Newest enrolled first ▾ ]    |
 | [ Search by name or email                                      ]         |
-| [ Copy 2 addresses ]  Show addresses                                     |
-| Copied 2 addresses. Paste them into Bcc, not To.                         |
+| [ Copy 3 addresses ]  Show addresses                                     |
+| Copied 3 addresses. Paste them into Bcc, not To.                         |
 | Student            Courses        Last enrolled                           |
 | Sam Ortiz          3 ▸            Nov 9, 2026            [ Unsubscribe ]  |
 |  sam@example.com   ▾ React Fundamentals · Nov 9, 2026                     |
@@ -82,7 +158,7 @@ The finished page, desktop:
 |                      CSS Layout · Sep 1, 2026                             |
 | Noa Levi           1              Nov 7, 2026            [ Unsubscribe ]  |
 | Lee Park (Suspended) 1            Oct 30, 2026           [ Unsubscribe ]  |  not copied
-| Ben Shaw (Un-enrolled) 1          Oct 27, 2026           [ Unsubscribe ]  |  not copied
+| Ben Shaw           1              Oct 27, 2026           [ Unsubscribe ]  |  un-enrolled, copied
 +--------------------------------------------------------------------------+
 | Unsubscribed (1)                                                         |
 | Dana Cohen         2              Nov 2, 2026            [ Resubscribe ]  |
@@ -91,16 +167,16 @@ The finished page, desktop:
 | Started a checkout and never paid. Never copied.   (grey help)           |
 | Tal Ben · tal@example.com · Nov 3, 2026                                  |
 +--------------------------------------------------------------------------+
-Copy: Sam, Noa (2), whatever the search shows or hides.
+Copy: Sam, Noa, Ben (3), whatever the search shows or hides.
 Sort menu: Newest enrolled first · Most courses first · Name A–Z · Good standing first; one order for Students and Unsubscribed. Unfinished checkouts list the newest checkout first, with its date.
 Search: narrows all three lists; no match shows "No one matches “zzz”."
 Empty: "No students yet.", with no Search, Sort menu, Copy button or Unsubscribed section; the Unfinished checkouts list still shows when it has anyone.
-None to copy: "Copy 0 addresses" disabled, with Show addresses disabled and a "No students to copy." line.
+None to copy: "Copy 0 addresses" disabled, with Show addresses disabled and a "No students in good standing to copy." line.
 Show addresses popup:
   +-----------------------------------------------+
-  | Addresses to copy (2)                     [×] |
+  | Addresses to copy (3)                     [×] |
   | +-------------------------------------------+ |
-  | | sam@example.com, noa@example.com          | |  read-only, all selected on open
+  | | sam@example.com, noa@example.com, ben@…   | |  read-only, all selected on open
   | +-------------------------------------------+ |
   | Copy them, then paste into Bcc, not To.       |
   |                                     [ Close ] |
@@ -117,7 +193,7 @@ Where each sketched state is built:
 |---|---|
 | Student list, Unfinished checkouts list, "No students yet.", API failure | 1 |
 | Admin nav, wide and phone | 2 |
-| Copy button with count, Bcc note, popup, disabled and refused states, "(Suspended)" and "(Un-enrolled)" labels | 3 |
+| Copy button with count, Bcc note, popup, disabled and refused states, "(Suspended)" label | 3 |
 | Unsubscribe, Resubscribe, Unsubscribed section | 4 |
 | Search box, no-match line | 5 |
 | Courses count, Last enrolled, course list | 6 |
@@ -152,7 +228,8 @@ Where each sketched state is built:
 | Every customer shows on the page. A student, a customer with at least one enrollment, sits in the main list. A customer with none sits in a separate Unfinished checkouts list, newest checkout first with its date in the admin's browser time zone, which the copy, Unsubscribe and the course columns leave alone. One unpaged API answer gives each customer's latest checkout time (the newest `Payment.createdAt`, since a returning customer reuses one row) and enrollments: the course, and when the student enrolled, was un-enrolled or was suspended | The owner wants to see everyone the shop has an email for. Someone who never paid gave their email to buy, not to get news. Mailing them risks breaking consent law in the EU, UK and Canada, and their spam reports push course emails into spam. A "0 · —" row in the main list reads as broken data. One answer carries everything milestones 3 to 7 need (revisit after use) | Unfinished checkouts in the main list and the copy (consent and spam risk; low); hiding them (the owner wants to see them; low); count and last-date fields on the customer (a second contract change; low); paging (code and tests for a small list; low) |
 | Unsubscribe sets a nullable `bulkEmailUnsubscribedAt` on `Customer`; Resubscribe clears it; a purchase leaves it alone | One fact, one column. Null means they never asked to stop, and the time answers "when did they ask?". The name says it covers bulk email only, reads as a past event like `revokedAt` and `suspendedAt`, and uses the page's word | `unsubscribedAt` (doesn't say which mail); `rejectsBulkEmailsAt` (present tense beside past-event siblings, and a second word for the page's Unsubscribe); a positive boolean such as `acceptsBulkMail` (loses when); a status enum plus a changed-at column (two columns); a history table of each change (a table for one admin's clicks; medium) |
 | Unsubscribe covers only the Students page's copy; the course page's copy and every course email ignore it | Students still need news about a course they joined | Leaving them out everywhere (they miss course changes) |
-| One Copy button copies every subscribed student in good standing. Its label carries the count ("Copy 2 addresses"), and the note after copying says to paste into Bcc, not To | The client asked for one way to mail everyone they can. The count answers "who will this reach?" before the click. A paste into To shows every address to every student, which counts as a data breach in the EU. Un-enrolled students are often refunded ones. A suspension came from a dispute; nothing sets one today ([payments/refunds.md](payments/refunds.md)), so it reaches only old rows. A repurchase clears an un-enroll, so the rule reads today's state (revisit after use) | Two buttons, subscribed and good standing (five controls above the list on a phone; low); un-enrolled students in the copy (refunded people get promotions; low); the count only after copying (the admin learns the reach too late; low) |
+| One Copy button copies every subscribed student with no suspended enrollment. An un-enrolled student stays in. Its label carries the count ("Copy 3 addresses"), and the note after copying says to paste into Bcc, not To | The client asked for one way to mail everyone they can. An un-enroll ends one course, not the student's interest in the shop's news; the course page's copy still leaves them out of that course's mail. The count answers "who will this reach?" before the click. A paste into To shows every address to every student, which counts as a data breach in the EU. A suspension came from a dispute; nothing sets one today ([payments/refunds.md](payments/refunds.md)), so it reaches only old rows (revisit after use) | Two buttons, subscribed and good standing (five controls above the list on a phone; low); leaving un-enrolled students out (they miss news they still want; low); the count only after copying (the admin learns the reach too late; low) |
+| After the name of a student with a suspended enrollment, the Students page shows "(Suspended)", even when another course reads Active | The admin sees why Copy leaves someone out, in the course page's access word (revisit after use) | "(Un-enrolled)" too (it no longer explains a left-out student; low); a pill like the course page's (a second look for one fact; low); no label (the count looks wrong; low) |
 | Beside Copy, on the Students page and the course page, "Show addresses" opens a popup with the same addresses, comma-separated, in a read-only box selected on open, with the Bcc warning | The owner wants a way that always works, whatever the browser does with the clipboard. Selecting on open leaves one copy keystroke | Only the red refused line (the admin has no way forward; low); the box always on the page (long lists push the students down; low) |
 | A search box above the lists narrows all three lists by name or email as the admin types, ignoring case, in the browser. Copy ignores the search | J2 and J3 start from an email reply, and phones have no easy find-in-page. If the copy followed the search, a forgotten search would trim the mail list silently (revisit after use) | Browser find only (phones lack it; low); Copy follows the search (silent loss of recipients; medium); an API search parameter (contract and tests for a small list; medium) |
 | Unsubscribe and Resubscribe act on one click, with no dialog, and the page re-renders through Next's `refresh()`, as Un-enroll does in [unenroll-student.action.ts](../web/src/features/admin-courses/course-view/students/unenroll/unenroll-student.action.ts) | Each undoes the other, so a slip costs one click (revisit after use) | A confirm dialog like Un-enroll (a click per student for a reversible change; low); an Undo note where the row was (complexity for the first release; low) |
@@ -255,24 +332,51 @@ Public home: | Embodying Emptiness                       (Courses) |
 
 ```
 Students (5)
-[ Copy 3 addresses ]  Show addresses
-Copied 3 addresses. Paste them into Bcc, not To.
-Sam Ortiz · Noa Levi · Lee Park (Suspended) · Ben Shaw (Un-enrolled) · Dana Cohen
-… otherwise as in 1 …
+[ Copy 4 addresses ]  Show addresses          phone: Copy full width, Show addresses under it
+Copied 4 addresses. Paste them into Bcc, not To.
+Sam Ortiz / sam@example.com
+Noa Levi
+Lee Park (Suspended)                          grey label; not copied
+Ben Shaw                                      un-enrolled; still copied
+Dana Cohen
+Unfinished checkouts (1) … as in 1
+Every student suspended: [ Copy 0 addresses ] (disabled)  Show addresses (disabled)
+                         No students in good standing to copy.
+Empty: "No students yet." with no Copy and no Show addresses
 ```
 
-- Size: 3 commits:
-  - share the copy button and the access check, a mechanical change that leaves the course page unchanged;
-  - the copy with its count and Bcc note, with the course page's note gaining the Bcc warning too;
-  - the Show addresses popup on both pages (shadcn's Base UI `dialog`, added by the shadcn CLI, no new package).
+- Size: 5 commits (3a to 3e) in the Status list. The overview said 3; changing the copy's words to props and the course page's Bcc note became their own commit (3c), so the move stays mechanical, and the label got its own slice (3b).
 - Test data: milestone 1's fixture, where Lee is suspended, Ben is un-enrolled and Tal has no enrollment.
-- Docs in the same commits:
-  - [admin-course-view.md](admin-course-view.md)'s copy-words row gains the Bcc note;
-  - that doc's refused-copy row, which rejected a hand-copy box, gives way to the popup;
-  - [payments/refunds.md](payments/refunds.md)'s row on keeping the suspension column notes that this page's copy reads it.
-  - All three are Decision rows, so the owner approves their text.
+- Approved row texts, written in the commit that makes each true:
+  - 3c, [admin-course-view.md](admin-course-view.md)'s row "The copy button reads" becomes: "The copy button reads "Copy active students' addresses", and its note reads "Copied all 4 active students' addresses. Paste them into Bcc, not To.", with "all" even for one" | existing *Why*, plus "The Bcc sentence comes from the copy this page shares with the Students page, because a paste into To shows every address to every student" | *Rejected* unchanged.
+  - 3d, [payments/refunds.md](payments/refunds.md)'s row "Nothing sets `suspendedAt` now" becomes: "Nothing sets `suspendedAt` now. Fulfillment still refunds a suspended buyer's payment, and both admin copies leave a suspended student out; the Students page's copy reads only this column" | "The dispute handler that set it is gone. Whether to keep the column is open; removing it means changing both copies" | "Removing it without deciding".
+  - 3e, [admin-course-view.md](admin-course-view.md)'s row "A refused copy shows a red line" becomes: "A refused copy shows a red line: "Couldn't copy the addresses. Your browser blocked the clipboard; click again, or use Show addresses to copy them by hand."" | "The browser rarely refuses, but the owner wants a way that always works; the popup is shared with the Students page ([admin-students-view.md](admin-students-view.md))" | "Only the red line (no way forward if the browser keeps refusing; low)".
+- Design notes *(temporary)*:
+  - The shared copy lives in `features/copy-addresses/` and the access word in `features/student-access/`. `StudentIdentity` stays in `admin-courses/` for now.
+  - Both copies keep the API's order, so sort (milestone 7) and search (milestone 5) never change the copied text.
+  - Good standing needs at least one enrollment. Without that check, "every enrollment unsuspended" holds for Tal's empty list and would copy him.
+  - The popup is [Base UI's Dialog](https://base-ui.com/react/components/dialog) through shadcn. `initialFocus` points at the box, and `setSelectionRange` selects its text. iOS Safari may ignore `select()` on a read-only field; nobody has checked this on a phone yet, so 3e's walk includes one.
+  - No new browser test: [course-view.spec.ts](../web/tests/browser/admin-courses/course-view.spec.ts) already proves the real clipboard, and jsdom can check the selection. If jsdom can't report the selection after the Dialog's focus, 3e adds one browser test of "selected on open".
+  - Milestone 4 adds a `key` on the Students page's copy once its addresses can change, as [student-list.tsx](../web/src/features/admin-courses/course-view/students/student-list.tsx) does after an un-enroll.
+- Flow *(temporary)*:
+
+```
+Admin opens /admin/students
+├── no students → "No students yet."; no Copy                  existing (1d), 3d
+└── students listed
+    ├── student with a suspended enrollment → "(Suspended)"   3b
+    ├── "Copy N addresses" (N = students in good standing)    3d
+    │   ├── N = 0 → disabled + "No students in good standing…" 3d; Show addresses disabled 3e
+    │   └── click → copied note + Bcc sentence                3c, 3d
+    │       └── refused → red line naming Show addresses      existing (6b), words 3e
+    └── Show addresses → popup, text selected                 3e
+        └── Close / × / Escape → focus back on Show addresses 3e
+Course page: same copy with its own words (3c), Bcc note (3c), Show addresses (3e)
+```
+
 - Done when: J1 walked in `dev:mock`, with Dana still in the copy until milestone 4:
-  - the button reads "Copy 3 addresses" and copies Sam's, Noa's and Dana's addresses;
+  - the button reads "Copy 4 addresses" and copies Sam's, Noa's, Ben's and Dana's addresses;
+  - only Lee shows "(Suspended)";
   - the note says Bcc, not To;
   - Show addresses opens the same addresses, already selected, on this page and on the course page;
   - the course page's note after copying also says Bcc, not To.
@@ -284,7 +388,7 @@ Sam Ortiz · Noa Levi · Lee Park (Suspended) · Ben Shaw (Un-enrolled) · Dana 
 - **Sketch:**
 
 ```
-… main list with [ Unsubscribe ] on each student row; the copy button reads "Copy 2 addresses" …
+… main list with [ Unsubscribe ] on each student row; the copy button reads "Copy 3 addresses" …
 Unsubscribed (1)
 Dana Cohen · dana@example.com                    [ Resubscribe ]
 Unfinished checkouts (1)  (no buttons)
@@ -314,7 +418,7 @@ Unfinished checkouts (1)  (no buttons)
 ```
 Students (5)
 [ Search by name or email          ]
-[ Copy 2 addresses ]  Show addresses      (count ignores the search)
+[ Copy 3 addresses ]  Show addresses      (count ignores the search)
 … only matching rows in each list …
 No match: No one matches “zzz”.
 Phone: the box is full width under the heading.
@@ -349,12 +453,12 @@ Phone: the box is full width under the heading.
 ```
 Students (4)                       Sort by [ Newest enrolled first ▾ ]
 [ Search by name or email          ]
-[ Copy 2 addresses ]  Show addresses
+[ Copy 3 addresses ]  Show addresses
 Sam · Noa · Lee · Ben
 Unsubscribed (1)  — in the same order
 Unfinished checkouts — always newest checkout first
 Menu: Newest enrolled first · Most courses first · Name A–Z · Good standing first
-Good standing first: Sam · Noa, then Lee (Suspended) · Ben (Un-enrolled)
+Good standing first: Sam · Noa · Ben, then Lee (Suspended)
 Phone: the label and menu wrap under the heading.
 ```
 
@@ -367,13 +471,12 @@ Phone: the label and menu wrap under the heading.
   - open `/admin/students` → Sam first;
   - pick Most courses first → Sam (3) first;
   - pick Name A–Z → both student lists alphabetical;
-  - pick Good standing first → Lee and Ben below Noa;
+  - pick Good standing first → Lee last;
   - Unfinished checkouts keep their order throughout;
   - reload → back to Newest enrolled first.
 
 ## Open questions
 
-- Milestone 3, can wait: the button, note and popup words, set by [style-guide.md](style-guide.md) §9.
 - Milestone 4, can wait: the endpoint shape. I recommend an unsubscription sub-resource, created and deleted, like un-enroll's revocation.
 - Milestone 5, can wait: the search box's words and its no-match line.
 - Milestone 7, can wait: whether Name A–Z sorts by the full name as typed. I recommend yes, since the shop stores one name field.
